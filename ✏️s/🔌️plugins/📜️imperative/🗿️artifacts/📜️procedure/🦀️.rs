@@ -395,8 +395,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: "procedure.document".into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md"],
-        import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md"],
+        export_stdio_kinds: vec!["stdio.csv".into(), "stdio.json".into(), "stdio.md".into()],
+        import_stdio_kinds: vec!["stdio.csv".into(), "stdio.json".into(), "stdio.md".into()],
     }
 }
 //#endregion 🔖️ArtifactKind

@@ -15,7 +15,7 @@ pub fn encode_payload(payload: &ChangeJfifHeaderMutation) -> Result<Vec<u8>, pro
     enc_density_units_bin(density_units, &mut out);
     store::pack_rt::write_varint_u64(&mut out, *x_density as u64);
     store::pack_rt::write_varint_u64(&mut out, *y_density as u64);
-    write_opt(&mut out, thumbnail, |t, out| enc_thumbnail_bin(t, out));
+    write_opt(&mut out, thumbnail, enc_thumbnail_bin);
     Ok(out)
 }
 pub fn decode(bytes: &[u8]) -> Result<JpgMutation, protocol::ProtocolError> {

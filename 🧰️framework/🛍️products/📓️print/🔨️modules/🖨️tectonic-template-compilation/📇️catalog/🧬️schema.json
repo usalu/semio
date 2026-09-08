@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "sourceDateEpoch", "documents"],
+  "properties": {
+    "version": { "const": 1 },
+    "sourceDateEpoch": { "type": "integer", "minimum": 0 },
+    "documents": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "texPath", "collection", "sources"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z]+(?:-[a-z0-9]+)*$" },
+          "texPath": { "type": "string", "pattern": "^[^/\\\\]+(?:/[^/\\\\]+)*\\.tex$" },
+          "collection": { "enum": ["templates", "visualizations"] },
+          "sources": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+        }
+      }
+    }
+  }
+}

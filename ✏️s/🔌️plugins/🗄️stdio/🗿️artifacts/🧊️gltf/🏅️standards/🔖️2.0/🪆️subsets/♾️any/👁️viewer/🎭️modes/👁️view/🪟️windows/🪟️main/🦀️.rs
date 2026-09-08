@@ -34,7 +34,7 @@ pub fn definition() -> WindowKindDefinition {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn entity_count(document: &GltfSnapshot) -> usize {
     let value = pack::json_from_dsl_value(&dsl::ToValue::to_value(document));
-    value.as_object().map(|object| object.iter().filter_map(|(_, field)| field.as_array().map(|array| array.len())).max().unwrap_or(0)).unwrap_or(0).clamp(1, 6)
+    value.as_object().map_or(0, |object| object.iter().filter_map(|(_, field)| field.as_array().map(|array| array.len())).max().unwrap_or(0)).clamp(1, 6)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

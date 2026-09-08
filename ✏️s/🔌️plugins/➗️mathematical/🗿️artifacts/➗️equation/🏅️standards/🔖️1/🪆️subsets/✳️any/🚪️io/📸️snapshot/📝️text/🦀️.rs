@@ -273,7 +273,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn example_primary_text_round_trips() {
         let text = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
-        let parsed = crate::artifacts::equation::dsl::parse_dsl(text).expect("parse example");
+        let parsed = parse_dsl(text).expect("parse example");
         store::os_store::test_support::assert_dsl_round_trip(&parsed);
     }
 

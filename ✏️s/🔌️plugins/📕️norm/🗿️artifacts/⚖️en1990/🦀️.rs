@@ -233,8 +233,11 @@ mod tests {
     #[test]
     fn qk_working_table_is_owned_by_the_exact_child() {
         let owned = en1990_qk_child_from_entries(&[En1990QkEntry { category: "snow".into(), value: 42.0 }]);
-        let wire = serde_json::to_vec(&owned).expect("EN 1990 child wire identity");
-        let reconstructed: En1990QkChild = serde_json::from_slice(&wire).expect("EN 1990 child wire roundtrip");
+        let wire = dsl::json::to_json_string(&owned);
+        let reconstructed: En1990QkChild = dsl::json::from_json_str(&wire).expect("EN 1990 child wire roundtrip");
+        let mut oracle_wire = Vec::new();
+        crate::document::child_identity_oracle::serialize(&owned, &mut serde_json::Serializer::new(&mut oracle_wire)).expect("independent child identity oracle");
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&wire).expect("first-party child identity JSON"), serde_json::from_slice::<serde_json::Value>(&oracle_wire).expect("Serde child identity JSON"));
         let observed = serde_json::json!({
             "ownedHasPayload": owned.local_owner::<En1990QkWorkingTable>().is_some(),
             "wireIdentityMatches": owned == reconstructed,

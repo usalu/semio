@@ -82,7 +82,7 @@ pub mod derived_composition {
     /// (`crate::artifacts::json::standards::v_rfc8259::subsets::base::io::io_registry::entries()`).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        let _ = register_subset_validator(validator_entry());
+        register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
     }
     //#endregion 🔖️SubsetValidator
 

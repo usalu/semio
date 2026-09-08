@@ -586,8 +586,8 @@ impl SceneBuilder {
     /// silently drew nothing. Both `push_line` and this function are plain sync `fn` here, so that
     /// call site cannot exist — see `tessellate::dashed_line_segments`'s doc comment.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn push_dashed_line(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, color: [f32; 4], width: f32, dash: f32, gap: f32) {
-        for (sx0, sy0, sx1, sy1) in tessellate::dashed_line_segments(x0, y0, x1, y1, dash, gap) {
+    pub fn push_dashed_line(&mut self, start: [f32; 2], end: [f32; 2], color: [f32; 4], width: f32, dash: f32, gap: f32) {
+        for (sx0, sy0, sx1, sy1) in tessellate::dashed_line_segments(start[0], start[1], end[0], end[1], dash, gap) {
             self.push_line(sx0, sy0, sx1, sy1, color, width);
         }
     }
@@ -595,8 +595,8 @@ impl SceneBuilder {
     /// 〰️ Overlay counterpart of [`Self::push_dashed_line`]; the wgpu target's overlay variant had the
     /// same dropped-future bug against `push_line_overlay`, fixed the same way.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn push_dashed_line_overlay(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, color: [f32; 4], width: f32, dash: f32, gap: f32) {
-        for (sx0, sy0, sx1, sy1) in tessellate::dashed_line_segments(x0, y0, x1, y1, dash, gap) {
+    pub fn push_dashed_line_overlay(&mut self, start: [f32; 2], end: [f32; 2], color: [f32; 4], width: f32, dash: f32, gap: f32) {
+        for (sx0, sy0, sx1, sy1) in tessellate::dashed_line_segments(start[0], start[1], end[0], end[1], dash, gap) {
             self.push_line_overlay(sx0, sy0, sx1, sy1, color, width);
         }
     }

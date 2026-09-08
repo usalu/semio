@@ -81,60 +81,6 @@ fn blur_gate_reject(scratch: &mut VideoImportScratch, score: f32, min_sharpness:
 //#region 🔖️SetStreamSync
 //#endregion 🔖️SetStreamSync
 
-//#region 🧪️Testkit
-/// 📥️ Imports `n` checker frames as one new image-sequence stream via `ImportFramePayload`, mirroring
-/// exactly what a real `importFrames` → `RequestFileOpen.multiple` re-dispatch loop sends. Shared with
-/// `🎮️commands/🏗️run-reconstruction`'s own tests, which need real decodable frames to run a pipeline on.
-#[cfg(test)]
-pub(crate) async fn testkit_import_checker_stream(app: &mut crate::editor::remodeling::testkit::RemodelingApp, n: u32) {
-    use crate::editor::remodeling::testkit::dispatch;
-    use crate::editor::remodeling::RemodelingCommand;
-    for index in 0..n {
-        dispatch(app, RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload: checker_data_url(24, 24, 3), name: format!("frame-{index}.png"), index })).await;
-    }
-}
-
-/// 🏁️ High-contrast `cell`-pixel checkerboard, PNG-encoded and base64-wrapped as a `requestFileOpen`
-/// `dataUrl` payload — so the real decode path is exercised, not a stub.
-#[cfg(test)]
-pub(crate) async fn checker_data_url(w: u32, h: u32, cell: u32) -> String {
-    format!("data:image/png;base64,{}", base64_codec::base64_standard_encode(remodeling_image::encode_png(&checker_image(w, h, cell)).expect("encode checker png")))
-}
-
-/// 🏁️ The same checkerboard, real-JPEG-encoded — mirrors what a `RequestMediaFrames` host actually
-/// dispatches to `frame_action` (`payload: dataUrl(image/jpeg)`).
-#[cfg(test)]
-pub(crate) async fn checker_data_url_jpeg(w: u32, h: u32, cell: u32) -> String {
-    format!("data:image/jpeg;base64,{}", base64_codec::base64_standard_encode(remodeling_image::encode_jpeg(&checker_image(w, h, cell), 90)))
-}
-
-/// 🎞️ A tiny synthesized MJPEG-in-MP4 video (n frames of the same checker pattern) as a
-/// `RequestMediaFrames`-fallback-style raw base64 data URL payload.
-#[cfg(test)]
-pub(crate) async fn checker_video_data_url(n: u32, w: u32, h: u32, cell: u32) -> String {
-    let jpeg = remodeling_image::encode_jpeg(&checker_image(w, h, cell), 90);
-    let frames: Vec<Vec<u8>> = (0..n).map(|_| jpeg.clone()).collect();
-    format!("data:video/mp4;base64,{}", base64_codec::base64_standard_encode(remodeling_video::write_mp4_mjpeg(&frames, 10.0)))
-}
-
-#[cfg(test)]
-fn checker_image(w: u32, h: u32, cell: u32) -> remodeling_image::ImageRgba8 {
-    let mut image = remodeling_image::ImageRgba8::new(w, h);
-    for y in 0..h {
-        for x in 0..w {
-            let on = ((x / cell.max(1)) + (y / cell.max(1))).is_multiple_of(2);
-            let v = if on { 235u8 } else { 20u8 };
-            let idx = ((y * w + x) * 4) as usize;
-            image.data[idx] = v;
-            image.data[idx + 1] = v;
-            image.data[idx + 2] = v;
-            image.data[idx + 3] = 255;
-        }
-    }
-    image
-}
-//#endregion 🧪️Testkit
-
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "import-video-bytes-payload")]
 pub struct ImportVideoBytesPayload {

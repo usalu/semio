@@ -717,16 +717,8 @@ impl ArtifactEditor for Generation3dPlayApp {
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
         };
-        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            request.context,
-            operation_context,
-            request.completion,
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
             Generation3dCommand::command_id,
             GENERATION3D_RETAINED_RAW_BYTES,
             1,
@@ -1166,7 +1158,7 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
                     ActionArgOption::new("inputSlider", LocalizedLabel::native("Slider", "Schieberegler")),
                     ActionArgOption::new("inputNote", LocalizedLabel::native("Note", "Notiz")),
                     ActionArgOption::new("outputPreview", LocalizedLabel::native("Preview", "Vorschau")),
-                ]).default_value("inputSlider"),
+                ]).default_value(&"inputSlider"),
             ])
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
@@ -1939,7 +1931,7 @@ pub(crate) mod testkit {
     }
 
     pub async fn render(app: &mut Generation3dApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
     }
 
     /// 🧵️ A `flowEvalTick` chain self-dispatches via `requestedEffects`, which only the JS renderer
@@ -1960,6 +1952,7 @@ pub(crate) mod testkit {
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
+    use serde_json::json;
     use super::*;
     use crate::editor::generation3d::testkit::{app, app_with_registry, drain_flow_eval_ticks};
     use semio_framework_plugin::PluginApp;
@@ -1974,7 +1967,7 @@ mod tests {
         snapshot.fixture.layout.insert("move-target".into(), flow::WidgetLayout { x: 1.0, y: 2.0 });
         snapshot.fixture.layout.insert("clear-target".into(), flow::WidgetLayout { x: 3.0, y: 4.0 });
         for (id, name) in [("delete-generation", "Delete"), ("rename-generation", "Before Rename"), ("change-generation", "Change Value")] {
-            snapshot.generation.cold_builder_mut().unwrap().generations.push(flow::playbook::FormGeneration { id: id.into(), name: name.into(), values: serde_json::Map::new() });
+            snapshot.generation.cold_builder_mut().unwrap().generations.push(flow::playbook::FormGeneration { id: id.into(), name: name.into(), values: Default::default() });
         }
         snapshot.generation.cold_builder_mut().unwrap().selected_generation_id = Some("rename-generation".into());
         snapshot
@@ -1996,10 +1989,10 @@ mod tests {
             Generation3dMutation::DeleteWidgetPosition(delete_widget_position::DeleteWidgetPosition { id: "clear-target".into() }),
             Generation3dMutation::UpdateCamera(update_camera::UpdateCamera { camera: flow::CameraJson { x: 9.0, y: 8.0, zoom: 1.75 } }),
             Generation3dMutation::ChangeSchema(change_schema::ChangeSchema { new_schema: "flow.fixture.production-retained".into() }),
-            Generation3dMutation::CreateGeneration(create_generation::CreateGeneration { generation: flow::playbook::FormGeneration { id: "created-generation".into(), name: "Created".into(), values: serde_json::Map::new() } }),
+            Generation3dMutation::CreateGeneration(create_generation::CreateGeneration { generation: flow::playbook::FormGeneration { id: "created-generation".into(), name: "Created".into(), values: Default::default() } }),
             Generation3dMutation::DeleteGeneration(delete_generation::DeleteGeneration { id: "delete-generation".into() }),
             Generation3dMutation::RenameGeneration(rename_generation::RenameGeneration { id: "rename-generation".into(), new_name: "After Rename".into() }),
-            Generation3dMutation::ChangeGenerationValue(change_generation_value::ChangeGenerationValue { id: "change-generation".into(), question_id: "deep-answer".into(), new_value: serde_json::json!({"object": {"array": [1.0, false, "retained"]}}) }),
+            Generation3dMutation::ChangeGenerationValue(change_generation_value::ChangeGenerationValue { id: "change-generation".into(), question_id: "deep-answer".into(), new_value: serde_json::json!({"object": {"array": [1.0, false, "retained"]}}).into() }),
         ]
     }
 
@@ -2033,7 +2026,7 @@ mod tests {
         crate::artifacts::generation3d::spr::generation3d_apply_retained_mutations_for_test(&mut expected, &mutations);
         let expected_digest = production_semantic_digest(&expected);
         let wire = serde_json::to_vec(&serde_json::json!({
-            "schema": crate::artifacts::generation3d::GENERATION_3D_SCHEMA,
+            "schema": GENERATION_3D_SCHEMA,
             "id": "generation3d-production-mounted-law",
             "vcs": {
                 "initialSnapshot": production_hex(&crate::artifacts::generation3d::snapshot::binary::encode(&snapshot)),
@@ -2056,7 +2049,7 @@ mod tests {
         (wire, expected, expected_digest)
     }
 
-    fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<Generation3dPlayApp>>, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
+    fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation3dPlayApp>>, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
         let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
         let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("P3 production ingress credits");
         crate::artifacts::generation3d::spr::generation3d_admit_publication_authority(
@@ -2074,14 +2067,14 @@ mod tests {
             let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
             bytes[..chunk.len()].copy_from_slice(chunk);
             let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded P3 production envelope page");
-            app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("P3 production envelope page admission failed: {fault}"));
+            app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("P3 production envelope page admission failed: {fault:?}"));
         }
         assert!(app.seal_artifact_envelope_ingress(handle).expect("P3 production envelope seal"));
         handle
     }
 
     fn drive_production_envelope(
-        app: &mut semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<Generation3dPlayApp>>,
+        app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation3dPlayApp>>,
         handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle,
     ) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
         for _ in 0..300_000 {
@@ -2100,14 +2093,14 @@ mod tests {
     /// and accepted, stale, ABA, and displaced stores remain owned until explicit terminal ACK/close.
     #[semio_framework_async_macros::async_test]
     async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_and_fail_closed() {
-        let mut accepted = semio_framework_plugin::VcsArtifactApp::<semio_framework_plugin::EditorApp<Generation3dPlayApp>>::new(semio_framework_plugin::EditorApp::default()).await;
+        let mut accepted = semio_framework_plugin::VcsArtifactApp::<EditorApp<Generation3dPlayApp>>::new(EditorApp::default()).await;
         let base_generation = accepted.artifact_generation_now();
         let (wire, expected, expected_digest) = production_envelope_wire("accepted-production-swap");
         let handle = admit_production_envelope(&mut accepted, &wire);
         assert_eq!(drive_production_envelope(&mut accepted, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
         assert_eq!(accepted.artifact_generation_now().0, base_generation.0 + 1);
-        let snapshot = accepted.snapshot().await.expect("accepted P3 production snapshot");
-        assert_eq!(&*snapshot, &expected, "real maintenance must publish all P3 snapshot and all-14 replay fields");
+        let snapshot = accepted.snapshot().expect("accepted P3 production snapshot");
+        assert_eq!(&snapshot, &expected, "real maintenance must publish all P3 snapshot and all-14 replay fields");
         assert_eq!(production_semantic_digest(&snapshot), expected_digest);
         assert!(snapshot.fixture.layout.contains_key("move-target"));
         assert!(!snapshot.fixture.layout.contains_key("clear-target"), "3D-only delete-widget-position must survive retained replay");
@@ -2122,8 +2115,8 @@ mod tests {
             (WrongBase, "generation3d-publication.wrong-base"),
             (WrongParent, "generation3d-publication.wrong-parent"),
         ] {
-            let mut app = semio_framework_plugin::VcsArtifactApp::<semio_framework_plugin::EditorApp<Generation3dPlayApp>>::new(semio_framework_plugin::EditorApp::default()).await;
-            let last_valid = app.snapshot().await.expect("last-valid P3 snapshot");
+            let mut app = semio_framework_plugin::VcsArtifactApp::<EditorApp<Generation3dPlayApp>>::new(EditorApp::default()).await;
+            let last_valid = app.snapshot().expect("last-valid P3 snapshot");
             let last_valid_digest = production_semantic_digest(&last_valid);
             let base_generation = app.artifact_generation_now();
             let (wire, _, _) = production_envelope_wire("rejected-production-candidate");
@@ -2132,7 +2125,7 @@ mod tests {
             assert_eq!(drive_production_envelope(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
             assert_eq!(crate::artifacts::generation3d::spr::generation3d_take_publication_hostile_observed(handle.operation), Some(expected_code));
             assert_eq!(app.artifact_generation_now(), base_generation);
-            let retained = app.snapshot().await.expect("last-valid P3 snapshot after rejected candidate");
+            let retained = app.snapshot().expect("last-valid P3 snapshot after rejected candidate");
             assert_eq!(production_semantic_digest(&retained), last_valid_digest);
             assert_eq!(retained, last_valid);
             assert!(app.acknowledge_artifact_store_replacement(handle).expect("rejected P3 terminal ACK after candidate retirement"));
@@ -2272,13 +2265,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn declared_actions_bridge_to_commands() {
         let _serial = test_support::lock();
-        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<Generation3dPlayApp>>(testkit::generation3d_app_manifest_for_testkit).await;
+        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Generation3dPlayApp>>(testkit::generation3d_app_manifest_for_testkit).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn registry_backed_editor_installs_every_declared_bounded_command_proof() {
         let _serial = test_support::lock();
-        let _app = semio_framework_plugin::testkit::new_app_with_registry::<semio_framework_plugin::EditorApp<Generation3dPlayApp>>(testkit::generation3d_app_manifest_for_testkit).await;
+        let _app = semio_framework_plugin::testkit::new_app_with_registry::<EditorApp<Generation3dPlayApp>>(testkit::generation3d_app_manifest_for_testkit).await;
     }
 
     #[test]
@@ -2357,7 +2350,7 @@ mod tests {
         let widgets: Vec<String> = app().await.snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| crate::artifacts::generation3d::widget_id(widget).to_string()).collect();
         assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
         let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
-        semio_framework_plugin::testkit::assert_two_instances_converge::<semio_framework_plugin::EditorApp<Generation3dPlayApp>, (Option<f64>, Option<f64>)>(
+        semio_framework_plugin::testkit::assert_two_instances_converge::<EditorApp<Generation3dPlayApp>, (Option<f64>, Option<f64>)>(
             "mem://generation3d-convergence",
             Generation3dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: w0.clone(), x: 111.0, y: 5.0 }),
             Generation3dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: w1.clone(), x: 222.0, y: 6.0 }),
@@ -2395,7 +2388,7 @@ mod tests {
             .expect("default fixture node")
             .to_string();
         let targets = serde_json::to_string(&vec![semio_framework_plugin::InteractionTarget { granularity: "node".into(), id: node_id.clone() }]).expect("selection targets");
-        let args = serde_json::json!({ "domainId": "graph", "targets": targets, "merge": "replace", "method": "pick" });
+        let args: dsl::DslValue = serde_json::json!({ "domainId": "graph", "targets": targets, "merge": "replace", "method": "pick" }).into();
         app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&args), &semio_framework_plugin::testkit::meta("local"))
             .await
             .expect("interaction selection persists");
@@ -2557,7 +2550,7 @@ mod tests {
     #[test]
     fn rectangle_wire_preview_emits_edge_only_mesh() {
         let _serial = test_serial();
-        let projection = Generation3dSnapshot::parse_dsl(crate::artifacts::generation3d::dsl::GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT).expect("rectangle wire example");
+        let projection = <Generation3dSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::generation3d::dsl::GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT).expect("rectangle wire example");
         let config = Generation3dConfig::default();
         let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.fixture, &config);
         let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("meshes");

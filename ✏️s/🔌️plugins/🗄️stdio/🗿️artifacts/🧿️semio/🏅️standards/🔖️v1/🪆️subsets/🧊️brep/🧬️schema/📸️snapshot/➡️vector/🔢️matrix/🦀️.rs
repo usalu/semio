@@ -82,9 +82,9 @@ impl Mat3 {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn sub(&self, o: &Mat3) -> Mat3 {
         let mut out = [[0.0; 3]; 3];
-        for r in 0..3 {
-            for c in 0..3 {
-                out[r][c] = self.rows[r][c] - o.rows[r][c];
+        for (r, row) in out.iter_mut().enumerate() {
+            for (c, value) in row.iter_mut().enumerate() {
+                *value = self.rows[r][c] - o.rows[r][c];
             }
         }
         Mat3::from_rows(out)

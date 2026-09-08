@@ -1,0 +1,53 @@
+{
+  "schema": "semio.shell.tutorial-run-fixture.v1",
+  "cases": [
+    {
+      "id": "owned-stop",
+      "events": [
+        "resolve",
+        "stop"
+      ],
+      "started": true,
+      "restores": 1
+    },
+    {
+      "id": "switch-before-snapshot",
+      "events": [
+        "switch",
+        "resolve",
+        "stop"
+      ],
+      "started": false,
+      "restores": 0
+    },
+    {
+      "id": "switch-before-stop",
+      "events": [
+        "resolve",
+        "switch",
+        "stop"
+      ],
+      "started": true,
+      "restores": 0
+    },
+    {
+      "id": "stop-before-snapshot",
+      "events": [
+        "stop",
+        "resolve"
+      ],
+      "started": false,
+      "restores": 0
+    },
+    {
+      "id": "replace-run-before-snapshot",
+      "events": [
+        "replace",
+        "resolve",
+        "stop"
+      ],
+      "started": false,
+      "restores": 0
+    }
+  ]
+}

@@ -1,17 +1,16 @@
 #!/usr/bin/env bun
 /** 🌉️ `@semio-tech/framework-os-mcp` TS task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`.
- * The default path builds the Rust Nx target first; an explicit binary override remains a strict
- * prebuilt-artifact seam. Both paths require an executable before Vitest starts. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCmd, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+ * Nx restores the Rust build before these process consumers run. An explicit binary override
+ * remains a strict prebuilt-artifact seam; both paths require an executable before Vitest starts. */
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { requireMcpBinary } from "../../🟦️.ts";
 import { proveMcpInferenceBridgeFixture } from "./💡️inference-bridge.ts";
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    if (!process.env.SEMIO_OS_MCP_BIN) runCmd("bun", ["nx", "run", "@semio-tech/framework-os-mcp-rs:build", "--skip-nx-cache"], { cwd: this.repoRoot });
     console.log(`[test] ${requireMcpBinary(this.repoRoot)}`);
-    runVitest(this.root, rest, "🧪️tests/🟦️.ts");
+    await runVitest(this.root, rest, "🧪️tests/🟦️.ts");
   }
 }
 
@@ -21,16 +20,15 @@ class TestScript extends BundleScript {
  * `semio-os-mcp` binary over stdio JSON-RPC for the scope, binding and input laws. Neither mode
  * involves an external model provider, WGPU rendering, or a two-user journey. */
 class InferenceBridgeCheckScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const mode = segments[0] ?? "--source";
     if (segments.length > 1 || !["--source", "--process"].includes(mode)) throw new Error("usage: inference-bridge-check [--source|--process]");
     const report = proveMcpInferenceBridgeFixture(this.repoRoot);
     console.log(`inference-bridge-oracle: ajv=${report.ajv} hostile=${report.hostile} errors=${report.errors} visibility=${report.visibility} lifecycle=${report.lifecycle} routes=${report.routes} limits=${report.limits}`);
     if (mode === "--process") {
-      if (!process.env.SEMIO_OS_MCP_BIN) runCmd("bun", ["nx", "run", "@semio-tech/framework-os-mcp-rs:build", "--skip-nx-cache"], { cwd: this.repoRoot });
       console.log(`[inference-bridge] ${requireMcpBinary(this.repoRoot)}`);
       resolveTestLevel(["long"]);
-      runVitest(this.root, ["💡️inference-bridge.test.ts"], "🧪️tests/🟦️.ts");
+      await runVitest(this.root, ["💡️inference-bridge.test.ts"], "🧪️tests/🟦️.ts");
     }
     console.log(`inference-bridge-check ${mode}: no external model provider, no WGPU rendering, and no two-user authenticated journey is run or claimed here.`);
   }

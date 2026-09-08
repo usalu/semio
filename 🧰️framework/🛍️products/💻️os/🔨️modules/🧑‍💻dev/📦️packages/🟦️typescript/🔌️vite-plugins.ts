@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, backboneKindFromUri, decodeDocumentPackBytes, encodeDocumentPackBytes } from "@semio-tech/framework-os";
 import type { PluginSourceEvent } from "@semio-tech/framework";
 import { MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, moduleIdForDirectoryName, moduleRoutePath } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { observeActivationReceipts, type ActivationReceipt } from "../../♻️activation/🟦️.ts";
 import { blake3Hex } from "../../../../../../🔨️modules/🔏️hash/🟦️.ts";
 
 /** @emoji 🗂️ Repository root derived from this module's own location — the config bundler must not
@@ -119,17 +120,27 @@ function validateCanonicalBootstrapDocumentId(documentId: string): void {
 }
 
 function validateCanonicalBootstrapFrontier(frontier: CanonicalBootstrapFolderMirrorFrontierV1, documentId: string): void {
-  if (
-    frontier?.documentId !== documentId ||
-    !Number.isSafeInteger(frontier.headEditOrdinal) ||
-    frontier.headEditOrdinal < 0 ||
-    !Number.isSafeInteger(frontier.lastCommitSeq) ||
-    frontier.lastCommitSeq < 0 ||
-    typeof frontier.headEditId !== "string" ||
-    frontier.headEditId.length === 0 ||
-    !SHA256_HEX.test(frontier.chainSha256)
-  )
-    throw canonicalBootstrapMirrorError("invalid");
+  const chainIsCanonical = SHA256_HEX.test(frontier?.chainSha256 ?? "");
+  const chainIsZero = chainIsCanonical && frontier.chainSha256 === "0".repeat(64);
+  const genesis =
+    frontier?.documentId === documentId &&
+    frontier.headEditOrdinal === 0 &&
+    frontier.headEditId === "" &&
+    frontier.lastCommitSeq === 0 &&
+    chainIsZero;
+  const edited =
+    frontier?.documentId === documentId &&
+    Number.isSafeInteger(frontier.headEditOrdinal) &&
+    frontier.headEditOrdinal > 0 &&
+    Number.isSafeInteger(frontier.lastCommitSeq) &&
+    frontier.lastCommitSeq > 0 &&
+    typeof frontier.headEditId === "string" &&
+    frontier.headEditId.length > 0 &&
+    new TextEncoder().encode(frontier.headEditId).byteLength <= 512 &&
+    !/\p{Cc}/u.test(frontier.headEditId) &&
+    chainIsCanonical &&
+    !chainIsZero;
+  if (!genesis && !edited) throw canonicalBootstrapMirrorError("invalid");
 }
 
 function validateCanonicalBootstrapReserve(request: CanonicalBootstrapFolderMirrorReserveV1, documentId: string): void {
@@ -637,6 +648,56 @@ export function semioPluginHotSwapVitePlugin() {
         });
       });
     },
+  };
+}
+/** 📡️ Announces explicit Nx activation completion and releases every server-owned subscription. */
+export function semioActivationVitePlugin(options: { readonly receiptDirectory: string }) {
+  let dispose = (): void => {};
+  return {
+    name: "semio-activation",
+    configureServer(server: {
+      middlewares: { use: (handler: (req: BackboneServerRequest, res: BackboneServerResponse, next: () => void) => void) => void };
+      httpServer?: { once: (event: "close", listener: () => void) => unknown } | null;
+      ws?: { send: (message: { type: "full-reload" }) => void };
+    }) {
+      dispose();
+      const subscribers = new Map<BackboneServerResponse, () => void>();
+      let previous: ActivationReceipt | undefined;
+      const send = (event: PluginSourceEvent): void => {
+        const text = `data: ${JSON.stringify(event)}\n\n`;
+        for (const [response, stop] of subscribers) {
+          try { response.write(text); } catch { stop(); subscribers.delete(response); }
+        }
+      };
+      const observer = observeActivationReceipts(options.receiptDirectory, (receipt) => {
+        if (previous) {
+          if (previous.plugins.map((row) => row.pluginId).join() !== receipt.plugins.map((row) => row.pluginId).join()) server.ws?.send({ type: "full-reload" });
+          const prior = new Map(previous.plugins.map((row) => [row.pluginId, row.artifactSha256]));
+          for (const row of receipt.plugins) if (prior.get(row.pluginId) !== row.artifactSha256) send({ kind: "built", pluginId: row.pluginId, rebuiltAt: row.rebuiltAt });
+        }
+        previous = receipt;
+      }, (error) => console.error("Activation receipt failed:", error));
+      dispose = (): void => {
+        observer.close();
+        for (const [response, stop] of subscribers) { stop(); response.end(); }
+        subscribers.clear();
+      };
+      server.httpServer?.once("close", dispose);
+      server.middlewares.use((req, res, next) => {
+        if (moduleRoutePath(req.url ?? "") !== PLUGIN_SOURCE_WATCH_PATH || req.method !== "GET") return next();
+        res.statusCode = 200;
+        res.setHeader("content-type", "text/event-stream");
+        res.setHeader("cache-control", "no-cache");
+        res.setHeader("connection", "keep-alive");
+        res.write(": connected\n\n");
+        const event: PluginSourceEvent = { kind: "snapshot", plugins: observer.snapshot().plugins.map(({ pluginId, rebuiltAt }) => ({ pluginId, rebuiltAt })) };
+        res.write(`data: ${JSON.stringify(event)}\n\n`);
+        const stop = startSseKeepalive(res);
+        subscribers.set(res, stop);
+        req.on("close", () => { stop(); subscribers.delete(res); });
+      });
+    },
+    closeBundle(): void { dispose(); },
   };
 }
 //#endregion 🔌️PluginHotSwapVitePlugin

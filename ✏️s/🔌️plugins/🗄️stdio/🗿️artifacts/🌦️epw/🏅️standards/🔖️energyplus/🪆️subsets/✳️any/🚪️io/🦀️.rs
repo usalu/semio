@@ -50,9 +50,9 @@ pub mod derived_composition {
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::epw::standards::energyplus::subsets::any::schema::epw_artifact_schema_descriptor());
         register_artifact_inferences();
-        let _ = store::register_document_codec(store::ArtifactCodec::of::<EpwSnapshot, crate::artifacts::epw::standards::energyplus::subsets::any::schema::mutations::EpwMutation>(
+        store::register_document_codec(store::ArtifactCodec::of::<EpwSnapshot, crate::artifacts::epw::standards::energyplus::subsets::any::schema::mutations::EpwMutation>(
             crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::STDIO_EPW_DOCUMENT_SCHEMA,
-        ));
+        )).expect("static Stdio registration must be available and conflict-free");
     }
 
     /// 💡️ Registers `s.stdio.epw.inference`'s facet leaves into the OS-wide inference catalog —

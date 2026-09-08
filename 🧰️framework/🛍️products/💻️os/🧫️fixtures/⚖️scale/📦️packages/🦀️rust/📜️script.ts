@@ -4,8 +4,10 @@
  * (unit tests included); `check-wasm` is the real wasm32-wasip2 component-guest build this ticket's
  * whole claim rests on. */
 import { readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+
+import { buildCargoArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts";
 
 class CheckScript extends BundleScript {
   run(): void {
@@ -20,13 +22,16 @@ class CheckWasmScript extends BundleScript {
 }
 
 class BuildWasmScript extends BundleScript {
-  run(): void {
-    runCargo(["rustc", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-scale-fixture", "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", "--profile", "wasm-dev", "--features", "component-guest"], this.root);
-    const targetRoot = process.env.CARGO_TARGET_DIR ? resolve(this.root, process.env.CARGO_TARGET_DIR) : join(this.repoRoot, "target");
-    const artifact = join(targetRoot, "wasm32-wasip2", "wasm-dev", "semio_framework_os_scale_fixture.wasm");
-    const bytes = readFileSync(artifact);
-    if (bytes.length < 8 || !bytes.subarray(0, 8).equals(Buffer.from([0, 97, 115, 109, 13, 0, 1, 0]))) throw new Error("wasm-dev scale output is not the expected component artifact");
-    console.log(`scale-component-link: profile=wasm-dev bytes=${bytes.length} artifact=${artifact}`);
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("Scale component build has a fixed output contract");
+    await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["-p", "semio-framework-os-scale-fixture", "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", "--profile", "wasm-dev", "--features", "component-guest"], this.repoRoot, {
+      command: "rustc",
+      output: "dist/component",
+      validate(files) {
+        const artifact = files.get("semio_framework_os_scale_fixture.wasm");
+        if (!artifact || !readFileSync(artifact).subarray(0, 8).equals(Buffer.from([0, 97, 115, 109, 13, 0, 1, 0]))) throw new Error("Scale output must be a WASI component");
+      },
+    });
   }
 }
 

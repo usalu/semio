@@ -70,10 +70,10 @@ pub fn boolean_solid(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol
     let bb_a = solid_bounding_box(body, a)?;
     let bb_b = solid_bounding_box(body, b)?;
     if aabb_finite(&bb_a) && aabb_finite(&bb_b) {
-        if let Some(id) = trivial_topology_fast_path(body, a, b, &bb_a, &bb_b, op, tol, rec)? {
+        if let Some(id) = trivial_topology_fast_path(body, a, b, (&bb_a, &bb_b), op, tol, rec)? {
             return Ok(id);
         }
-        if let Some(id) = box_fast_path(body, a, b, &bb_a, &bb_b, op, tol, rec)? {
+        if let Some(id) = box_fast_path(body, a, b, (&bb_a, &bb_b), op, tol, rec)? {
             return Ok(id);
         }
     }
@@ -106,7 +106,7 @@ pub fn section_solid_by_plane(body: &mut Body, solid: SolidId, origin: Pnt3, nor
     require_tol(tol)?;
     require_solid(body, solid)?;
     let n = plane_normal(normal)?;
-    let points = solid_vertex_positions(body, solid)?;
+    let points = solid_vertex_positions(body, solid);
     let mut section_pts = Vec::new();
     for p in &points {
         if ((*p - origin).dot(n)).abs() <= tol * 10.0 {
@@ -166,7 +166,7 @@ pub fn split_solid_by_plane(body: &mut Body, solid: SolidId, origin: Pnt3, norma
     if mesh.index.len() % 3 != 0 {
         return Err(KernelError::InvalidInput("mesh index length must be a multiple of 3".into()));
     }
-    for tri in mesh.index.chunks_exact(3) {
+    for tri in mesh.index.as_chunks::<3>().0 {
         let i0 = tri[0] as usize;
         let i1 = tri[1] as usize;
         let i2 = tri[2] as usize;
@@ -189,7 +189,7 @@ pub fn split_solid_by_plane(body: &mut Body, solid: SolidId, origin: Pnt3, norma
     }
     if pos_tris.is_empty() || neg_tris.is_empty() {
         // Fall back to vertex-side hulls when tessellation did not straddle the plane.
-        let points = solid_vertex_positions(body, solid)?;
+        let points = solid_vertex_positions(body, solid);
         let mut pos = Vec::new();
         let mut neg = Vec::new();
         for p in points {
@@ -227,7 +227,7 @@ pub fn split_solid_by_plane(body: &mut Body, solid: SolidId, origin: Pnt3, norma
 /// containment alone is necessary but not sufficient — used only to decide whether the probe is
 /// worth running).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn trivial_topology_fast_path(body: &mut Body, a: SolidId, b: SolidId, bb_a: &AxisAlignedBox, bb_b: &AxisAlignedBox, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<Option<SolidId>, KernelError> {
+fn trivial_topology_fast_path(body: &mut Body, a: SolidId, b: SolidId, (bb_a, bb_b): (&AxisAlignedBox, &AxisAlignedBox), op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<Option<SolidId>, KernelError> {
     let gap = aabb_gap(bb_a, bb_b);
     if gap >= tol {
         return match op {
@@ -265,7 +265,7 @@ fn trivial_topology_fast_path(body: &mut Body, a: SolidId, b: SolidId, bb_a: &Ax
 /// `outer` — a real (if sampling-based) containment proof, not an AABB heuristic.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn solid_wholly_inside(body: &Body, inner: SolidId, outer: SolidId, tol: f64) -> Result<bool, KernelError> {
-    let points = solid_vertex_positions(body, inner)?;
+    let points = solid_vertex_positions(body, inner);
     if points.is_empty() {
         return Ok(false);
     }
@@ -286,7 +286,7 @@ fn solid_wholly_inside(body: &Body, inner: SolidId, outer: SolidId, tol: f64) ->
 /// just cheaper than running the general imprint engine on 12 coplanar face pairs. Cut is left to
 /// the general engine (an L-shaped result isn't a box).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn box_fast_path(body: &mut Body, a: SolidId, b: SolidId, bb_a: &AxisAlignedBox, bb_b: &AxisAlignedBox, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<Option<SolidId>, KernelError> {
+fn box_fast_path(body: &mut Body, a: SolidId, b: SolidId, (bb_a, bb_b): (&AxisAlignedBox, &AxisAlignedBox), op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<Option<SolidId>, KernelError> {
     if !matches!(op, BooleanOp::Unite | BooleanOp::Intersect) {
         return Ok(None);
     }
@@ -364,7 +364,7 @@ fn exact_imprint_boolean(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp,
     let coincident_b: HashSet<FaceId> = coincident.iter().map(|&(_, fb)| fb).collect();
     let coincident_a: HashSet<FaceId> = coincident.iter().map(|&(fa, _)| fa).collect();
     let faces_b: Vec<FaceId> = faces_b_all.iter().copied().filter(|f| !coincident_b.contains(f)).collect();
-    let faces_a: Vec<FaceId> = faces_a_all.clone();
+    let faces_a: Vec<FaceId> = faces_a_all;
 
     let mut pending_a: HashMap<FaceId, Vec<Pending>> = HashMap::new();
     let mut pending_b: HashMap<FaceId, Vec<Pending>> = HashMap::new();
@@ -584,7 +584,7 @@ fn pre_existing_entity_strings(body: &Body, solids: &HashSet<SolidId>) -> HashSe
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn clip_intcurve_to_faces(body: &Body, ic: &IntCurve, face_a: FaceId, face_b: FaceId, tol: f64) -> Vec<(f64, f64, bool, Vec<f64>)> {
     let (lo, hi) = intcurve_finite_bracket(body, ic, face_a, face_b);
-    if !(hi > lo) {
+    if hi.partial_cmp(&lo) != Some(std::cmp::Ordering::Greater) {
         return Vec::new();
     }
     let periodic = ic.curve3.is_periodic() && ic.curve3.period().is_some_and(|p| (hi - lo - p).abs() < 1e-6 * p.max(1.0));
@@ -594,7 +594,7 @@ fn clip_intcurve_to_faces(body: &Body, ic: &IntCurve, face_a: FaceId, face_b: Fa
         let ub = wrap_uv_for_surface(body, face_b, ic.pcurve_b.eval(t));
         point_in_face_uv_periodic(body, face_a, ua, tol) && point_in_face_uv_periodic(body, face_b, ub, tol)
     };
-    let mut inside = vec![false; N + 1];
+    let mut inside = [false; N + 1];
     for (i, slot) in inside.iter_mut().enumerate() {
         let t = lo + (hi - lo) * (i as f64 / N as f64);
         *slot = valid(t);
@@ -691,7 +691,7 @@ fn intcurve_finite_bracket(body: &Body, ic: &IntCurve, face_a: FaceId, face_b: F
 fn curve3_extent(curve: &crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3, domain: (f64, f64)) -> f64 {
     const K: usize = 16;
     let (lo, hi) = domain;
-    if !(hi > lo) {
+    if hi.partial_cmp(&lo) != Some(std::cmp::Ordering::Greater) {
         return 0.0;
     }
     let pts: Vec<Pnt3> = (0..=K).map(|i| curve.eval(lo + (hi - lo) * (i as f64 / K as f64))).collect();
@@ -1293,8 +1293,8 @@ pub fn boolean_solid_mesh_preview(body: &mut Body, a: SolidId, b: SolidId, op: B
     let mesh_b = tessellate_solid(body, b, deflection)?;
     let mut points = Vec::new();
     let mut triangles: Vec<[Pnt3; 3]> = Vec::new();
-    append_kept_triangles(body, &mesh_a, b, op, true, tol, &mut points, &mut triangles)?;
-    append_kept_triangles(body, &mesh_b, a, op, false, tol, &mut points, &mut triangles)?;
+    append_kept_triangles(body, &mesh_a, b, op, true, tol, (&mut points, &mut triangles))?;
+    append_kept_triangles(body, &mesh_b, a, op, false, tol, (&mut points, &mut triangles))?;
     if triangles.is_empty() {
         return Err(KernelError::Boolean(BooleanError::InvalidResult("mesh boolean produced no triangles".into())));
     }
@@ -1308,12 +1308,12 @@ pub fn boolean_solid_mesh_preview(body: &mut Body, a: SolidId, b: SolidId, op: B
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn append_kept_triangles(body: &Body, mesh: &MeshTransfer, other: SolidId, op: BooleanOp, from_a: bool, tol: f64, out_points: &mut Vec<Pnt3>, out_tris: &mut Vec<[Pnt3; 3]>) -> Result<(), KernelError> {
+fn append_kept_triangles(body: &Body, mesh: &MeshTransfer, other: SolidId, op: BooleanOp, from_a: bool, tol: f64, (out_points, out_tris): (&mut Vec<Pnt3>, &mut Vec<[Pnt3; 3]>)) -> Result<(), KernelError> {
     let npos = mesh.position.len() / 3;
-    if mesh.index.len() % 3 != 0 {
+    if !mesh.index.len().is_multiple_of(3) {
         return Err(KernelError::InvalidInput("mesh index length must be a multiple of 3".into()));
     }
-    for tri in mesh.index.chunks_exact(3) {
+    for tri in mesh.index.as_chunks::<3>().0 {
         let i0 = tri[0] as usize;
         let i1 = tri[1] as usize;
         let i2 = tri[2] as usize;
@@ -1381,7 +1381,7 @@ fn outer_faces(body: &Body, solid: SolidId) -> Result<Vec<FaceId>, KernelError> 
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn solid_vertex_positions(body: &Body, solid: SolidId) -> Result<Vec<Pnt3>, KernelError> {
+fn solid_vertex_positions(body: &Body, solid: SolidId) -> Vec<Pnt3> {
     let mut seen: HashSet<VertexId> = HashSet::new();
     let mut points = Vec::new();
     for face in body.solid_faces(solid) {
@@ -1417,7 +1417,7 @@ fn solid_vertex_positions(body: &Body, solid: SolidId) -> Result<Vec<Pnt3>, Kern
             }
         }
     }
-    Ok(points)
+    points
 }
 
 // #endregion 🔖️ShellHelpers

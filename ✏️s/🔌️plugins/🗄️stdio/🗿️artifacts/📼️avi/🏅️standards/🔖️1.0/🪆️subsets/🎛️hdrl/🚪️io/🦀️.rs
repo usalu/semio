@@ -47,9 +47,9 @@ pub mod derived_composition {
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::avi::standards::v1_0::subsets::any::schema::avi_artifact_schema_descriptor());
         register_artifact_inferences();
-        let _ = store::register_document_codec(store::ArtifactCodec::of::<AviSnapshot, crate::artifacts::avi::standards::v1_0::subsets::any::schema::mutations::AviMutation>(
+        store::register_document_codec(store::ArtifactCodec::of::<AviSnapshot, crate::artifacts::avi::standards::v1_0::subsets::any::schema::mutations::AviMutation>(
             crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA,
-        ));
+        )).expect("static Stdio registration must be available and conflict-free");
     }
 
     /// 💡️ Registers `s.stdio.avi.inference`'s facet leaves into the OS-wide inference

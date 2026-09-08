@@ -235,6 +235,7 @@ fn flow_operation_fields(operation: u16) -> &'static [(&'static str, FlowArgumen
 }
 
 trait FlowActionState {
+    #[cfg(test)]
     fn operation(&self) -> u16;
     fn advance(&mut self, domain: &mut FlowDomainAdapter, arguments: &FlowArguments, budget: AbiWorkBudget) -> FlowFeatureStep;
 }
@@ -1017,6 +1018,7 @@ struct FlowAction2504 {
 }
 
 impl FlowActionState for FlowAction2504 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_504
     }
@@ -1055,6 +1057,7 @@ struct FlowAction2505 {
 }
 
 impl FlowActionState for FlowAction2505 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_505
     }
@@ -1098,6 +1101,7 @@ struct FlowAction2506 {
 }
 
 impl FlowActionState for FlowAction2506 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_506
     }
@@ -1141,6 +1145,7 @@ struct FlowAction2507 {
 }
 
 impl FlowActionState for FlowAction2507 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_507
     }
@@ -1185,6 +1190,7 @@ struct FlowAction2508 {
 }
 
 impl FlowActionState for FlowAction2508 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_508
     }
@@ -1229,6 +1235,7 @@ struct FlowAction2509 {
 }
 
 impl FlowActionState for FlowAction2509 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_509
     }
@@ -1273,6 +1280,7 @@ struct FlowAction2510 {
 }
 
 impl FlowActionState for FlowAction2510 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_510
     }
@@ -1317,6 +1325,7 @@ struct FlowAction2511 {
 }
 
 impl FlowActionState for FlowAction2511 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_511
     }
@@ -1355,6 +1364,7 @@ struct FlowAction2512 {
 }
 
 impl FlowActionState for FlowAction2512 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_512
     }
@@ -1393,6 +1403,7 @@ struct FlowAction2513 {
 }
 
 impl FlowActionState for FlowAction2513 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_513
     }
@@ -1436,6 +1447,7 @@ struct FlowAction2514 {
 }
 
 impl FlowActionState for FlowAction2514 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_514
     }
@@ -1483,6 +1495,7 @@ struct FlowAction2515 {
 }
 
 impl FlowActionState for FlowAction2515 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_515
     }
@@ -1526,6 +1539,7 @@ struct FlowAction2516 {
 }
 
 impl FlowActionState for FlowAction2516 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_516
     }
@@ -1569,6 +1583,7 @@ struct FlowAction2517 {
 }
 
 impl FlowActionState for FlowAction2517 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_517
     }
@@ -1608,6 +1623,7 @@ struct FlowAction2518 {
 }
 
 impl FlowActionState for FlowAction2518 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_518
     }
@@ -1659,6 +1675,7 @@ struct FlowAction2519 {
 }
 
 impl FlowActionState for FlowAction2519 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_519
     }
@@ -1709,6 +1726,7 @@ struct FlowAction2520 {
 }
 
 impl FlowActionState for FlowAction2520 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_520
     }
@@ -1747,6 +1765,7 @@ struct FlowAction2521 {
 }
 
 impl FlowActionState for FlowAction2521 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_521
     }
@@ -1785,6 +1804,7 @@ struct FlowAction2522 {
 }
 
 impl FlowActionState for FlowAction2522 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_522
     }
@@ -1823,6 +1843,7 @@ struct FlowAction2523 {
 }
 
 impl FlowActionState for FlowAction2523 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_523
     }
@@ -1862,6 +1883,7 @@ struct FlowAction2524 {
 }
 
 impl FlowActionState for FlowAction2524 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_524
     }
@@ -1911,6 +1933,7 @@ struct FlowAction2525 {
 }
 
 impl FlowActionState for FlowAction2525 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_525
     }
@@ -1954,6 +1977,7 @@ struct FlowAction2526 {
 }
 
 impl FlowActionState for FlowAction2526 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_526
     }
@@ -1997,6 +2021,7 @@ struct FlowAction2527 {
 }
 
 impl FlowActionState for FlowAction2527 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_527
     }
@@ -2040,6 +2065,7 @@ struct FlowAction2528 {
 }
 
 impl FlowActionState for FlowAction2528 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_528
     }
@@ -2083,6 +2109,7 @@ struct FlowAction2529 {
 }
 
 impl FlowActionState for FlowAction2529 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_529
     }
@@ -2126,6 +2153,7 @@ struct FlowAction2530 {
 }
 
 impl FlowActionState for FlowAction2530 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_530
     }
@@ -2164,6 +2192,7 @@ struct FlowAction2531 {
 }
 
 impl FlowActionState for FlowAction2531 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_531
     }
@@ -2207,6 +2236,7 @@ struct FlowAction2532 {
 }
 
 impl FlowActionState for FlowAction2532 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_532
     }
@@ -2245,6 +2275,7 @@ struct FlowAction2533 {
 }
 
 impl FlowActionState for FlowAction2533 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_533
     }
@@ -2283,6 +2314,7 @@ struct FlowAction2534 {
 }
 
 impl FlowActionState for FlowAction2534 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_534
     }
@@ -2321,6 +2353,7 @@ struct FlowAction2535 {
 }
 
 impl FlowActionState for FlowAction2535 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_535
     }
@@ -2359,6 +2392,7 @@ struct FlowAction2536 {
 }
 
 impl FlowActionState for FlowAction2536 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_536
     }
@@ -2402,6 +2436,7 @@ struct FlowAction2537 {
 }
 
 impl FlowActionState for FlowAction2537 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_537
     }
@@ -2440,6 +2475,7 @@ struct FlowAction2538 {
 }
 
 impl FlowActionState for FlowAction2538 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_538
     }
@@ -2483,6 +2519,7 @@ struct FlowAction2539 {
 }
 
 impl FlowActionState for FlowAction2539 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_539
     }
@@ -2526,6 +2563,7 @@ struct FlowAction2540 {
 }
 
 impl FlowActionState for FlowAction2540 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_540
     }
@@ -2569,6 +2607,7 @@ struct FlowAction2541 {
 }
 
 impl FlowActionState for FlowAction2541 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_541
     }
@@ -2612,6 +2651,7 @@ struct FlowAction2542 {
 }
 
 impl FlowActionState for FlowAction2542 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_542
     }
@@ -2655,6 +2695,7 @@ struct FlowAction2543 {
 }
 
 impl FlowActionState for FlowAction2543 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_543
     }
@@ -2698,6 +2739,7 @@ struct FlowAction2544 {
 }
 
 impl FlowActionState for FlowAction2544 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_544
     }
@@ -2741,6 +2783,7 @@ struct FlowAction2545 {
 }
 
 impl FlowActionState for FlowAction2545 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_545
     }
@@ -2784,6 +2827,7 @@ struct FlowAction2546 {
 }
 
 impl FlowActionState for FlowAction2546 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_546
     }
@@ -2827,6 +2871,7 @@ struct FlowAction2547 {
 }
 
 impl FlowActionState for FlowAction2547 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_547
     }
@@ -2865,6 +2910,7 @@ struct FlowAction2548 {
 }
 
 impl FlowActionState for FlowAction2548 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_548
     }
@@ -2908,6 +2954,7 @@ struct FlowAction2549 {
 }
 
 impl FlowActionState for FlowAction2549 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_549
     }
@@ -2951,6 +2998,7 @@ struct FlowAction2550 {
 }
 
 impl FlowActionState for FlowAction2550 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_550
     }
@@ -2989,6 +3037,7 @@ struct FlowAction2551 {
 }
 
 impl FlowActionState for FlowAction2551 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_551
     }
@@ -3027,6 +3076,7 @@ struct FlowAction2552 {
 }
 
 impl FlowActionState for FlowAction2552 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_552
     }
@@ -3070,6 +3120,7 @@ struct FlowAction2553 {
 }
 
 impl FlowActionState for FlowAction2553 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_553
     }
@@ -3108,6 +3159,7 @@ struct FlowAction2554 {
 }
 
 impl FlowActionState for FlowAction2554 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_554
     }
@@ -3146,6 +3198,7 @@ struct FlowAction2555 {
 }
 
 impl FlowActionState for FlowAction2555 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_555
     }
@@ -3185,6 +3238,7 @@ struct FlowAction2556 {
 }
 
 impl FlowActionState for FlowAction2556 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_556
     }
@@ -3223,6 +3277,7 @@ struct FlowAction2557 {
 }
 
 impl FlowActionState for FlowAction2557 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_557
     }
@@ -3261,6 +3316,7 @@ struct FlowAction2558 {
 }
 
 impl FlowActionState for FlowAction2558 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_558
     }
@@ -3299,6 +3355,7 @@ struct FlowAction2559 {
 }
 
 impl FlowActionState for FlowAction2559 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_559
     }
@@ -3337,6 +3394,7 @@ struct FlowAction2560 {
 }
 
 impl FlowActionState for FlowAction2560 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_560
     }
@@ -3375,6 +3433,7 @@ struct FlowAction2561 {
 }
 
 impl FlowActionState for FlowAction2561 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_561
     }
@@ -3413,6 +3472,7 @@ struct FlowAction2562 {
 }
 
 impl FlowActionState for FlowAction2562 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_562
     }
@@ -3451,6 +3511,7 @@ struct FlowAction2563 {
 }
 
 impl FlowActionState for FlowAction2563 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_563
     }
@@ -3489,6 +3550,7 @@ struct FlowAction2564 {
 }
 
 impl FlowActionState for FlowAction2564 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_564
     }
@@ -3532,6 +3594,7 @@ struct FlowAction2565 {
 }
 
 impl FlowActionState for FlowAction2565 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_565
     }
@@ -3575,6 +3638,7 @@ struct FlowAction2566 {
 }
 
 impl FlowActionState for FlowAction2566 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_566
     }
@@ -3614,6 +3678,7 @@ struct FlowAction2567 {
 }
 
 impl FlowActionState for FlowAction2567 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_567
     }
@@ -3657,6 +3722,7 @@ struct FlowAction2568 {
 }
 
 impl FlowActionState for FlowAction2568 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_568
     }
@@ -3700,6 +3766,7 @@ struct FlowAction2569 {
 }
 
 impl FlowActionState for FlowAction2569 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_569
     }
@@ -3738,6 +3805,7 @@ struct FlowAction2570 {
 }
 
 impl FlowActionState for FlowAction2570 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_570
     }
@@ -3781,6 +3849,7 @@ struct FlowAction2571 {
 }
 
 impl FlowActionState for FlowAction2571 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_571
     }
@@ -3824,6 +3893,7 @@ struct FlowAction2572 {
 }
 
 impl FlowActionState for FlowAction2572 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_572
     }
@@ -3867,6 +3937,7 @@ struct FlowAction2573 {
 }
 
 impl FlowActionState for FlowAction2573 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_573
     }
@@ -3905,6 +3976,7 @@ struct FlowAction2574 {
 }
 
 impl FlowActionState for FlowAction2574 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_574
     }
@@ -3943,6 +4015,7 @@ struct FlowAction2575 {
 }
 
 impl FlowActionState for FlowAction2575 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_575
     }
@@ -3981,6 +4054,7 @@ struct FlowAction2576 {
 }
 
 impl FlowActionState for FlowAction2576 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_576
     }
@@ -4019,6 +4093,7 @@ struct FlowAction2577 {
 }
 
 impl FlowActionState for FlowAction2577 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_577
     }
@@ -4057,6 +4132,7 @@ struct FlowAction2578 {
 }
 
 impl FlowActionState for FlowAction2578 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_578
     }
@@ -4100,6 +4176,7 @@ struct FlowAction2579 {
 }
 
 impl FlowActionState for FlowAction2579 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_579
     }
@@ -4143,6 +4220,7 @@ struct FlowAction2580 {
 }
 
 impl FlowActionState for FlowAction2580 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_580
     }
@@ -4181,6 +4259,7 @@ struct FlowAction2581 {
 }
 
 impl FlowActionState for FlowAction2581 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_581
     }
@@ -4219,6 +4298,7 @@ struct FlowAction2582 {
 }
 
 impl FlowActionState for FlowAction2582 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_582
     }
@@ -4262,6 +4342,7 @@ struct FlowAction2583 {
 }
 
 impl FlowActionState for FlowAction2583 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_583
     }
@@ -4305,6 +4386,7 @@ struct FlowAction2584 {
 }
 
 impl FlowActionState for FlowAction2584 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_584
     }
@@ -4343,6 +4425,7 @@ struct FlowAction2585 {
 }
 
 impl FlowActionState for FlowAction2585 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_585
     }
@@ -4381,6 +4464,7 @@ struct FlowAction2586 {
 }
 
 impl FlowActionState for FlowAction2586 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_586
     }
@@ -4419,6 +4503,7 @@ struct FlowAction2587 {
 }
 
 impl FlowActionState for FlowAction2587 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_587
     }
@@ -4462,6 +4547,7 @@ struct FlowAction2588 {
 }
 
 impl FlowActionState for FlowAction2588 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_588
     }
@@ -4505,6 +4591,7 @@ struct FlowAction2589 {
 }
 
 impl FlowActionState for FlowAction2589 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_589
     }
@@ -4543,6 +4630,7 @@ struct FlowAction2590 {
 }
 
 impl FlowActionState for FlowAction2590 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_590
     }
@@ -4581,6 +4669,7 @@ struct FlowAction2591 {
 }
 
 impl FlowActionState for FlowAction2591 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_591
     }
@@ -4619,6 +4708,7 @@ struct FlowAction2592 {
 }
 
 impl FlowActionState for FlowAction2592 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_592
     }
@@ -4657,6 +4747,7 @@ struct FlowAction2593 {
 }
 
 impl FlowActionState for FlowAction2593 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_593
     }
@@ -4695,6 +4786,7 @@ struct FlowAction2594 {
 }
 
 impl FlowActionState for FlowAction2594 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_594
     }
@@ -4733,6 +4825,7 @@ struct FlowAction2595 {
 }
 
 impl FlowActionState for FlowAction2595 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_595
     }
@@ -4771,6 +4864,7 @@ struct FlowAction2596 {
 }
 
 impl FlowActionState for FlowAction2596 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_596
     }
@@ -4809,6 +4903,7 @@ struct FlowAction2597 {
 }
 
 impl FlowActionState for FlowAction2597 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_597
     }
@@ -4847,6 +4942,7 @@ struct FlowAction2598 {
 }
 
 impl FlowActionState for FlowAction2598 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_598
     }
@@ -4890,6 +4986,7 @@ struct FlowAction2599 {
 }
 
 impl FlowActionState for FlowAction2599 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_599
     }
@@ -4936,6 +5033,7 @@ struct FlowAction2600 {
 }
 
 impl FlowActionState for FlowAction2600 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_600
     }
@@ -4974,6 +5072,7 @@ struct FlowAction2601 {
 }
 
 impl FlowActionState for FlowAction2601 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_601
     }
@@ -5012,6 +5111,7 @@ struct FlowAction2602 {
 }
 
 impl FlowActionState for FlowAction2602 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_602
     }
@@ -5050,6 +5150,7 @@ struct FlowAction2605 {
 }
 
 impl FlowActionState for FlowAction2605 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_605
     }
@@ -5093,6 +5194,7 @@ struct FlowAction2606 {
 }
 
 impl FlowActionState for FlowAction2606 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_606
     }
@@ -5131,6 +5233,7 @@ struct FlowAction2607 {
 }
 
 impl FlowActionState for FlowAction2607 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_607
     }
@@ -5175,6 +5278,7 @@ struct FlowAction2609 {
 }
 
 impl FlowActionState for FlowAction2609 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_609
     }
@@ -5213,6 +5317,7 @@ struct FlowAction2610 {
 }
 
 impl FlowActionState for FlowAction2610 {
+    #[cfg(test)]
     fn operation(&self) -> u16 {
         2_610
     }
@@ -5863,9 +5968,14 @@ mod domain_laws {
         let mut domain = FlowDomainAdapter::default();
         let mut expected = crate::artifact::FlowFixture::default();
         expected.schema = "flow.fixture.synchronized".into();
-        let json = serde_json::to_string(&expected).unwrap();
+        let json = crate::os_pack::json::to_json_string(&expected);
         run(&mut domain, 2_610, text_payload(&json)).unwrap();
-        let actual: crate::artifact::FlowFixture = serde_json::from_slice(&run(&mut domain, 2_609, Vec::new()).unwrap()).unwrap();
+        let bytes = run(&mut domain, 2_609, Vec::new()).unwrap();
+        let value = crate::os_pack::json::parse(std::str::from_utf8(&bytes).unwrap()).unwrap();
+        let actual = <crate::artifact::FlowFixture as crate::os_dsl::FromValue>::from_value(
+            crate::os_pack::json::to_dsl_value(&value),
+        )
+        .unwrap();
         assert_eq!(actual, expected);
     }
 

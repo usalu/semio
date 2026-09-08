@@ -4,8 +4,8 @@ use super::*;
 use store::os_pack::{ScalarRecordWireStep, ScalarRecordWireWitness};
 
 //#region 🔣️Fixture
-fn text(field: &serde_json::Value) -> String { field["unit"].as_str().unwrap().repeat(field["repeat"].as_u64().unwrap() as usize) + field["suffix"].as_str().unwrap() }
-fn command(row: &serde_json::Value) -> FlowCommand {
+fn text(field: &Value) -> String { field["unit"].as_str().unwrap().repeat(field["repeat"].as_u64().unwrap() as usize) + field["suffix"].as_str().unwrap() }
+fn command(row: &Value) -> FlowCommand {
     let fields = &row["fields"];
     match row["id"].as_str().unwrap() {
         "evaluate" => FlowCommand::Evaluate(evaluate::Evaluate {}),
@@ -39,7 +39,7 @@ fn close(mut cursor: ScalarRecordWireWitness<FlowCommand>, root: &Arc<FlowComman
 //#region 🧪️Laws
 #[test]
 fn host_wire_witness_matches_real_opbinary_for_all_six_routes() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️fixtures/📡️host-wire/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../🧪️fixtures/📡️host-wire/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let root = Arc::new(command(row)); let bytes = protocol::OpBinary::encode_op(root.as_ref()).unwrap();
         assert_eq!(bytes.len(), row["wireBytes"].as_u64().unwrap() as usize); assert_eq!(bytes[0], 1); assert_eq!(bytes[1] as u64, row["ordinal"].as_u64().unwrap());

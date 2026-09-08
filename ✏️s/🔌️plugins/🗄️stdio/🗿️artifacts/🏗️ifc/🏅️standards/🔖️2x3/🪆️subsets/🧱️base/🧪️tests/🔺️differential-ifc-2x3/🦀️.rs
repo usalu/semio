@@ -202,7 +202,7 @@ mod subject {
             // 🧭️ "no-mutation" is no longer a declared `Ifc2x3Mutation` kind (`NoMutation` was
             // dropped, `dsl::Mutations` rejects a wrapper-less variant); a `SetSnapshot` back onto
             // the identical base is a real no-op mutation, not a fabricated sentinel.
-            "no-mutation" => Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+            "no-mutation" => Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(base.clone()) }),
             "set-snapshot" => {
                 let schemas = str_array(params, "fileSchema");
                 if schemas.is_empty() {
@@ -210,7 +210,7 @@ mod subject {
                 }
                 let mut snapshot = base.clone();
                 snapshot.document.header.file_schema = vec![Part21Value::List(schemas.into_iter().map(Part21Value::Str).collect())];
-                Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })
+                Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(snapshot) })
             }
             "set-header" => {
                 let field = params.get("header").ok_or("set-header requires a header field")?;

@@ -1,5 +1,16 @@
 #[cfg(target_arch = "wasm32")]
 extern crate semio_framework_async as wasm_bindgen_futures;
+#[cfg(test)]
+use ui_wgpu::wgpu::Mesh3dItem;
+
+#[cfg(test)]
+fn collect_fixture_actions(input: &mut InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+    let mut actions = Vec::new();
+    while let Some(action) = input.take_action_step().expect("fixture action authority remains live") {
+        actions.push(action.into_descriptor().expect("bounded fixture action materializes"));
+    }
+    actions
+}
 
 // 🧊️ Raw wgpu WASM renderer for declarative framework UiNode trees.
 //
@@ -17,6 +28,7 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as dsl_core;
 #[cfg(not(target_arch = "wasm32"))]
 extern crate semio_framework_os_kernel as protocol;
+#[cfg(any(test, not(target_arch = "wasm32")))]
 extern crate semio_framework_os_kernel as store;
 #[cfg(not(target_arch = "wasm32"))]
 extern crate semio_framework_os_kernel as store_sync;
@@ -101,10 +113,12 @@ pub mod parallel_runtime;
 
 use infinite_world::world::{
     begin_world3d_dynamic_retirement, enqueue_world3d_event, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_response, retire_cancelled_world3d_asset_step, return_world3d_asset, seal_world3d_asset_response,
-    step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction, step_world3d_snapshot, take_next_completed_world3d_asset_step, take_next_world3d_asset, world3d_asset_cancellation_requested,
+    step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction, step_world3d_snapshot, take_next_completed_world3d_asset_step, take_next_world3d_asset,
     world3d_dynamic_retirement_terminal_is_empty, world3d_interaction_front_generation, World3dSnapshotApplyStep, WorldAssetFault, WorldAssetFetchOwner, WorldAssetIoAuthority, WorldAssetMetadataId, WorldAssetRequestKind, WorldAssetRequestToken,
-    WorldAssetResponsePage, WorldDrawRebuildStep, WorldDynamicFault, WorldInteractionAuthorityStep, WorldInteractionIntent, WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_ASSET_RESPONSE_PAGE_CAPACITY,
+    WorldAssetResponsePage, WorldDrawRebuildStep, WorldDynamicFault, WorldInteractionAuthorityStep, WorldInteractionIntent, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_ASSET_RESPONSE_PAGE_CAPACITY,
 };
+#[cfg(not(target_arch = "wasm32"))]
+use infinite_world::world::{world3d_asset_cancellation_requested, WORLD_ASSET_RESPONSE_BYTE_CAPACITY};
 use program_bridge::filter_plugins;
 #[cfg(not(target_arch = "wasm32"))]
 use program_bridge::load_wasm_plugins;
@@ -115,8 +129,6 @@ use std::cell::RefCell;
 use std::future::Future;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
-#[cfg(target_arch = "wasm32")]
-use ui_wgpu::wgpu::apply_canvas_cursor;
 use ui_wgpu::wgpu::ActionDescriptor;
 // 🏚️ `dispatch_window_event`/`WindowInputState`/`schedule_frame` no longer imported here — they were
 // `SemioApp`/`start_frame_loop`-only (both deleted, packet os-host); `winit_app.rs` normalizes input
@@ -134,6 +146,7 @@ use wasm_bindgen::prelude::*;
 // `WindowId` no longer imported here — all `SemioApp`-only (deleted, packet os-host); `winit_app.rs`
 // imports each of these itself. `EventLoop`/`Window` stay: `run_native`/`semio_wgpu_mount` still
 // construct the event loop and `AppRuntime` still names `Window` throughout.
+#[cfg(not(target_arch = "wasm32"))]
 use winit::event_loop::EventLoop;
 #[cfg(not(target_arch = "wasm32"))]
 use winit::window::Fullscreen;
@@ -226,22 +239,12 @@ impl RendererAssetFetchOwner {
         self.owner_mut().close_step()
     }
 
-    fn token(&self) -> WorldAssetRequestToken {
-        match self {
-            Self::World { owner, .. } | Self::Shared(owner) => owner.token(),
-        }
-    }
-
     fn generation(&self) -> u64 {
         self.owner().generation()
     }
 
     fn revision(&self) -> u64 {
         self.owner().revision()
-    }
-
-    fn take_decode_page(&mut self) -> Result<Option<WorldAssetResponsePage>, WorldAssetFault> {
-        self.owner_mut().take_decode_page()
     }
 
     fn decode_page(&self) -> Result<Option<&WorldAssetResponsePage>, WorldAssetFault> {
@@ -5105,9 +5108,7 @@ pub(crate) mod kernel_runtime {
     }
 
     impl ExchangeOutcome {
-        pub(crate) fn take_typed_operation_result(&self, receiver: u32) -> Option<TypedOperationResultPage> {
-            typed_operation_result_exchange().get()?.take_page(receiver)
-        }
+
 
         pub(crate) fn acknowledge_typed_operation_result(&self, token: TypedOperationResultToken) -> bool {
             typed_operation_result_exchange().get().is_some_and(|exchange| exchange.acknowledge(token))
@@ -5240,9 +5241,7 @@ pub(crate) mod kernel_runtime {
             self.queue.try_push(KernelRequest::AcknowledgeJobProgress { token }, Arc::new(ResponseSlot::default()), None).is_ok()
         }
 
-        pub(crate) fn take_typed_operation_result_page(&self, receiver: u32) -> Option<TypedOperationResultPage> {
-            typed_operation_result_exchange().get()?.take_page(receiver)
-        }
+
 
         pub(crate) fn acknowledge_typed_operation_result(&self, token: TypedOperationResultToken) -> bool {
             typed_operation_result_exchange().get().is_some_and(|exchange| exchange.acknowledge(token))
@@ -6245,6 +6244,7 @@ pub(crate) mod kernel_runtime {
             self.slots.iter().flatten().any(|state| matches!(state, CommandDocumentRetirementState::Closing { .. }))
         }
 
+        #[cfg(test)]
         fn batch_is_empty(&self, batch: u64, generation: u64) -> bool {
             !self.slots.iter().flatten().any(|state| match state {
                 CommandDocumentRetirementState::Reserved { batch: owner_batch, generation: owner_generation, .. }
@@ -6662,7 +6662,7 @@ pub(crate) mod kernel_runtime {
                 semio_framework_job::default_now_us,
                 &mut preview_sequence,
             );
-            match entry.log.begin_capture(&mut context, actor, worker_count, worker_slot, TURN_BUDGET.fuel, TURN_BUDGET.deadline_ms, publication) {
+            match entry.log.begin_capture(&mut context, actor, semio_framework_actor::JobReplaySchedule { worker_count, worker_slot, granted_fuel: TURN_BUDGET.fuel, deadline_class_ms: TURN_BUDGET.deadline_ms }, publication) {
                 Ok(()) => entry.terminal_seen |= terminal,
                 Err(rejected) => {
                     let fault = match rejected.fault {
@@ -7914,6 +7914,7 @@ pub(crate) mod kernel_runtime {
             .await;
         }
 
+        #[cfg(test)]
         fn begin_shutdown(&self) -> bool {
             let Ok(mut state) = self.state.try_lock() else {
                 return false;
@@ -7922,6 +7923,7 @@ pub(crate) mod kernel_runtime {
             true
         }
 
+        #[cfg(test)]
         fn shutdown_step(&self, maximum_bytes: usize) -> (bool, usize, usize) {
             let Ok(mut state) = self.state.try_lock() else {
                 return (false, 0, 0);
@@ -8225,7 +8227,7 @@ pub(crate) mod kernel_runtime {
                         patch: Some(retained_patch(surface, 0, index as u64 + 1)),
                         receipt: None,
                     })
-                    .expect("maximum pending rejection");
+                    .unwrap_or_else(|_| panic!("maximum pending rejection"));
             }
             let surface = SurfaceId::try_from("rejection-overflow").expect("bounded surface");
             let rejected = rejections
@@ -9067,7 +9069,7 @@ pub(crate) mod kernel_runtime {
         fn fixed_kernel_request_queue_returns_capacity_plus_one_owner_and_preserves_fifo() {
             let queue = KernelRequestQueue::default();
             for instance in 0..KERNEL_REQUEST_QUEUE_CAPACITY as u32 {
-                queue.try_push(destroy_request(instance), Arc::new(ResponseSlot::default()), None).unwrap();
+                queue.try_push(destroy_request(instance), Arc::new(ResponseSlot::default()), None).unwrap_or_else(|_| panic!("fixture request queue admission"));
             }
             let (rejected, _) = queue.try_push(destroy_request(999), Arc::new(ResponseSlot::default()), None).unwrap_err();
             assert!(matches!(rejected, KernelRequest::DestroyApp { ref owner } if owner.instance == 999));
@@ -9082,7 +9084,7 @@ pub(crate) mod kernel_runtime {
         #[test]
         fn fixed_kernel_request_queue_rejects_aggregate_page_credit_plus_one_exactly() {
             let queue = KernelRequestQueue::default();
-            queue.try_push(command_request(1, 7, semio_framework::kernel::COMMAND_MAXIMUM_PAGES), Arc::new(ResponseSlot::default()), None).unwrap();
+            queue.try_push(command_request(1, 7, semio_framework::kernel::COMMAND_MAXIMUM_PAGES), Arc::new(ResponseSlot::default()), None).unwrap_or_else(|_| panic!("fixture request queue admission"));
             let (rejected, _) = queue.try_push(command_request(2, 8, 1), Arc::new(ResponseSlot::default()), None).unwrap_err();
             assert!(matches!(rejected, KernelRequest::ExchangeCommands { instance: 2, ref driver } if driver.remaining_pages() == 1));
         }
@@ -9134,7 +9136,7 @@ pub(crate) mod kernel_runtime {
                 KernelRequest::DestroyApp { owner } => owner,
                 _ => unreachable!(),
             };
-            queue.try_push(KernelRequest::DestroyApp { owner: owner.clone() }, Arc::new(ResponseSlot::default()), None).unwrap();
+            queue.try_push(KernelRequest::DestroyApp { owner: owner.clone() }, Arc::new(ResponseSlot::default()), None).unwrap_or_else(|_| panic!("fixture request queue admission"));
             assert!(queue.begin_shutdown());
             assert_eq!(queue.shutdown_step(0), (true, 1, 0));
             assert_eq!(owner.terminal_status(), Some(KernelCloseStatus::Fault));
@@ -9143,7 +9145,7 @@ pub(crate) mod kernel_runtime {
         #[test]
         fn fixed_kernel_request_queue_shutdown_releases_one_real_page_per_grant() {
             let queue = KernelRequestQueue::default();
-            queue.try_push(command_request(3, 12, 2), Arc::new(ResponseSlot::default()), None).unwrap();
+            queue.try_push(command_request(3, 12, 2), Arc::new(ResponseSlot::default()), None).unwrap_or_else(|_| panic!("fixture request queue admission"));
             assert!(queue.begin_shutdown());
             assert_eq!(queue.shutdown_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES - 1), (false, 0, 0));
             assert_eq!(queue.shutdown_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES), (false, 1, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES));
@@ -9153,7 +9155,7 @@ pub(crate) mod kernel_runtime {
         #[test]
         fn fixed_kernel_request_queue_shutdown_releases_create_fields_one_owner_per_grant() {
             let queue = KernelRequestQueue::default();
-            queue.try_push(KernelRequest::CreateApp { owner: CreateAppRequestOwner::new(PathBuf::from("path"), "plugin".to_string(), "app".to_string()) }, Arc::new(ResponseSlot::default()), None).unwrap();
+            queue.try_push(KernelRequest::CreateApp { owner: CreateAppRequestOwner::new(PathBuf::from("path"), "plugin".to_string(), "app".to_string()) }, Arc::new(ResponseSlot::default()), None).unwrap_or_else(|_| panic!("fixture request queue admission"));
             assert!(queue.begin_shutdown());
             assert_eq!(queue.shutdown_step(3), (false, 0, 0));
             assert_eq!(queue.shutdown_step(4), (false, 1, 4));
@@ -9164,8 +9166,8 @@ pub(crate) mod kernel_runtime {
         #[test]
         fn fixed_kernel_request_queue_shutdown_releases_surface_and_rejected_events_in_fifo_units() {
             let queue = KernelRequestQueue::default();
-            queue.try_push(KernelRequest::Exchange { instance: 1, event: QueuedKernelEvent { surface_visible: Some("surface".to_string()) } }, Arc::new(ResponseSlot::default()), None).unwrap();
-            queue.try_push(KernelRequest::CloseRejectedEvents { owner: RejectedKernelEvents { events: std::collections::VecDeque::from([Event::Wake, Event::Wake]) } }, Arc::new(ResponseSlot::default()), None).unwrap();
+            queue.try_push(KernelRequest::Exchange { instance: 1, event: QueuedKernelEvent { surface_visible: Some("surface".to_string()) } }, Arc::new(ResponseSlot::default()), None).unwrap_or_else(|_| panic!("fixture request queue admission"));
+            queue.try_push(KernelRequest::CloseRejectedEvents { owner: RejectedKernelEvents { events: std::collections::VecDeque::from([Event::Wake, Event::Wake]) } }, Arc::new(ResponseSlot::default()), None).unwrap_or_else(|_| panic!("fixture request queue admission"));
             assert!(queue.begin_shutdown());
             assert_eq!(queue.shutdown_step(6), (false, 0, 0));
             assert_eq!(queue.shutdown_step(7), (false, 1, 7));
@@ -10558,15 +10560,15 @@ mod async_boundary_tests {
         let mut normals = Vec::new();
         let mut indices = Vec::new();
         let mut position_cursor = lease.cursor(Mesh3dField::Positions).unwrap();
-        while let Some(Mesh3dItem::Vec3(value)) = position_cursor.next().unwrap() {
+        while let Some(Mesh3dItem::Vec3(value)) = position_cursor.read_next().unwrap() {
             positions.extend_from_slice(&value);
         }
         let mut normal_cursor = lease.cursor(Mesh3dField::Normals).unwrap();
-        while let Some(Mesh3dItem::Vec3(value)) = normal_cursor.next().unwrap() {
+        while let Some(Mesh3dItem::Vec3(value)) = normal_cursor.read_next().unwrap() {
             normals.extend_from_slice(&value);
         }
         let mut index_cursor = lease.cursor(Mesh3dField::Indices).unwrap();
-        while let Some(Mesh3dItem::U32(value)) = index_cursor.next().unwrap() {
+        while let Some(Mesh3dItem::U32(value)) = index_cursor.read_next().unwrap() {
             indices.push(value);
         }
         let legacy = semio_framework::mesh_from_glb(&valid).expect("legacy glTF oracle");
@@ -11311,14 +11313,6 @@ impl FrameMaintenanceOwner {
 
     fn generation(&self) -> Option<u64> {
         self.cursor.as_ref().map(|cursor| cursor.generation)
-    }
-
-    fn cancel(&self) -> Option<&semio_framework_async::CancelToken> {
-        self.cursor.as_ref().map(|cursor| &cursor.cancel)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.interaction.is_none() && self.cursor.is_none()
     }
 
     fn take_pair(&mut self) -> Option<(AppInteractionState, FrameDeferredCursor)> {
@@ -12436,14 +12430,17 @@ impl RuntimeMailbox {
         self.0.completions.lock().expect("runtime completion mailbox lock").len() < RUNTIME_COMPLETION_CAPACITY - 1
     }
 
+    #[cfg(target_arch = "wasm32")]
     fn has_pending_text_work(&self) -> bool {
         self.try_lock().ok().and_then(|runtime| runtime.interaction.as_ref().map(AppInteractionState::has_pending_text_work)).unwrap_or(false)
     }
 
+    #[cfg(target_arch = "wasm32")]
     fn take_text_fault(&self) -> Option<String> {
         self.try_lock().ok()?.interaction.as_mut()?.text_fault.take()
     }
 
+    #[cfg(target_arch = "wasm32")]
     fn take_frame_fault(&self) -> Option<String> {
         if let Some(fault) = self.0.frame_fault.lock().expect("runtime frame fault lock").take() {
             return Some(fault);
@@ -14915,23 +14912,6 @@ const _: fn() = || {
 };
 
 #[cfg(not(target_arch = "wasm32"))]
-fn resolve_asset_fetch_url(url: &str) -> String {
-    if url.starts_with("http://") || url.starts_with("https://") {
-        return url.to_string();
-    }
-    if url.starts_with('/') {
-        let base = std::env::var("SEMIO_ASSET_BASE_URL").unwrap_or_else(|_| "http://127.0.0.1:6141".to_string());
-        return format!("{}{}", base.trim_end_matches('/'), url);
-    }
-    url.to_string()
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn resolve_map_tile_fetch_url(url: &str) -> String {
-    resolve_asset_fetch_url(url)
-}
-
-#[cfg(not(target_arch = "wasm32"))]
 fn native_renderer_asset_path(url: &str) -> Result<std::path::PathBuf, String> {
     if url.starts_with("/mesh/") {
         let source = &mesh_assets::resolve_mesh_asset(url)?.source;
@@ -15548,6 +15528,7 @@ impl AppInteractionState {
         true
     }
 
+    #[cfg(target_arch = "wasm32")]
     fn has_pending_text_work(&self) -> bool {
         self.input.text_buffer.reserved_bytes() != 0 || self.text_streams.iter().any(Option::is_some) || self.text_cancel_pending
     }
@@ -16152,7 +16133,7 @@ pub async fn run_socket_grant_probe() -> i32 {
 
     const PROBE_SCHEMA: &str = "native.socket-grant.probe/v1";
     let Some(credential) = claimed_local_hub_credential("native") else { return 1 };
-    let _ = dsl::os_store::register_document_codec(dsl::os_store::ArtifactCodec::of::<NativeSocketProbeSnapshot, NativeSocketProbeMutation>(PROBE_SCHEMA)).await;
+    let _ = dsl::os_store::register_document_codec(dsl::os_store::ArtifactCodec::of::<NativeSocketProbeSnapshot, NativeSocketProbeMutation>(PROBE_SCHEMA));
     let pool = renderer_worker_pool();
     let runtime = Arc::new(TokioHostRuntime::with_pool(pool.clone()));
     let scope = runtime.open_scope_now(ScopeOwner::Service("native_socket_grant_probe"), None);

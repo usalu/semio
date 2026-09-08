@@ -25,13 +25,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> BinarySnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> BinarySnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> BinaryMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// ▶️ `set-snapshot` carries the committed `before` BinarySnapshot to exactly the committed `after`.
@@ -68,12 +68,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: BinarySnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: BinarySnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "set-snapshot/rewrites-the-two-middle-bytes: committed {side} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "set-snapshot/rewrites-the-two-middle-bytes: committed mutation JSON is not canonical");
 }
@@ -91,7 +91,7 @@ async fn declared_outcome_holds() {
         .messages()
         .iter()
         .map(|message| {
-            let level = serde_json::to_value(message.level).expect("severity encodes");
+            let level = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&message.level)).expect("severity encodes");
             (level.as_str().unwrap_or_default().to_string(), message.code.0.clone())
         })
         .collect();
@@ -112,7 +112,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let raised = <BinaryMutation as protocol::Mutation<BinarySnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(raised.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(raised.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-snapshot/rewrites-the-two-middle-bytes: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(raised.diff().splices.len(), 1, "set-snapshot/rewrites-the-two-middle-bytes: BinaryDiff::between emits exactly one splice for one contiguous differing region");
@@ -123,8 +123,8 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to BinaryDiff.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: BinaryDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let decoded: BinaryDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-snapshot/rewrites-the-two-middle-bytes: committed diff JSON is not canonical");
     assert_eq!(decoded.splices[0].insert, vec![255u8, 254], "set-snapshot/rewrites-the-two-middle-bytes: insert bytes decode from a JSON number array — a base64 string here would mean the committed diff was written against the wrong codec");
@@ -134,7 +134,7 @@ async fn committed_diff_is_canonical() {
 /// a complete description of what this `set-snapshot` changed, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: BinaryDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: BinaryDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <BinaryDiff as protocol::MutationDiff<BinarySnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-snapshot/rewrites-the-two-middle-bytes: committed diff did not carry before to after");
 }

@@ -8,11 +8,17 @@ use semio_framework_hash::Sha256;
 #[path = "🧱️chunk-cas/🦀️.rs"]
 pub mod chunk_cas;
 
+#[path = "🌱️creation/🦀️.rs"]
+pub mod creation;
+
 #[path = "🔒️file-fence/🦀️.rs"]
 mod file_fence;
 
 /// 🔐️ Domain prefix for a canonical checkpoint identity.
 pub const CHECKPOINT_ID_V1_DOMAIN: &[u8] = b"semio.hub.artifact-checkpoint.v1\0";
+
+/// 🌱️ A zero-history root has an identity domain distinct from edited checkpoints.
+pub const GENESIS_CHECKPOINT_ID_V1_DOMAIN: &[u8] = b"semio.hub.artifact-genesis.v1\0";
 
 /// 🧯️ Immutable production ceiling for one checkpoint's accepted operation count.
 pub const AUTHORITY_MAX_OPERATIONS: usize = 16_384;
@@ -246,6 +252,12 @@ pub trait TrustedArtifactCodec: Send + Sync {
     async fn apply_operation(&self, pair: ArtifactPair, operation: &AcceptedArtifactOperation, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError>;
 }
 
+/// 🌱️ Creation is executable package authority, separate from ordinary codec registration.
+pub trait TrustedArtifactGenesisCodec: TrustedArtifactCodec {
+    /// 🪺️ Creates the selected artifact's own initial snapshot with no accepted edit.
+    async fn initial_pair(&self, document_id: &str, dialect: &::directory::os_io::ArtifactDialect, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError>;
+}
+
 /// 🗂️ Trusted package-hash catalog port implemented by the production plugin-host adapter.
 pub trait TrustedArtifactCatalog: Send + Sync {
     type Codec: TrustedArtifactCodec;
@@ -407,7 +419,12 @@ fn append_field(output: &mut Vec<u8>, bytes: &[u8]) -> Result<(), AuthorityError
 /// and publication time are excluded because neither changes canonical artifact content or lineage.
 pub fn checkpoint_id_encoding_v1(checkpoint: &ArtifactCheckpoint) -> Result<Vec<u8>, AuthorityError> {
     let mut output = Vec::with_capacity(CHECKPOINT_ID_V1_DOMAIN.len() + 384);
-    output.extend_from_slice(CHECKPOINT_ID_V1_DOMAIN);
+    if checkpoint.baseline_frontier.is_genesis_for(&checkpoint.scope) {
+        if checkpoint.parent_checkpoint_id.is_some() { return Err(AuthorityError::InvalidParentCheckpoint); }
+        output.extend_from_slice(GENESIS_CHECKPOINT_ID_V1_DOMAIN);
+    } else {
+        output.extend_from_slice(CHECKPOINT_ID_V1_DOMAIN);
+    }
     append_field(&mut output, checkpoint.scope.space_id.as_bytes())?;
     append_field(&mut output, checkpoint.scope.document_id.as_bytes())?;
     append_field(&mut output, checkpoint.parent_checkpoint_id.as_ref().map_or(&[][..], |hash| &hash.0))?;
@@ -951,7 +968,7 @@ mod tests {
     #[tokio::test]
     async fn plugin_host_catalog_resolves_only_the_exact_live_package_manifest_kind_schema_and_codec_hash() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔌️authority-adapter/🔣️.json")).expect("adapter fixture");
-        register_document_codec(fixture_artifact_codec()).await.expect("register fixture codec");
+        register_document_codec(fixture_artifact_codec()).expect("register fixture codec");
         let graph = PluginGraph::new();
         graph.register(fixture_manifest()).await.expect("register fixture manifest");
         let package = PackageRef { package: PackageId("fixture.authority.package".to_string()), hash: PackageHash([0x22; 32]) };

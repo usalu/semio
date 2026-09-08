@@ -1,0 +1,133 @@
+{
+  "schema": "semio.pack.value-record-materialization.v1",
+  "wire": "SPK/1.0-record-body",
+  "bridge": {"fieldId": 1, "rootTag": "11", "exact": true},
+  "cases": [
+    {
+      "id": "canonical-null",
+      "rawHex": "0001011112",
+      "limits": {"maxFileLen": 5, "maxSegmentLen": 0, "maxSymbols": 0, "maxDepth": 0, "maxItems": 0, "maxTotalAlloc": 0},
+      "expect": {"outcome": "accepted", "value": null}
+    },
+    {
+      "id": "interned-repeat-at-limit",
+      "rawHex": "012030313233343536373839616263646566303132333435363738396162636465660101110c03060006000600",
+      "limits": {"maxFileLen": 128, "maxSegmentLen": 32, "maxSymbols": 1, "maxDepth": 1, "maxItems": 3, "maxTotalAlloc": 352},
+      "expect": {"outcome": "accepted", "value": ["0123456789abcdef0123456789abcdef", "0123456789abcdef0123456789abcdef", "0123456789abcdef0123456789abcdef"]}
+    },
+    {
+      "id": "interned-repeat-over-limit",
+      "rawHex": "012030313233343536373839616263646566303132333435363738396162636465660101110c03060006000600",
+      "limits": {"maxFileLen": 128, "maxSegmentLen": 32, "maxSymbols": 1, "maxDepth": 1, "maxItems": 3, "maxTotalAlloc": 351},
+      "expect": {"outcome": "limit"}
+    },
+    {
+      "id": "inline-string-at-limit",
+      "rawHex": "00010111070474657874",
+      "limits": {"maxFileLen": 10, "maxSegmentLen": 4, "maxSymbols": 0, "maxDepth": 0, "maxItems": 0, "maxTotalAlloc": 4},
+      "expect": {"outcome": "accepted", "value": "text"}
+    },
+    {
+      "id": "inline-string-over-limit",
+      "rawHex": "00010111070474657874",
+      "limits": {"maxFileLen": 10, "maxSegmentLen": 4, "maxSymbols": 0, "maxDepth": 0, "maxItems": 0, "maxTotalAlloc": 3},
+      "expect": {"outcome": "limit"}
+    },
+    {
+      "id": "array-slots-at-limit",
+      "rawHex": "000101110c021202",
+      "limits": {"maxFileLen": 9, "maxSegmentLen": 0, "maxSymbols": 0, "maxDepth": 1, "maxItems": 2, "maxTotalAlloc": 128},
+      "expect": {"outcome": "accepted", "value": [null, true]}
+    },
+    {
+      "id": "array-slots-over-limit",
+      "rawHex": "000101110c021202",
+      "limits": {"maxFileLen": 9, "maxSegmentLen": 0, "maxSymbols": 0, "maxDepth": 1, "maxItems": 2, "maxTotalAlloc": 127},
+      "expect": {"outcome": "limit"}
+    },
+    {
+      "id": "map-slots-at-limit",
+      "rawHex": "000101111002070161120702626202",
+      "limits": {"maxFileLen": 15, "maxSegmentLen": 2, "maxSymbols": 0, "maxDepth": 1, "maxItems": 2, "maxTotalAlloc": 131},
+      "expect": {"outcome": "accepted", "value": {"a": null, "bb": true}}
+    },
+    {
+      "id": "map-slots-over-limit",
+      "rawHex": "000101111002070161120702626202",
+      "limits": {"maxFileLen": 15, "maxSegmentLen": 2, "maxSymbols": 0, "maxDepth": 1, "maxItems": 2, "maxTotalAlloc": 130},
+      "expect": {"outcome": "limit"}
+    },
+    {
+      "id": "nested-array-map-at-depth",
+      "rawHex": "000101110c01100107016b0c0112",
+      "limits": {"maxFileLen": 14, "maxSegmentLen": 1, "maxSymbols": 0, "maxDepth": 3, "maxItems": 1, "maxTotalAlloc": 193},
+      "expect": {"outcome": "accepted", "value": [{"k": [null]}]}
+    },
+    {
+      "id": "nested-array-map-over-depth",
+      "rawHex": "000101110c01100107016b0c0112",
+      "limits": {"maxFileLen": 14, "maxSegmentLen": 1, "maxSymbols": 0, "maxDepth": 2, "maxItems": 1, "maxTotalAlloc": 193},
+      "expect": {"outcome": "limit"}
+    },
+    {
+      "id": "list-count-over-items",
+      "rawHex": "000101110cffffffffffffffffff01",
+      "limits": {"maxFileLen": 15, "maxSegmentLen": 0, "maxSymbols": 0, "maxDepth": 0, "maxItems": 4, "maxTotalAlloc": 256},
+      "expect": {"outcome": "limit"}
+    },
+    {
+      "id": "map-count-over-items",
+      "rawHex": "0001011110ffffffffffffffffff01",
+      "limits": {"maxFileLen": 15, "maxSegmentLen": 0, "maxSymbols": 0, "maxDepth": 0, "maxItems": 4, "maxTotalAlloc": 256},
+      "expect": {"outcome": "limit"}
+    },
+    {
+      "id": "field-count-zero",
+      "rawHex": "0000",
+      "limits": {"maxFileLen": 2, "maxSegmentLen": 0, "maxSymbols": 0, "maxDepth": 0, "maxItems": 0, "maxTotalAlloc": 0},
+      "expect": {"outcome": "malformed"}
+    },
+    {
+      "id": "field-count-two",
+      "rawHex": "0002011112021112",
+      "limits": {"maxFileLen": 8, "maxSegmentLen": 0, "maxSymbols": 0, "maxDepth": 0, "maxItems": 2, "maxTotalAlloc": 0},
+      "expect": {"outcome": "malformed"}
+    },
+    {
+      "id": "duplicate-field-id",
+      "rawHex": "0002011112011112",
+      "limits": {"maxFileLen": 8, "maxSegmentLen": 0, "maxSymbols": 0, "maxDepth": 0, "maxItems": 2, "maxTotalAlloc": 0},
+      "expect": {"outcome": "malformed"}
+    },
+    {
+      "id": "foreign-field-id",
+      "rawHex": "0001021112",
+      "limits": {"maxFileLen": 5, "maxSegmentLen": 0, "maxSymbols": 0, "maxDepth": 0, "maxItems": 1, "maxTotalAlloc": 0},
+      "expect": {"outcome": "malformed"}
+    },
+    {
+      "id": "non-value-root-tag",
+      "rawHex": "00010112",
+      "limits": {"maxFileLen": 4, "maxSegmentLen": 0, "maxSymbols": 0, "maxDepth": 0, "maxItems": 1, "maxTotalAlloc": 0},
+      "expect": {"outcome": "malformed"}
+    },
+    {
+      "id": "trailing-byte",
+      "rawHex": "000101111200",
+      "limits": {"maxFileLen": 6, "maxSegmentLen": 0, "maxSymbols": 0, "maxDepth": 0, "maxItems": 1, "maxTotalAlloc": 0},
+      "expect": {"outcome": "malformed"}
+    },
+    {
+      "id": "symbol-count-over-limit",
+      "rawHex": "02",
+      "limits": {"maxFileLen": 1, "maxSegmentLen": 0, "maxSymbols": 1, "maxDepth": 0, "maxItems": 0, "maxTotalAlloc": 64},
+      "expect": {"outcome": "limit"}
+    },
+    {
+      "id": "symbol-bytes-over-materialization",
+      "rawHex": "01056162636465",
+      "limits": {"maxFileLen": 7, "maxSegmentLen": 5, "maxSymbols": 1, "maxDepth": 0, "maxItems": 0, "maxTotalAlloc": 36},
+      "expect": {"outcome": "limit"}
+    }
+  ]
+}

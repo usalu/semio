@@ -134,7 +134,7 @@ pub(crate) fn agg_diff(this: &LasMutation, base: &LasSnapshot) -> protocol::Muta
         LasMutation::SetVlrData(set_vlr_data::SetVlrData { index, data }) => diff::diff_set_vlr_data(*index, data.clone()),
         LasMutation::InsertPoint(insert_point::InsertPoint { index, point }) => diff::diff_insert_point(base, *index, point.clone()),
         LasMutation::RemovePoint(remove_point::RemovePoint { index }) => diff::diff_remove_point(base, *index),
-        LasMutation::SetPoint(set_point::SetPoint { index, point }) => diff::diff_set_point(base, *index, point.clone()),
+        LasMutation::SetPoint(set_point::SetPoint { index, point }) => diff::diff_set_point(base, *index, point),
     })
 }
 
@@ -1150,7 +1150,7 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📸️set-snapshot/🧪️tests/📈️lifts-the-second-point-and-stretches-the-z-bound/🦀️.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/📈️lifts-the-second-c64af6/🦀️.rs"]
     mod tests_set_snapshot_lifts_the_second_point_and_stretches_the_z_bound;
 }
 //#endregion 🧪️FixtureTests

@@ -30,7 +30,8 @@ path = "../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️su
 # `default-features = false`; only its own component build keeps `plugin-root`.
 [features]
 default = ["plugin-root"]
-plugin-root = ["full-artifact-catalog"]
+plugin-root = ["component-app-assembly"]
+component-app-assembly = ["full-artifact-catalog"]
 full-artifact-catalog = []
 home-io = []
 

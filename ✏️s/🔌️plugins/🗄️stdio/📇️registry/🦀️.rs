@@ -1,10 +1,57 @@
 //! 🧾️ Schema-owned stdio artifact-definition assembly.
 
+/// 🏭 Constructs one artifact assembly from its declared definition.
+type ArtifactAssemblyFactory = fn(ArtifactDefinition) -> Result<ArtifactAssembly, PluginAssemblyError>;
+
 use semio_framework_plugin::io::FormatDescriptor;
 use semio_framework_plugin::{
     ArtifactCapability, ArtifactCapabilityKind, ArtifactDeclaration, ArtifactDefinition, ArtifactDefinitionError, ArtifactExecutableIdentity, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, PluginAssemblyError,
 };
 use std::collections::{BTreeMap, BTreeSet};
+
+/// 📦️ Reads the guest's canonical component identity from its Cargo component contract.
+#[cfg(feature = "full-artifact-catalog")]
+pub(crate) fn component_package_id() -> Result<&'static str, PluginAssemblyError> {
+    let manifest = include_str!("../📦️packages/🦀️rust/Cargo.toml");
+    if manifest.len() > 64 * 1024 {
+        return Err(PluginAssemblyError::new("plugin-assembly.package-id", "component Cargo contract exceeds 64 KiB"));
+    }
+    let mut component = false;
+    let mut component_seen = false;
+    let mut package_id = None;
+    for raw in manifest.lines() {
+        let line = raw.trim();
+        if line.starts_with('[') {
+            component = line == "[package.metadata.component]";
+            if component && std::mem::replace(&mut component_seen, true) {
+                return Err(PluginAssemblyError::new("plugin-assembly.package-id", "component Cargo contract repeats its component section"));
+            }
+        } else if component {
+            let Some((key, raw_value)) = line.split_once('=') else { continue };
+            if key.trim() != "package" {
+                continue;
+            }
+            if package_id.is_some() {
+                return Err(PluginAssemblyError::new("plugin-assembly.package-id", "component Cargo contract repeats its package key"));
+            }
+            package_id = raw_value.trim().strip_prefix('"').and_then(|value| value.strip_suffix('"'));
+        }
+    }
+    let package_id = package_id.ok_or_else(|| PluginAssemblyError::new("plugin-assembly.package-id", "component package identity is missing"))?;
+    let suffix = package_id.strip_prefix("semio:").ok_or_else(|| PluginAssemblyError::new("plugin-assembly.package-id", "component package identity must use the semio namespace"))?;
+    if suffix.is_empty() || suffix.starts_with('-') || suffix.ends_with('-') || suffix.contains("--") || !suffix.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-') {
+        return Err(PluginAssemblyError::new("plugin-assembly.package-id", "component package identity is not canonical semio:<lowercase-alnum-hyphen>"));
+    }
+    Ok(package_id)
+}
+
+#[cfg(all(test, feature = "full-artifact-catalog"))]
+mod component_package_id_tests {
+    #[test]
+    fn component_package_identity_comes_from_the_canonical_cargo_contract() {
+        assert_eq!(super::component_package_id().expect("stdio component package identity"), "semio:stdio");
+    }
+}
 
 //#region SourceSchema
 #[derive(Clone, value_derive::FromValue, value_derive::ToValue)]
@@ -302,8 +349,8 @@ fn failure(message: impl Into<String>) -> PluginAssemblyError {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn descriptor<T: dsl::ToValue>(value: &T) -> Result<Vec<u8>, PluginAssemblyError> {
-    Ok(pack::to_json_string(value).into_bytes())
+fn descriptor<T: dsl::ToValue>(value: &T) -> Vec<u8> {
+    pack::to_json_string(value).into_bytes()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -390,10 +437,7 @@ fn executable_mappings(source: &Source) -> Result<BTreeMap<String, ArtifactExecu
     }
     for item in source.codecs.iter().filter(|item| item.executable_registration) {
         let binding = item.native_factory.as_ref().ok_or_else(|| failure(format!("executable codec {} omits its native factory binding", item.id)))?;
-        let factory = native_codec_factories()
-            .into_iter()
-            .find(|factory| factory.id == binding.factory_id)
-            .ok_or_else(|| failure(format!("executable codec {} names unknown native factory {}", item.id, binding.factory_id)))?;
+        let factory = native_codec_factories().into_iter().find(|factory| factory.id == binding.factory_id).ok_or_else(|| failure(format!("executable codec {} names unknown native factory {}", item.id, binding.factory_id)))?;
         let identity = ArtifactExecutableIdentity::from_function_pointer(factory.codec as *const ());
         if mappings.insert(item.id.clone(), identity).is_some() {
             return Err(failure(format!("{} repeats executable mapping {}", source.id, item.id)));
@@ -518,10 +562,7 @@ fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
     for item in &source.codecs {
         let standard = source.standards.iter().find(|standard| item.id.starts_with(&format!("{}.codec.", standard.id))).ok_or_else(|| failure(format!("invalid codec {}", item.id)))?;
         versioned_leaf(&item.id, &format!("{}.codec.", standard.id))?;
-        if !source.source_dialects.iter().any(|dialect| dialect.id == item.from)
-            || !source.source_dialects.iter().any(|dialect| dialect.id == item.to)
-            || !matches!(item.status.as_str(), "unimplemented" | "implemented" | "verified")
-        {
+        if !source.source_dialects.iter().any(|dialect| dialect.id == item.from) || !source.source_dialects.iter().any(|dialect| dialect.id == item.to) || !matches!(item.status.as_str(), "unimplemented" | "implemented" | "verified") {
             return Err(failure(format!("invalid codec {}", item.id)));
         }
         match (&item.native_factory, item.executable_registration) {
@@ -693,11 +734,9 @@ pub fn definition_only_assembly(artifact: &str, definition: ArtifactDefinition) 
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn declared_capability<T: dsl::ToValue>(mappings: &BTreeMap<String, ArtifactExecutableIdentity>, id: &str, kind: ArtifactCapabilityKind, value: &T) -> Result<ArtifactCapability, PluginAssemblyError> {
-    let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(id).map_err(PluginAssemblyError::definition)?, kind).descriptor(descriptor(value)?).map_err(PluginAssemblyError::definition)?;
+    let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(id).map_err(PluginAssemblyError::definition)?, kind).descriptor(descriptor(value)).map_err(PluginAssemblyError::definition)?;
     if capability.kind() == &ArtifactCapabilityKind::inference() {
-        capability = capability
-            .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), id).map_err(PluginAssemblyError::definition)?)
-            .map_err(PluginAssemblyError::definition)?;
+        capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), id).map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     }
     if let Some(executable) = mappings.get(id) {
         capability = capability.executable(*executable);
@@ -745,13 +784,13 @@ fn build(source: &Source) -> Result<ArtifactDefinition, PluginAssemblyError> {
         definition = definition.capability(runtime_capability(item)?).map_err(PluginAssemblyError::definition)?;
     }
     for item in &source.resources {
-        definition = definition.resource(child(&item.id, &source.id, "resource")?, descriptor(item)?).map_err(PluginAssemblyError::definition)?;
+        definition = definition.resource(child(&item.id, &source.id, "resource")?, descriptor(item)).map_err(PluginAssemblyError::definition)?;
     }
     for item in &source.localized_descriptors {
-        definition = definition.localization(ArtifactLocale::parse(&item.locale).map_err(PluginAssemblyError::definition)?, format!("{}\n{}", item.name, item.description), descriptor(item)?).map_err(PluginAssemblyError::definition)?;
+        definition = definition.localization(ArtifactLocale::parse(&item.locale).map_err(PluginAssemblyError::definition)?, format!("{}\n{}", item.name, item.description), descriptor(item)).map_err(PluginAssemblyError::definition)?;
     }
     for item in &source.conformance_suites {
-        definition = definition.conformance_suite(child(&item.id, &source.id, "conformance-suite")?, descriptor(item)?).map_err(PluginAssemblyError::definition)?;
+        definition = definition.conformance_suite(child(&item.id, &source.id, "conformance-suite")?, descriptor(item)).map_err(PluginAssemblyError::definition)?;
     }
     Ok(definition)
 }
@@ -766,9 +805,9 @@ pub fn artifact_definitions() -> Result<Vec<ArtifactDefinition>, PluginAssemblyE
 
 /// 🧭️ Assembles every artifact root in schema-catalog order.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn artifact_factories() -> BTreeMap<&'static str, fn(ArtifactDefinition) -> Result<ArtifactAssembly, PluginAssemblyError>> {
+fn artifact_factories() -> BTreeMap<&'static str, ArtifactAssemblyFactory> {
     let mut factories = BTreeMap::from([
-        ("binary", crate::artifacts::binary::assembly as fn(ArtifactDefinition) -> Result<ArtifactAssembly, PluginAssemblyError>),
+        ("binary", crate::artifacts::binary::assembly as ArtifactAssemblyFactory),
         ("txt", crate::artifacts::txt::assembly),
         ("xml", crate::artifacts::xml::assembly),
         ("deflate", crate::artifacts::deflate::assembly),
@@ -779,7 +818,7 @@ fn artifact_factories() -> BTreeMap<&'static str, fn(ArtifactDefinition) -> Resu
     ]);
     #[cfg(feature = "full-artifact-catalog")]
     factories.extend(BTreeMap::from([
-        ("md", crate::artifacts::md::assembly as fn(ArtifactDefinition) -> Result<ArtifactAssembly, PluginAssemblyError>),
+        ("md", crate::artifacts::md::assembly as ArtifactAssemblyFactory),
         ("gltf", crate::artifacts::gltf::assembly),
         ("obj", crate::artifacts::obj::assembly),
         ("stl", crate::artifacts::stl::assembly),
@@ -891,7 +930,7 @@ impl NativeCodecFactoryReceipt {
     pub fn instantiate(&self) -> Result<store::ArtifactCodec, PluginAssemblyError> {
         let codec = (self.factory)();
         if self.plugin_id != "stdio"
-            || self.package_id != crate::plugin::component_package_id()?
+            || self.package_id != component_package_id()?
             || self.package_version != env!("CARGO_PKG_VERSION")
             || codec.schema != self.schema
             || codec.extension != self.extension
@@ -970,10 +1009,9 @@ native_codec_factory!(svg_codec, svg, SvgSnapshot, SvgMutation, STDIO_SVG_DOCUME
 
 #[cfg(feature = "full-artifact-catalog")]
 fn pdf_codec() -> store::ArtifactCodec {
-    let mut codec = store::ArtifactCodec::of::<
-        crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot,
-        crate::artifacts::pdf::standards::v1_4::subsets::base::schema::mutations::PdfMutation,
-    >(crate::artifacts::pdf::STDIO_PDF_DOCUMENT_SCHEMA);
+    let mut codec = store::ArtifactCodec::of::<crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, crate::artifacts::pdf::standards::v1_4::subsets::base::schema::mutations::PdfMutation>(
+        crate::artifacts::pdf::STDIO_PDF_DOCUMENT_SCHEMA,
+    );
     codec.extension = "pdf";
     codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("../🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
     codec
@@ -1029,7 +1067,7 @@ fn native_codec_hash(value: &str) -> Result<[u8; 32], PluginAssemblyError> {
         return Err(failure("native codec pack schema hash must contain exactly 64 lowercase hexadecimal digits"));
     }
     let mut hash = [0u8; 32];
-    for (index, chunk) in value.as_bytes().chunks_exact(2).enumerate() {
+    for (index, chunk) in value.as_bytes().as_chunks::<2>().0.iter().enumerate() {
         let digit = |byte| match byte {
             b'0'..=b'9' => Some(byte - b'0'),
             b'a'..=b'f' => Some(byte - b'a' + 10),
@@ -1047,17 +1085,10 @@ fn native_codec_hash(value: &str) -> Result<[u8; 32], PluginAssemblyError> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via schema validation) — see R9
 fn validate_native_codec_binding(source: &Source, item: &Codec, binding: &NativeCodecBinding) -> Result<(), PluginAssemblyError> {
-    let factory = native_codec_factories()
-        .into_iter()
-        .find(|factory| factory.id == binding.factory_id)
-        .ok_or_else(|| failure(format!("codec {} names unknown native factory {}", item.id, binding.factory_id)))?;
+    let factory = native_codec_factories().into_iter().find(|factory| factory.id == binding.factory_id).ok_or_else(|| failure(format!("codec {} names unknown native factory {}", item.id, binding.factory_id)))?;
     let kind = (factory.kind)();
     let hash = native_codec_hash(&binding.pack_schema_hash)?;
-    let runtime = source
-        .runtime_capabilities
-        .iter()
-        .find(|capability| capability.id == binding.runtime_capability_id)
-        .ok_or_else(|| failure(format!("codec {} names missing runtime capability {}", item.id, binding.runtime_capability_id)))?;
+    let runtime = source.runtime_capabilities.iter().find(|capability| capability.id == binding.runtime_capability_id).ok_or_else(|| failure(format!("codec {} names missing runtime capability {}", item.id, binding.runtime_capability_id)))?;
     let extension_claim = ArtifactIdentityClaim::codec_extension(&binding.document_schema, &binding.extension).map_err(PluginAssemblyError::definition)?;
     let expected_claims = BTreeSet::from([("codec".to_owned(), binding.document_schema.clone()), (extension_claim.namespace().as_str().to_owned(), extension_claim.value().to_owned())]);
     let codec = (factory.codec)();
@@ -1081,14 +1112,8 @@ pub fn native_codec_artifact_kinds() -> Vec<semio_framework_plugin::ArtifactKind
 
 #[cfg(feature = "full-artifact-catalog")]
 fn validate_native_openable_projection(receipts: &[NativeCodecFactoryReceipt]) -> Result<(), PluginAssemblyError> {
-    let provider: NativeOpenableProviderSourceV1 = pack::from_json_str(include_str!("🧬️schema/📜️native-codec-factories.json"))
-        .map_err(|error| failure(format!("cannot parse native codec receipt projection: {error}")))?;
-    if provider.schema != "semio.stdio.native-openable-catalog-provider/v1"
-        || provider.provider_id != "stdio/native-codecs/v1"
-        || provider.plugin_id != "stdio"
-        || provider.package_id != "semio:stdio"
-        || provider.receipts.len() != receipts.len()
-    {
+    let provider: NativeOpenableProviderSourceV1 = pack::from_json_str(include_str!("🧬️schema/📜️native-codec-factories.json")).map_err(|error| failure(format!("cannot parse native codec receipt projection: {error}")))?;
+    if provider.schema != "semio.stdio.native-openable-catalog-provider/v1" || provider.provider_id != "stdio/native-codecs/v1" || provider.plugin_id != "stdio" || provider.package_id != "semio:stdio" || provider.receipts.len() != receipts.len() {
         return Err(failure("native codec receipt projection identity or closure is invalid"));
     }
     let mut ordered = receipts.iter().collect::<Vec<_>>();
@@ -1113,6 +1138,400 @@ fn validate_native_openable_projection(receipts: &[NativeCodecFactoryReceipt]) -
     Ok(())
 }
 
+#[cfg(feature = "full-artifact-catalog")]
+const NATIVE_ARTIFACT_CATALOG_TOPIC: &str = "stdio.artifact-catalog.v1";
+
+#[cfg(feature = "full-artifact-catalog")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::FromValue, value_derive::ToValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+struct NativeArtifactCatalogV1 {
+    schema: String,
+    plugin_id: String,
+    package_id: String,
+    package_version: String,
+    definitions: Vec<NativeCatalogDefinitionV1>,
+    codecs: Vec<NativeCatalogCodecV1>,
+}
+
+#[cfg(feature = "full-artifact-catalog")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::FromValue, value_derive::ToValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+struct NativeCatalogDefinitionV1 {
+    identity: String,
+    capabilities: Vec<NativeCatalogCapabilityV1>,
+}
+
+#[cfg(feature = "full-artifact-catalog")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::FromValue, value_derive::ToValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+struct NativeCatalogCapabilityV1 {
+    identity: String,
+    kind: String,
+    descriptor_sha256: String,
+    executable: bool,
+    claims: Vec<NativeCatalogClaimV1>,
+    localizations: Vec<NativeCatalogLocalizationV1>,
+}
+
+#[cfg(feature = "full-artifact-catalog")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::FromValue, value_derive::ToValue)]
+#[value(deny_unknown_fields)]
+struct NativeCatalogClaimV1 {
+    namespace: String,
+    value: String,
+}
+
+#[cfg(feature = "full-artifact-catalog")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::FromValue, value_derive::ToValue)]
+#[value(deny_unknown_fields)]
+struct NativeCatalogLocalizationV1 {
+    locale: String,
+    text: String,
+}
+
+#[cfg(feature = "full-artifact-catalog")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::FromValue, value_derive::ToValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+struct NativeCatalogCodecV1 {
+    factory_id: String,
+    definition_identity: String,
+    descriptor_codec_id: String,
+    runtime_capability_id: String,
+    artifact_kind: String,
+    schema: String,
+    extension: String,
+    pack_schema_sha256: String,
+}
+
+#[cfg(feature = "full-artifact-catalog")]
+fn catalog_hex(bytes: &[u8; 32]) -> String {
+    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+}
+
+#[cfg(feature = "full-artifact-catalog")]
+struct NativeCatalogProjectionBudget {
+    projection: usize,
+    descriptors: usize,
+}
+
+#[cfg(feature = "full-artifact-catalog")]
+impl NativeCatalogProjectionBudget {
+    fn new() -> Self {
+        Self { projection: 0, descriptors: 0 }
+    }
+
+    fn charge(&mut self, bytes: usize) -> Result<(), PluginAssemblyError> {
+        self.projection = self.projection.checked_add(bytes).filter(|value| *value <= 2 * 1024 * 1024).ok_or_else(|| failure("native catalog semantic commitment exceeds 2 MiB"))?;
+        Ok(())
+    }
+
+    fn descriptor(&mut self, bytes: usize) -> Result<(), PluginAssemblyError> {
+        self.descriptors = self.descriptors.checked_add(bytes).filter(|value| *value <= 16 * 1024 * 1024).ok_or_else(|| failure("native catalog descriptor hashing exceeds 16 MiB"))?;
+        Ok(())
+    }
+
+    fn object(&mut self, fields: &[&str]) -> Result<(), PluginAssemblyError> {
+        self.charge(2 + fields.len().saturating_sub(1))?;
+        for field in fields {
+            self.string(&[field], 64)?;
+            self.charge(1)?;
+        }
+        Ok(())
+    }
+
+    fn array(&mut self, length: usize) -> Result<(), PluginAssemblyError> {
+        self.charge(2 + length.saturating_sub(1))
+    }
+
+    fn string(&mut self, parts: &[&str], maximum: usize) -> Result<(), PluginAssemblyError> {
+        let length = parts.iter().try_fold(0usize, |sum, part| sum.checked_add(part.len())).filter(|length| *length > 0 && *length <= maximum).ok_or_else(|| failure("native catalog string exceeds its owned schema bound"))?;
+        let mut encoded = 2 + length;
+        for byte in parts.iter().flat_map(|part| part.bytes()) {
+            encoded += match byte {
+                b'"' | b'\\' | 8 | 9 | 10 | 12 | 13 => 1,
+                0..=31 => 5,
+                _ => 0,
+            };
+        }
+        self.charge(encoded)
+    }
+}
+
+#[cfg(feature = "full-artifact-catalog")]
+fn preflight_native_catalog_projection(assemblies: &[ArtifactAssembly], receipts: &[NativeCodecFactoryReceipt]) -> Result<NativeCatalogProjectionBudget, PluginAssemblyError> {
+    if assemblies.len() != 36 || receipts.len() != 26 {
+        return Err(failure("native catalog projection requires 36 definitions and 26 codecs"));
+    }
+    let mut budget = NativeCatalogProjectionBudget::new();
+    budget.object(&["schema", "pluginId", "packageId", "packageVersion", "definitions", "codecs"])?;
+    for value in ["semio.stdio.artifact-catalog/v1", "stdio", component_package_id()?, env!("CARGO_PKG_VERSION")] {
+        budget.string(&[value], 16384)?;
+    }
+    budget.array(assemblies.len())?;
+    for assembly in assemblies {
+        let definition = match assembly {
+            ArtifactAssembly::Definition(definition) => definition,
+            ArtifactAssembly::Runtime(declaration) => declaration.definition(),
+        };
+        let count = definition.capabilities().count();
+        if count == 0 || count > 2048 {
+            return Err(failure("native catalog capability count exceeds its owned commitment bounds"));
+        }
+        budget.object(&["identity", "capabilities"])?;
+        budget.string(&[definition.identity().as_str()], 4096)?;
+        budget.array(count)?;
+        for capability in definition.capabilities() {
+            if capability.descriptor_bytes().len() > 2 * 1024 * 1024 || capability.claims().len() > 64 || capability.localizations().len() > 64 {
+                return Err(failure("native catalog capability exceeds its owned commitment bounds"));
+            }
+            budget.descriptor(capability.descriptor_bytes().len())?;
+            budget.object(&["identity", "kind", "descriptorSha256", "executable", "claims", "localizations"])?;
+            budget.string(&[capability.identity().as_str()], 4096)?;
+            budget.string(&[capability.kind().as_str()], 16384)?;
+            budget.charge(66 + if capability.executable_identity().is_some() { 4 } else { 5 })?;
+            budget.array(capability.claims().len())?;
+            for claim in capability.claims() {
+                budget.object(&["namespace", "value"])?;
+                budget.string(&[claim.namespace().as_str()], 16384)?;
+                budget.string(&[claim.value()], 16384)?;
+            }
+            budget.array(capability.localizations().len())?;
+            for localization in capability.localizations() {
+                budget.object(&["locale", "text"])?;
+                budget.string(&[localization.locale().as_str()], 16384)?;
+                budget.string(&[localization.text()], 16384)?;
+            }
+        }
+    }
+    budget.array(receipts.len())?;
+    for receipt in receipts {
+        let factory = native_codec_factories().into_iter().find(|factory| factory.id == receipt.factory_id).ok_or_else(|| failure("native catalog codec has no private artifact owner"))?;
+        budget.object(&["factoryId", "definitionIdentity", "descriptorCodecId", "runtimeCapabilityId", "artifactKind", "schema", "extension", "packSchemaSha256"])?;
+        budget.string(&[&receipt.factory_id], 16384)?;
+        budget.string(&["s.stdio.", factory.artifact], 4096)?;
+        budget.string(&[&receipt.descriptor_codec_id], 4096)?;
+        budget.string(&[&receipt.runtime_capability_id], 4096)?;
+        budget.string(&[&receipt.artifact_kind], 4096)?;
+        budget.string(&[&receipt.schema], 16384)?;
+        budget.string(&[&receipt.extension], 16384)?;
+        budget.charge(66)?;
+    }
+    Ok(budget)
+}
+
+#[cfg(all(test, feature = "full-artifact-catalog"))]
+mod catalog_projection_budget_tests {
+    use super::*;
+
+    #[test]
+    fn catalog_projection_budget_matches_serde_and_refuses_before_overdraw() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/📇️native-catalog-surface/🧪️budget.json")).unwrap();
+        for row in fixture["cases"].as_array().unwrap() {
+            let value = row["text"].as_str().unwrap();
+            let mut budget = NativeCatalogProjectionBudget::new();
+            budget.string(&[value], 16384).unwrap();
+            let expected = row["encodedBytes"].as_u64().unwrap() as usize;
+            assert_eq!(serde_json::to_vec(value).unwrap().len(), expected, "{}", row["id"]);
+            assert_eq!(budget.projection, expected, "{}", row["id"]);
+        }
+        for row in fixture["aggregateCases"].as_array().unwrap() {
+            let mut budget = NativeCatalogProjectionBudget::new();
+            let projection = row["projectionCharges"].as_array().unwrap();
+            let descriptors = row["descriptorCharges"].as_array().unwrap();
+            let independent =
+                projection.iter().map(|v| v.as_u64().unwrap()).sum::<u64>() <= fixture["projectionLimitBytes"].as_u64().unwrap() && descriptors.iter().map(|v| v.as_u64().unwrap()).sum::<u64>() <= fixture["descriptorLimitBytes"].as_u64().unwrap();
+            let result = projection.iter().try_for_each(|value| budget.charge(value.as_u64().unwrap() as usize)).and_then(|()| descriptors.iter().try_for_each(|value| budget.descriptor(value.as_u64().unwrap() as usize)));
+            assert_eq!(independent, row["accepted"].as_bool().unwrap(), "{}", row["id"]);
+            assert_eq!(result.is_ok(), independent, "{}", row["id"]);
+            assert!(budget.projection <= 2 * 1024 * 1024 && budget.descriptors <= 16 * 1024 * 1024);
+        }
+        let mut budget = NativeCatalogProjectionBudget::new();
+        assert!(budget.charge(usize::MAX).is_err());
+        assert_eq!(budget.projection, 0);
+        assert!(budget.descriptor(usize::MAX).is_err());
+        assert_eq!(budget.descriptors, 0);
+        assert!(budget.string(&[""], 16).is_err());
+        assert!(budget.string(&["éé"], 3).is_err());
+    }
+
+    #[test]
+    fn catalog_projection_preflight_matches_actual_serde_payload_bytes() {
+        let assemblies = artifact_assemblies().unwrap();
+        let receipts = native_codec_factory_receipts().unwrap();
+        let expected = preflight_native_catalog_projection(&assemblies, &receipts).unwrap();
+        let contribution = artifact_catalog_contribution(&assemblies).unwrap();
+        let payload = serde_json::to_value(&contribution).unwrap()["payload"].clone();
+        assert_eq!(serde_json::to_vec(&payload).unwrap().len(), expected.projection);
+        assert!(expected.descriptors > 0);
+    }
+}
+
+#[cfg(feature = "full-artifact-catalog")]
+fn native_artifact_catalog(assemblies: &[ArtifactAssembly]) -> Result<NativeArtifactCatalogV1, PluginAssemblyError> {
+    if assemblies.len() != 36 {
+        return Err(failure("native catalog commitment requires all 36 artifact definitions"));
+    }
+    let receipts = native_codec_factory_receipts()?;
+    preflight_native_catalog_projection(assemblies, &receipts)?;
+    let mut definitions = Vec::with_capacity(36);
+    for assembly in assemblies {
+        let definition = match assembly {
+            ArtifactAssembly::Definition(definition) => definition,
+            ArtifactAssembly::Runtime(declaration) => declaration.definition(),
+        };
+        let mut capabilities = Vec::new();
+        for capability in definition.capabilities() {
+            if capabilities.len() == 2048 || capability.descriptor_bytes().len() > 2 * 1024 * 1024 || capability.claims().len() > 64 || capability.localizations().len() > 64 {
+                return Err(failure("native catalog capability exceeds its owned commitment bounds"));
+            }
+            capabilities.push(NativeCatalogCapabilityV1 {
+                identity: capability.identity().as_str().into(),
+                kind: capability.kind().as_str().into(),
+                descriptor_sha256: catalog_hex(&semio_framework_hash::Sha256::digest(capability.descriptor_bytes())),
+                executable: capability.executable_identity().is_some(),
+                claims: capability.claims().iter().map(|claim| NativeCatalogClaimV1 { namespace: claim.namespace().as_str().into(), value: claim.value().into() }).collect(),
+                localizations: capability.localizations().iter().map(|localization| NativeCatalogLocalizationV1 { locale: localization.locale().as_str().into(), text: localization.text().into() }).collect(),
+            });
+        }
+        if capabilities.is_empty() {
+            return Err(failure("native catalog definition has no semantic capabilities"));
+        }
+        definitions.push(NativeCatalogDefinitionV1 { identity: definition.identity().as_str().into(), capabilities });
+    }
+    definitions.sort_by(|left, right| left.identity.cmp(&right.identity));
+    let identities = definitions.iter().map(|definition| definition.identity.as_str()).collect::<BTreeSet<_>>();
+    if identities.len() != 36 || receipts.len() != 26 {
+        return Err(failure("native catalog definition and codec ownership is incomplete"));
+    }
+    let mut codecs = Vec::with_capacity(26);
+    for receipt in receipts {
+        let factory = native_codec_factories().into_iter().find(|factory| factory.id == receipt.factory_id).ok_or_else(|| failure("native catalog codec has no private artifact owner"))?;
+        let definition_identity = format!("s.stdio.{}", factory.artifact);
+        if !identities.contains(definition_identity.as_str()) {
+            return Err(failure("native catalog codec omits its declared definition owner"));
+        }
+        codecs.push(NativeCatalogCodecV1 {
+            factory_id: receipt.factory_id,
+            definition_identity,
+            descriptor_codec_id: receipt.descriptor_codec_id,
+            runtime_capability_id: receipt.runtime_capability_id,
+            artifact_kind: receipt.artifact_kind,
+            schema: receipt.schema,
+            extension: receipt.extension,
+            pack_schema_sha256: catalog_hex(&receipt.pack_schema_hash),
+        });
+    }
+    codecs.sort_by(|left, right| left.factory_id.cmp(&right.factory_id));
+    Ok(NativeArtifactCatalogV1 { schema: "semio.stdio.artifact-catalog/v1".into(), plugin_id: "stdio".into(), package_id: component_package_id()?.into(), package_version: env!("CARGO_PKG_VERSION").into(), definitions, codecs })
+}
+
+/// 📇️ Commits the exact definitions consumed by this guest assembly, without executable addresses.
+#[cfg(feature = "full-artifact-catalog")]
+pub(crate) fn artifact_catalog_contribution(assemblies: &[ArtifactAssembly]) -> Result<semio_framework::TopicContribution, PluginAssemblyError> {
+    let payload = dsl::ToValue::to_value(&native_artifact_catalog(assemblies)?);
+    if pack::json_to_string(&pack::json_from_dsl_value(&payload)).len() > 2 * 1024 * 1024 {
+        return Err(failure("native catalog semantic commitment exceeds 2 MiB"));
+    }
+    Ok(semio_framework::TopicContribution::new(NATIVE_ARTIFACT_CATALOG_TOPIC, payload))
+}
+
+/// 🔗️ Binds consumers to the exact version of their statically linked Stdio catalog.
+#[cfg(feature = "full-artifact-catalog")]
+pub fn native_artifact_catalog_dependency() -> Result<semio_framework::PluginDependency, PluginAssemblyError> {
+    let version = semio_framework::Version::parse(env!("CARGO_PKG_VERSION")).map_err(|error| failure(format!("compiled Stdio catalog version is invalid: {error}")))?;
+    Ok(semio_framework::PluginDependency::new("stdio", semio_framework::VersionReq::Exact(version)))
+}
+
+/// 🪢️ Requires the consumer's sole dependency to equal its compiled catalog owner.
+#[cfg(feature = "full-artifact-catalog")]
+pub fn validate_native_artifact_catalog_dependency(dependencies: &[semio_framework::PluginDependency]) -> Result<(), PluginAssemblyError> {
+    if dependencies != [native_artifact_catalog_dependency()?].as_slice() {
+        return Err(failure("decoded consumer dependencies differ from the exact compiled Stdio catalog"));
+    }
+    Ok(())
+}
+
+/// 🧮️ Recomputes the complete headless projection from the same artifact-owned assemblies.
+#[cfg(feature = "full-artifact-catalog")]
+pub fn native_artifact_catalog_contribution() -> Result<semio_framework::TopicContribution, PluginAssemblyError> {
+    artifact_catalog_contribution(&artifact_assemblies()?)
+}
+
+#[cfg(feature = "full-artifact-catalog")]
+fn catalog_value_matches(expected: &semio_framework::DslValue, actual: &semio_framework::DslValue) -> bool {
+    use semio_framework::DslValue;
+    match (expected, actual) {
+        (DslValue::String(left), DslValue::String(right)) => left == right,
+        (DslValue::Bool(left), DslValue::Bool(right)) => left == right,
+        (DslValue::Array(left), DslValue::Array(right)) => left.len() == right.len() && left.iter().zip(right).all(|(a, b)| catalog_value_matches(a, b)),
+        (DslValue::Object(left), DslValue::Object(right)) => {
+            left.len() == right.len()
+                && left.iter().all(|(key, value)| {
+                    let mut matches = right.iter().filter(|(candidate, _)| candidate == key);
+                    let Some((_, candidate)) = matches.next() else { return false };
+                    matches.next().is_none() && catalog_value_matches(value, candidate)
+                })
+        }
+        _ => false,
+    }
+}
+
+#[cfg(feature = "full-artifact-catalog")]
+struct CompiledNativeCatalogExpectation {
+    payload: semio_framework::DslValue,
+    catalog: NativeArtifactCatalogV1,
+}
+
+#[cfg(feature = "full-artifact-catalog")]
+fn compiled_native_catalog_expectation() -> Result<&'static CompiledNativeCatalogExpectation, PluginAssemblyError> {
+    static EXPECTED: std::sync::OnceLock<Result<CompiledNativeCatalogExpectation, PluginAssemblyError>> = std::sync::OnceLock::new();
+    EXPECTED
+        .get_or_init(|| {
+            let contribution = native_artifact_catalog_contribution()?;
+            let catalog = contribution.decode().map_err(|error| failure(format!("native catalog owner is not its closed schema: {error}")))?;
+            Ok(CompiledNativeCatalogExpectation { payload: contribution.payload, catalog })
+        })
+        .as_ref()
+        .map_err(Clone::clone)
+}
+
+/// 🔐️ Admits only the exact guest-committed 36-definition/26-codec semantic projection.
+#[cfg(feature = "full-artifact-catalog")]
+pub fn validate_native_artifact_catalog_contributions(contributions: &[semio_framework::TopicContribution]) -> Result<(), PluginAssemblyError> {
+    if contributions.len() > 256 {
+        return Err(failure("native catalog contribution inventory exceeds 256 topics"));
+    }
+    let mut matches = contributions.iter().filter(|contribution| contribution.topic == "stdio.artifact-catalog" || contribution.topic.starts_with("stdio.artifact-catalog."));
+    let actual = matches.next().ok_or_else(|| failure("decoded Stdio descriptor omits its semantic catalog commitment"))?;
+    if matches.next().is_some() || actual.topic != NATIVE_ARTIFACT_CATALOG_TOPIC {
+        return Err(failure("decoded Stdio descriptor repeats or replaces its semantic catalog topic"));
+    }
+    let expected = compiled_native_catalog_expectation()?;
+    if !catalog_value_matches(&expected.payload, &actual.payload) {
+        return Err(failure("decoded Stdio descriptor differs from native artifact semantics"));
+    }
+    let decoded: NativeArtifactCatalogV1 = actual.decode().map_err(|error| failure(format!("native catalog commitment is not its closed schema: {error}")))?;
+    if decoded != expected.catalog {
+        return Err(failure("decoded Stdio descriptor differs from its exact native commitment"));
+    }
+    Ok(())
+}
+
+/// 🔎️ Requires every decoded kind to equal the complete artifact-owned native catalog.
+#[cfg(feature = "full-artifact-catalog")]
+pub fn validate_native_codec_artifact_kinds(kinds: &[semio_framework_plugin::ArtifactKindSpec]) -> Result<(), PluginAssemblyError> {
+    let expected = native_codec_artifact_kinds();
+    if expected.len() != 26 || kinds.len() != expected.len() {
+        return Err(failure("decoded descriptor omits or adds native artifact kinds"));
+    }
+    let actual = kinds.iter().map(|kind| (kind.id.as_str(), kind)).collect::<BTreeMap<_, _>>();
+    let identities = expected.iter().map(|kind| kind.id.as_str()).collect::<BTreeSet<_>>();
+    if actual.len() != kinds.len() || identities.len() != expected.len() || expected.iter().any(|kind| actual.get(kind.id.as_str()).copied() != Some(kind)) {
+        return Err(failure("decoded descriptor differs from the complete native artifact catalog"));
+    }
+    Ok(())
+}
+
 /// 🧷 Emits receipts only when schema data explicitly authorizes the exact native factory.
 #[cfg(feature = "full-artifact-catalog")]
 pub fn native_codec_factory_receipts() -> Result<Vec<NativeCodecFactoryReceipt>, PluginAssemblyError> {
@@ -1122,7 +1541,7 @@ pub fn native_codec_factory_receipts() -> Result<Vec<NativeCodecFactoryReceipt>,
     if executable_codecs != 26 {
         return Err(failure(format!("withholding native codec factories: artifact owners authorize {executable_codecs} executable registrations, expected 26")));
     }
-    let package_id = crate::plugin::component_package_id()?.to_owned();
+    let package_id = component_package_id()?.to_owned();
     if package_id != "semio:stdio" {
         return Err(failure("native codec receipt package differs from semio:stdio"));
     }
@@ -1133,8 +1552,7 @@ pub fn native_codec_factory_receipts() -> Result<Vec<NativeCodecFactoryReceipt>,
             ArtifactAssembly::Definition(_) => None,
         })
         .collect::<BTreeSet<_>>();
-    let descriptor = crate::plugin()?.manifest;
-    let descriptor_kinds = descriptor.artifact_kinds.into_iter().map(|kind| (kind.id.clone(), kind)).collect::<BTreeMap<_, _>>();
+    let catalog_kinds = native_codec_artifact_kinds().into_iter().map(|kind| (kind.id.clone(), kind)).collect::<BTreeMap<_, _>>();
     let mut factory_ids = BTreeSet::new();
     let mut descriptor_codec_ids = BTreeSet::new();
     let mut receipt_keys = BTreeSet::new();
@@ -1142,19 +1560,12 @@ pub fn native_codec_factory_receipts() -> Result<Vec<NativeCodecFactoryReceipt>,
     for source in &values {
         for item in source.codecs.iter().filter(|codec| codec.executable_registration) {
             let binding = item.native_factory.as_ref().ok_or_else(|| failure(format!("executable codec {} omits its native factory binding", item.id)))?;
-            let factory = native_codec_factories()
-                .into_iter()
-                .find(|factory| factory.id == binding.factory_id)
-                .ok_or_else(|| failure(format!("executable codec {} names unknown native factory {}", item.id, binding.factory_id)))?;
-            if !runtime_artifacts.contains(factory.artifact)
-                || !factory_ids.insert(factory.id.to_owned())
-                || !descriptor_codec_ids.insert(item.id.clone())
-                || !receipt_keys.insert((binding.artifact_kind.clone(), binding.document_schema.clone()))
-            {
+            let factory = native_codec_factories().into_iter().find(|factory| factory.id == binding.factory_id).ok_or_else(|| failure(format!("executable codec {} names unknown native factory {}", item.id, binding.factory_id)))?;
+            if !runtime_artifacts.contains(factory.artifact) || !factory_ids.insert(factory.id.to_owned()) || !descriptor_codec_ids.insert(item.id.clone()) || !receipt_keys.insert((binding.artifact_kind.clone(), binding.document_schema.clone())) {
                 return Err(failure(format!("executable codec {} is not bijective with one runtime artifact and private factory", item.id)));
             }
             let kind = (factory.kind)();
-            if descriptor_kinds.get(&binding.artifact_kind) != Some(&kind) {
+            if kind.schema != binding.document_schema || catalog_kinds.get(&binding.artifact_kind) != Some(&kind) {
                 return Err(failure(format!("descriptor artifact kind {} differs from executable codec {}", binding.artifact_kind, item.id)));
             }
             let receipt = NativeCodecFactoryReceipt {
@@ -1174,12 +1585,7 @@ pub fn native_codec_factory_receipts() -> Result<Vec<NativeCodecFactoryReceipt>,
             receipts.push(receipt);
         }
     }
-    if receipts.len() != 26
-        || factory_ids.len() != 26
-        || descriptor_codec_ids.len() != 26
-        || receipt_keys.len() != 26
-        || native_codec_factories().into_iter().any(|factory| !factory_ids.contains(factory.id))
-    {
+    if receipts.len() != 26 || factory_ids.len() != 26 || descriptor_codec_ids.len() != 26 || receipt_keys.len() != 26 || native_codec_factories().into_iter().any(|factory| !factory_ids.contains(factory.id)) {
         return Err(failure("native codec receipt manifest, descriptor identities, runtime artifacts, and private factories are not a complete bijection"));
     }
     validate_native_openable_projection(&receipts)?;
@@ -1307,6 +1713,7 @@ mod tests {
         assert_eq!(formats[0].mimes, ["model/gltf+json"]);
         assert_eq!(formats[0].extensions, [".gltf"]);
         assert_eq!(artifact_assemblies().unwrap().len(), 36);
+        #[cfg(feature = "component-app-assembly")]
         assert!(crate::plugin().is_ok());
     }
 }

@@ -64,6 +64,7 @@ mod surface_tests {
                     match app.close_step(items, bytes).expect("the actual Flow app owns every store and instance close stage") {
                         PluginCloseStep::Pending { released_items, released_bytes } => assert!(released_items <= items && released_bytes <= bytes),
                         PluginCloseStep::Blocked { reason } => panic!("fresh Flow surface retains no external reader: {reason}"),
+                        PluginCloseStep::AwaitingInput { reason } => panic!("fixture has no active worker input to await: {reason}"),
                         PluginCloseStep::Complete => { completed = true; break; }
                     }
                 }
@@ -80,13 +81,13 @@ mod surface_tests {
     /// 👁️ A viewer instance never mutates the document store, even when dispatched.
     #[semio_framework_async_macros::async_test]
     async fn flow_viewer_never_mutates() {
-        semio_framework_plugin::testkit::assert_viewer_never_mutates::<FlowViewer>();
+        semio_framework_plugin::testkit::assert_viewer_never_mutates::<FlowViewer>().await;
     }
 
     /// 🤝️ Editor and viewer surfaces agree on the artifact dialect they address.
     #[semio_framework_async_macros::async_test]
     async fn flow_editor_and_viewer_share_dialect() {
-        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<FlowPlayApp, FlowViewer>();
+        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<FlowPlayApp, FlowViewer>().await;
     }
 }
 //#endregion 🧪️SurfaceTests

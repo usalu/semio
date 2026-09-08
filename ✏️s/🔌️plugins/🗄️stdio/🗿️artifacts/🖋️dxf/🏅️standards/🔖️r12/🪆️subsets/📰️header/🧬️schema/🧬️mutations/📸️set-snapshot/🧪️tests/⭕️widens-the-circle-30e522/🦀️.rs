@@ -21,13 +21,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> DxfSnapshot {
-    serde_json::from_str(BEFORE).expect("before DXF snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("before DXF snapshot decodes")
 }
 fn expected_after() -> DxfSnapshot {
-    serde_json::from_str(AFTER).expect("after DXF snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("after DXF snapshot decodes")
 }
 fn mutation() -> DxfMutation {
-    serde_json::from_str(MUTATION).expect("set-snapshot mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("set-snapshot mutation decodes")
 }
 
 /// ▶️ `set-snapshot` carries the R12 drawing to exactly the committed `after`: the circle is wider,
@@ -68,12 +68,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: DxfSnapshot = serde_json::from_str(text).expect("DXF snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("DXF snapshot encodes");
+        let decoded: DxfSnapshot = dsl::json::from_json_str(text).expect("DXF snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("DXF snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("DXF snapshot reparses");
         assert_eq!(reencoded, original, "dxf/set-snapshot: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("set-snapshot mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("set-snapshot mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("set-snapshot mutation reparses");
     assert_eq!(reencoded, original, "dxf/set-snapshot: committed mutation JSON is not canonical");
 }
@@ -97,7 +97,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <DxfMutation as protocol::Mutation<DxfSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced DXF diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced DXF diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed DXF diff decodes");
     assert_eq!(produced, committed, "dxf/set-snapshot: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -107,7 +107,7 @@ async fn produces_committed_diff() {
 /// change there.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: DxfDiff = serde_json::from_str(DIFF).expect("committed DXF diff decodes");
+    let decoded: DxfDiff = dsl::json::from_json_str(DIFF).expect("committed DXF diff decodes");
     assert!(decoded.header_vars.is_none() && decoded.tables.is_none() && decoded.blocks.is_none(), "dxf/set-snapshot: nothing but the entities triple may be touched");
     let entities = decoded.entities.as_ref().expect("the committed diff carries an entities triple");
     assert!(entities.removed.is_empty() && entities.added.is_empty() && entities.modified.len() == 1, "dxf/set-snapshot: the circle must be patched in place, never removed and re-added");
@@ -115,7 +115,7 @@ async fn committed_diff_is_canonical() {
         panic!("dxf/set-snapshot: the delta must be a kind-preserving Circle patch, never a Replace");
     };
     assert!(circle.center.is_none() && circle.layer.is_none() && circle.radius == Some(4.0), "dxf/set-snapshot: only the radius field may be set on the circle patch");
-    let reencoded = serde_json::to_value(&decoded).expect("DXF diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("DXF diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed DXF diff reparses");
     assert_eq!(reencoded, original, "dxf/set-snapshot: committed diff JSON is not canonical");
 }
@@ -124,7 +124,7 @@ async fn committed_diff_is_canonical() {
 /// radius field is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: DxfDiff = serde_json::from_str(DIFF).expect("committed DXF diff decodes");
+    let decoded: DxfDiff = dsl::json::from_json_str(DIFF).expect("committed DXF diff decodes");
     let produced = <DxfDiff as protocol::MutationDiff<DxfSnapshot>>::apply(&decoded, &before()).expect("committed DXF diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "dxf/set-snapshot: committed diff did not carry before to after");
 }

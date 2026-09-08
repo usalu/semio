@@ -51,7 +51,7 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetLineMutation
         if let Some(reason) = native_text_error(&self.text, base.line_ending, !is_last || base.trailing_newline) {
             return protocol::MutationOutcome::error("mutation.invariant", reason, Vec::<String>::new());
         }
-        protocol::MutationOutcome::new(if base.lines.get(index).map_or(true, |current| current == &self.text) {
+        protocol::MutationOutcome::new(if base.lines.get(index).is_none_or(|current| current == &self.text) {
             TxtDiff::default()
         } else {
             TxtDiff { lines: Some(TxtLinesDiff { removed: vec![], modified: vec![TxtLineModified { index, text: self.text.clone() }], added: vec![] }), ..Default::default() }
@@ -87,7 +87,7 @@ mod tests {
     #[test]
     fn canonical_leaf_metadata_matches_descriptor_and_provenance() {
         let expected: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).expect("valid canonical set-line descriptor");
-        assert_eq!(serde_json::to_value(<SetLineMutation as MutationLeaf>::DESCRIPTOR).expect("serializable descriptor"), expected);
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(<SetLineMutation as MutationLeaf>::DESCRIPTOR))).expect("serializable descriptor"), expected);
         let provenance = <SetLineMutation as MutationLeaf>::PROVENANCE;
         assert_eq!(provenance.mutation_root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
         assert_eq!(provenance.owner, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️set-line");
@@ -99,7 +99,7 @@ mod tests {
 
     #[test]
     fn semantic_identity_matches_descriptor() {
-        assert_eq!(<SetLineMutation as protocol::MutationKind<TxtSnapshot, super::super::TxtMutation>>::SEMANTICS.kind, "set-line");
+        assert_eq!(<SetLineMutation as MutationKind<TxtSnapshot, TxtMutation>>::SEMANTICS.kind, "set-line");
     }
 
     #[test]
@@ -124,9 +124,9 @@ mod tests {
         let base = TxtSnapshot { lines: vec!["a".into(), "b".into()], line_ending: LineEnding::Lf, ..Default::default() };
         let mutation = SetLineMutation { index: 0, text: "a\r".into() };
         assert!(!<SetLineMutation as MutationKind<TxtSnapshot, TxtMutation>>::diff(&mutation, &base).messages().is_empty());
-        assert!(serde_json::from_str::<SetLineMutation>(r#"{"index":0,"text":"x","unknown":true}"#).is_err());
+        assert!(dsl::json::from_json_str::<SetLineMutation>(r#"{"index":0,"text":"x","unknown":true}"#).is_err());
         assert!(TxtMutation::decode_op(&[vec![5], vec![255]].concat()).is_err());
-        let value = serde_json::to_value(TxtMutation::SetLine(SetLineMutation { index: 1, text: "a".into() })).unwrap();
+        let value = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(TxtMutation::SetLine(SetLineMutation { index: 1, text: "a".into() })))).unwrap();
         assert_eq!(value["mutation"], "set-line");
         assert_eq!(value["payload"], serde_json::json!({ "index": 1, "text": "a" }));
     }

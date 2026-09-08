@@ -6,6 +6,19 @@
 //! `crate::shell::...` call site elsewhere in the crate keeps resolving with zero other changes.
 //! 🖥️ OS shell chrome — navbar, footer, floating panels, overlays, and studio mode.
 
+#[cfg(test)]
+use crate::dock::{drop_zone_indicator_rect, push_window_silhouette_border, DockDropZone, DockRenderContext, DockStackTab};
+#[cfg(test)]
+use crate::engine_canvas::theme_is_dark;
+#[cfg(test)]
+use crate::interpreter::resolve_ui_image;
+#[cfg(test)]
+use semio_framework::{app_breadcrumb, app_window_label, resolve_app_breadcrumb};
+#[cfg(all(test, not(target_arch = "wasm32")))]
+use semio_framework_os_kernel::os_directory::{client::DirectoryTransport, directory_command_sha256, DirectoryCommandOutcomeV1};
+#[cfg(test)]
+use ui_wgpu::wgpu::{push_chrome_group_border, Label, UiButtonNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode};
+
 use crate::dock::{compute_dock_drop_zone, parse_path, DockDragKind, DockDragPayload, DockDragState, DockState, WindowSilhouette};
 #[cfg(test)]
 use crate::interpreter::render_ui_document;
@@ -13,7 +26,13 @@ use crate::interpreter::{begin_ui_document_opportunity, framework_widget_context
 use crate::program_bridge::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, PluginHostConfig, ProgramBridgeEntry};
 use crate::scenes::{clear_graph_node_context, resolve_graph_context_action, toggle_vfs_row_expanded, vfs_selection_for_click, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
 use infinite_world::world::{enqueue_world3d_events, World3dState, WorldInteractionIntent, WorldInteractionPhase};
-use semio_framework::{AppDefinition, ExampleDefinition, IconName, PanelGroup, PanelTabDefinition, ViewModel};
+#[cfg(test)]
+use ui_wgpu::wgpu::draw_text;
+#[cfg(test)]
+use ui_wgpu::wgpu::{WindowEngagementControl, WindowEngagementInput};
+use semio_framework::{AppDefinition, PanelGroup, PanelTabDefinition, ViewModel};
+#[cfg(test)]
+use semio_framework::{ExampleDefinition, IconName};
 use semio_framework_os_kernel::os_directory::identity::IdentityEnv;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
@@ -21,7 +40,9 @@ use std::collections::{BTreeMap, HashMap};
 use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactDocumentKey, ArtifactEvent, ArtifactHost, ArtifactMailboxSender, ArtifactSyncStatus, PersistenceBinding, RemoteState};
 #[cfg(not(target_arch = "wasm32"))]
 use store_sync::PresencePeer;
-use ui_contract::{SurfaceId, UiDocumentLease, UiFixedList, UiText, UI_DOCUMENT_LEASE_ALIASES, UI_DOCUMENT_LEASE_SLOTS};
+use ui_contract::{SurfaceId, UiDocumentLease, UiText, UI_DOCUMENT_LEASE_ALIASES, UI_DOCUMENT_LEASE_SLOTS};
+#[cfg(test)]
+use ui_contract::UiFixedList;
 // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3/§C6 (lane 2-D) —
 // lane 1-D's Rust directory client + native identity mint/restore helper, consumed as-is (never
 // re-declared: `semio_framework_os_kernel::os_directory` is the single source of truth both this
@@ -56,15 +77,13 @@ use semio_framework_async::{CancelToken, Lane, OperationContext, ScopeOwner, Tra
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_services::{ComputePool, TokioHostRuntime};
 use ui_wgpu::wgpu::{
-    chrome_item_bg, chrome_item_text, draw_text, paint_retained_glyph_step, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, RetainedGlyphCursor, RetainedGlyphStep,
+    chrome_item_bg, chrome_item_text, paint_retained_glyph_step, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, RetainedGlyphCursor, RetainedGlyphStep,
     Rgba, Theme, TreeDragState, TreeDropPosition, WidgetInteractionMaps, WindowStackCorner,
 };
 use ui_wgpu::wgpu::{
-    ActionDescriptor, Locale, LocalizedLabel, Terminology, UtilityCategory, UtilityNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
+    ActionDescriptor, Locale, LocalizedLabel, Terminology, UtilityCategory, UtilityNode, WindowEngagement,
     WindowMeasure, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
 };
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::JsCast;
 
 const FRAMEWORK_DISPLAY_WINDOWS_TAB_ID: &str = "framework.display.windows";
 const FRAMEWORK_DISPLAY_LAYOUT_TAB_ID: &str = "framework.display.layout";
@@ -81,9 +100,6 @@ fn optional_dsl_value_as_json(value: Option<DslValue>) -> Option<Value> {
     value.map(|entry| dsl_value_as_json(&entry))
 }
 
-fn optional_json_as_dsl_value(value: Option<Value>) -> Option<DslValue> {
-    value.map(|entry| serde_json::from_value(entry).unwrap_or(DslValue::Null))
-}
 /// 🎨️ Byte-identical to React's `FRAMEWORK_SETTINGS_THEME_TAB_ID` (`ui/js/react/index.tsx:8807`) — the
 /// `PanelTabKind::SettingsTheme` variant this maps to already existed in `framework/core/rs/lib.rs`
 /// but was completely unwired on this side (see `build_settings_theme_ui`/`right_tabs`).
@@ -325,11 +341,9 @@ fn resolve_identity_env() -> Option<IdentityEnv> {
     IdentityEnv::from_process_env()
 }
 
-/// 🌐️ Browser wgpu build: `IdentityEnv::from_process_env` reads `std::env::var`, which never resolves
-/// anything meaningful on `wasm32-unknown-unknown` — `🟦️.ts` calls `semioWgpuSetHubEnv` (mirroring
-/// its existing `semioWgpuSetAppRole` call) with the `VITE_S_*` values it read, stashed here.
 #[cfg(target_arch = "wasm32")]
 thread_local! {
+    /// 🌐️ Browser boot environment supplied by `semioWgpuSetHubEnv` from the TypeScript host.
     static BOOT_HUB_ENV: std::cell::RefCell<Option<(String, String, Option<String>)>> = std::cell::RefCell::new(None);
 }
 
@@ -469,6 +483,7 @@ fn open_artifact_relay_target(action_id: &str, args: Option<&Value>) -> Result<O
 
 /// 👥️ Projects only Hub-normalized peers for the shell's currently attached surface.
 #[cfg(not(target_arch = "wasm32"))]
+#[cfg(test)]
 fn presence_peer_rows_for_surface(peers: &[PresencePeer], attached_surface: Option<&str>, target_surface: &str) -> Vec<ui_wgpu::wgpu::PresencePeerRow> {
     if attached_surface != Some(target_surface) {
         return Vec::new();
@@ -1135,10 +1150,12 @@ fn context_menu_open_submenu_path(root: &[ContextMenuItem], path: &[usize]) -> O
     Some(next)
 }
 
+#[cfg(test)]
 fn context_menu_paths_equal(a: &[usize], b: &[usize]) -> bool {
     a.len() == b.len() && a.iter().zip(b.iter()).all(|(left, right)| left == right)
 }
 
+#[cfg(test)]
 fn context_menu_submenu_open(active: &[usize], row_path: &[usize], is_active: bool, has_children: bool) -> bool {
     if !has_children {
         return false;
@@ -1241,7 +1258,7 @@ impl ShellChromeMaintenance {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(test, not(target_arch = "wasm32")))]
 /// 🧵️ Compile-time proof that chrome construction state can move to a worker.
 fn assert_shell_chrome_build_state_is_send() {
     fn assert_send<T: Send>() {}
@@ -1952,7 +1969,7 @@ mod shell_pool_future_tests {
         });
         assert_eq!(rx.recv_timeout(std::time::Duration::from_secs(1)), Ok(7));
         assert_eq!(pool.worker_count(), workers);
-        pool.shutdown();
+        pool.shutdown().expect("fixture worker pool shuts down");
     }
 
     #[test]
@@ -1964,7 +1981,7 @@ mod shell_pool_future_tests {
         });
         task.cancel();
         let started = std::time::Instant::now();
-        pool.shutdown();
+        pool.shutdown().expect("fixture worker pool shuts down");
         assert!(started.elapsed() < std::time::Duration::from_secs(1));
     }
 }
@@ -3018,6 +3035,7 @@ fn save_panel_layout_to_store(layout: &PanelLayoutPersisted) {
 
 impl ShellState {
     #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(test)]
     fn submit_shell_io(&mut self, operation: impl FnOnce() -> ShellIoCompletion + Send + 'static) {
         const MAX_PENDING_SHELL_IO: usize = 64;
         if self.shell_io_pending.len() >= MAX_PENDING_SHELL_IO {
@@ -3455,6 +3473,7 @@ impl ShellState {
         }
     }
 
+    #[cfg(test)]
     fn active_plugin_examples(&self) -> Vec<ExampleDefinition> {
         let Some(session) = &self.session else {
             return Vec::new();
@@ -3499,6 +3518,7 @@ impl ShellState {
         self.pending_dock_drag = Some((payload, (x, y)));
     }
 
+    #[cfg(test)]
     fn dock_tab_bars_for_drop(&self, atlas: &mut FontAtlas, theme: &Theme, canvas: Rect, labels: &HashMap<String, String>, icon_ids: &HashMap<String, String>) -> Vec<(Vec<usize>, WindowStackCorner, Rect, Vec<f32>)> {
         let _ = icon_ids;
         self.dock.stack_corner_tab_bar_rects(canvas, theme, atlas, labels)
@@ -4294,6 +4314,7 @@ impl ShellState {
     /// @emoji 🚦️ Human-readable summary of a document's sync health for the attach card, mirroring
     /// the React shell's `syncStatusLabel`.
     #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(test)]
     fn sync_status_label(status: &ArtifactSyncStatus) -> String {
         let remote = match &status.remote {
             RemoteState::Live { peer_count } => {
@@ -4337,39 +4358,7 @@ impl ShellState {
         "Persisted".to_string()
     }
 
-    /// 💓️ Publishes the newest app-typed presence through the document host's
-    /// per-document coalescer. The channel drain also exposes transient generation for the native
-    /// renderer's next-frame invalidation contract without ever sharing transient contents.
-    #[cfg(not(target_arch = "wasm32"))]
-    fn publish_presence_heartbeat(&mut self) {
-        let Some(channel) = self.sync_channel.as_ref() else { return };
-        let _document_id = channel.document_id.clone();
-        let instance_id = channel.instance_id;
-        let plugin_id = channel.plugin_id.clone();
-        let connected_at_ms = channel.connected_at_ms;
-        let presence_pack = self.plugins.iter().find(|plugin| plugin.plugin_id == plugin_id).and_then(|plugin| plugin.ephemeral_snapshot(instance_id).ok()).map(|(presence, _, _)| presence);
-        let label = self.session.as_ref().map(|session| session.app.id.clone());
-        let peer = PresencePeer {
-            actor: self.current_shell_actor(instance_id),
-            label,
-            presence_pack,
-            connected_at_ms,
-            user_id: self.identity.as_ref().map(|identity| identity.user_id.clone()),
-            role: None,
-            drag_ghost_json: None,
-            interaction: None,
-            // 👥️ Peer-presence fields introduced by the presence refactor. The wgpu shell does not
-            // publish colour/surface/view/ui presence yet — the sync actor assigns `color` from the
-            // hub's `Session` frame, and the richer `views`/`ui` payloads belong to the presence
-            // packet, not this heartbeat. Left empty rather than invented so nothing fabricates
-            // presence state the shell does not actually observe.
-            color: None,
-            surface: None,
-            views: Vec::new(),
-            ui: None,
-        };
-        self.document_host.presence_heartbeat_key(&channel.document_key, chrome_now_ms() as u64, peer);
-    }
+
 
     /// 🎭️ ticket §1 — contract §C0's `user:{userId}#{sessionId}` once identity is minted/restored,
     /// else the pre-identity local default this shell always used (`shell_actor`'s pure decision).
@@ -5906,12 +5895,13 @@ impl ShellState {
         // 📇️ ticket §5/§6 — "/spaces/{id}/studio" keeps the pre-existing studio behaviour (the ONLY
         // behaviour this route had before this lane); a bare "/spaces/{id}" now opens the `s.space`
         // artifact-index app instead, mirroring the React shell's `applyShellUri` (`📓️w2-c-report.md`).
-        let (space_id, is_studio_route) = match raw.split_once('/') {
+        let space_route = match raw.split_once('/') {
             Some((id, "studio")) => (id.to_string(), true),
             _ => (raw.clone(), false),
         };
+        let space_id = space_route.0;
         #[cfg(not(target_arch = "wasm32"))]
-        if !is_studio_route {
+        if !space_route.1 {
             self.open_space_id = Some(space_id.clone());
             let host_program = self.plugins.iter().find(|program| program.plugin_id == cfg.plugin_id).cloned();
             let space_app = host_program
@@ -7897,6 +7887,7 @@ mod shell_input_tests {
 /// the eleven overlay/dropdown/status painters below that draw a whole scalar in one pass. It was
 /// `#[cfg(test)]`-gated, which made every one of those production call sites `E0425` on every target
 /// (the reason this crate compiled on neither `wasm32-unknown-unknown` nor natively).
+#[cfg(test)]
 fn chrome_text(target: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
@@ -8174,11 +8165,13 @@ fn measure_chrome_group_item(atlas: &mut FontAtlas, theme: &Theme, item: &Chrome
     theme.padding_standard * 2.0 + icon_w + text_w
 }
 
+#[cfg(test)]
 struct WindowMeasuresRailOutcome {
     chip_hit: Option<(Rect, String)>,
     reserve_width: f32,
 }
 
+#[cfg(test)]
 const WINDOW_MEASURE_TRAVERSAL_CAPACITY: usize = 64;
 const WINDOW_MEASURE_ACTION_CAPACITY: usize = 64;
 
@@ -8200,6 +8193,7 @@ struct WindowMeasureActionRegistry {
     slots: [Option<WindowMeasureActionBinding>; WINDOW_MEASURE_ACTION_CAPACITY],
 }
 
+#[cfg(test)]
 struct WindowMeasureRenderFrame<'a> {
     measure: &'a WindowMeasure,
     inset: f32,
@@ -8227,10 +8221,12 @@ impl WindowMeasureActionRegistry {
     }
 }
 
+#[cfg(test)]
 fn window_overlay_max_width(content_w: f32, inset: f32) -> f32 {
     (content_w - inset * 2.0).max(0.0)
 }
 
+#[cfg(test)]
 fn engagement_rail_width(theme: &Theme, content_w: f32, inset: f32, measures_reserve: f32) -> f32 {
     let available = content_w - inset * 2.0 - measures_reserve;
     theme.window_engagement_max_width.min(available.max(0.0))
@@ -8248,6 +8244,7 @@ fn floating_panel_width(width: f32, body: Rect, theme: &Theme) -> f32 {
     width.clamp(theme.panel_min_width, floating_panel_max_width(body, theme))
 }
 
+#[cfg(test)]
 fn measure_window_measure_height(theme: &Theme, collapsed_sections: &HashMap<String, bool>, measure: &WindowMeasure) -> Option<f32> {
     let mut stack = UiFixedList::<&WindowMeasure, WINDOW_MEASURE_TRAVERSAL_CAPACITY>::default();
     stack.try_push(measure).ok()?;
@@ -8269,6 +8266,7 @@ fn measure_window_measure_height(theme: &Theme, collapsed_sections: &HashMap<Str
     Some(height)
 }
 
+#[cfg(test)]
 fn measure_window_measures_body_height<'a>(theme: &Theme, collapsed_sections: &HashMap<String, bool>, measures: impl Iterator<Item = &'a WindowMeasure>) -> Option<f32> {
     let mut height = 0.0;
     for measure in measures {
@@ -8277,6 +8275,7 @@ fn measure_window_measures_body_height<'a>(theme: &Theme, collapsed_sections: &H
     Some(height)
 }
 
+#[cfg(test)]
 fn measure_engagement_body_height(theme: &Theme, engagement: &WindowEngagement) -> f32 {
     let mut h = 0.0f32;
     if let Some(options) = &engagement.options {
@@ -8396,6 +8395,7 @@ fn framework_sync_utilities(active_uri: Option<&str>) -> Vec<UtilityNode> {
     ]
 }
 
+#[cfg(test)]
 fn partition_utilities_by_category(utilities: &[UtilityNode]) -> [Vec<UtilityNode>; 4] {
     let mut buckets: [Vec<UtilityNode>; 4] = [vec![], vec![], vec![], vec![]];
     for utility in utilities {
@@ -8419,6 +8419,7 @@ fn partition_utilities_by_category(utilities: &[UtilityNode]) -> [Vec<UtilityNod
 /// (`register_hits: false`) — a `peer:<actor>` hit is registered separately, with no `event`, purely
 /// so the id is discoverable for e2e/hit-testing.
 #[cfg(all(test, not(target_arch = "wasm32")))]
+#[cfg(test)]
 fn render_presence_bar(draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, rows: &[ui_wgpu::wgpu::PresencePeerRow], right_edge: f32, btn_y: f32, btn_h: f32) {
     if rows.is_empty() {
         return;
@@ -8754,6 +8755,7 @@ fn panel_toggle_icon_id(kind: &str, session: Option<&ActiveSession>) -> &'static
 
 /// 🛡️ Chrome content must always win over window bodies; route it to the
 /// overlay compositing phase (guaranteed last) whenever one is available.
+#[cfg(test)]
 fn with_chrome_sink<F, R>(draw: &mut DrawList, overlay: &mut Option<&mut DrawList>, f: F) -> R
 where
     F: FnOnce(&mut DrawList, &mut Option<&mut DrawList>) -> R,
@@ -9603,6 +9605,7 @@ pub(crate) fn command_category_label(category: &str) -> String {
 
 /// 🎛️ Ordered, deduped `(category id, display label)` pairs derived from whatever commands actually
 /// resolved — the wgpu mirror of `os-shell.tsx`'s `commandCategories`.
+#[cfg(test)]
 pub(crate) fn command_categories(commands: &[ResolvedCommand]) -> Vec<(String, String)> {
     let mut seen = std::collections::HashSet::new();
     let mut categories = Vec::new();
@@ -9911,6 +9914,16 @@ mod command_registry_tests {
             command_hash: INFERENCE_TEST_HASH.into(),
             proposal_hash: INFERENCE_TEST_HASH.into(),
             applied: true,
+            undo: semio_framework_os_kernel::os_directory::GisMapApprovalUndoHandleV1 {
+                target_id: "22".repeat(16),
+                expected_current: semio_framework_os_kernel::os_directory::CheckpointPublicationFrontierV1 {
+                    document_id: "document-map".into(),
+                    head_edit_ordinal: 2,
+                    head_edit_id: "approval-edit".into(),
+                    last_commit_seq: 2,
+                    chain_sha256: INFERENCE_TEST_HASH.into(),
+                },
+            },
         }));
         assert_eq!(driver.status().phase, GisMapInferencePortPhaseV1::Applied);
         assert_eq!(driver.turn(20_000), GisMapInferenceTurnV1::Terminal);
@@ -10663,6 +10676,7 @@ struct ChromeTourState {
 }
 
 impl ShellChromeBuildState {
+    #[cfg(test)]
     fn register_tooltip(&mut self, control_id: impl Into<String>, title: impl Into<String>) {
         let title = title.into();
         if !title.is_empty() {
@@ -10679,6 +10693,7 @@ impl ShellChromeBuildState {
         !self.dialog_stack.is_empty()
     }
 
+    #[cfg(test)]
     fn open_dialog(&mut self, request: ChromeDialogRequest) {
         self.dialog_stack.push(request);
     }
@@ -10687,6 +10702,7 @@ impl ShellChromeBuildState {
         self.dialog_stack.pop();
     }
 
+    #[cfg(test)]
     fn start_introduction(&mut self) {
         self.tour_state = Some(ChromeTourState { step_index: 0, completed_interactions: Vec::new() });
     }
@@ -10730,6 +10746,7 @@ impl ShellChromeBuildState {
 /// rendered `title` shows it, without touching that function's own body. Control-id format
 /// (`framework.utility.{button|toggle|collection}.{id}`) mirrors it exactly, including the flat
 /// (non-prefixed) child ids nested `Collection`s already use there.
+#[cfg(test)]
 fn chrome_register_utility_tooltips(chrome: &mut ShellChromeBuildState, utilities: &[UtilityNode]) {
     for utility in utilities {
         match utility {
@@ -10753,6 +10770,7 @@ fn chrome_register_utility_tooltips(chrome: &mut ShellChromeBuildState, utilitie
 /// user's current selection lives inside it, mirroring `ui/js/react/index.tsx`'s recursive picker
 /// active-path reconciliation. Called from `render_footer_utility_nodes` (an off-limits `ShellInput`-
 /// adjacent function this wave — see the report's coordination note).
+#[cfg(test)]
 fn utility_subtree_has_active_path(nodes: &[UtilityNode]) -> bool {
     nodes.iter().any(|node| match node {
         UtilityNode::Toggle { pressed, .. } => pressed.unwrap_or(false),
@@ -10819,6 +10837,7 @@ impl ShellChromeBuildState {
         self.element_rects.insert(id.into(), ChromeElementRectEntry { rect, fallback: false });
     }
 
+    #[cfg(test)]
     fn register_element_rect_fallback(&mut self, id: impl Into<String>, rect: Rect) {
         let id = id.into();
         self.element_rects.entry(id).or_insert(ChromeElementRectEntry { rect, fallback: true });
@@ -10828,6 +10847,7 @@ impl ShellChromeBuildState {
         self.element_rects.get(id).map(|entry| entry.rect)
     }
 
+    #[cfg(test)]
     fn element_rect_is_fallback(&self, id: &str) -> bool {
         self.element_rects.get(id).is_some_and(|entry| entry.fallback)
     }
@@ -10840,6 +10860,7 @@ impl ShellChromeBuildState {
 /// here: `push_solid` quads tile with no seam (no per-quad backdrop-filter to discontinue), a real glass
 /// veil can't work in this renderer (see `introduction_veil_bands`'s doc), and 3D window content lives in
 /// separate `scene_passes` that can't be repainted above an overlay at all.
+#[cfg(test)]
 fn punch_introduction_cutout(band: Rect, hole: Rect) -> Vec<Rect> {
     let top = band.y.max(hole.y);
     let left = band.x.max(hole.x);
@@ -10863,6 +10884,7 @@ fn punch_introduction_cutout(band: Rect, hole: Rect) -> Vec<Rect> {
 /// overlay glass regions composite *before* the overlay's own instance pass, i.e. beneath that chrome
 /// regardless of push order. A solid-fill veil with real geometric holes is therefore the correct choice,
 /// not a shortcut — and it's seam-free by construction (no per-quad backdrop-filter exists to discontinue).
+#[cfg(test)]
 fn introduction_veil_bands(width: f32, height: f32, cutouts: &[Rect]) -> Vec<Rect> {
     let mut bands = vec![Rect::new(0.0, 0.0, width, height)];
     for cutout in cutouts {
@@ -10879,21 +10901,25 @@ fn introduction_veil_bands(width: f32, height: f32, cutouts: &[Rect]) -> Vec<Rec
     bands
 }
 
+#[cfg(test)]
 const INTRODUCED_PULSE_PERIOD_MS: f64 = 1600.0;
 
 /// 🎓️ Raised-cosine breathing thickness for the introduced-element pulse ring — mirrors the
 /// `data-introduced` CSS keyframes (`ui/styling/js/🎨️ui.css`: hairline → focus → hairline over 1.6s,
 /// ease-in-out), which are exactly a raised cosine.
+#[cfg(test)]
 fn introduced_pulse_thickness(now_ms: f64, hairline: f32, focus: f32) -> f32 {
     let phase = (now_ms.rem_euclid(INTRODUCED_PULSE_PERIOD_MS) / INTRODUCED_PULSE_PERIOD_MS) as f32;
     hairline + (focus - hairline) * 0.5 * (1.0 - (phase * std::f32::consts::TAU).cos())
 }
 
+#[cfg(test)]
 const INTRODUCTION_INFO_BOX_GAP: f32 = 16.0;
 
 /// 🎓️ Where the info box sits relative to `anchor` — byte-for-byte port of `resolveIntroductionPlacement`
 /// (`ui/js/react/index.tsx`). `auto` picks the side with the most free viewport space; `center` (and any
 /// anchor-less step) centers the box.
+#[cfg(test)]
 fn resolve_introduction_placement(placement: semio_framework::IntroductionPlacement, anchor: Option<Rect>, box_size: (f32, f32), viewport: (f32, f32)) -> (f32, f32) {
     use semio_framework::IntroductionPlacement;
     let (box_w, box_h) = box_size;
@@ -10936,6 +10962,7 @@ fn resolve_introduction_placement(placement: semio_framework::IntroductionPlacem
 /// renderer: the first `possible` (in the order the host already gave them — wgpu's engagement rail has
 /// no ranked-match dropdown to reorder by) whose label case-insensitively prefix-matches `query`, sliced
 /// on a char boundary (never a byte index) so a multi-byte label can't panic.
+#[cfg(test)]
 fn engagement_completion_suffix(query: &str, possibles: Option<&[ui_wgpu::wgpu::WindowEngagementPossible]>) -> String {
     let query = query.trim();
     if query.is_empty() {
@@ -10963,6 +10990,7 @@ fn engagement_completion_suffix(query: &str, possibles: Option<&[ui_wgpu::wgpu::
 /// 👻️ Pure accept-decision for the ghost-text click affordance — factored out of
 /// `render_engagement_input` so it's unit-testable without a `GpuContext` fixture (that function
 /// unconditionally needs a real wgpu device, per its own `_gpu` parameter).
+#[cfg(test)]
 fn engagement_ghost_accept_on_click(ghost_rect: Rect, pointer_x: f32, pointer_y: f32, clicked_this_frame: bool, query: &str, suffix: &str) -> Option<String> {
     if clicked_this_frame && ghost_rect.contains(pointer_x, pointer_y) {
         Some(format!("{query}{suffix}"))
@@ -12587,6 +12615,7 @@ impl ShellState {
         self.session.is_some()
     }
 
+    #[cfg(test)]
     fn left_tabs(&self, session: &ActiveSession) -> Vec<PanelTabDefinition> {
         let is_de = self.locale_id == "de";
         match self.active_left_kind {
@@ -12623,6 +12652,7 @@ impl ShellState {
         }
     }
 
+    #[cfg(test)]
     fn right_tabs(&self, session: &ActiveSession) -> Vec<PanelTabDefinition> {
         match self.active_right_kind {
             RightPanelKind::Settings => {
@@ -12661,6 +12691,7 @@ impl ShellState {
         }
     }
 
+    #[cfg(test)]
     fn active_left_tab_id(&self, session: &ActiveSession) -> String {
         match self.active_left_kind {
             LeftPanelKind::Display => FRAMEWORK_DISPLAY_WINDOWS_TAB_ID.into(),
@@ -12682,6 +12713,7 @@ impl ShellState {
         }
     }
 
+    #[cfg(test)]
     fn active_right_tab_id(&self, session: &ActiveSession) -> String {
         // 🎨️🎛️ Settings now has 2-3 tabs (General / Theme / Commands — see `right_tabs`), so this needs
         // to actually respect `self.active_right_tab` here too, same as every other panel column, instead
@@ -14411,6 +14443,7 @@ impl ShellState {
     /// together, mirroring React's `data-element-alias`); everything else resolves through
     /// `resolve_element_rect` (utility buttons/toggles; panel tabs via registration).
     /// `…firstDraggable` resolves to the first draggable tree-row hit inside the tab body when available.
+    #[cfg(test)]
     fn resolve_introduction_element_rects(&self, id: &str, theme: &Theme, width: f32, height: f32, hit_targets: &[HitTarget<ActionDescriptor>]) -> Vec<Rect> {
         if id == semio_framework::UI_NAVBAR_ELEMENT_ID {
             return vec![Rect::new(0.0, 0.0, width, theme.navbar_height)];
@@ -14455,6 +14488,7 @@ impl ShellState {
     }
 
     /// 🪟️ Resolves every dock-stack silhouette for an introduction window id (kind or instance).
+    #[cfg(test)]
     fn resolve_introduction_window_silhouettes(&self, id: &str) -> Vec<WindowSilhouette> {
         let Some(segment) = id.strip_prefix("framework.window.") else {
             return Vec::new();
@@ -14473,6 +14507,7 @@ impl ShellState {
     }
 
     /// 🆔️ Convenience: first/only rect for an introduction id (info-box anchoring + single-target pulse).
+    #[cfg(test)]
     fn resolve_introduction_element_rect(&self, id: &str, theme: &Theme, width: f32, height: f32, hit_targets: &[HitTarget<ActionDescriptor>]) -> Option<Rect> {
         let rects = self.resolve_introduction_element_rects(id, theme, width, height, hit_targets);
         match rects.as_slice() {
@@ -14807,6 +14842,7 @@ impl ShellState {
         }
     }
 
+    #[cfg(test)]
     fn render_example_dropdown(&self, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, x: f32, y: f32, w: f32, items: &[(String, String, usize)], examples: &[ExampleDefinition]) {
         let row_h = theme.control_height;
         let h = items.len() as f32 * row_h + theme.padding_standard * 2.0;
@@ -14830,6 +14866,7 @@ impl ShellState {
         }
     }
 
+    #[cfg(test)]
     fn render_action_list(
         &self,
         overlay: &mut DrawList,
@@ -14884,10 +14921,12 @@ impl ShellState {
         }
     }
 
+    #[cfg(test)]
     fn measures_for_kind(kind: &semio_framework::WindowKindDefinition) -> &[WindowMeasure] {
         kind.options.measures.as_slice()
     }
 
+    #[cfg(test)]
     fn engagement_for_kind(&self, kind: &semio_framework::WindowKindDefinition) -> Option<WindowEngagement> {
         self.window_engagements.get(&kind.id).cloned().or_else(|| kind.options.engagement.as_option().cloned()).or_else(|| if kind.surface_kind.is_viewport() { Some(ui_wgpu::wgpu::default_viewport_engagement()) } else { None })
     }
@@ -14980,6 +15019,7 @@ impl ShellState {
     /// rendered as a compact overlay directly above the footer utility bar (no detached "Utility Options" card).
     /// Reuses [`Self::render_window_measure`] so Select/Slider/Toggle controls behave exactly as in the
     /// general Measures rail.
+    #[cfg(test)]
     fn render_utility_options_rail(
         &mut self,
         draw: &mut DrawList,
@@ -15023,6 +15063,7 @@ impl ShellState {
         })(draw, overlay)
     }
 
+    #[cfg(test)]
     fn render_window_measure_tree(
         &mut self,
         draw: &mut DrawList,
@@ -15057,6 +15098,7 @@ impl ShellState {
         Some(y - bounds.y)
     }
 
+    #[cfg(test)]
     fn render_window_measure_one(&mut self, draw: &mut DrawList, overlay: &mut Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, bounds: Rect, measure: &WindowMeasure) {
         use ui_wgpu::wgpu::widgets::{render_window_measure_select, render_window_measure_slider, render_window_measure_toggle};
         let y = bounds.y;
@@ -15202,6 +15244,7 @@ impl ShellState {
         })(draw, overlay)
     }
 
+    #[cfg(test)]
     fn render_engagement_input(
         &mut self,
         draw: &mut DrawList,
@@ -15264,6 +15307,7 @@ impl ShellState {
         // #endregion
     }
 
+    #[cfg(test)]
     fn render_engagement_control(
         &mut self,
         draw: &mut DrawList,
@@ -15402,6 +15446,7 @@ impl ShellState {
     }
 
     /// 📝️ Total height of one action's staged arg form (per-arg fields + the Execute/Reset row).
+    #[cfg(test)]
     fn staged_form_height(&self, theme: &Theme, action: &semio_framework::ActionDefinition) -> f32 {
         let mut h = theme.gap_standard;
         for arg in &action.args {
@@ -15410,6 +15455,7 @@ impl ShellState {
         h + theme.control_height + theme.gap_standard
     }
 
+    #[cfg(test)]
     fn staged_arg_height(&self, theme: &Theme, arg: &semio_framework::ActionArgDef) -> f32 {
         match arg.control() {
             semio_framework::ActionArgControl::Toggle => theme.control_height + theme.gap_standard,
@@ -15544,6 +15590,7 @@ impl ShellState {
 
     /// 📝️ The current display string of a scalar arg — the live focus buffer if focused, else the
     /// effective staged/default value.
+    #[cfg(test)]
     fn staged_arg_display_string(&self, window_id: &str, action_id: &str, arg: &semio_framework::ActionArgDef, input: &InputState<ActionDescriptor>, control_id: Option<&str>) -> String {
         if let Some(control_id) = control_id {
             if input.focused_id.as_deref() == Some(control_id) {
@@ -15560,6 +15607,7 @@ impl ShellState {
     }
 
     #[allow(clippy::too_many_arguments)]
+    #[cfg(test)]
     fn render_staged_text_field(
         &mut self,
         draw: &mut DrawList,
@@ -15584,6 +15632,7 @@ impl ShellState {
     }
 
     #[allow(clippy::too_many_arguments)]
+    #[cfg(test)]
     fn paint_staged_input_box(&self, draw: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, rect: Rect, display: &str, focused: bool, enabled: bool, control_id: &str) {
         draw.push_rounded([rect.x, rect.y, rect.w, rect.h], theme.input_bg, theme.border_radius);
         if focused {
@@ -15605,6 +15654,7 @@ impl ShellState {
 
     /// 📏️ Shared width pass for a menu level — also used to size a submenu BEFORE deciding which side of
     /// its parent row it opens on (see `render_context_menu_level`'s flip-left check).
+    #[cfg(test)]
     fn context_menu_level_width(items: &[ContextMenuItem], theme: &Theme) -> f32 {
         let mut w = 180.0;
         for item in items.iter().filter(|item| !item.separator || !item.label.is_empty()) {
@@ -16150,6 +16200,7 @@ fn with_chrome_prefs<R>(f: impl FnOnce(&mut ChromePrefsState) -> R) -> R {
     })
 }
 
+#[cfg(test)]
 pub(crate) fn active_theme_id() -> String {
     with_chrome_prefs(|prefs| prefs.theme_id.clone())
 }
@@ -16158,6 +16209,7 @@ pub(crate) fn set_active_theme_id(id: &str) {
     with_chrome_prefs(|prefs| prefs.theme_id = id.to_string());
 }
 
+#[cfg(test)]
 pub(crate) fn active_ui_layout() -> String {
     with_chrome_prefs(|prefs| prefs.ui_layout.clone())
 }
@@ -16170,10 +16222,8 @@ pub(crate) fn set_active_ui_layout(layout: &str) {
     with_chrome_prefs(|prefs| prefs.ui_layout = value.to_string());
 }
 
-pub(crate) fn active_worker_count() -> u32 {
-    with_chrome_prefs(|prefs| prefs.worker_count)
-}
 
+#[cfg(test)]
 pub(crate) fn custom_theme_ids() -> Vec<String> {
     with_chrome_prefs(|prefs| prefs.custom_themes.keys().cloned().collect())
 }
@@ -16432,22 +16482,12 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
 
 /// 🗣️ `id`'s locale-aware label via `ui_wgpu::wgpu::framework_panel_tab_label` (the one existing
 /// locale-aware string helper, per a prior wave), falling back to `fallback` for app-declared ids.
+#[cfg(test)]
 fn shell_panel_tab_label(id: &str, fallback: &'static str, is_de: bool) -> String {
     ui_wgpu::wgpu::framework_panel_tab_label(id, is_de).unwrap_or(fallback).to_string()
 }
 
-/// 🎓️ Reads whether `app_id`'s introduction has already been shown, byte-identical semantics to
-/// `readStoredIntroductionSeen` (`ui/js/react/index.tsx:2309`). Persistence primitive only — wiring
-/// this into the actual onboarding-tour auto-start trigger is `w3-overlays-chrome-polish`'s scope.
-pub(crate) fn read_stored_introduction_seen(app_id: &str) -> bool {
-    prefs_get(&format!("{UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}{app_id}")).as_deref() == Some("true")
-}
 
-/// 🎓️ Marks `app_id`'s introduction as shown, byte-identical semantics to `writeStoredIntroductionSeen`
-/// (`ui/js/react/index.tsx:2315`).
-pub(crate) fn write_stored_introduction_seen(app_id: &str) {
-    prefs_set(&format!("{UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}{app_id}"), "true");
-}
 //#endregion 🗣️ChromeI18n
 
 //#region 💾️PrefsSync

@@ -2,7 +2,7 @@
 name = "semio-framework-ui-backend-vulkan"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Hand-written Vulkan backend for Linux"
 
 [package.metadata.semio]

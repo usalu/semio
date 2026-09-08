@@ -24,15 +24,11 @@ pub fn handle(payload: &RequestDeleteArtifact, doc: &ArtifactView<'_, SSpaceSnap
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::space_index::commands::create_artifact;
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
 
     #[semio_framework_async_macros::async_test]
     async fn request_delete_opens_the_confirm_dialog_without_mutating() {
-        let mut app = testkit::new_app().await;
-        app.dispatch_typed(SpaceIndexCommand::CreateArtifact(create_artifact::CreateArtifact { name: "First".into(), kind_id: "draw".into(), now_ms: 1, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local"))
-            .await.expect("create artifact");
-        let id = app.snapshot().unwrap().artifacts[0].id.clone();
+        let (mut app, id) = testkit::new_app_with_artifact().await;
         let result = app.dispatch_typed(SpaceIndexCommand::RequestDeleteArtifact(RequestDeleteArtifact { id: id.clone() }), &semio_framework_plugin::testkit::meta("local")).await.expect("request delete");
         assert!(result.mutations.is_empty(), "requesting delete never mutates the document directly");
         assert_eq!(app.snapshot().unwrap().artifacts.len(), 1, "the row survives until the dialog is confirmed");

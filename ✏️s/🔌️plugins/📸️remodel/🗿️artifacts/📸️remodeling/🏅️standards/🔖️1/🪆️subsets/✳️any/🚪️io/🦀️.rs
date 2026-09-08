@@ -566,6 +566,7 @@ mod io_tests {
     use crate::artifacts::remodeling::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::artifacts::remodeling::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use semio_framework::io::io_mechanism::{Deserializer, Serializer};
+    use semio_framework::io_schema::IoPayload;
     use semio_framework_plugin::mesh_from_kind;
 
     const PLY_FIXTURE: &[u8] = include_bytes!("🧫️fixtures/🧱️four-points.ply");

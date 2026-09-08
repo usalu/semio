@@ -227,11 +227,11 @@ impl RequestRegistry {
     /// HTTP task is not itself cancelled by this, it just has nowhere left to deliver into. A chunk
     /// for an id that is not `Pending` (already resolved, or cancelled/dropped — see `RequestFuture`'s
     /// `Drop` impl) is a harmless no-op, same as `resolve` on an unknown id.
-    pub fn append_chunk(&self, id: RequestId, bytes: Vec<u8>, done: bool, cap: usize) {
+    pub fn append_chunk(&self, id: RequestId, bytes: &[u8], done: bool, cap: usize) {
         let mut inner = self.inner.borrow_mut();
         let outcome = match inner.get_mut(id.0).map(|entry| &mut entry.value) {
             Some(Slot::Pending { partial, .. }) => {
-                partial.extend_from_slice(&bytes);
+                partial.extend_from_slice(bytes);
                 if partial.len() > cap {
                     Some(Err(Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.request-registry.body-too-large"), format!("http/blob body exceeded the {cap}-byte instance quota (message_bytes)"))))
                 } else if done {
@@ -410,7 +410,7 @@ mod tests {
         let original: Vec<u8> = (0u8..=255).chain(0u8..=255).chain(0u8..100).collect(); // 710 bytes, non-trivial and non-uniform
         for (index, window) in original.chunks(97).enumerate() {
             let done = (index + 1) * 97 >= original.len();
-            registry.append_chunk(RequestId(1), window.to_vec(), done, 1024 * 1024);
+            registry.append_chunk(RequestId(1), window, done, 1024 * 1024);
         }
         let mut future = Box::pin(future);
         let waker = futures_test_waker();
@@ -426,8 +426,8 @@ mod tests {
     async fn append_chunk_over_cap_faults_instead_of_silently_truncating() {
         let registry = RequestRegistry::new();
         let future = registry.request(|req| Effect::CancelJob { job: req.0 });
-        registry.append_chunk(RequestId(1), vec![0u8; 40], false, 64);
-        registry.append_chunk(RequestId(1), vec![0u8; 40], false, 64); // 80 > 64 cap — must fault here, not wait for `done`
+        registry.append_chunk(RequestId(1), &[0u8; 40], false, 64);
+        registry.append_chunk(RequestId(1), &[0u8; 40], false, 64); // 80 > 64 cap — must fault here, not wait for `done`
         let mut future = Box::pin(future);
         let waker = futures_test_waker();
         let mut cx = Context::from_waker(waker);
@@ -441,10 +441,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn append_chunk_on_an_unknown_or_already_resolved_id_is_a_harmless_no_op() {
         let registry = RequestRegistry::new();
-        registry.append_chunk(RequestId(999), vec![1, 2, 3], false, 1024); // never requested
+        registry.append_chunk(RequestId(999), &[1, 2, 3], false, 1024); // never requested
         let future = registry.request(|req| Effect::CancelJob { job: req.0 });
         registry.resolve(RequestId(1), Ok(b"already done".to_vec()));
-        registry.append_chunk(RequestId(1), vec![9, 9, 9], true, 1024); // arrives after resolve
+        registry.append_chunk(RequestId(1), &[9, 9, 9], true, 1024); // arrives after resolve
         let mut future = Box::pin(future);
         let waker = futures_test_waker();
         let mut cx = Context::from_waker(waker);

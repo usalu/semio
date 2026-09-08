@@ -670,8 +670,8 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: RASTER_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: crate::artifacts::raster::standards::v1::subsets::any::io::export_stdio_kinds().to_vec(),
-        import_stdio_kinds: crate::artifacts::raster::standards::v1::subsets::any::io::import_stdio_kinds().to_vec(),
+        export_stdio_kinds: crate::artifacts::raster::standards::v1::subsets::any::io::export_stdio_kinds().iter().map(|kind| (*kind).to_owned()).collect(),
+        import_stdio_kinds: crate::artifacts::raster::standards::v1::subsets::any::io::import_stdio_kinds().iter().map(|kind| (*kind).to_owned()).collect(),
     }
 }
 //#endregion 🔖️ArtifactKind

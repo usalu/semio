@@ -10,6 +10,9 @@
 //! type 6 / bit depth 8 / interlace method 0 for the pixel data — see 🚫️EncodeScopeNote below
 //! — but DOES honestly re-emit every typed ancillary/text/unknown chunk it decoded, in the
 //! original relative chunk order.
+/// 🧩 Borrowed PNG chunk type tag and payload.
+type PngChunkView<'a> = ([u8; 4], &'a [u8]);
+
 
 use crate::artifacts::png::{
     schema::snapshot::{PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims, PngRgb, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp, PngTransparency},
@@ -87,7 +90,7 @@ fn write_chunk(out: &mut Vec<u8>, ty: &[u8; 4], data: &[u8]) {
 /// 📖 Splits a PNG byte stream into `(type, data)` chunks, rejecting CRC mismatches and
 /// truncation up front so downstream decode logic never has to re-check framing.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_chunks(data: &[u8]) -> Result<Vec<([u8; 4], &[u8])>, String> {
+fn read_chunks(data: &[u8]) -> Result<Vec<PngChunkView<'_>>, String> {
     if data.len() < 8 || data[0..8] != PNG_SIGNATURE {
         return Err("png: bad signature".into());
     }
@@ -186,13 +189,13 @@ fn samples_per_pixel(color_type: u8) -> usize {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn bpp_bytes(ihdr: &Ihdr) -> usize {
-    ((samples_per_pixel(ihdr.color_type) * ihdr.bit_depth as usize + 7) / 8).max(1)
+    (samples_per_pixel(ihdr.color_type) * ihdr.bit_depth as usize).div_ceil(8).max(1)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn packed_row_bytes(width: u32, color_type: u8, bit_depth: u8) -> usize {
     let bits = width as usize * samples_per_pixel(color_type) * bit_depth as usize;
-    (bits + 7) / 8
+    bits.div_ceil(8)
 }
 //#endregion Ihdr
 
@@ -218,8 +221,8 @@ fn filter_row(filter_type: u8, cur: &[u8], prev: Option<&[u8]>, bpp: usize) -> V
     let mut out = vec![0u8; cur.len()];
     for x in 0..cur.len() {
         let a = if x >= bpp { cur[x - bpp] } else { 0 };
-        let b = prev.map(|p| p[x]).unwrap_or(0);
-        let c = if x >= bpp { prev.map(|p| p[x - bpp]).unwrap_or(0) } else { 0 };
+        let b = prev.map_or(0, |p| p[x]);
+        let c = if x >= bpp { prev.map_or(0, |p| p[x - bpp]) } else { 0 };
         out[x] = match filter_type {
             0 => cur[x],
             1 => cur[x].wrapping_sub(a),
@@ -240,8 +243,8 @@ fn defilter_row(filter_type: u8, filt: &[u8], prev: Option<&[u8]>, bpp: usize) -
     let mut out = vec![0u8; filt.len()];
     for x in 0..filt.len() {
         let a = if x >= bpp { out[x - bpp] } else { 0 };
-        let b = prev.map(|p| p[x]).unwrap_or(0);
-        let c = if x >= bpp { prev.map(|p| p[x - bpp]).unwrap_or(0) } else { 0 };
+        let b = prev.map_or(0, |p| p[x]);
+        let c = if x >= bpp { prev.map_or(0, |p| p[x - bpp]) } else { 0 };
         out[x] = match filter_type {
             0 => filt[x],
             1 => filt[x].wrapping_add(a),
@@ -303,8 +306,8 @@ const ADAM7: [(u32, u32, u32, u32); 7] = [(0, 0, 8, 8), (4, 0, 8, 8), (0, 4, 4, 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn adam7_pass_dims(width: u32, height: u32, pass: usize) -> (u32, u32) {
     let (sx, sy, stx, sty) = ADAM7[pass];
-    let w = if width > sx { (width - sx + stx - 1) / stx } else { 0 };
-    let h = if height > sy { (height - sy + sty - 1) / sty } else { 0 };
+    let w = if width > sx { (width - sx).div_ceil(stx) } else { 0 };
+    let h = if height > sy { (height - sy).div_ceil(sty) } else { 0 };
     (w, h)
 }
 //#endregion Adam7
@@ -319,9 +322,7 @@ fn unpack_samples(row: &[u8], width: usize, spp: usize, bit_depth: u8) -> Vec<u3
             out.push(((row[i * 2] as u32) << 8) | row[i * 2 + 1] as u32);
         }
     } else if bit_depth == 8 {
-        for i in 0..count {
-            out.push(row[i] as u32);
-        }
+        out.extend(row[..count].iter().map(|&sample| sample as u32));
     } else {
         let mut bitpos = 0usize;
         for _ in 0..count {
@@ -607,7 +608,7 @@ pub fn decode_png(data: &[u8]) -> Result<PngSnapshot, String> {
             if chunk.len() % 3 != 0 {
                 return Err("png PLTE: length not a multiple of 3".into());
             }
-            palette = chunk.chunks_exact(3).map(|c| [c[0], c[1], c[2]]).collect();
+            palette = chunk.as_chunks::<3>().0.iter().map(|c| [c[0], c[1], c[2]]).collect();
             plte_out = Some(palette.iter().map(|c| PngRgb { r: c[0], g: c[1], b: c[2] }).collect());
             chunk_order.push(PngChunkMarker::Plte);
         } else if ty == *b"tRNS" {
@@ -789,7 +790,7 @@ pub fn decode_png(data: &[u8]) -> Result<PngSnapshot, String> {
         }
     } else {
         let mut pos = 0usize;
-        for pass in 0..7 {
+        for (pass, &(sx, sy, stx, sty)) in ADAM7.iter().enumerate() {
             let (pw, ph) = adam7_pass_dims(ihdr.width, ihdr.height, pass);
             if pw == 0 || ph == 0 {
                 continue;
@@ -797,7 +798,6 @@ pub fn decode_png(data: &[u8]) -> Result<PngSnapshot, String> {
             let row_bytes = packed_row_bytes(pw, ihdr.color_type, ihdr.bit_depth);
             let (rows, new_pos) = defilter_pass(&raw, pos, ph, row_bytes, bpp)?;
             pos = new_pos;
-            let (sx, sy, stx, sty) = ADAM7[pass];
             for (j, row) in rows.iter().enumerate() {
                 let samples = unpack_samples(row, pw as usize, spp, ihdr.bit_depth);
                 put_row(&samples, pw as usize, sx, sy + j as u32 * sty, stx)?;

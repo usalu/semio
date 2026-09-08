@@ -3,7 +3,7 @@
 use crate::artifacts::jack::mutations::TrinityGraphMutation;
 #[cfg(test)]
 use crate::artifacts::jack::mutations::{
-    change_data_property, create_edge, create_node, delete_edge, delete_node, move_node, register_trinity_graph_mutation_descriptors, remove_data_property, rename_node, ChangeDataProperty, CreateEdge, DeleteNode, RenameNode,
+    change_data_property, create_edge, create_node, delete_edge, delete_node, move_node, register_trinity_graph_mutation_descriptors, remove_data_property, rename_node, CreateEdge, DeleteNode, RenameNode,
 };
 use crate::artifacts::jack::{EntityRef, JackSnapshot, PropertyBag, PropertyValue, TRINITY_GRAPH_SCHEMA};
 #[cfg(test)]
@@ -245,7 +245,7 @@ mod tests {
     use super::*;
     use crate::artifacts::jack::mutations::CreateNode;
     use crate::artifacts::jack::{Camera, Manifest, PortDirection};
-    use protocol::MutationDiff;
+    
 
     fn mini_fixture() -> JackSnapshot {
         JackSnapshot::with_content(

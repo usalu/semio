@@ -729,13 +729,13 @@ mod tests_validate {
             header: EntityHeader::new(EntityId::new_serial("relationship", "broken"), "broken"),
             source_id: program.elements[0].header.id.clone(),
             target_id: EntityId("missing-target".into()),
-            kind: crate::artifacts::program::registers::RelationshipKind::DependsOn,
+            kind: RelationshipKind::DependsOn,
             strength: Some(1.0),
             directional: true,
             rationale: None,
             constraints: Vec::new(),
             conditions: Vec::new(),
-            relationship_priority: crate::artifacts::program::kernel::Priority::Preferred,
+            relationship_priority: Priority::Preferred,
             valid_from: None,
             valid_until: None,
             evidence: Vec::new(),
@@ -2399,7 +2399,7 @@ mod tests_trace {
     async fn audit_trail_sorted_newest_first() {
         let mut program = sample_plugin();
         program.audit_events.push(AuditEvent {
-            header: crate::artifacts::program::kernel::EntityHeader::new(EntityId::new_serial("audit", "older"), "older"),
+            header: EntityHeader::new(EntityId::new_serial("audit", "older"), "older"),
             action: crate::artifacts::program::registers::AuditAction::Created,
             actor_id: None,
             subject_id: program.elements[0].header.id.clone(),
@@ -2420,7 +2420,7 @@ mod tests_trace {
             retention_until: None,
         });
         program.audit_events.push(AuditEvent {
-            header: crate::artifacts::program::kernel::EntityHeader::new(EntityId::new_serial("audit", "newer"), "newer"),
+            header: EntityHeader::new(EntityId::new_serial("audit", "newer"), "newer"),
             action: crate::artifacts::program::registers::AuditAction::Updated,
             actor_id: None,
             subject_id: program.elements[0].header.id.clone(),

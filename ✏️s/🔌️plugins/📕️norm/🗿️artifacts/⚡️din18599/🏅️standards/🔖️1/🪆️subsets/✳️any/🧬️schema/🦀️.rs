@@ -26,6 +26,7 @@ pub struct Din18599Artifact {
     pub h_v: f64,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.table")]
+    #[cfg_attr(test, serde(with = "crate::document::child_identity_oracle"))]
     pub climate: Din18599ClimateChild,
     #[state(artifact)]
     pub internal_gains_w_m2: f64,
@@ -729,7 +730,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn from_building_computes_h_t_from_u_value() {
+    async fn from_building_computes_h_t_from_u_value() {
         let inputs = reference_100m2_inputs();
         let r = total_resistance(&reference_wall_layers(), R_SI_WALL_M2K_W, R_SE_WALL_M2K_W);
         let u = u_value_from_resistance(r);
@@ -742,7 +743,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn from_building_computes_h_v_from_ventilation() {
+    async fn from_building_computes_h_v_from_ventilation() {
         let inputs = reference_100m2_inputs();
         let airflow = residential_ventilation_rate(100.0, 4);
         assert!((airflow - 120.0).abs() < 1e-9);
@@ -752,35 +753,35 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn reference_100m2_q_t_numeric() {
+    async fn reference_100m2_q_t_numeric() {
         let inputs = reference_100m2_inputs();
         let q_t = part_2::transmission_losses_kwh(&inputs);
         assert!((q_t - 11_054.56).abs() < 1.0);
     }
 
     #[semio_framework_async_macros::async_test]
-    fn reference_100m2_q_v_numeric() {
+    async fn reference_100m2_q_v_numeric() {
         let inputs = reference_100m2_inputs();
         let q_v = part_3::ventilation_losses_kwh(&inputs);
         assert!((q_v - 4_896.01).abs() < 1.0);
     }
 
     #[semio_framework_async_macros::async_test]
-    fn reference_100m2_q_p_numeric() {
+    async fn reference_100m2_q_p_numeric() {
         let inputs = reference_100m2_inputs();
         let q_p = part_10::primary_energy_kwh(&inputs);
         assert!((q_p - 19_608.96).abs() < 5.0);
     }
 
     #[semio_framework_async_macros::async_test]
-    fn dhw_from_occupants_4_persons() {
+    async fn dhw_from_occupants_4_persons() {
         let inputs = reference_100m2_inputs();
         let q_w = part_9::dhw_demand_kwh(&inputs);
         assert!((q_w - 3600.0).abs() < 1e-9);
     }
 
     #[semio_framework_async_macros::async_test]
-    fn cooling_degree_hours_zone2_positive() {
+    async fn cooling_degree_hours_zone2_positive() {
         let climate = MonthlyClimate::german_reference(ClimateZoneDe::Zone2);
         let cdh = part_8::cooling_degree_hours(&climate);
         assert!(cdh > 1000.0);
@@ -790,34 +791,34 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn part_4_internal_gains_positive() {
+    async fn part_4_internal_gains_positive() {
         let inputs = reference_100m2_inputs();
         let q_i = part_4::internal_gains_kwh(&inputs);
         assert!(q_i > 1000.0);
     }
 
     #[semio_framework_async_macros::async_test]
-    fn part_5_solar_gains_positive() {
+    async fn part_5_solar_gains_positive() {
         let inputs = reference_100m2_inputs();
         let q_s = part_5::solar_gains_kwh(&inputs);
         assert!(q_s > 0.0, "q_s={q_s}");
     }
 
     #[semio_framework_async_macros::async_test]
-    fn part_6_system_losses_scale_with_area() {
+    async fn part_6_system_losses_scale_with_area() {
         let inputs = reference_100m2_inputs();
         let q_sys = part_6::system_losses_kwh(&inputs);
         assert!((q_sys - 800.0).abs() < 1e-9);
     }
 
     #[semio_framework_async_macros::async_test]
-    fn part_11_automation_factor_residential() {
+    async fn part_11_automation_factor_residential() {
         let inputs = reference_100m2_inputs();
         assert!((part_11::automation_factor(&inputs) - 0.95).abs() < 1e-9);
     }
 
     #[semio_framework_async_macros::async_test]
-    fn part_12_tabular_distinct_from_part_10() {
+    async fn part_12_tabular_distinct_from_part_10() {
         let inputs = reference_100m2_inputs();
         let q_p = part_10::primary_energy_kwh(&inputs);
         let q_tab = part_12::tabular_primary_energy_kwh(&inputs);
@@ -826,7 +827,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn primary_energy_factor_table_cited() {
+    async fn primary_energy_factor_table_cited() {
         assert!((primary_energy_factor("natural_gas") - 1.1).abs() < 1e-9);
         assert!((primary_energy_factor("district_heat") - 0.7).abs() < 1e-9);
         assert!((primary_energy_factor("electricity_grid") - 1.8).abs() < 1e-9);
@@ -834,14 +835,14 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn part_1_primary_energy_aggregation_worked_example() {
+    async fn part_1_primary_energy_aggregation_worked_example() {
         let deliveries = vec![part_1::FinalEnergyDelivery { carrier: "natural_gas".into(), q_f_kwh: 10_000.0 }, part_1::FinalEnergyDelivery { carrier: "electricity_grid".into(), q_f_kwh: 2_000.0 }];
         let q_p = part_1::aggregate_primary_energy_kwh(&deliveries);
         assert!((q_p - 14_600.0).abs() < 1e-9, "q_p = {q_p}, expected 10000*1.1 + 2000*1.8 = 14600");
     }
 
     #[semio_framework_async_macros::async_test]
-    fn part_8_cooling_demand_numeric_worked_example() {
+    async fn part_8_cooling_demand_numeric_worked_example() {
         let inputs = reference_100m2_inputs();
         let cdh = part_8::cooling_degree_hours(&crate::artifacts::din18599::din18599_climate(&inputs));
         let expected_q_c = (inputs.h_t + inputs.h_v) * cdh * 0.35 / 1000.0;
@@ -851,7 +852,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn reference_residential_matches_from_building() {
+    async fn reference_residential_matches_from_building() {
         let via_helper = reference_residential(ClimateZoneDe::Zone2, 100.0);
         let via_from_building = reference_100m2_inputs();
         assert_eq!(via_helper, via_from_building);

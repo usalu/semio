@@ -396,7 +396,7 @@ mod tests {
         ];
         assert_eq!(sample.len(), KINDS.len(), "one sample per declared kind");
         for (mutation, kind) in sample.iter().zip(KINDS) {
-            let tag = serde_json::to_value(mutation).expect("serializes")["mutation"].as_str().expect("the internally-tagged variant name").to_string();
+            let tag = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(mutation)).expect("serializes")["mutation"].as_str().expect("the internally-tagged variant name").to_string();
             let kebab = kind.split('-').enumerate().map(|(index, part)| if index == 0 { part.to_string() } else { format!("{}{}", part[..1].to_uppercase(), &part[1..]) }).collect::<String>();
             assert_eq!(tag, kebab, "KINDS entry {kind} must name the variant it stands for");
         }

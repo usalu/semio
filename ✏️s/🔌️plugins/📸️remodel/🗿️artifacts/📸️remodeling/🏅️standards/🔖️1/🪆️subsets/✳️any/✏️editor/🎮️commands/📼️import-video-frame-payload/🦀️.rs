@@ -7,6 +7,10 @@ use crate::artifacts::remodeling::{FrameRef, ImageAsset, MediaKind, MediaStream,
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use crate::editor::remodeling::engine::images as remodeling_image;
 use crate::editor::remodeling::payload_from_data_url;
+#[cfg(test)]
+use crate::editor::remodeling::engine::video as remodeling_video;
+#[cfg(test)]
+use crate::editor::remodeling::commands::import_frame_payload;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::VecDeque;
@@ -127,7 +131,7 @@ pub(crate) async fn testkit_import_checker_stream(app: &mut crate::editor::remod
     use crate::editor::remodeling::testkit::dispatch;
     use crate::editor::remodeling::RemodelingCommand;
     for index in 0..n {
-        dispatch(app, RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload: checker_data_url(24, 24, 3), name: format!("frame-{index}.png"), index })).await;
+        dispatch(app, RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload: checker_data_url(24, 24, 3).await, name: format!("frame-{index}.png"), index })).await;
     }
 }
 
@@ -228,7 +232,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn import_frame_payload_creates_a_stream_and_asset() {
         let mut app = app().await;
-        testkit_import_checker_stream(&mut app, 3);
+        testkit_import_checker_stream(&mut app, 3).await;
         let scene = app.snapshot().expect("projection");
         assert_eq!(scene.streams.len(), 1, "one importFrames batch creates exactly one stream");
         assert_eq!(scene.streams[0].frames.len(), 3);
@@ -243,7 +247,7 @@ mod tests {
         // 🎯️ `IngestParams::default().frame_sample_stride == 5`; force stride 1 so all 5 synthesized
         // frames are kept (a stride-sampling test belongs to the video engine topic file, not here).
         dispatch(&mut app, RemodelingCommand::SetIngestParams(crate::editor::remodeling::commands::set_ingest_params::SetIngestParams { frame_sample_stride: 1, max_frames: 200, downscale_long_edge_px: 1600, min_sharpness: 0.3 })).await;
-        dispatch(&mut app, RemodelingCommand::ImportVideoBytesPayload(import_video_bytes_payload::ImportVideoBytesPayload { payload: checker_video_data_url(5, 32, 32, 4), name: "clip.mp4".into() })).await;
+        dispatch(&mut app, RemodelingCommand::ImportVideoBytesPayload(import_video_bytes_payload::ImportVideoBytesPayload { payload: checker_video_data_url(5, 32, 32, 4).await, name: "clip.mp4".into() })).await;
         let scene = app.snapshot().expect("projection");
         assert_eq!(scene.streams.len(), 1);
         assert_eq!(scene.streams[0].kind, MediaKind::Video);
@@ -257,7 +261,7 @@ mod tests {
     async fn import_video_frame_payload_then_done_writes_one_stream_with_video_source() {
         let mut app = app().await;
         for index in 0..4u32 {
-            dispatch(&mut app, RemodelingCommand::ImportVideoFramePayload(ImportVideoFramePayload { payload: checker_data_url_jpeg(24, 24, 3), name: "clip.mp4".into(), index, frame_index: index, timestamp_ms: f64::from(index) * 100.0 })).await;
+            dispatch(&mut app, RemodelingCommand::ImportVideoFramePayload(ImportVideoFramePayload { payload: checker_data_url_jpeg(24, 24, 3).await, name: "clip.mp4".into(), index, frame_index: index, timestamp_ms: f64::from(index) * 100.0 })).await;
         }
         dispatch(&mut app, RemodelingCommand::ImportVideoDone(import_video_done::ImportVideoDone { name: "clip.mp4".into(), duration_ms: 400.0, frame_count: 4, width: 24, height: 24, codec: "mjpeg".into() })).await;
         let scene = app.snapshot().expect("projection");

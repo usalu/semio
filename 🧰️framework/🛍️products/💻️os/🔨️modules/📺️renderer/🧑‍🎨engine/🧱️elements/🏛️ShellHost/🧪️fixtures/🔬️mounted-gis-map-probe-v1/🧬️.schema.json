@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "source", "expected", "hostile"],
+  "properties": {
+    "schema": { "const": "semio.os.mounted-gis-map-probe/v1" },
+    "source": { "$ref": "#/$defs/source" },
+    "expected": { "$ref": "#/$defs/probe" },
+    "hostile": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": { "enum": ["unacknowledged-identity", "stale-ui-revision", "non-map-root", "malformed-map-pack", "duplicate-region-id"] }
+    }
+  },
+  "$defs": {
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spaceId", "documentId"],
+      "properties": { "spaceId": { "type": "string", "minLength": 1 }, "documentId": { "type": "string", "minLength": 1 } }
+    },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "clientInstanceId", "activationGeneration", "catalogGenerationId", "componentSha256", "descriptorSha256", "browserActorSha256", "uiRevision", "verifiedSurfaceId", "surface", "regions"],
+      "properties": {
+        "scope": { "$ref": "#/$defs/scope" },
+        "clientInstanceId": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
+        "activationGeneration": { "type": "string", "pattern": "^[1-9][0-9]{0,19}$" },
+        "catalogGenerationId": { "$ref": "#/$defs/sha256" },
+        "componentSha256": { "$ref": "#/$defs/sha256" },
+        "descriptorSha256": { "$ref": "#/$defs/sha256" },
+        "browserActorSha256": { "$ref": "#/$defs/sha256" },
+        "uiRevision": { "type": "integer", "minimum": 1 },
+        "verifiedSurfaceId": { "type": "string", "minLength": 1 },
+        "surface": { "type": "string", "minLength": 1 },
+        "regions": { "type": "array", "maxItems": 4096, "items": { "type": "object", "required": ["id"], "properties": { "id": { "type": "string", "minLength": 1, "maxLength": 256 } } } }
+      }
+    },
+    "probe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "clientInstanceId", "activationGeneration", "catalogGenerationId", "componentSha256", "descriptorSha256", "browserActorSha256", "uiRevision", "rootKind", "regionIds"],
+      "properties": {
+        "scope": { "$ref": "#/$defs/scope" },
+        "clientInstanceId": { "type": "string" },
+        "activationGeneration": { "type": "string" },
+        "catalogGenerationId": { "$ref": "#/$defs/sha256" },
+        "componentSha256": { "$ref": "#/$defs/sha256" },
+        "descriptorSha256": { "$ref": "#/$defs/sha256" },
+        "browserActorSha256": { "$ref": "#/$defs/sha256" },
+        "uiRevision": { "type": "integer", "minimum": 1 },
+        "rootKind": { "const": "tiled-map" },
+        "regionIds": { "type": "array", "maxItems": 4096, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 256 } }
+      }
+    }
+  }
+}

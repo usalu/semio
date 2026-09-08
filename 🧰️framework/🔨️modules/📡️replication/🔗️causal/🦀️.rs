@@ -444,6 +444,7 @@ impl MutationDag {
     /// @emoji ➕️ Inserts one envelope. Returns `AlreadyApplied` if its id was applied before,
     /// `Err(Duplicate)` if it's already buffered as pending, `Pending` if any dependency is wholly
     /// unknown to this dag, else `Applied` (and cascades `drain_ready` for anything it unblocks).
+    #[expect(clippy::result_large_err, reason = "Fixed-capacity admission returns the original envelope without allocating on rejection.")]
     pub fn insert(&mut self, envelope: MutationEnvelope) -> Result<InsertResult, MutationDagInsertRejected> {
         let id = envelope.mutation_id.0.as_str();
         if id.len() > MUTATION_DAG_IDENTIFIER_BYTES || envelope.dependencies.iter().any(|dependency| dependency.0.len() > MUTATION_DAG_IDENTIFIER_BYTES) {

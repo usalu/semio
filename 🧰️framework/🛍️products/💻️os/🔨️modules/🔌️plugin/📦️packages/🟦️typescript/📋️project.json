@@ -1,0 +1,38 @@
+{
+  "name": "@semio-tech/framework-plugin-web",
+  "targets": {
+    "support-dev": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "production"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim",
+        "{projectRoot}/dist/dev/🔌️plugin-modules/🧵️shard"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts support dev"
+      }
+    },
+    "support-release": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "production"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/release/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim",
+        "{projectRoot}/dist/release/🔌️plugin-modules/🧵️shard"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts support release"
+      }
+    }
+  },
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/**/*.{ts,json}"
+    ]
+  }
+}

@@ -329,19 +329,19 @@ fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdd
 /// `D` onto a `T` (needed when `d2` modifies an item `d1` just added).
 #[allow(clippy::too_many_arguments)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_indexed<T, D>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T>
+fn absorb_indexed<T, D>(d1: IndexedTripleDiff<D, T>, d2: &IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T>
 where
     T: Clone,
     D: Clone,
 {
     let d1_ref_max = d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).max();
-    let mut base_len = d1_ref_max.map(|m| m + 1).unwrap_or(0);
+    let mut base_len = d1_ref_max.map_or(0, |m| m + 1);
     let mid_len_needed_by_d1 = d1.added.iter().map(|a| a.index + 1).max().unwrap_or(0);
     while base_len.saturating_sub(d1.removed.len()) + d1.added.len() < mid_len_needed_by_d1 {
         base_len += 1;
     }
     let d2_ref_max = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max();
-    let required_mid_len = d2_ref_max.map(|m| m + 1).unwrap_or(0);
+    let required_mid_len = d2_ref_max.map_or(0, |m| m + 1);
     while base_len.saturating_sub(d1.removed.len()) + d1.added.len() < required_mid_len {
         base_len += 1;
     }
@@ -483,7 +483,7 @@ where
 
 /// 🧮️ Name-keyed absorb — identity is the KEY (not position), so no index transport is needed.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
+fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -856,11 +856,11 @@ fn inverse_run(base: &DocRun, diff: &DocRunDiff) -> DocRunDiff {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_list_item(base: &DocListItem, diff: &DocListItemDiff) -> DocListItemDiff {
-    DocListItemDiff { blocks: diff.blocks.as_ref().map(|bd| inverse_indexed(&base.blocks, bd, |b, d| inverse_block(b, d))) }
+    DocListItemDiff { blocks: diff.blocks.as_ref().map(|bd| inverse_indexed(&base.blocks, bd, inverse_block)) }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_cell(base: &DocTableCell, diff: &DocTableCellDiff) -> DocTableCellDiff {
-    DocTableCellDiff { blocks: diff.blocks.as_ref().map(|bd| inverse_indexed(&base.blocks, bd, |b, d| inverse_block(b, d))) }
+    DocTableCellDiff { blocks: diff.blocks.as_ref().map(|bd| inverse_indexed(&base.blocks, bd, inverse_block)) }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_row(base: &DocTableRow, diff: &DocTableRowDiff) -> DocTableRowDiff {
@@ -901,7 +901,7 @@ fn inverse_block(base: &DocBlock, diff: &DocBlockDiff) -> DocBlockDiff {
         }
         DocBlockDiff::Quote(qd) => {
             let DocBlock::Quote { blocks } = base else { return DocBlockDiff::Replace { block: base.clone() } };
-            DocBlockDiff::Quote(DocQuoteDiff { blocks: qd.blocks.as_ref().map(|bd| inverse_indexed(blocks, bd, |b, d| inverse_block(b, d))) })
+            DocBlockDiff::Quote(DocQuoteDiff { blocks: qd.blocks.as_ref().map(|bd| inverse_indexed(blocks, bd, inverse_block)) })
         }
         DocBlockDiff::Image(id) => {
             let DocBlock::Image { image_id, alt, width, height } = base else { return DocBlockDiff::Replace { block: base.clone() } };
@@ -930,7 +930,7 @@ fn absorb_list_item_diff(mut a: DocListItemDiff, b: DocListItemDiff) -> DocListI
     a.blocks = match (a.blocks.take(), b.blocks) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ba), Some(bb)) => Some(absorb_indexed(ba, bb, absorb_block_diff, block_with_diff_applied)),
+        (Some(ba), Some(bb)) => Some(absorb_indexed(ba, &bb, absorb_block_diff, block_with_diff_applied)),
     };
     a
 }
@@ -939,7 +939,7 @@ fn absorb_cell_diff(mut a: DocTableCellDiff, b: DocTableCellDiff) -> DocTableCel
     a.blocks = match (a.blocks.take(), b.blocks) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ba), Some(bb)) => Some(absorb_indexed(ba, bb, absorb_block_diff, block_with_diff_applied)),
+        (Some(ba), Some(bb)) => Some(absorb_indexed(ba, &bb, absorb_block_diff, block_with_diff_applied)),
     };
     a
 }
@@ -948,7 +948,7 @@ fn absorb_row_diff(mut a: DocTableRowDiff, b: DocTableRowDiff) -> DocTableRowDif
     a.cells = match (a.cells.take(), b.cells) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ca), Some(cb)) => Some(absorb_indexed(ca, cb, absorb_cell_diff, cell_with_diff_applied)),
+        (Some(ca), Some(cb)) => Some(absorb_indexed(ca, &cb, absorb_cell_diff, cell_with_diff_applied)),
     };
     a
 }
@@ -985,7 +985,7 @@ fn absorb_block_diff(a: DocBlockDiff, b: DocBlockDiff) -> DocBlockDiff {
             pa.runs = match (pa.runs.take(), pb.runs) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(ra), Some(rb)) => Some(absorb_indexed(ra, rb, absorb_run_diff, run_with_diff_applied)),
+                (Some(ra), Some(rb)) => Some(absorb_indexed(ra, &rb, absorb_run_diff, run_with_diff_applied)),
             };
             DocBlockDiff::Paragraph(pa)
         }
@@ -999,7 +999,7 @@ fn absorb_block_diff(a: DocBlockDiff, b: DocBlockDiff) -> DocBlockDiff {
             ha.runs = match (ha.runs.take(), hb.runs) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(ra), Some(rb)) => Some(absorb_indexed(ra, rb, absorb_run_diff, run_with_diff_applied)),
+                (Some(ra), Some(rb)) => Some(absorb_indexed(ra, &rb, absorb_run_diff, run_with_diff_applied)),
             };
             DocBlockDiff::Heading(ha)
         }
@@ -1010,7 +1010,7 @@ fn absorb_block_diff(a: DocBlockDiff, b: DocBlockDiff) -> DocBlockDiff {
             la.items = match (la.items.take(), lb.items) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(ia), Some(ib)) => Some(absorb_indexed(ia, ib, absorb_list_item_diff, list_item_with_diff_applied)),
+                (Some(ia), Some(ib)) => Some(absorb_indexed(ia, &ib, absorb_list_item_diff, list_item_with_diff_applied)),
             };
             DocBlockDiff::List(la)
         }
@@ -1018,7 +1018,7 @@ fn absorb_block_diff(a: DocBlockDiff, b: DocBlockDiff) -> DocBlockDiff {
             ta.rows = match (ta.rows.take(), tb.rows) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(ra), Some(rb)) => Some(absorb_indexed(ra, rb, absorb_row_diff, row_with_diff_applied)),
+                (Some(ra), Some(rb)) => Some(absorb_indexed(ra, &rb, absorb_row_diff, row_with_diff_applied)),
             };
             DocBlockDiff::Table(ta)
         }
@@ -1035,7 +1035,7 @@ fn absorb_block_diff(a: DocBlockDiff, b: DocBlockDiff) -> DocBlockDiff {
             qa.blocks = match (qa.blocks.take(), qb.blocks) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(ba), Some(bb)) => Some(absorb_indexed(ba, bb, absorb_block_diff, block_with_diff_applied)),
+                (Some(ba), Some(bb)) => Some(absorb_indexed(ba, &bb, absorb_block_diff, block_with_diff_applied)),
             };
             DocBlockDiff::Quote(qa)
         }
@@ -1096,19 +1096,19 @@ impl MutationDiff<SemioDocumentSnapshot> for SemioDocumentDiff {
         self.styles = match (styles, other.styles) {
             (None, x) => x,
             (x, None) => x,
-            (Some(sa), Some(sb)) => Some(absorb_named(sa, sb, |s| s.id.clone(), absorb_style_diff, apply_style)),
+            (Some(sa), Some(sb)) => Some(absorb_named(sa, &sb, |s| s.id.clone(), absorb_style_diff, apply_style)),
         };
         let images = std::mem::take(&mut self.images);
         self.images = match (images, other.images) {
             (None, x) => x,
             (x, None) => x,
-            (Some(ia), Some(ib)) => Some(absorb_named(ia, ib, |i| i.id.clone(), absorb_image_diff, apply_image)),
+            (Some(ia), Some(ib)) => Some(absorb_named(ia, &ib, |i| i.id.clone(), absorb_image_diff, apply_image)),
         };
         let blocks = std::mem::take(&mut self.blocks);
         self.blocks = match (blocks, other.blocks) {
             (None, x) => x,
             (x, None) => x,
-            (Some(ba), Some(bb)) => Some(absorb_indexed(ba, bb, absorb_block_diff, block_with_diff_applied)),
+            (Some(ba), Some(bb)) => Some(absorb_indexed(ba, &bb, absorb_block_diff, block_with_diff_applied)),
         };
     }
 }
@@ -1121,7 +1121,7 @@ impl DiffAlgebra<SemioDocumentSnapshot> for SemioDocumentDiff {
         SemioDocumentDiff {
             styles: self.styles.as_ref().map(|sd| inverse_named(&base.styles, sd, |s| s.id.clone(), inverse_style)),
             images: self.images.as_ref().map(|id| inverse_named(&base.images, id, |i| i.id.clone(), inverse_image)),
-            blocks: self.blocks.as_ref().map(|bd| inverse_indexed(&base.blocks, bd, |b, d| inverse_block(b, d))),
+            blocks: self.blocks.as_ref().map(|bd| inverse_indexed(&base.blocks, bd, inverse_block)),
         }
     }
     fn is_empty(&self) -> bool {
@@ -1144,7 +1144,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -1207,7 +1207,7 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
-    format!("[{}]", items.iter().map(|i| enc(i)).collect::<Vec<_>>().join(","))
+    format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {

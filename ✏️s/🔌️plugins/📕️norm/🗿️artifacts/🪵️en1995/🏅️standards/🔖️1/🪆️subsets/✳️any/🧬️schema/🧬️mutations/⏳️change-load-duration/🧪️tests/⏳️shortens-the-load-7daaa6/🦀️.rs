@@ -33,17 +33,17 @@ fn built_outcome() -> protocol::MutationOutcome<En1995Diff> {
 /// ▶️ Shortening the load-duration class from medium-term to short-term rewrites `load_duration` alone. k_mod
 /// rises for the same service class, but the service class itself — the other k_mod index — must not change.
 #[semio_framework_async_macros::async_test]
-fn shortens_the_load_duration_class_from_medium_to_short() {
+async fn shortens_the_load_duration_class_from_medium_to_short() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-load-duration applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-load-duration/shortens-the-load-duration-class-from-medium-to-short: the applied state differs from the committed after-snapshot");
-    assert_eq!(applied.load_duration, "short", "change-load-duration/shortens-the-load-duration-class-from-medium-to-short: load_duration must read "short" once the change lands");
+    assert_eq!(applied.load_duration, "short", r#"change-load-duration/shortens-the-load-duration-class-from-medium-to-short: load_duration must read "short" once the change lands"#);
     assert_eq!(applied.service_class, before().service_class, "change-load-duration/shortens-the-load-duration-class-from-medium-to-short: the service class describes the moisture environment and has nothing to do with how long the load acts");
 }
 
 /// ↩️ `change-load-duration`'s inverse reads the OLD "medium" out of BASE, so replaying it puts the "medium"
 /// duration class back on `load_duration`.
 #[semio_framework_async_macros::async_test]
-fn returning_to_the_medium_term_class_restores_before() {
+async fn returning_to_the_medium_term_class_restores_before() {
     let base = before();
     let forward = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-load-duration applies");
@@ -53,7 +53,7 @@ fn returning_to_the_medium_term_class_restores_before() {
         let undo = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(step, &snapshot);
         snapshot = protocol::MutationDiff::apply(undo.diff(), &snapshot).expect("the change-load-duration inverse step applies");
     }
-    assert_eq!(snapshot.load_duration, base.load_duration, "change-load-duration/shortens-the-load-duration-class-from-medium-to-short: the inverse must put the "medium" duration class back on `load_duration`");
+    assert_eq!(snapshot.load_duration, base.load_duration, r#"change-load-duration/shortens-the-load-duration-class-from-medium-to-short: the inverse must put the "medium" duration class back on `load_duration`"#);
     assert_eq!(snapshot, base, "change-load-duration/shortens-the-load-duration-class-from-medium-to-short: replaying the inverse did not restore the whole before-snapshot");
 }
 
@@ -61,7 +61,7 @@ fn returning_to_the_medium_term_class_restores_before() {
 /// encode is a fixed point, so `{"ChangeLoadDuration": {"newLoadDuration": "short"}}` — the field is an
 /// unvalidated `String` is spelled here exactly as this artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-fn committed_json_is_canonical() {
+async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1995Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -76,11 +76,11 @@ fn committed_json_is_canonical() {
 /// 🎯️ "short" differs from the committed "medium", so `change-load-duration`'s only guard, the
 /// equality one, stays shut.
 #[semio_framework_async_macros::async_test]
-fn declared_outcome_holds() {
+async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-load-duration/shortens-the-load-duration-class-from-medium-to-short: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, "change-load-duration/shortens-the-load-duration-class-from-medium-to-short: `load_duration` is a `String`, so `change-load-duration` has no finiteness guard; "short" differs from the committed "medium", so its equality guard stays shut");
+    assert_eq!(produced.worst_level(), None, r#"change-load-duration/shortens-the-load-duration-class-from-medium-to-short: `load_duration` is a `String`, so `change-load-duration` has no finiteness guard; "short" differs from the committed "medium", so its equality guard stays shut"#);
     assert!(produced.messages().is_empty(), "change-load-duration/shortens-the-load-duration-class-from-medium-to-short: an accepted change-load-duration emits no diagnostics at all");
 }
 
@@ -88,7 +88,7 @@ fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `loadDuration` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-fn produces_committed_diff() {
+async fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-load-duration diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-load-duration/shortens-the-load-duration-class-from-medium-to-short: the produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -97,9 +97,9 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1995Diff`, re-encodes unchanged, and carries the load-duration class and
 /// nothing else.
 #[semio_framework_async_macros::async_test]
-fn committed_diff_is_canonical() {
+async fn committed_diff_is_canonical() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-load-duration diff decodes");
-    assert_eq!(decoded.load_duration, Some("short".to_string()), "change-load-duration/shortens-the-load-duration-class-from-medium-to-short: the committed diff must carry loadDuration = "short"");
+    assert_eq!(decoded.load_duration, Some("short".to_string()), r#"change-load-duration/shortens-the-load-duration-class-from-medium-to-short: the committed diff must carry loadDuration = "short""#);
     assert!(decoded.service_class.is_none(), "change-load-duration/shortens-the-load-duration-class-from-medium-to-short: change-load-duration writes loadDuration and must leave `service_class` untouched");
     assert!(decoded.fire_duration_min.is_none(), "change-load-duration/shortens-the-load-duration-class-from-medium-to-short: change-load-duration writes loadDuration and must leave `fire_duration_min` untouched");
     assert!(decoded.artifact.is_none(), "change-load-duration/shortens-the-load-duration-class-from-medium-to-short: a field-scoped change must never fall back to a whole-artifact replacement");
@@ -111,9 +111,9 @@ fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the duration-class change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-fn committed_diff_applies_to_after() {
+async fn committed_diff_applies_to_after() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-load-duration diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-load-duration/shortens-the-load-duration-class-from-medium-to-short: the committed diff did not carry before to after");
-    assert_eq!(produced.load_duration, "short", "change-load-duration/shortens-the-load-duration-class-from-medium-to-short: applying the committed diff must land load_duration on "short"");
+    assert_eq!(produced.load_duration, "short", r#"change-load-duration/shortens-the-load-duration-class-from-medium-to-short: applying the committed diff must land load_duration on "short""#);
 }

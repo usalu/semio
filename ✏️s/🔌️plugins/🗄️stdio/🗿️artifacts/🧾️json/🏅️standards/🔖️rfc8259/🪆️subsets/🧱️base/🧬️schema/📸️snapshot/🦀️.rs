@@ -23,7 +23,9 @@ pub struct JsonMember {
 /// [`JsonMember`] (never a map) so decode->encode preserves member insertion order exactly.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
+#[derive(Default)]
 pub enum JsonValue {
+    #[default]
     Null,
     // NOTE: every non-unit variant MUST be a struct variant (named field), never a bare tuple
     // variant — serde's internally-tagged (`tag = "kind"`) representation can only merge the tag
@@ -36,11 +38,6 @@ pub enum JsonValue {
     Object { members: Vec<JsonMember> },
 }
 
-impl Default for JsonValue {
-    fn default() -> Self {
-        JsonValue::Null
-    }
-}
 
 impl From<serde_json::Value> for JsonValue {
     fn from(v: serde_json::Value) -> Self {

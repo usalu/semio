@@ -48,12 +48,12 @@ mod surface_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn shooting_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::shooting::ShootingViewer>();
+        assert_viewer_never_mutates::<crate::viewer::shooting::ShootingViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn shooting_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::shooting::ShootingPlayApp, crate::viewer::shooting::ShootingViewer>();
+        assert_editor_and_viewer_share_dialect::<crate::editor::shooting::ShootingPlayApp, crate::viewer::shooting::ShootingViewer>().await;
     }
 }
 //#endregion 🧪️SurfaceTests

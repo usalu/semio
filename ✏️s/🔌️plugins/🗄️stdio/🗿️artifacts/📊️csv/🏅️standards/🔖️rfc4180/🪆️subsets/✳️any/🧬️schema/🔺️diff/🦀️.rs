@@ -236,7 +236,7 @@ fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec
 /// against a zero-length virtual base and lose every earlier survivor entirely.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
-    removed.iter().copied().chain(modified_indices).chain(added_indices).max().map(|m| m + 1).unwrap_or(0)
+    removed.iter().copied().chain(modified_indices).chain(added_indices).max().map_or(0, |m| m + 1)
 }
 //#endregion 🔖️IndexTransport
 
@@ -372,7 +372,7 @@ fn absorb_records(d1: CsvRecordsDiff, d2: CsvRecordsDiff) -> CsvRecordsDiff {
         r.dedup();
         r.len()
     };
-    let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map(|m| m + 1).unwrap_or(0);
+    let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map_or(0, |m| m + 1);
     let base_len = base_len_hint(&d1.removed, d1.modified.iter().map(|m| m.index), d1_added_indices.iter().copied()).max((needed_mid_len + removed_count).saturating_sub(d1.added.len()));
     let mid_slots = simulate_slots(base_len, &d1.removed, &d1_added_indices);
     //#endregion 🔖️PhiBaseToMid
@@ -435,7 +435,7 @@ fn absorb_records(d1: CsvRecordsDiff, d2: CsvRecordsDiff) -> CsvRecordsDiff {
         })
         .collect();
     let d2_added_indices: Vec<usize> = d2.added.iter().map(|a| a.index).collect();
-    let mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map(|m| m + 1).unwrap_or(0);
+    let mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map_or(0, |m| m + 1);
     let after_slots = simulate_slots(mid_len, &d2.removed, &d2_added_indices);
     let mut mid_to_after: HashMap<usize, usize> = HashMap::new();
     for (pos, slot) in after_slots.iter().enumerate() {
@@ -509,7 +509,7 @@ impl DiffAlgebra<CsvSnapshot> for CsvDiff {
     }
 
     fn is_empty(&self) -> bool {
-        self.has_header.is_none() && self.records.as_ref().map_or(true, CsvRecordsDiff::is_empty)
+        self.has_header.is_none() && self.records.as_ref().is_none_or(CsvRecordsDiff::is_empty)
     }
 }
 
@@ -544,7 +544,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -851,7 +851,7 @@ fn read_bin_records_diff(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecordsDiff, 
     Ok(CsvRecordsDiff { removed, modified, added })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
+fn diff_pack_err(e: &dsl::PackError) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "csv diff binary", offset: 0, detail: e.to_string() }
 }
 
@@ -882,10 +882,10 @@ impl DiffCodec for CsvDiff {
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut r = dsl::ByteReader::new(bytes);
-        let hh_flag = r.read_u8().map_err(diff_pack_err)?;
-        let has_header = if hh_flag == 1 { Some(r.read_u8().map_err(diff_pack_err)? != 0) } else { None };
-        let rec_flag = r.read_u8().map_err(diff_pack_err)?;
-        let records = if rec_flag == 1 { Some(read_bin_records_diff(&mut r).map_err(diff_pack_err)?) } else { None };
+        let hh_flag = r.read_u8().map_err(|error| diff_pack_err(&error))?;
+        let has_header = if hh_flag == 1 { Some(r.read_u8().map_err(|error| diff_pack_err(&error))? != 0) } else { None };
+        let rec_flag = r.read_u8().map_err(|error| diff_pack_err(&error))?;
+        let records = if rec_flag == 1 { Some(read_bin_records_diff(&mut r).map_err(|error| diff_pack_err(&error))?) } else { None };
         Ok(CsvDiff { has_header, records })
     }
 }

@@ -13,7 +13,7 @@ pub fn diff(payload: &super::MoveObject, base: &SemioObjectSnapshot) -> protocol
     if base.transform.translation == t {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Object is already at this translation.".to_string());
     }
-    let mut transform = base.transform.clone();
+    let mut transform = base.transform;
     transform.translation = t;
     protocol::MutationOutcome::new(SemioObjectDiff { transform: Some(transform), ..Default::default() })
 }

@@ -15,16 +15,35 @@
   "$defs": {
     "receipt": {
       "type": "object", "additionalProperties": false,
-      "required": ["factoryId", "kind", "schema", "extension", "capability", "protocolPath", "protocolBytes", "protocolSha256"],
+      "required": ["factoryId", "kind", "schema", "extension", "capability", "packRecord", "protocolPath", "protocolBytes", "protocolSha256"],
       "properties": {
         "factoryId": { "enum": ["gis.gismap.v1", "gis.gisterrain.v1"] },
         "kind": { "enum": ["s.gis.gismap", "s.gis.gisterrain"] },
         "schema": { "enum": ["gis.map", "gis.terrain"] },
         "extension": { "enum": ["gismap", "gisterrain"] },
         "capability": { "enum": ["s.gis.gismap.codec.document", "s.gis.gisterrain.codec.document"] },
+        "packRecord": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["keyword", "fields"],
+          "properties": {
+            "keyword": { "enum": ["gismap", "gisterrain"] },
+            "fields": { "type": "array", "minItems": 3, "maxItems": 6, "items": { "$ref": "#/$defs/field" } }
+          }
+        },
         "protocolPath": { "enum": ["🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio", "🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"] },
         "protocolBytes": { "type": "integer", "minimum": 1, "maximum": 65536 },
         "protocolSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "key", "optional"],
+      "properties": {
+        "id": { "type": "integer", "minimum": 1, "maximum": 6 },
+        "key": { "enum": ["positions", "routes", "regions", "drawing", "image", "value", "exaggeration", "importedFeaturesJson", "mesh"] },
+        "optional": { "type": "boolean" }
       }
     }
   }

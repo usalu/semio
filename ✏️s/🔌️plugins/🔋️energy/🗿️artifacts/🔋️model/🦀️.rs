@@ -319,8 +319,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: ENERGY_MODEL_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"],
-        import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"],
+        export_stdio_kinds: vec!["stdio.csv".into(), "stdio.json".into(), "stdio.xlsx".into(), "stdio.zip".into()],
+        import_stdio_kinds: vec!["stdio.csv".into(), "stdio.json".into(), "stdio.xlsx".into(), "stdio.zip".into()],
     }
 }
 //#endregion 🔖️ArtifactKind

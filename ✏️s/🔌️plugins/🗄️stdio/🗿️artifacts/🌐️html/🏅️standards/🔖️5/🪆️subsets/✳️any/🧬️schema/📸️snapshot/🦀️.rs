@@ -506,12 +506,12 @@ impl<'a> Parser<'a> {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn read_text_until_lt(&mut self) -> Result<String, TextError> {
+    fn read_text_until_lt(&mut self) -> String {
         let start = self.pos;
         while !matches!(self.peek(), Some(b'<') | None) {
             self.advance();
         }
-        Ok(decode_entities(self.slice(start, self.pos)))
+        decode_entities(self.slice(start, self.pos))
     }
 
     /// 🌳 Parses one element and its full subtree, starting at `<`.
@@ -556,7 +556,7 @@ impl<'a> Parser<'a> {
                         children.push(self.parse_element()?);
                     }
                 }
-                Some(_) => children.push(HtmlNode::Text { text: self.read_text_until_lt()? }),
+                Some(_) => children.push(HtmlNode::Text { text: self.read_text_until_lt() }),
             }
         }
         Ok(HtmlNode::Element { name, attributes, children })

@@ -678,8 +678,8 @@ mod tests {
         let mut table = Table::new();
         table.push_continuous("x", vec![1.0, 2.5]).unwrap();
         table.push_categorical("y", &["a", ""]).unwrap();
-        let json = serde_json::to_string(&table).unwrap();
-        let back: Table = serde_json::from_str(&json).unwrap();
+        let json = dsl::json::to_json_string(&table);
+        let back: Table = dsl::json::from_json_str(&json).unwrap();
         assert_eq!(back.names(), table.names());
         assert!(nan_aware_eq(back.continuous(0).unwrap(), table.continuous(0).unwrap()));
         assert_eq!(back.categorical(1).unwrap().codes(), table.categorical(1).unwrap().codes());

@@ -180,7 +180,7 @@ pub mod derived_analysis {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn resolve_ref<'a>(objects: &'a [PdfIndirectObject], r: ObjRef) -> Option<&'a PdfObject> {
+    fn resolve_ref(objects: &[PdfIndirectObject], r: ObjRef) -> Option<&PdfObject> {
         objects.iter().find(|o| o.id == r).map(|o| &o.value)
     }
 
@@ -194,7 +194,7 @@ pub mod derived_analysis {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn find_catalog(objects: &[PdfIndirectObject]) -> Option<&PdfObject> {
-        objects.iter().find(|o| o.value.as_dict().map(|d| dict_name(d, "Type") == Some("Catalog")).unwrap_or(false)).map(|o| &o.value)
+        objects.iter().find(|o| o.value.as_dict().is_some_and(|d| dict_name(d, "Type") == Some("Catalog"))).map(|o| &o.value)
     }
 
     /// 🌳️ Real, recursive walk of the `/DPartRoot`/`/DParts` tree (ISO 16612-2 §6.2): each DPart

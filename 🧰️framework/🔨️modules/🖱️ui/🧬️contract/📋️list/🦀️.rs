@@ -145,9 +145,9 @@ impl<T, const N: usize> PagedList<T, N> {
     fn page_items() -> usize { if size_of::<T>() == 0 { N.max(1) } else { (PAGE_BYTES / size_of::<T>()).max(1).min(N.max(1)) } }
     fn height() -> usize {
         let slots = Self::page_items();
-        let mut pages = N / slots + usize::from(N % slots != 0);
+        let mut pages = N.div_ceil(slots);
         let mut height = 0;
-        while pages > 1 { pages = pages / FANOUT + usize::from(pages % FANOUT != 0); height += 1; }
+        while pages > 1 { pages = pages.div_ceil(FANOUT); height += 1; }
         height
     }
     fn slot(index: usize, height: usize) -> usize { (index >> ((height - 1) * 4)) & (FANOUT - 1) }

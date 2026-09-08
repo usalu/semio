@@ -17,13 +17,15 @@ pub use crate::artifacts::step::engine::brep::{BrepFace, BrepMesh, BrepVertex};
 
 //#region 🔖️Value
 /// 🔤️ One typed Part-21 argument value, step's own vocabulary (never `Part21Value` directly —
-/// that stays the shared tokenizer's working representation). `Unset` = `$`, `Derived` = `*`,
+/// that stays the shared tokenizer's working representation). `Unset` = `, `Derived` = `*`,
 /// `Reference` = a `#456` instance pointer, `Enum` = `.T.`/`.F.`/`.UNKNOWN.`-shaped enumeration or
 /// domain-select literal, `Aggregate` = a parenthesized list, `TypedValue` = a simple/complex
 /// defined-type wrapper (`IFCLENGTHMEASURE(3000.)`-shaped).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
+#[derive(Default)]
 pub enum StepValue {
+    #[default]
     Unset,
     Derived,
     Integer(i64),
@@ -35,11 +37,6 @@ pub enum StepValue {
     TypedValue { type_name: String, value: Box<StepValue> },
 }
 
-impl Default for StepValue {
-    fn default() -> Self {
-        StepValue::Unset
-    }
-}
 //#endregion 🔖️Value
 
 //#region 🔖️Header
@@ -336,7 +333,7 @@ fn entity_to_part21(e: &StepEntity) -> Part21Instance {
 /// 🔁️ `Part21Document` -> `(StepHeader, Vec<StepEntity>)` — the ONLY place the shared generic
 /// graph is decoded into step's own model.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn step_snapshot_from_part21(doc: Part21Document) -> (StepHeader, Vec<StepEntity>) {
+pub fn step_snapshot_from_part21(doc: &Part21Document) -> (StepHeader, Vec<StepEntity>) {
     let header = header_from_part21(&doc.header);
     let entities = doc.instances.iter().map(entity_from_part21).collect();
     (header, entities)
@@ -359,7 +356,7 @@ impl StepSnapshot {
     /// 🔁️ Builds a `StepSnapshot` from a generic Part-21 graph (e.g. one built by
     /// `engine::brep::brep_mesh_to_part21` or hand-assembled in a test).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn from_part21_document(doc: Part21Document) -> Self {
+    pub fn from_part21_document(doc: &Part21Document) -> Self {
         let (header, entities) = step_snapshot_from_part21(doc);
         Self { schema: STDIO_STEP_DOCUMENT_SCHEMA.into(), header, entities }
     }
@@ -379,7 +376,7 @@ impl store::ArtifactDsl for StepSnapshot {
             Err(_) => text,
         };
         let document = parse_part21(body).map_err(|e| store::TextError::new(format!("step parse: {e}"), dsl::TextSpan::at(1, 1)))?;
-        Ok(Self::from_part21_document(document))
+        Ok(Self::from_part21_document(&document))
     }
     fn print_dsl(&self) -> String {
         let body = write_part21(&self.to_part21_document());
@@ -403,7 +400,7 @@ impl store::ArtifactPack for StepSnapshot {
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
         let document = parse_part21(&text).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(Self::from_part21_document(document))
+        Ok(Self::from_part21_document(&document))
     }
 }
 //#endregion 🔖️Part21Codec

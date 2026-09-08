@@ -109,7 +109,9 @@
         "RUSTC_BOOTSTRAP",
         "CARGO_TARGET_DIR",
         "CARGO_UNSTABLE_EMBED_METADATA",
-        "SEMIO_WASM_OPT_BIN"
+        "SEMIO_WASM_OPT_BIN",
+        "DEVELOPER_DIR",
+        "FORCE_XCODE"
       ],
       "commands": [
         "rustc -vV",

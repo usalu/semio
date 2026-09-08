@@ -47,9 +47,9 @@ pub mod derived_composition {
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::html::standards::v5::subsets::any::schema::html_artifact_schema_descriptor());
         register_artifact_inferences();
-        let _ = store::register_document_codec(store::ArtifactCodec::of::<HtmlSnapshot, crate::artifacts::html::standards::v5::subsets::any::schema::mutations::HtmlMutation>(
+        store::register_document_codec(store::ArtifactCodec::of::<HtmlSnapshot, crate::artifacts::html::standards::v5::subsets::any::schema::mutations::HtmlMutation>(
             crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::STDIO_HTML_DOCUMENT_SCHEMA,
-        ));
+        )).expect("static Stdio registration must be available and conflict-free");
     }
 
     /// 💡️ Registers `s.stdio.html.inference`'s facet leaves into the OS-wide inference catalog —

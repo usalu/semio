@@ -302,7 +302,7 @@ const STEP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard:
 const SEMIO_BREP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("brep") };
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn step_err(message: String) -> store::PackError {
+fn step_err(message: &str) -> store::PackError {
     store::PackError::Schema(format!("semio brep <- step: {message}"))
 }
 
@@ -328,27 +328,27 @@ impl ArtifactDeserializer for SemioBrepFromStep {
         for e in &from.entities {
             if has_type(e, "VERTEX_POINT") {
                 let args = args_for_type(e, "VERTEX_POINT").expect("has_type just confirmed VERTEX_POINT");
-                let point_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| step_err(format!("VERTEX_POINT #{}: vertex_geometry not a reference", e.id)))?;
-                let point = resolver.point(point_ref).map_err(step_err)?;
+                let point_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| step_err(&format!("VERTEX_POINT #{}: vertex_geometry not a reference", e.id)))?;
+                let point = resolver.point(point_ref).map_err(|error| step_err(&error))?;
                 vertices.push(BrepVertex { id: format!("v{}", e.id), point, tol: 0.0 });
             }
             if has_type(e, "EDGE_CURVE") {
                 let args = args_for_type(e, "EDGE_CURVE").expect("has_type just confirmed EDGE_CURVE");
-                let start_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| step_err(format!("EDGE_CURVE #{}: edge_start not a reference", e.id)))?;
-                let end_ref = args.get(2).and_then(as_ref_id).ok_or_else(|| step_err(format!("EDGE_CURVE #{}: edge_end not a reference", e.id)))?;
-                let curve_ref = args.get(3).and_then(as_ref_id).ok_or_else(|| step_err(format!("EDGE_CURVE #{}: edge_geometry not a reference", e.id)))?;
-                let curve = resolver.curve(curve_ref).map_err(step_err)?;
+                let start_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| step_err(&format!("EDGE_CURVE #{}: edge_start not a reference", e.id)))?;
+                let end_ref = args.get(2).and_then(as_ref_id).ok_or_else(|| step_err(&format!("EDGE_CURVE #{}: edge_end not a reference", e.id)))?;
+                let curve_ref = args.get(3).and_then(as_ref_id).ok_or_else(|| step_err(&format!("EDGE_CURVE #{}: edge_geometry not a reference", e.id)))?;
+                let curve = resolver.curve(curve_ref).map_err(|error| step_err(&error))?;
                 edges.push(BrepEdge { id: format!("e{}", e.id), start_vertex: format!("v{start_ref}"), end_vertex: format!("v{end_ref}"), curve, tol: 0.0 });
             }
             if has_type(e, "EDGE_LOOP") {
                 let args = args_for_type(e, "EDGE_LOOP").expect("has_type just confirmed EDGE_LOOP");
-                let edge_refs = args.get(1).and_then(as_agg).ok_or_else(|| step_err(format!("EDGE_LOOP #{}: edge_list not a list", e.id)))?;
+                let edge_refs = args.get(1).and_then(as_agg).ok_or_else(|| step_err(&format!("EDGE_LOOP #{}: edge_list not a list", e.id)))?;
                 let mut members = Vec::with_capacity(edge_refs.len());
                 for oe in edge_refs {
-                    let oe_id = as_ref_id(oe).ok_or_else(|| step_err(format!("EDGE_LOOP #{}: edge_list entry not a reference", e.id)))?;
-                    let oe_entity = resolver.get(oe_id).ok_or_else(|| step_err(format!("EDGE_LOOP #{}: dangling ORIENTED_EDGE #{oe_id}", e.id)))?;
-                    let oe_args = args_for_type(oe_entity, "ORIENTED_EDGE").ok_or_else(|| step_err(format!("EDGE_LOOP #{}: #{oe_id} is not an ORIENTED_EDGE", e.id)))?;
-                    let edge_ref = oe_args.get(3).and_then(as_ref_id).ok_or_else(|| step_err(format!("ORIENTED_EDGE #{oe_id}: edge_element not a reference")))?;
+                    let oe_id = as_ref_id(oe).ok_or_else(|| step_err(&format!("EDGE_LOOP #{}: edge_list entry not a reference", e.id)))?;
+                    let oe_entity = resolver.get(oe_id).ok_or_else(|| step_err(&format!("EDGE_LOOP #{}: dangling ORIENTED_EDGE #{oe_id}", e.id)))?;
+                    let oe_args = args_for_type(oe_entity, "ORIENTED_EDGE").ok_or_else(|| step_err(&format!("EDGE_LOOP #{}: #{oe_id} is not an ORIENTED_EDGE", e.id)))?;
+                    let edge_ref = oe_args.get(3).and_then(as_ref_id).ok_or_else(|| step_err(&format!("ORIENTED_EDGE #{oe_id}: edge_element not a reference")))?;
                     let orientation = matches!(oe_args.get(4), Some(StepValue::Enum(s)) if s == "T");
                     members.push(BrepLoopEdge { edge: format!("e{edge_ref}"), orientation });
                 }
@@ -356,16 +356,16 @@ impl ArtifactDeserializer for SemioBrepFromStep {
             }
             if has_type(e, "ADVANCED_FACE") {
                 let args = args_for_type(e, "ADVANCED_FACE").expect("has_type just confirmed ADVANCED_FACE");
-                let bound_refs = args.get(1).and_then(as_agg).ok_or_else(|| step_err(format!("ADVANCED_FACE #{}: bounds not a list", e.id)))?;
+                let bound_refs = args.get(1).and_then(as_agg).ok_or_else(|| step_err(&format!("ADVANCED_FACE #{}: bounds not a list", e.id)))?;
                 let mut outer_loop: Option<String> = None;
                 let mut inner_loops = Vec::new();
                 for bound in bound_refs {
-                    let bound_id = as_ref_id(bound).ok_or_else(|| step_err(format!("ADVANCED_FACE #{}: bound entry not a reference", e.id)))?;
-                    let bound_entity = resolver.get(bound_id).ok_or_else(|| step_err(format!("ADVANCED_FACE #{}: dangling bound #{bound_id}", e.id)))?;
+                    let bound_id = as_ref_id(bound).ok_or_else(|| step_err(&format!("ADVANCED_FACE #{}: bound entry not a reference", e.id)))?;
+                    let bound_entity = resolver.get(bound_id).ok_or_else(|| step_err(&format!("ADVANCED_FACE #{}: dangling bound #{bound_id}", e.id)))?;
                     let is_outer = has_type(bound_entity, "FACE_OUTER_BOUND");
                     let bound_args =
-                        args_for_type(bound_entity, "FACE_OUTER_BOUND").or_else(|| args_for_type(bound_entity, "FACE_BOUND")).ok_or_else(|| step_err(format!("ADVANCED_FACE #{}: #{bound_id} is neither FACE_BOUND nor FACE_OUTER_BOUND", e.id)))?;
-                    let loop_ref = bound_args.get(1).and_then(as_ref_id).ok_or_else(|| step_err(format!("bound #{bound_id}: bound not a reference")))?;
+                        args_for_type(bound_entity, "FACE_OUTER_BOUND").or_else(|| args_for_type(bound_entity, "FACE_BOUND")).ok_or_else(|| step_err(&format!("ADVANCED_FACE #{}: #{bound_id} is neither FACE_BOUND nor FACE_OUTER_BOUND", e.id)))?;
+                    let loop_ref = bound_args.get(1).and_then(as_ref_id).ok_or_else(|| step_err(&format!("bound #{bound_id}: bound not a reference")))?;
                     let loop_id = format!("l{loop_ref}");
                     if is_outer || outer_loop.is_none() {
                         if outer_loop.is_some() {
@@ -377,30 +377,30 @@ impl ArtifactDeserializer for SemioBrepFromStep {
                         inner_loops.push(loop_id);
                     }
                 }
-                let outer_loop = outer_loop.ok_or_else(|| step_err(format!("ADVANCED_FACE #{}: no bound resolved to an outer loop", e.id)))?;
-                let surface_ref = args.get(2).and_then(as_ref_id).ok_or_else(|| step_err(format!("ADVANCED_FACE #{}: face_geometry not a reference", e.id)))?;
-                let surface = resolver.surface(surface_ref).map_err(step_err)?;
+                let outer_loop = outer_loop.ok_or_else(|| step_err(&format!("ADVANCED_FACE #{}: no bound resolved to an outer loop", e.id)))?;
+                let surface_ref = args.get(2).and_then(as_ref_id).ok_or_else(|| step_err(&format!("ADVANCED_FACE #{}: face_geometry not a reference", e.id)))?;
+                let surface = resolver.surface(surface_ref).map_err(|error| step_err(&error))?;
                 let orientation = matches!(args.get(3), Some(StepValue::Enum(s)) if s == "T");
                 faces.push(BrepFace { id: format!("f{}", e.id), outer_loop, inner_loops, surface, orientation, tol: 0.0 });
             }
             if has_type(e, "CLOSED_SHELL") || has_type(e, "OPEN_SHELL") {
                 let args = args_for_type(e, "CLOSED_SHELL").or_else(|| args_for_type(e, "OPEN_SHELL")).expect("has_type just confirmed a shell type");
-                let face_refs = args.get(1).and_then(as_agg).ok_or_else(|| step_err(format!("shell #{}: cfs_faces not a list", e.id)))?;
+                let face_refs = args.get(1).and_then(as_agg).ok_or_else(|| step_err(&format!("shell #{}: cfs_faces not a list", e.id)))?;
                 let mut members = Vec::with_capacity(face_refs.len());
                 for f in face_refs {
-                    let f_ref = as_ref_id(f).ok_or_else(|| step_err(format!("shell #{}: face entry not a reference", e.id)))?;
+                    let f_ref = as_ref_id(f).ok_or_else(|| step_err(&format!("shell #{}: face entry not a reference", e.id)))?;
                     members.push(BrepShellFace { face: format!("f{f_ref}"), orientation: true });
                 }
                 shells.push(BrepShell { id: format!("s{}", e.id), faces: members });
             }
             if has_type(e, "MANIFOLD_SOLID_BREP") {
                 let args = args_for_type(e, "MANIFOLD_SOLID_BREP").expect("has_type just confirmed MANIFOLD_SOLID_BREP");
-                let outer_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| step_err(format!("MANIFOLD_SOLID_BREP #{}: outer not a reference", e.id)))?;
+                let outer_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| step_err(&format!("MANIFOLD_SOLID_BREP #{}: outer not a reference", e.id)))?;
                 let mut members = vec![BrepSolidShell { shell: format!("s{outer_ref}"), is_void: false }];
                 if let Some(vargs) = args_for_type(e, "BREP_WITH_VOIDS") {
-                    let void_refs = vargs.first().and_then(as_agg).ok_or_else(|| step_err(format!("BREP_WITH_VOIDS on #{}: voids not a list", e.id)))?;
+                    let void_refs = vargs.first().and_then(as_agg).ok_or_else(|| step_err(&format!("BREP_WITH_VOIDS on #{}: voids not a list", e.id)))?;
                     for v in void_refs {
-                        let v_ref = as_ref_id(v).ok_or_else(|| step_err(format!("BREP_WITH_VOIDS on #{}: void entry not a reference", e.id)))?;
+                        let v_ref = as_ref_id(v).ok_or_else(|| step_err(&format!("BREP_WITH_VOIDS on #{}: void entry not a reference", e.id)))?;
                         members.push(BrepSolidShell { shell: format!("s{v_ref}"), is_void: true });
                     }
                 }
@@ -426,7 +426,7 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn fixture_step_snapshot() -> StepSnapshot {
         let doc = crate::artifacts::step::engine::part21::parse_part21(FIXTURE).expect("parse real AP214 fixture");
-        StepSnapshot::from_part21_document(doc)
+        StepSnapshot::from_part21_document(&doc)
     }
 
     #[semio_framework_async_macros::async_test]
@@ -465,7 +465,7 @@ mod tests {
         // produce a zero direction.
         let bad = FIXTURE.replace("#20=LINE('',#1,#30);", "#20=LINE('',#1,#999);");
         let doc = crate::artifacts::step::engine::part21::parse_part21(&bad).expect("parse");
-        let step = StepSnapshot::from_part21_document(doc);
+        let step = StepSnapshot::from_part21_document(&doc);
         let result = semio_framework_plugin::resolve_ready(SemioBrepFromStep::deserialize(&step));
         assert!(result.is_err(), "dangling VECTOR reference must surface as an error, not a fabricated direction");
     }
@@ -475,7 +475,7 @@ mod tests {
         // Swap PLANE for a surface kind outside this leaf's supported vocabulary.
         let bad = FIXTURE.replace("#16=PLANE('',#40);", "#16=SURFACE_OF_REVOLUTION('',#20,#40);");
         let doc = crate::artifacts::step::engine::part21::parse_part21(&bad).expect("parse");
-        let step = StepSnapshot::from_part21_document(doc);
+        let step = StepSnapshot::from_part21_document(&doc);
         let result = semio_framework_plugin::resolve_ready(SemioBrepFromStep::deserialize(&step));
         assert!(result.is_err(), "an unsupported surface entity must error, never silently become a Plane");
     }

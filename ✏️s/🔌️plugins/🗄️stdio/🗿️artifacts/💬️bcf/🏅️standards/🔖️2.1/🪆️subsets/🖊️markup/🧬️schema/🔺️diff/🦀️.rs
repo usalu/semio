@@ -160,7 +160,7 @@ where
 /// annihilates the add; a `d2`-modify of a `d1`-added key patches into the carried payload;
 /// everything else composes directly on the shared key space.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
+fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -347,12 +347,12 @@ impl MutationDiff<BcfSnapshot> for BcfDiff {
         self.topics = match (self.topics.take(), other.topics) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |t| t.guid.clone(), absorb_topic_diff, apply_topic)),
+            (Some(a), Some(b)) => Some(absorb_named(a, &b, |t| t.guid.clone(), absorb_topic_diff, apply_topic)),
         };
         self.parts = match (self.parts.take(), other.parts) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |p| p.name.clone(), absorb_part_diff, apply_part)),
+            (Some(a), Some(b)) => Some(absorb_named(a, &b, |p| p.name.clone(), absorb_part_diff, apply_part)),
         };
     }
 }
@@ -588,12 +588,12 @@ fn absorb_topic_diff(mut a: BcfTopicDiff, b: BcfTopicDiff) -> BcfTopicDiff {
     a.comments = match (a.comments.take(), b.comments) {
         (None, x) => x,
         (x, None) => x,
-        (Some(x), Some(y)) => Some(absorb_named(x, y, |c| c.guid.clone(), absorb_comment_diff, apply_comment)),
+        (Some(x), Some(y)) => Some(absorb_named(x, &y, |c| c.guid.clone(), absorb_comment_diff, apply_comment)),
     };
     a.viewpoints = match (a.viewpoints.take(), b.viewpoints) {
         (None, x) => x,
         (x, None) => x,
-        (Some(x), Some(y)) => Some(absorb_named(x, y, |v| v.guid.clone(), absorb_viewpoint_diff, apply_viewpoint)),
+        (Some(x), Some(y)) => Some(absorb_named(x, &y, |v| v.guid.clone(), absorb_viewpoint_diff, apply_viewpoint)),
     };
     a
 }
@@ -666,7 +666,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -739,11 +739,11 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 /// whole-value replaced rather than key-diffed.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
-    format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
+    format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 //#endregion 🔖️Primitives
 
@@ -755,16 +755,16 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 /// collection (`topics`/`comments`/`viewpoints`/`parts`) below.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_named_triple<K, D, T>(triple: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K) -> String, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
-    let removed = triple.removed.iter().map(|k| enc_k(k)).collect::<Vec<_>>().join(",");
+    let removed = triple.removed.iter().map(&enc_k).collect::<Vec<_>>().join(",");
     let modified = triple.modified.iter().map(|m| format!("{}:{}", enc_k(&m.key), enc_d(&m.diff))).collect::<Vec<_>>().join(",");
-    let added = triple.added.iter().map(|t| enc_t(t)).collect::<Vec<_>>().join(",");
+    let added = triple.added.iter().map(enc_t).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_named_triple<K, D, T>(s: &str, dec_k: impl Fn(&str) -> Result<K, String>, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedTripleDiff<K, D, T>, String> {
     let three = split_top_level(s, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("named triple: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|e| dec_k(e)).collect::<Result<Vec<_>, String>>()?;
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(&dec_k).collect::<Result<Vec<_>, String>>()?;
     let modified = split_top_level(strip_brackets(modified_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
@@ -773,7 +773,7 @@ pub(crate) fn dec_named_triple<K, D, T>(s: &str, dec_k: impl Fn(&str) -> Result<
             Ok(NamedModified { key: dec_k(k)?, diff: dec_d(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|e| dec_t(e)).collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_t).collect::<Result<Vec<_>, String>>()?;
     Ok(NamedTripleDiff { removed, modified, added })
 }
 //#endregion 🔖️NamedTripleCodec
@@ -1394,20 +1394,20 @@ pub(crate) fn dec_part_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<Bc
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_comments_diff_bin(d: &BcfCommentsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_comment_diff_bin, enc_comment_bin, out)
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_comment_diff_bin, enc_comment_bin, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_comments_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfCommentsDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_comment_diff_bin, dec_comment_bin)
+    dec_named_triple_bin(reader, read_str_lp, dec_comment_diff_bin, dec_comment_bin)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_viewpoints_diff_bin(d: &BcfViewpointsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_viewpoint_diff_bin, enc_viewpoint_bin, out)
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_viewpoint_diff_bin, enc_viewpoint_bin, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_viewpoints_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfViewpointsDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_viewpoint_diff_bin, dec_viewpoint_bin)
+    dec_named_triple_bin(reader, read_str_lp, dec_viewpoint_diff_bin, dec_viewpoint_bin)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1447,20 +1447,20 @@ pub(crate) fn dec_topic_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<B
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_topics_diff_bin(d: &BcfTopicsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_topic_diff_bin, enc_topic_bin, out)
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_topic_diff_bin, enc_topic_bin, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_topics_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfTopicsDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_topic_diff_bin, dec_topic_bin)
+    dec_named_triple_bin(reader, read_str_lp, dec_topic_diff_bin, dec_topic_bin)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_parts_diff_bin(d: &BcfPartsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_part_diff_bin, enc_part_bin, out)
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_part_diff_bin, enc_part_bin, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_parts_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfPartsDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_part_diff_bin, dec_part_bin)
+    dec_named_triple_bin(reader, read_str_lp, dec_part_diff_bin, dec_part_bin)
 }
 //#endregion 🔖️DiffValueBinaryCodecs
 //#endregion 🔖️BinaryCodecs

@@ -13,7 +13,7 @@ pub fn diff(payload: &super::RotateObject, base: &SemioObjectSnapshot) -> protoc
     if base.transform.rotation == r {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Object is already at this rotation.".to_string());
     }
-    let mut transform = base.transform.clone();
+    let mut transform = base.transform;
     transform.rotation = r;
     protocol::MutationOutcome::new(SemioObjectDiff { transform: Some(transform), ..Default::default() })
 }

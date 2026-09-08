@@ -85,7 +85,7 @@ pub(crate) fn assembly_ratios(parts: &[GltfPartInference], policy: &GltfAnalysis
         return None;
     }
     let signature = |part: &GltfPartInference| {
-        let mut dimensions = part.indicators.size.oriented_bounds.value.as_ref().map(|bounds| bounds.dimensions.array()).unwrap_or([0.0; 3]);
+        let mut dimensions = part.indicators.size.oriented_bounds.value.as_ref().map_or([0.0; 3], |bounds| bounds.dimensions.array());
         dimensions.sort_by(f64::total_cmp);
         let quantum = policy.absolute_length_tolerance.max(1e-9);
         let area_quantum = quantum * quantum;

@@ -12,7 +12,7 @@ use crate::artifacts::gisterrain::standards::v1::subsets::any::schema::inference
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
 use crate::editor::gis3d::config::Gis3dConfig;
 use framework_surface::terrain::projection;
-use semio_framework_plugin::{scene_surface, world3d_scene_extended, world3d_selection_json, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{scene_surface, World3dScene, world3d_selection_json, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
 use serde_json::{json, Value};
 
@@ -67,7 +67,7 @@ fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
 
 pub fn render(document: &GisTerrainSnapshot, cfg: &Gis3dConfig) -> UiAssemblyResult<BuiltNode> {
     let descriptor = parse_descriptor(document);
-    let mut scene = world3d_scene_extended(
+    let mut scene = World3dScene::base(
         cfg.camera_json.clone(),
         "[]".into(),
         instances_json(&descriptor),
@@ -78,27 +78,12 @@ pub fn render(document: &GisTerrainSnapshot, cfg: &Gis3dConfig) -> UiAssemblyRes
         // selection; every not-yet-migrated `world3d_selection_json` call site in this repo already
         // passes an empty selection for the same reason.
         world3d_selection_json("rectangle", &[], None),
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): this window binds the "features"
-        // domain (see `create_gis3d_app`'s `.window_kind_interactions`) — a plain pick/hover on this
-        // surface targets its single `"pin"` granularity, not the OS's own bare `world` board domain.
-        Some("features".into()),
-        Some("pin".into()),
     );
+    // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): this window binds the "features"
+    // domain (see `create_gis3d_app`'s `.window_kind_interactions`) — a plain pick/hover on this
+    // surface targets its single `"pin"` granularity, not the OS's own bare `world` board domain.
+    scene.domain_id = Some("features".into());
+    scene.domain_granularity_id = Some("pin".into());
     scene.terrain_json = Some(build_terrain_scene_json(&descriptor));
     scene_surface(GIS3D_PLAY_SURFACE, ContractSurfaceKind::World3d, &scene)
 }
@@ -112,15 +97,15 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_the_world_3d_terrain_scene() {
-        let mut app = app();
-        let json = render_body(&mut app, GIS3D_PLAY_BODY_COMPOSITE);
+        let mut app = app().await;
+        let json = render_body(&mut app, GIS3D_PLAY_BODY_COMPOSITE).await;
         assert!(json.contains("world-3d"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn the_fixture_pins_reach_the_scene_as_world_instances() {
-        let mut app = app();
-        let json = render_body(&mut app, GIS3D_PLAY_BODY_COMPOSITE);
+        let mut app = app().await;
+        let json = render_body(&mut app, GIS3D_PLAY_BODY_COMPOSITE).await;
         assert!(json.contains("p_institut_de_botanique_ulg_liege"));
         assert!(json.contains("pin"));
     }

@@ -73,6 +73,7 @@ pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, labels:
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
+    use crate::artifacts::curation::Filters;
     use super::*;
     use crate::editor::sourcing::testkit::{new_app, render as render_body};
 

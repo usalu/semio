@@ -214,6 +214,7 @@ pub fn diff_generation_from_ops(base: &Generation3dSnapshot, ops: Vec<Generation
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
+    use crate::artifacts::generation3d::schema::Generation3dPreviewCamera;
     use super::*;
 
     #[test]

@@ -398,17 +398,17 @@ mod tests {
         }
     }
 
-    #[test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    #[semio_framework_async_macros::async_test]
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::generation3d::op::Generation3dMutation;
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
-        let mut store: ArtifactStore<Generation3dSnapshot, Generation3dMutation> = ArtifactStore::new(create_document_envelope(GENERATION_3D_SCHEMA, "generation3d", Generation3dSnapshot::default(), None)).expect("valid artifact store fixture");
+        let mut store: ArtifactStore<Generation3dSnapshot, Generation3dMutation> = ArtifactStore::new(create_document_envelope(GENERATION_3D_SCHEMA, "generation3d", Generation3dSnapshot::default(), None)).await.expect("valid artifact store fixture");
         use crate::artifacts::generation3d::mutations::create_widget::CreateWidget;
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![Generation3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Generation3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], description: None }).await.expect("apply");
         let edit: &Edit<Generation3dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        test_support::assert_command_envelope_round_trip::<Generation3dSnapshot, Generation3dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        test_support::assert_command_envelope_round_trip::<Generation3dSnapshot, Generation3dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
     }
 }
 //#endregion 🧪️Tests

@@ -1,4 +1,5 @@
 //! 🧬️ Direct change-node-name mutation owner.
+use crate::artifacts::gltf::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::artifacts::gltf::schema::modules::mutation_support::structure_geometry::checked_index;
 use crate::artifacts::gltf::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::artifacts::gltf::GltfSnapshot;
@@ -166,7 +167,7 @@ impl<'a> FacadeProtobufReader<'a> {
             }
             value |= u64::from(byte & 0x7f) << (shift * 7);
             if byte & 0x80 == 0 {
-                let width = if value == 0 { 1 } else { ((64 - value.leading_zeros() + 6) / 7) as usize };
+                let width = if value == 0 { 1 } else { (64 - value.leading_zeros()).div_ceil(7) as usize };
                 if self.position - start != width {
                     return facade_error("nonminimal", path);
                 }
@@ -263,8 +264,8 @@ fn protobuf_restore(reader: &mut FacadeProtobufReader<'_>, path: &str) -> Facade
                 let mut nullable = reader.message(path)?;
                 after = Some(protobuf_optional(&mut nullable, path)?);
             }
-            1 | 2 | 3 if matches!(wire, 0 | 2) => return facade_error("duplicate", path),
-            1 | 2 | 3 => return facade_error("wire", path),
+            1..=3 if matches!(wire, 0 | 2) => return facade_error("duplicate", path),
+            1..=3 => return facade_error("wire", path),
             _ => return facade_error("unknown", path),
         }
     }
@@ -359,20 +360,6 @@ pub enum ChangeNodeNameMutation {
     Restore(GltfChangeNodeNameRestore),
 }
 
-fn rejection_outcome(code: String, path: String, detail: String) -> protocol::MutationOutcome<crate::artifacts::gltf::schema::diff::GltfDiff> {
-    let target = path.split('/').filter(|part| !part.is_empty()).map(str::to_string).collect::<Vec<_>>();
-    if code.contains("no-observable-change") {
-        return protocol::MutationOutcome::new(Default::default()).warn("mutation.no-op", detail);
-    }
-    if code.contains("duplicate") {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", detail, target);
-    }
-    if code.contains("out-of-range") || code.contains("missing") || code.contains("not-found") {
-        return protocol::MutationOutcome::error("mutation.target-missing", detail, target);
-    }
-    protocol::MutationOutcome::fatal("mutation.invariant", format!("{code}: {detail}"), target)
-}
-
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeNodeNameMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node-name", kind: "change-node-name", record: "ChangedNodeName" };
 
@@ -383,7 +370,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeNodeNam
         };
         match next {
             Ok(next) => protocol::MutationOutcome::new(<crate::artifacts::gltf::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
-            Err(error) => rejection_outcome(error.code, error.path, error.detail),
+            Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
         }
     }
 
@@ -435,7 +422,7 @@ mod direct_leaf_tests {
     #[test]
     fn canonical_leaf_metadata_matches_descriptor_and_provenance() {
         let expected: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).expect("valid canonical node-name descriptor");
-        assert_eq!(serde_json::to_value(<ChangeNodeNameMutation as MutationLeaf>::DESCRIPTOR).expect("serializable descriptor"), expected);
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(<ChangeNodeNameMutation as MutationLeaf>::DESCRIPTOR))).expect("serializable descriptor"), expected);
         let provenance = <ChangeNodeNameMutation as MutationLeaf>::PROVENANCE;
         assert_eq!(provenance.mutation_root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations");
         assert_eq!(provenance.owner, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🏷️rename");

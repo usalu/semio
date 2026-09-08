@@ -283,10 +283,14 @@
         "receipt": {
           "schema": "semio.hub.inference-approval-receipt/v1",
           "jobId": "11111111111111111111111111111111",
-          "mutationId": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+          "mutationId": "9071779b724c67e0a45d5e23fddc8dbe",
           "commandHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
           "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
-          "applied": true
+          "applied": true,
+          "undo": {
+            "targetId": "22222222222222222222222222222222",
+            "expectedCurrent": { "documentId": "document-map", "headEditOrdinal": 2, "headEditId": "approval-edit", "lastCommitSeq": 2, "chainSha256": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130" }
+          }
         }
       },
       "expected": {
@@ -571,10 +575,14 @@
         "receipt": {
           "schema": "semio.hub.inference-approval-receipt/v1",
           "jobId": "11111111111111111111111111111111",
-          "mutationId": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+          "mutationId": "9071779b724c67e0a45d5e23fddc8dbe",
           "commandHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
           "proposalHash": "0000000000000000000000000000000000000000000000000000000000000000",
-          "applied": true
+          "applied": true,
+          "undo": {
+            "targetId": "22222222222222222222222222222222",
+            "expectedCurrent": { "documentId": "document-map", "headEditOrdinal": 2, "headEditId": "approval-edit", "lastCommitSeq": 2, "chainSha256": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130" }
+          }
         }
       },
       "expected": {
@@ -605,10 +613,14 @@
         "receipt": {
           "schema": "semio.hub.inference-approval-receipt/v1",
           "jobId": "11111111111111111111111111111111",
-          "mutationId": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+          "mutationId": "9071779b724c67e0a45d5e23fddc8dbe",
           "commandHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
           "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
-          "applied": false
+          "applied": false,
+          "undo": {
+            "targetId": "22222222222222222222222222222222",
+            "expectedCurrent": { "documentId": "document-map", "headEditOrdinal": 2, "headEditId": "approval-edit", "lastCommitSeq": 2, "chainSha256": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130" }
+          }
         }
       },
       "expected": {

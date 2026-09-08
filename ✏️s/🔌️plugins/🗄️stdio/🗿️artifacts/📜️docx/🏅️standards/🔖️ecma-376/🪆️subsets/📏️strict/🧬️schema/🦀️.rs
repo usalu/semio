@@ -247,7 +247,7 @@ pub mod derived_analysis {
     /// `CODE_REL_BASE` below checks for) -- matching by suffix here keeps this lookup honest for both
     /// conformance classes instead of silently failing to find the main part on any strict document.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn main_document_part<'a>(opc: &'a OpcPackage) -> Option<(&'a OpcPart, String)> {
+    fn main_document_part(opc: &OpcPackage) -> Option<(&OpcPart, String)> {
         let rel = opc.relationships_for("").iter().find(|r| r.rel_type.ends_with("/officeDocument"))?;
         let path = resolve_relationship_target("", &rel.target);
         opc.part(&path).map(|p| (p, path))

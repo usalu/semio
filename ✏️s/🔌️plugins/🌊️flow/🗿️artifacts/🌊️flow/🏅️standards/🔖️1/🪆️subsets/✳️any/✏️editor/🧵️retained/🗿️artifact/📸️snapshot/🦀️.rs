@@ -36,6 +36,7 @@ mod tests {
                                 }
                                 PluginCloseStep::Complete => { completed = true; break; }
                                 PluginCloseStep::Blocked { .. } => panic!("unshared Flow store must close without a retained reader"),
+                                PluginCloseStep::AwaitingInput { reason } => panic!("fixture has no active worker input to await: {reason}"),
                             }
                         }
                         assert!(completed, "Flow durable store must report completion within the fixed bound");
@@ -50,8 +51,8 @@ mod tests {
                     }
                     "config" => close_lane!(crate::editor::flow::config::FlowConfig { preview_off_node_ids: vec![text], ..Default::default() }, App::build_config_store_owners(), App::build_config_store_disposer()),
                     "draft" => {
-                        assert_eq!(std::mem::size_of::<semio_framework_plugin::NoDraft>(), 0);
-                        assert_eq!(std::mem::size_of::<semio_framework_plugin::NoDraftMutation>(), 0);
+                        assert_eq!(size_of::<semio_framework_plugin::NoDraft>(), 0);
+                        assert_eq!(size_of::<semio_framework_plugin::NoDraftMutation>(), 0);
                         close_lane!(semio_framework_plugin::NoDraft::default(), App::build_draft_store_owners(), App::build_draft_store_disposer());
                     }
                     _ => panic!("unknown durable Flow lane"),

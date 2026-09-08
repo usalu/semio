@@ -84,6 +84,7 @@ impl UiPatchOps {
     }
 
     /// 🧊️ Synchronous cold builder only; retained callers separate ledger admission and placement.
+    #[expect(clippy::result_large_err, reason = "A full retirement page returns the exact patch operation without allocating outside its retirement grant.")]
     pub fn try_push(&mut self, value: UiPatchOp) -> Result<(), UiPatchOp> {
         let mut source = Some(value);
         while !self.has_reserved_slot() {
@@ -226,7 +227,7 @@ impl UiTypedRetire for PatchPages {
             return Ok(UiValueRetirementStep { progressed: true, released_items: 1, ..UiValueRetirementStep::default() });
         }
         if *phase == 1 {
-            page.truncate(0);
+            page.clear();
             self.length -= 1;
             *phase = 0;
             child_path.fill(0);

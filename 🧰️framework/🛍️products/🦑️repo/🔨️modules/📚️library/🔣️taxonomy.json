@@ -24455,6 +24455,9 @@
       "target": "@semio-tech/framework-graph:generate",
       "previewTarget": "@semio-tech/framework-graph:preview-generated",
       "checkTarget": "@semio-tech/framework-graph:check-generated",
+      "nativeConsumers": [
+        "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust"
+      ],
       "inputPatterns": [
         "✏️s/🔌️plugins/**/*manifest.json",
         "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📋️project.json",
@@ -24522,6 +24525,7 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/📐️schema.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🗺️catalog.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧩️extension/📐️directory.schema.json",
+        "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🔣️.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
       ],
       "inputDiscovery": {
@@ -24566,11 +24570,9 @@
       "target": "@semio-tech/print:generate",
       "previewTarget": "@semio-tech/print:preview-generated",
       "inputPatterns": [
-        "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📜️script.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌗️mixing/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json",
-        "🧰️framework/🛍️products/📓️print/🎮️commands/🎨latex-token-stylesheet-generation/🟦️.ts",
-        "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📋️project.json",
-        "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📜️script.ts",
+        "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/📜️script.ts",
         "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🟦️.ts"
       ],
       "outputRoots": [
@@ -24580,6 +24582,39 @@
         }
       ],
       "reason": "The print target renders one tracked LaTeX stylesheet from the styling token source"
+    },
+    "report-actor-network": {
+      "ownership": "owned",
+      "ownerPath": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
+      "target": "@semio-tech/mit-bestand-bericht:generate-actor-network",
+      "previewTarget": "@semio-tech/mit-bestand-bericht:preview-generated",
+      "checkTarget": "@semio-tech/mit-bestand-bericht:check-generated",
+      "inputPatterns": [
+        "bun.lock",
+        "♻️mit-bestand/📋️bericht/📎️anhang/📇️akteursnetz-erweiterung-kandidaten.md",
+        "♻️mit-bestand/📋️bericht/🔨️modules/👥️actor-network/📜️script.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts"
+      ],
+      "outputRoots": [
+        {
+          "path": "♻️mit-bestand/📋️bericht/📎️anhang/🎯️akteursnetz-programme.tex",
+          "inclusion": "tracked"
+        },
+        {
+          "path": "♻️mit-bestand/📋️bericht/📎️anhang/👥️akteursnetz.tex",
+          "inclusion": "tracked"
+        },
+        {
+          "path": "♻️mit-bestand/📋️bericht/📎️anhang/📊️akteursnetz-tabellen.tex",
+          "inclusion": "tracked"
+        },
+        {
+          "path": "♻️mit-bestand/📋️bericht/📎️anhang/🕸️akteursnetz-figuren.tex",
+          "inclusion": "tracked"
+        }
+      ],
+      "reason": "The validated actor-network ledger deterministically renders four tracked LaTeX fragments; PDF compilation consumes the owned generator outputs"
     },
     "scale-fixture": {
       "ownership": "owned",
@@ -24605,6 +24640,9 @@
       "target": "@semio-tech/framework-schema:generate",
       "previewTarget": "@semio-tech/framework-schema:preview-generated",
       "checkTarget": "@semio-tech/framework-schema:check",
+      "nativeConsumers": [
+        "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust"
+      ],
       "inputPatterns": [
         "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📋️project.json",
         "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
@@ -24688,6 +24726,9 @@
       "target": "@semio-tech/ui-styling-tokens:generate",
       "previewTarget": "@semio-tech/ui-styling-tokens:preview-generated",
       "checkTarget": "@semio-tech/ui-styling-tokens:check-generated",
+      "nativeConsumers": [
+        "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust"
+      ],
       "inputPatterns": [
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌓️theme/🔣️.json",
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🟦️.ts",
@@ -24748,6 +24789,9 @@
       "target": "@semio-tech/ui-rs:generate",
       "previewTarget": "@semio-tech/ui-rs:preview-generated",
       "checkTarget": "@semio-tech/ui-rs:check",
+      "nativeConsumers": [
+        "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust"
+      ],
       "inputPatterns": [
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json",
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📜️script.ts",

@@ -42,7 +42,7 @@ pub fn compute_svg_dimensions(snapshot: &SvgSnapshot) -> SvgDimensions {
     let Ok(SvgElement::Svg { view_box, width, height, .. }) = svg_element_from_xml_node(root) else {
         return SvgDimensions::default();
     };
-    let (view_box_width, view_box_height) = view_box.map(|vb| (vb.width, vb.height)).unwrap_or((0.0, 0.0));
+    let (view_box_width, view_box_height) = view_box.map_or((0.0, 0.0), |vb| (vb.width, vb.height));
     let width = width.as_deref().and_then(parse_length).unwrap_or(view_box_width);
     let height = height.as_deref().and_then(parse_length).unwrap_or(view_box_height);
     SvgDimensions { width, height }

@@ -2,7 +2,7 @@
 name = "semio-framework-os-shell"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Shell UI state single source of truth: ShellState/ShellCommand/ShellEvent vocabulary and the pure reduce() function every host (React, wgpu, MCP gateway) becomes a client of — pure, no I/O, no clock (now_ms is caller-supplied), no wasm_bindgen/web_sys/winit/tokio/std::thread."
 
 [package.metadata.semio]

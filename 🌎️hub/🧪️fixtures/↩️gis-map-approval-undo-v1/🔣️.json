@@ -40,6 +40,14 @@
       "chainSha256": "8888888888888888888888888888888888888888888888888888888888888888"
     }
   },
+  "genesisFirstUndo": {
+    "initialShape": "scope-bound-zero-frontier",
+    "firstCommandOrdinalDelta": 1,
+    "undoCommandOrdinalDelta": 1,
+    "restoresExactInitialSnapshot": true,
+    "restoresGenesisFrontier": false,
+    "syntheticGenesisEdit": false
+  },
   "traces": [
     {
       "name": "owner-exact-tail-applies",

@@ -277,7 +277,7 @@ fn checkerboard_rgba(width: u32, height: u32, light_cell: u8, dark_cell: u8) -> 
     for y in 0..height {
         for x in 0..width {
             let idx = ((y * width + x) * 4) as usize;
-            let on = ((x / cell) + (y / cell)) % 2 == 0;
+            let on = ((x / cell) + (y / cell)).is_multiple_of(2);
             let v = if on { light_cell } else { dark_cell };
             rgba[idx] = v;
             rgba[idx + 1] = v;
@@ -651,7 +651,7 @@ impl RasterHost {
                         let mask_key = format!("mask:{id}");
                         let mut mask_rgba = self.buffers.mask.entry(mask_key.clone()).or_insert_with(|| vec![255u8; (mask_state.width * mask_state.height * 4) as usize]).clone();
                         if mask_state.invert {
-                            for a in mask_rgba.chunks_exact_mut(4) {
+                            for a in mask_rgba.as_chunks_mut::<4>().0 {
                                 a[3] = 255 - a[3];
                             }
                         }

@@ -1,0 +1,237 @@
+{
+  "files": {
+    "Cargo.toml": "[workspace]\nmembers = [\"app\", \"library\", \"development\", \"transitive\", \"unused\", \"builder\"]\nresolver = \"2\"\n[workspace.dependencies]\ncommon = { package = \"library\", path = \"library\" }\n",
+    "app/Cargo.toml": "[package]\nname = \"app\"\nversion = \"0.1.0\"\nedition = \"2021\"\n[dependencies]\ncommon.workspace = true\n[dev-dependencies]\ndevelopment = { path = \"../development\" }\n",
+    "library/Cargo.toml": "[package]\nname = \"library\"\nversion = \"0.1.0\"\nedition = \"2021\"\n[dependencies]\ntransitive = { path = \"../transitive\" }\n[build-dependencies]\nbuilder = { path = \"../builder\" }\n[dev-dependencies]\nunused = { path = \"../unused\" }\n",
+    "development/Cargo.toml": "[package]\nname = \"development\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    "transitive/Cargo.toml": "[package]\nname = \"transitive\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    "unused/Cargo.toml": "[package]\nname = \"unused\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    "builder/Cargo.toml": "[package]\nname = \"builder\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    "app/src/lib.rs": "pub const VALUE: u8 = 1;\n",
+    "library/src/lib.rs": "pub const VALUE: u8 = 1;\n",
+    "development/src/lib.rs": "pub const VALUE: u8 = 1;\n",
+    "transitive/src/lib.rs": "pub const VALUE: u8 = 1;\n",
+    "unused/src/lib.rs": "pub const VALUE: u8 = 1;\n",
+    "builder/src/lib.rs": "pub const VALUE: u8 = 1;\n"
+  },
+  "contracts": {
+    "library": {
+      "ownership": "owned",
+      "ownerPath": "library",
+      "target": "library:generate",
+      "nativeConsumers": [
+        "library"
+      ],
+      "inputPatterns": [
+        "library/source.json"
+      ],
+      "outputRoots": [
+        {
+          "path": "library/generated",
+          "inclusion": "ignored"
+        }
+      ]
+    },
+    "development": {
+      "ownership": "owned",
+      "ownerPath": "development",
+      "target": "development:generate",
+      "nativeConsumers": [
+        "development"
+      ],
+      "inputPatterns": [
+        "development/source.json"
+      ],
+      "outputRoots": [
+        {
+          "path": "development/generated",
+          "inclusion": "ignored"
+        }
+      ]
+    },
+    "transitive": {
+      "ownership": "owned",
+      "ownerPath": "transitive",
+      "target": "transitive:generate",
+      "nativeConsumers": [
+        "transitive"
+      ],
+      "inputPatterns": [
+        "transitive/source.json"
+      ],
+      "outputRoots": [
+        {
+          "path": "transitive/generated",
+          "inclusion": "ignored"
+        }
+      ]
+    },
+    "unused": {
+      "ownership": "owned",
+      "ownerPath": "unused",
+      "target": "unused:generate",
+      "nativeConsumers": [
+        "unused"
+      ],
+      "inputPatterns": [
+        "unused/source.json"
+      ],
+      "outputRoots": [
+        {
+          "path": "unused/generated",
+          "inclusion": "ignored"
+        }
+      ]
+    },
+    "builder": {
+      "ownership": "owned",
+      "ownerPath": "builder",
+      "target": "builder:generate",
+      "nativeConsumers": [
+        "builder"
+      ],
+      "inputPatterns": [
+        "builder/source.json"
+      ],
+      "outputRoots": [
+        {
+          "path": "builder/generated",
+          "inclusion": "ignored"
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "name": "production-closure",
+      "root": "app",
+      "tests": false,
+      "targets": [
+        "builder:generate",
+        "library:generate",
+        "transitive:generate"
+      ]
+    },
+    {
+      "name": "test-closure",
+      "root": "app",
+      "tests": true,
+      "targets": [
+        "builder:generate",
+        "development:generate",
+        "library:generate",
+        "transitive:generate"
+      ]
+    },
+    {
+      "name": "direct-test-closure",
+      "root": "library",
+      "tests": true,
+      "targets": [
+        "builder:generate",
+        "library:generate",
+        "transitive:generate",
+        "unused:generate"
+      ]
+    },
+    {
+      "name": "unrelated-package",
+      "root": "unused",
+      "tests": false,
+      "targets": [
+        "unused:generate"
+      ]
+    }
+  ],
+  "nativeTargets": [
+    "build",
+    "check",
+    "test"
+  ],
+  "arguments": [
+    {
+      "operation": "build",
+      "args": [
+        "--release",
+        "--features",
+        "svg"
+      ],
+      "valid": true
+    },
+    {
+      "operation": "build",
+      "args": [
+        "--bin",
+        "viewer"
+      ],
+      "valid": true
+    },
+    {
+      "operation": "build",
+      "args": [
+        "--all-targets"
+      ],
+      "valid": false
+    },
+    {
+      "operation": "check",
+      "args": [
+        "--tests"
+      ],
+      "valid": false
+    },
+    {
+      "operation": "check",
+      "args": [
+        "--example=viewer"
+      ],
+      "valid": false
+    },
+    {
+      "operation": "test",
+      "args": [
+        "--all-targets"
+      ],
+      "valid": true
+    },
+    {
+      "operation": "test",
+      "args": [
+        "--test",
+        "integration",
+        "--",
+        "--test-threads=1"
+      ],
+      "valid": true
+    },
+    {
+      "operation": "test",
+      "args": [
+        "--workspace"
+      ],
+      "valid": false
+    },
+    {
+      "operation": "test",
+      "args": [
+        "--package=other"
+      ],
+      "valid": false
+    },
+    {
+      "operation": "build",
+      "args": [
+        "-pother"
+      ],
+      "valid": false
+    },
+    {
+      "operation": "build",
+      "args": [
+        "--manifest-path",
+        "../other/Cargo.toml"
+      ],
+      "valid": false
+    }
+  ]
+}

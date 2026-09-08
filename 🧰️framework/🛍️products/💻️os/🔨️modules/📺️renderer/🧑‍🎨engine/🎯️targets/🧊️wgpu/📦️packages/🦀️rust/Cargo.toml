@@ -2,7 +2,7 @@
 name = "semio-framework-os-renderer-wgpu"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Raw wgpu WASM renderer for declarative framework UiNode trees"
 build = "build.rs"
 
@@ -62,7 +62,7 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 base64 = "0.22.1"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
-vello = { version = "0.7.0", default-features = false, features = ["wgpu"] }
+vello = { version = "0.9.0", default-features = false, features = ["wgpu"] }
 winit = { version = "0.30.12", default-features = false, features = ["rwh_06"] }
 resvg = "0.45.1"
 tiny-skia = "0.11.4"
@@ -144,3 +144,6 @@ web-sys = { version = "0.3.98", features = [
     "console",
     "MediaQueryList",
 ] }
+
+[dev-dependencies]
+ui_wgpu = { path = "../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-ui" }

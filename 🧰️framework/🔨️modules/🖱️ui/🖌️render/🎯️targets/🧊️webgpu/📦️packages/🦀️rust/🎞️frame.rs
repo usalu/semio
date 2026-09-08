@@ -340,6 +340,7 @@ fn run_blur_chain(device: &wgpu::Device, queue: &wgpu::Queue, pipelines: &Pipeli
             depth_stencil_attachment: None,
             timestamp_writes: None,
             occlusion_query_set: None,
+            multiview_mask: None,
         });
         pass.set_pipeline(&pipelines.blur_downsample_pipeline);
         pass.set_bind_group(0, &bind_group, &[]);
@@ -362,6 +363,7 @@ fn blit_scene_to_swapchain(device: &wgpu::Device, encoder: &mut wgpu::CommandEnc
         depth_stencil_attachment: None,
         timestamp_writes: None,
         occlusion_query_set: None,
+        multiview_mask: None,
     });
     pass.set_pipeline(&pipelines.scene_blit_pipeline);
     pass.set_bind_group(0, &scene_bind_group, &[]);
@@ -441,6 +443,7 @@ pub(crate) fn render(
             }),
             timestamp_writes: None,
             occlusion_query_set: None,
+            multiview_mask: None,
         });
         replay_batches(&mut pass, pipelines, resources, quad_buffer.as_ref(), vector_buffer.as_ref(), glass_buffer.as_ref(), &scene_sample_bind_group, &buckets.backdrop_content, width, height)?;
         replay_world_passes(&mut pass, pipelines, resources, world_ring, &prepared_world, world_mask_buffer.as_ref(), world_instance_buffer, world_line_buffer, width, height)?;
@@ -453,6 +456,7 @@ pub(crate) fn render(
             depth_stencil_attachment: Some(depth_stencil_attachment(depth_view, wgpu::LoadOp::Load)),
             timestamp_writes: None,
             occlusion_query_set: None,
+            multiview_mask: None,
         });
         replay_batches(&mut pass, pipelines, resources, quad_buffer.as_ref(), vector_buffer.as_ref(), glass_buffer.as_ref(), &scene_sample_bind_group, &buckets.backdrop_overlay, width, height)?;
     }
@@ -471,6 +475,7 @@ pub(crate) fn render(
             depth_stencil_attachment: None,
             timestamp_writes: None,
             occlusion_query_set: None,
+            multiview_mask: None,
         });
         replay_batches(&mut pass, pipelines, resources, quad_buffer.as_ref(), vector_buffer.as_ref(), glass_buffer.as_ref(), &scene_sample_bind_group, &buckets.glass, width, height)?;
     }
@@ -482,6 +487,7 @@ pub(crate) fn render(
             depth_stencil_attachment: Some(depth_stencil_attachment(depth_view, wgpu::LoadOp::Load)),
             timestamp_writes: None,
             occlusion_query_set: None,
+            multiview_mask: None,
         });
         replay_batches(&mut pass, pipelines, resources, quad_buffer.as_ref(), vector_buffer.as_ref(), glass_buffer.as_ref(), &scene_sample_bind_group, &buckets.foreground_content, width, height)?;
     }
@@ -493,6 +499,7 @@ pub(crate) fn render(
             depth_stencil_attachment: Some(depth_stencil_attachment(depth_view, wgpu::LoadOp::Load)),
             timestamp_writes: None,
             occlusion_query_set: None,
+            multiview_mask: None,
         });
         replay_batches(&mut pass, pipelines, resources, quad_buffer.as_ref(), vector_buffer.as_ref(), glass_buffer.as_ref(), &scene_sample_bind_group, &buckets.foreground_overlay, width, height)?;
     }

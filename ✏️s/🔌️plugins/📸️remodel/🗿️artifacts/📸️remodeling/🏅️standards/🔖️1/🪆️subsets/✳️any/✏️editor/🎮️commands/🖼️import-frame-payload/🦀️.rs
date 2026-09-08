@@ -55,7 +55,7 @@ pub(crate) async fn testkit_import_checker_stream(app: &mut crate::editor::remod
     use crate::editor::remodeling::testkit::dispatch;
     use crate::editor::remodeling::RemodelingCommand;
     for index in 0..n {
-        dispatch(app, RemodelingCommand::ImportFramePayload(ImportFramePayload { payload: checker_data_url(24, 24, 3), name: format!("frame-{index}.png"), index })).await;
+        dispatch(app, RemodelingCommand::ImportFramePayload(ImportFramePayload { payload: checker_data_url(24, 24, 3).await, name: format!("frame-{index}.png"), index })).await;
     }
 }
 
@@ -64,22 +64,6 @@ pub(crate) async fn testkit_import_checker_stream(app: &mut crate::editor::remod
 #[cfg(test)]
 pub(crate) async fn checker_data_url(w: u32, h: u32, cell: u32) -> String {
     format!("data:image/png;base64,{}", base64_codec::base64_standard_encode(remodeling_image::encode_png(&checker_image(w, h, cell)).expect("encode checker png")))
-}
-
-/// 🏁️ The same checkerboard, real-JPEG-encoded — mirrors what a `RequestMediaFrames` host actually
-/// dispatches to `frame_action` (`payload: dataUrl(image/jpeg)`).
-#[cfg(test)]
-pub(crate) async fn checker_data_url_jpeg(w: u32, h: u32, cell: u32) -> String {
-    format!("data:image/jpeg;base64,{}", base64_codec::base64_standard_encode(remodeling_image::encode_jpeg(&checker_image(w, h, cell), 90)))
-}
-
-/// 🎞️ A tiny synthesized MJPEG-in-MP4 video (n frames of the same checker pattern) as a
-/// `RequestMediaFrames`-fallback-style raw base64 data URL payload.
-#[cfg(test)]
-pub(crate) async fn checker_video_data_url(n: u32, w: u32, h: u32, cell: u32) -> String {
-    let jpeg = remodeling_image::encode_jpeg(&checker_image(w, h, cell), 90);
-    let frames: Vec<Vec<u8>> = (0..n).map(|_| jpeg.clone()).collect();
-    format!("data:video/mp4;base64,{}", base64_codec::base64_standard_encode(remodeling_video::write_mp4_mjpeg(&frames, 10.0)))
 }
 
 #[cfg(test)]

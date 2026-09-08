@@ -10,8 +10,7 @@ pub fn encode(value: &JpgMutation) -> Option<Result<Vec<u8>, protocol::ProtocolE
 }
 pub fn encode_payload(payload: &RemoveQuantTableMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     let RemoveQuantTableMutation { id } = payload;
-    let mut out = Vec::new();
-    out.push(*id);
+    let out = vec![*id];
     Ok(out)
 }
 pub fn decode(bytes: &[u8]) -> Result<JpgMutation, protocol::ProtocolError> {

@@ -82,10 +82,8 @@ fn render_block(block: &MdBlock, out: &mut String) {
         // ends with the blank line `render_list_item` writes after every item, so the guard below
         // adds nothing there.
         MdBlock::List { ordered, start, tight, items } => {
-            let mut n = start.unwrap_or(1);
-            for item in items {
+            for (n, item) in (start.unwrap_or(1)..).zip(items.iter()) {
                 let marker = if *ordered { format!("{n}. ") } else { "- ".to_string() };
-                n += 1;
                 render_list_item(&marker, item, *tight, out);
             }
             if !items.is_empty() && !out.ends_with("\n\n") {

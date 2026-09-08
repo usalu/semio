@@ -3,7 +3,7 @@
   "$id": "semio.hub.gis-map-approval-undo-fixture/v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "target", "request", "traces", "historyMembers", "sourceHostiles"],
+  "required": ["schema", "target", "request", "genesisFirstUndo", "traces", "historyMembers", "sourceHostiles"],
   "$defs": {
     "hex32": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
     "hex64": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
@@ -58,6 +58,19 @@
         "targetId": { "$ref": "#/$defs/hex32" },
         "idempotencyKey": { "$ref": "#/$defs/hex32" },
         "expectedCurrent": { "$ref": "#/$defs/frontier" }
+      }
+    },
+    "genesisFirstUndo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["initialShape", "firstCommandOrdinalDelta", "undoCommandOrdinalDelta", "restoresExactInitialSnapshot", "restoresGenesisFrontier", "syntheticGenesisEdit"],
+      "properties": {
+        "initialShape": { "const": "scope-bound-zero-frontier" },
+        "firstCommandOrdinalDelta": { "const": 1 },
+        "undoCommandOrdinalDelta": { "const": 1 },
+        "restoresExactInitialSnapshot": { "const": true },
+        "restoresGenesisFrontier": { "const": false },
+        "syntheticGenesisEdit": { "const": false }
       }
     },
     "traces": {

@@ -2,7 +2,7 @@
 name = "semio-framework-replication"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Product-neutral replication contract: lane-tagged client/server frames, causal mutation envelopes, the mutation trait family, conflict vocabulary, the .spr record format and the pack codec primitives beneath them. Spoken identically by the optimistic local replica and the authoritative server; depends on neither."
 
 [package.metadata.semio]

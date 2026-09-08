@@ -1,0 +1,215 @@
+{
+  "schemaVersion": 1,
+  "lock": {
+    "lockfileVersion": 1,
+    "workspaces": {
+      "": {
+        "name": "fixture",
+        "dependencies": {
+          "api": "1.0.0"
+        }
+      },
+      "apps/📄️document": {
+        "name": "@fixture/document",
+        "dependencies": {
+          "api": "2.0.0"
+        }
+      }
+    },
+    "patchedDependencies": {
+      "core@1.0.0": "patches/core.patch"
+    },
+    "packages": {
+      "@fixture/document": [
+        "@fixture/document@workspace:apps/📄️document"
+      ],
+      "api": [
+        "api@1.0.0",
+        "",
+        {
+          "dependencies": {
+            "core": "^1",
+            "alias": "npm:actual@1.0.0"
+          },
+          "peerDependencies": {
+            "peer": "*",
+            "absent": "*"
+          }
+        },
+        "api-integrity"
+      ],
+      "core": [
+        "core@2.0.0",
+        "",
+        {},
+        "core-two-integrity"
+      ],
+      "api/core": [
+        "core@1.0.0",
+        "",
+        {
+          "dependencies": {
+            "api": "^1"
+          }
+        },
+        "core-one-integrity"
+      ],
+      "alias": [
+        "actual@1.0.0",
+        "",
+        {
+          "optionalDependencies": {
+            "platform": "1",
+            "missing": "1"
+          }
+        },
+        "actual-integrity"
+      ],
+      "platform": [
+        "platform@1.0.0",
+        "",
+        {
+          "os": "linux",
+          "cpu": "arm64"
+        },
+        "platform-integrity"
+      ],
+      "peer": [
+        "peer@1.0.0",
+        "",
+        {},
+        "peer-one-integrity"
+      ],
+      "@fixture/document/api": [
+        "api@2.0.0",
+        "",
+        {
+          "dependencies": {
+            "core": "^2"
+          },
+          "peerDependencies": {
+            "peer": "*"
+          }
+        },
+        "api-two-integrity"
+      ],
+      "@fixture/document/peer": [
+        "peer@2.0.0",
+        "",
+        {},
+        "peer-two-integrity"
+      ],
+      "unrelated": [
+        "unrelated@1.0.0",
+        "",
+        {},
+        "unrelated-integrity"
+      ]
+    }
+  },
+  "patches": {
+    "patches/core.patch": "authored patch bytes\n"
+  },
+  "resolutions": [
+    {
+      "from": "",
+      "name": "api",
+      "key": "api"
+    },
+    {
+      "from": "@fixture/document",
+      "name": "api",
+      "key": "@fixture/document/api"
+    },
+    {
+      "from": "@fixture/document/api",
+      "name": "core",
+      "key": "core"
+    },
+    {
+      "from": "@fixture/document/api",
+      "name": "peer",
+      "key": "@fixture/document/peer"
+    },
+    {
+      "from": "api",
+      "name": "core",
+      "key": "api/core"
+    },
+    {
+      "from": "api/core",
+      "name": "api",
+      "key": "api"
+    }
+  ],
+  "closures": [
+    {
+      "root": "api",
+      "keys": [
+        "alias",
+        "api",
+        "api/core",
+        "peer",
+        "platform"
+      ]
+    },
+    {
+      "root": "@fixture/document/api",
+      "keys": [
+        "@fixture/document/api",
+        "@fixture/document/peer",
+        "core"
+      ]
+    }
+  ],
+  "mutations": [
+    {
+      "name": "Unrelated Package Integrity",
+      "package": "unrelated",
+      "root": "api",
+      "changed": false
+    },
+    {
+      "name": "Nested Dependency Integrity",
+      "package": "api/core",
+      "root": "api",
+      "changed": true
+    },
+    {
+      "name": "Other Resolved Version",
+      "package": "core",
+      "root": "api",
+      "changed": false
+    },
+    {
+      "name": "Nested Peer Dependency",
+      "package": "@fixture/document/peer",
+      "root": "@fixture/document/api",
+      "changed": true
+    },
+    {
+      "name": "Optional Platform Dependency",
+      "package": "platform",
+      "root": "api",
+      "changed": true
+    }
+  ],
+  "importers": [
+    {
+      "file": "apps/📄️document/src/📜️script.ts",
+      "name": "api",
+      "key": "@fixture/document/api"
+    },
+    {
+      "file": "domain/📜️script.ts",
+      "name": "api",
+      "key": "api"
+    }
+  ],
+  "unresolvedImports": [
+    "@/lib",
+    "@local",
+    "node:fs",
+    "virtual:entry"
+  ]
+}

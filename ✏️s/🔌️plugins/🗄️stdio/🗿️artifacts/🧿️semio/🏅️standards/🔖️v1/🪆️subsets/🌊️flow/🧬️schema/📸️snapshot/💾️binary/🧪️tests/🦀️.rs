@@ -4,7 +4,7 @@ use semio_s_plugin_stdio::artifacts::semio::{create_semio_member, SemioMembers, 
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, SemioFlowSnapshot};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::binary::{SemioFlowSnapshotDecode, SemioFlowSnapshotDecodeStep};
 use semio_framework_job::StepContext;
-use store::{ErasedSnapshotRetirement, MemberFactory, MemberOpenDiagnostic, MemberOpenOperation, MemberOpenRequest, MemberOpenStep, OwnerRef, SnapshotRetirementStep, SpaceMember};
+use store::{ErasedSnapshotRetirement, MemberFactory, MemberOpenDiagnostic, MemberOpenOperation, MemberOpenRequest, MemberOpenStep, MemberSnapshotOpenOperation, OwnerRef, SnapshotRetirementStep, SpaceMember};
 use semio_framework_job::{Generation, OperationId, StepBudget, root_cancel_token};
 use store::{ArtifactPack, OwnedSchemaDecodeCredits, OwnedSchemaDecodePage, OwnedSchemaDecodePages};
 
@@ -127,7 +127,7 @@ fn semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures() {
             for fuel in [1, 2, 17] {
                 let input = request(&wire, "flow");
                 let retained = input.retained_input_bytes();
-                let mut decoder = SemioFlowSnapshotDecode::new(input).unwrap_or_else(|_| panic!("exact Flow identity"));
+                let mut decoder = SemioFlowSnapshotDecode::begin(input).unwrap_or_else(|_| panic!("exact Flow identity"));
                 let mut sequence = 0;
                 let mut zero = StepContext::new(OperationId(1), Generation(1), StepBudget::new(0, 999), root_cancel_token(), || Some(1), &mut sequence);
                 assert!(matches!(decoder.step(&mut zero), SemioFlowSnapshotDecodeStep::Pending { consumed_bytes: 0 }));
@@ -161,7 +161,7 @@ fn semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures() {
     }
     let wire = bytes(fixture["valid"][1]["hex"].as_str().unwrap());
     for cut in 0..=wire.len() {
-        let mut decoder = SemioFlowSnapshotDecode::new(request(&wire, "flow")).unwrap_or_else(|_| panic!("exact Flow identity"));
+        let mut decoder = SemioFlowSnapshotDecode::begin(request(&wire, "flow")).unwrap_or_else(|_| panic!("exact Flow identity"));
         let retained = decoder.retained_input_bytes();
         let cancel = root_cancel_token(); let mut sequence = 0;
         while decoder.consumed_bytes() < cut {
@@ -176,7 +176,7 @@ fn semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures() {
         close(&mut decoder);
     }
     for (operation, generation, now, diagnostic) in [(2,1,Some(1),MemberOpenDiagnostic::Stale),(1,2,Some(1),MemberOpenDiagnostic::Stale),(1,1,Some(1000),MemberOpenDiagnostic::Expired),(1,1,None,MemberOpenDiagnostic::Expired)] {
-        let mut decoder = SemioFlowSnapshotDecode::new(request(&wire, "flow")).unwrap_or_else(|_| panic!("exact Flow identity"));
+        let mut decoder = SemioFlowSnapshotDecode::begin(request(&wire, "flow")).unwrap_or_else(|_| panic!("exact Flow identity"));
         let mut sequence = 0;
         let clock: fn() -> Option<u64> = match now { Some(1) => || Some(1), Some(1000) => || Some(1000), None => || None, _ => unreachable!() };
         let mut cx = StepContext::new(OperationId(operation), Generation(generation), StepBudget::new(1, 2000), root_cancel_token(), clock, &mut sequence);
@@ -184,7 +184,7 @@ fn semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures() {
         close(&mut decoder);
     }
     let input = request(&wire, "text"); let retained = input.retained_input_bytes();
-    let mut rejected = SemioFlowSnapshotDecode::new(input).err().expect("wrong dialect cannot admit");
+    let mut rejected = SemioFlowSnapshotDecode::begin(input).err().expect("wrong dialect cannot admit");
     assert_eq!(rejected.request.retained_input_bytes(), retained);
     close(&mut rejected.request);
     eprintln!("[DEBUG] real Flow typed decoder: 2 neutral snapshots, 12 malformed/capacity/identity cases at three fuel grants; every byte cancellation boundary retains exact input and partial typed fields through bounded close");
@@ -202,7 +202,7 @@ fn semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes(
         let expected_bytes = retained + lifecycle["request"]["identityBytes"].as_u64().unwrap() as usize;
         if state == "closing" { assert!(matches!(input.close_step(1, 0).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })); }
         if state == "retired" { assert_eq!(close(&mut input), expected_bytes); }
-        match SemioFlowSnapshotDecode::new(input) {
+        match SemioFlowSnapshotDecode::begin(input) {
             Ok(mut decoder) => { assert!(row["reason"].is_null()); assert_eq!(decoder.consumed_bytes(), 0); assert_eq!(close(&mut decoder), expected_bytes); }
             Err(mut rejected) => {
                 let diagnostic = match row["reason"].as_str().unwrap() { "unsealed" => MemberOpenDiagnostic::Unsealed, "stale" => MemberOpenDiagnostic::Stale, "identity" => MemberOpenDiagnostic::Identity, _ => panic!("closed neutral diagnosis") };
@@ -224,7 +224,7 @@ fn semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes(
     assert_eq!(close(store::retirement::owned_retirement(large_snapshot).as_mut()), row["snapshotRetiredBytes"].as_u64().unwrap() as usize);
     for grants in lifecycle["retirementGrants"].as_array().unwrap() {
         let grants = grants.as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize).collect::<Vec<_>>();
-        let mut decoder = SemioFlowSnapshotDecode::new(request(&large_wire, "flow")).unwrap_or_else(|_| panic!("large Flow identity"));
+        let mut decoder = SemioFlowSnapshotDecode::begin(request(&large_wire, "flow")).unwrap_or_else(|_| panic!("large Flow identity"));
         assert_eq!(decoder.retained_input_bytes(), row["inputBytes"].as_u64().unwrap() as usize);
         assert_eq!(decoder.retained_input_bytes().div_ceil(4096), row["inputPages"].as_u64().unwrap() as usize);
         let cancel = root_cancel_token(); let mut sequence = 0;

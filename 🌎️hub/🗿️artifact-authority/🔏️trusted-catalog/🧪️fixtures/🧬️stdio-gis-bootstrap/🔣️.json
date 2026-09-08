@@ -13,6 +13,7 @@
         "packageId": "semio:gis",
         "version": "0.1.0",
         "role": "plugin",
+        "dependencies": [{ "pluginId": "stdio", "packageId": "semio:stdio", "version": "0.1.0" }],
         "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
         "componentBlake3": "1212121212121212121212121212121212121212121212121212121212121212",
         "descriptorSha256": "1313131313131313131313131313131313131313131313131313131313131313",
@@ -34,6 +35,7 @@
         "packageId": "semio:stdio",
         "version": "0.1.0",
         "role": "plugin",
+        "dependencies": [],
         "componentSha256": "2121212121212121212121212121212121212121212121212121212121212121",
         "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
         "descriptorSha256": "2323232323232323232323232323232323232323232323232323232323232323",
@@ -55,7 +57,7 @@
       "parentDialect": { "artifactKind": "s.gis.gismap", "standard": "1", "subset": "*" },
       "grant": { "read": true, "write": true, "observe": true }
     },
-    "generationId": "4770d7cd21d76ec2310270fe9404b2eaa08fe8add81de6f3dbc729b6bc7c3969"
+    "generationId": "f14b364eee6e3c182713859a02472cb3d121c4a9e24eefcb44b348cada07b103"
   },
   "sources": {
     "stdioReceipts": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/📜️native-codec-factories.json",
@@ -176,12 +178,12 @@
       { "change": "leaf-replaced-during-read", "accepted": false },
       { "change": "cancel-before-read", "accepted": false }
     ],
-    "initialGenerationId": "4770d7cd21d76ec2310270fe9404b2eaa08fe8add81de6f3dbc729b6bc7c3969",
+    "initialGenerationId": "f14b364eee6e3c182713859a02472cb3d121c4a9e24eefcb44b348cada07b103",
     "failedCandidateGenerationId": "f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1",
-    "currentAfterFailedCandidate": "4770d7cd21d76ec2310270fe9404b2eaa08fe8add81de6f3dbc729b6bc7c3969",
+    "currentAfterFailedCandidate": "f14b364eee6e3c182713859a02472cb3d121c4a9e24eefcb44b348cada07b103",
     "nextGenerationId": "3434343434343434343434343434343434343434343434343434343434343434",
     "stalePlan": {
-      "issuedGenerationId": "4770d7cd21d76ec2310270fe9404b2eaa08fe8add81de6f3dbc729b6bc7c3969",
+      "issuedGenerationId": "f14b364eee6e3c182713859a02472cb3d121c4a9e24eefcb44b348cada07b103",
       "observedGenerationId": "3434343434343434343434343434343434343434343434343434343434343434",
       "expected": "stale"
     },

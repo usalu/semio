@@ -743,9 +743,9 @@ if ($sessionStartEffective) {
 
 $repoRoot = Get-RepoRoot
 Set-Location $repoRoot
-$nxWorkspaceDataTerminal = Join-Path $repoRoot ".nx\workspace-data-terminal"
-Ensure-Directory -Path $nxWorkspaceDataTerminal
-$env:NX_WORKSPACE_DATA_DIRECTORY = $nxWorkspaceDataTerminal
+$nxWorkspaceData = Join-Path $repoRoot ".nx\workspace-data"
+Ensure-Directory -Path $nxWorkspaceData
+$env:NX_WORKSPACE_DATA_DIRECTORY = $nxWorkspaceData
 Refresh-CurrentProcessPath
 
 #region 🧰️MachineInstall

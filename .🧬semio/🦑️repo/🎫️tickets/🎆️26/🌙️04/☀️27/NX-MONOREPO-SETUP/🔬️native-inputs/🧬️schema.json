@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "files",
+    "included",
+    "excluded"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "files": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "included": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "excluded": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

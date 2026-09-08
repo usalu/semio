@@ -2,7 +2,7 @@
 name = "semio-framework-os-flow"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "OS flow family — document/host/vcs + brep geometry session; operators (light/draw/brep/bim) are packaged extensions"
 
 [package.metadata.semio]

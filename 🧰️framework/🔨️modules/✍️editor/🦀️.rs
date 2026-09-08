@@ -601,7 +601,7 @@ impl EditorHost {
                 continue;
             }
             let size = span.end - span.start;
-            if best.map(|current| size < current.end - current.start).unwrap_or(true) {
+            if best.is_none_or(|current| size < current.end - current.start) {
                 best = Some(span);
             }
         }
@@ -688,7 +688,8 @@ impl EditorHost {
 
     pub fn sync_from_scene_json(&mut self, json: &str) -> Result<(), EditorError> {
         let value: serde_json::Value = serde_json::from_str(json)?;
-        self.sync_from_scene_value(&value)
+        self.sync_from_scene_value(&value);
+        Ok(())
     }
 
     pub fn sync_from_scene_pack(&mut self, bytes: &[u8]) -> Result<(), EditorError> {
@@ -696,14 +697,15 @@ impl EditorHost {
         // accept that first, then fall back to `decode_pack_value` for native pack-shell callers/tests.
         let dsl = store::pack_rt::decode_wire_value(bytes).or_else(|_| store::pack_rt::decode_pack_value(bytes))?;
         let value = store::pack_rt::dsl_value_to_json(dsl);
-        self.sync_from_scene_value(&value)
+        self.sync_from_scene_value(&value);
+        Ok(())
     }
 
     fn expand_scene_json_field(raw: &str) -> String {
         store::pack_rt::scene_field_json_text(raw).unwrap_or_else(|_| raw.to_string())
     }
 
-    fn sync_from_scene_value(&mut self, value: &serde_json::Value) -> Result<(), EditorError> {
+    fn sync_from_scene_value(&mut self, value: &serde_json::Value) {
         if let Some(buffer) = value.get("buffer").and_then(|v| v.as_str()) {
             self.set_text(buffer.to_string());
         }
@@ -770,7 +772,6 @@ impl EditorHost {
                 _ => self.set_hover_range(None, None),
             }
         }
-        Ok(())
     }
 
     pub fn wheel_scroll_screen(&mut self, delta_y: f64) {
@@ -947,7 +948,7 @@ impl EditorHost {
 
     pub fn move_line_end(&mut self, extend: bool) {
         let (line, _) = offset_line_col(&self.text, self.caret);
-        let line_len = self.text.split('\n').nth(line).map(str::len).unwrap_or(0);
+        let line_len = self.text.split('\n').nth(line).map_or(0, str::len);
         self.caret = offset_at_line_col(&self.text, line, line_len);
         if !extend {
             self.anchor = self.caret;
@@ -1401,7 +1402,7 @@ fn offset_at_line_col(text: &str, line: usize, col: usize) -> usize {
     let mut line_start = 0usize;
     for (i, ch) in text.char_indices() {
         if current_line == line {
-            let line_end = text[line_start..].find('\n').map(|idx| line_start + idx).unwrap_or(text.len());
+            let line_end = text[line_start..].find('\n').map_or(text.len(), |idx| line_start + idx);
             return line_start + col.min(line_end.saturating_sub(line_start));
         }
         if ch == '\n' {
@@ -1428,11 +1429,11 @@ fn position_to_offset(text: &str, pos: &TextPosJson) -> usize {
 }
 
 fn prev_char_boundary(text: &str, index: usize) -> usize {
-    text[..index].char_indices().next_back().map(|(i, _)| i).unwrap_or(0)
+    text[..index].char_indices().next_back().map_or(0, |(i, _)| i)
 }
 
 fn next_char_boundary(text: &str, index: usize) -> usize {
-    text[index..].char_indices().nth(1).map(|(i, _)| index + i).unwrap_or(text.len())
+    text[index..].char_indices().nth(1).map_or(text.len(), |(i, _)| index + i)
 }
 // #endregion 🔖️EditorState
 
@@ -2575,11 +2576,11 @@ mod tests {
 
     #[test]
     fn char_boundary_helpers_handle_multibyte() {
-        let text = "a😀️b";
-        let emoji_start = 1;
-        let emoji_end = 1 + "😀️".len();
-        assert_eq!(next_char_boundary(text, emoji_start), emoji_end);
-        assert_eq!(prev_char_boundary(text, emoji_end), emoji_start);
+        let text = "a\u{1f600}\u{fe0f}b";
+        for [start, end] in [[0, 1], [1, 5], [5, 8], [8, 9]] {
+            assert_eq!(next_char_boundary(text, start), end);
+            assert_eq!(prev_char_boundary(text, end), start);
+        }
         assert_eq!(prev_char_boundary(text, 0), 0);
         assert_eq!(next_char_boundary(text, text.len()), text.len());
     }

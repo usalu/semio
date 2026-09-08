@@ -255,7 +255,7 @@ fn parsed_part(snap: &DocxSnapshot, path: &str) -> Option<XmlDocument> {
 pub fn sync_main_part(snap: &mut DocxSnapshot) {
     if !part_already_projects(snap, MAIN_DOCUMENT_PART, &snap.document.body, |document| crate::artifacts::docx::standards::v_ecma_376::subsets::base::io::import::deserializers::document_from_xml(document).ok()) {
         let bytes = xml_document_to_text(&document_into_part(parsed_part(snap, MAIN_DOCUMENT_PART).as_ref(), &snap.document)).into_bytes();
-        let content_type = snap.opc.content_types.resolve(MAIN_DOCUMENT_PART).map(str::to_string).unwrap_or_else(|| MAIN_DOCUMENT_CONTENT_TYPE.into());
+        let content_type = snap.opc.content_types.resolve(MAIN_DOCUMENT_PART).map_or_else(|| MAIN_DOCUMENT_CONTENT_TYPE.into(), str::to_string);
         snap.opc.set_part(MAIN_DOCUMENT_PART, &content_type, bytes);
     }
     let has_office_document_rel = snap.opc.relationships_for("").iter().any(|r| r.rel_type == REL_TYPE_OFFICE_DOCUMENT || r.rel_type == STRICT_REL_TYPE_OFFICE_DOCUMENT);
@@ -265,7 +265,7 @@ pub fn sync_main_part(snap: &mut DocxSnapshot) {
     if !snap.document.styles.is_empty() {
         if !part_already_projects(snap, STYLES_PART, &snap.document.styles, |document| crate::artifacts::docx::standards::v_ecma_376::subsets::base::io::import::deserializers::styles_from_xml(document).ok()) {
             let styles_bytes = xml_document_to_text(&styles_into_part(parsed_part(snap, STYLES_PART).as_ref(), &snap.document.styles)).into_bytes();
-            let styles_content_type = snap.opc.content_types.resolve(STYLES_PART).map(str::to_string).unwrap_or_else(|| STYLES_CONTENT_TYPE.into());
+            let styles_content_type = snap.opc.content_types.resolve(STYLES_PART).map_or_else(|| STYLES_CONTENT_TYPE.into(), str::to_string);
             snap.opc.set_part(STYLES_PART, &styles_content_type, styles_bytes);
         }
         let has_styles_rel = snap.opc.relationships_for(MAIN_DOCUMENT_PART).iter().any(|r| r.rel_type == REL_TYPE_STYLES || r.rel_type == STRICT_REL_TYPE_STYLES);

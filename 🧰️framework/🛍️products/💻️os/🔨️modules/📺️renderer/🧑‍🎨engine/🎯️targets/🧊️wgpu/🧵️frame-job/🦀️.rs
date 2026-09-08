@@ -10,6 +10,7 @@
 //! renderer has booted inside its dedicated Worker isolate; calls from a browser UI isolate fail
 //! closed and never execute the transaction inline.
 
+#[cfg(not(target_arch = "wasm32"))]
 use semio_framework_async::Lane;
 use semio_framework_job::{
     root_cancel_token, BatchDriveConfig, BatchJobParams, BatchJobSession, CancelToken, CommitCandidate, InteractiveJob, StepContext, StepOutcome, WorkerJobSessionAdmissionRejected, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US,
@@ -714,8 +715,8 @@ mod tests {
     #[test]
     fn cancellation_retires_empty_preparation_to_terminal_empty() {
         let build = crate::AppFrameBuild {
-            input: ui_wgpu::wgpu::PreparedRenderInput::new(1, 1, ui_wgpu::wgpu::DrawList::default(), None, 0.0),
-            engine_packets: Vec::new(),
+            input: ui_wgpu::wgpu::PreparedRenderInput::try_new(1, 1, ui_wgpu::wgpu::DrawList::default(), None, 0.0).unwrap_or_else(|_| panic!("empty fixture preparation admission")),
+            engine_packets: crate::FrameEnginePackets::default(),
             generation: Generation(1),
             cursor: ui_wgpu::wgpu::SemioCursor::Default,
             theme_dark: false,

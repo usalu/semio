@@ -18,6 +18,7 @@ async fn flow_empty_transient_close_matches_neutral_trace_and_exact_owner() {
             PluginCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= items && released_bytes <= bytes); "pending" }
             PluginCloseStep::Complete => "complete",
             PluginCloseStep::Blocked { .. } => panic!("empty transient closure cannot block"),
+            PluginCloseStep::AwaitingInput { reason } => panic!("fixture has no active worker input to await: {reason}"),
         };
         assert_eq!(status, row["status"].as_str().unwrap());
         assert_eq!(original_root.upgrade().is_none(), row["retired"].as_bool().unwrap());

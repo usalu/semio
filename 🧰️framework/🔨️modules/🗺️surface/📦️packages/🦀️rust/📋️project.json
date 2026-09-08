@@ -9,7 +9,7 @@
         "command": "bun ./📜️script.ts wasm"
       },
       "outputs": [
-        "{projectRoot}/pkg"
+        "{projectRoot}/🕸️bindings"
       ],
       "cache": true
     },

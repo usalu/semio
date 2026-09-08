@@ -26,7 +26,7 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 /// `any`. See `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🦀️.rs`'s `artifact()` doc
 /// comment for the `localization: &[]` deferral rationale (identical here).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-#[cfg(feature = "full-artifact-catalog")]
+#[cfg(feature = "component-app-assembly")]
 pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::plugin::StdioApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
@@ -73,7 +73,7 @@ pub mod io_registry {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        let _ = register_composer_entries(v_utf_8::entries());
+        register_composer_entries(v_utf_8::entries()).expect("static Stdio registration must be available and conflict-free");
     }
 }
 //#endregion 🚪️DerivedIoRegistry

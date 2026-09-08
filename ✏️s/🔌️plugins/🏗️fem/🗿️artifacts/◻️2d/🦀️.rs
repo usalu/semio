@@ -292,8 +292,8 @@ pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "computation.fem2d".into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md", "stdio.obj", "stdio.stl", "stdio.txt"],
-        import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md", "stdio.obj", "stdio.stl", "stdio.txt"],
+        export_stdio_kinds: vec!["stdio.csv".into(), "stdio.json".into(), "stdio.md".into(), "stdio.obj".into(), "stdio.stl".into(), "stdio.txt".into()],
+        import_stdio_kinds: vec!["stdio.csv".into(), "stdio.json".into(), "stdio.md".into(), "stdio.obj".into(), "stdio.stl".into(), "stdio.txt".into()],
     }
 }
 // #endregion 🔖️ArtifactKind

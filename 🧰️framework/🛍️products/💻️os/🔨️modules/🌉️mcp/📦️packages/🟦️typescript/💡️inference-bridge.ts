@@ -147,8 +147,28 @@ export const approvalReceiptSchema = {
     commandHash: { type: "string", pattern: HEX64 },
     proposalHash: { type: "string", pattern: HEX64 },
     applied: { type: "boolean" },
+    undo: {
+      type: "object",
+      properties: {
+        targetId: { type: "string", pattern: HEX32 },
+        expectedCurrent: {
+          type: "object",
+          properties: {
+            documentId: { type: "string", minLength: 1 },
+            headEditOrdinal: { type: "integer", minimum: 1 },
+            headEditId: { type: "string", minLength: 1 },
+            lastCommitSeq: { type: "integer", minimum: 1 },
+            chainSha256: { type: "string", pattern: HEX64 },
+          },
+          required: ["documentId", "headEditOrdinal", "headEditId", "lastCommitSeq", "chainSha256"],
+          additionalProperties: false,
+        },
+      },
+      required: ["targetId", "expectedCurrent"],
+      additionalProperties: false,
+    },
   },
-  required: ["schema", "jobId", "mutationId", "commandHash", "proposalHash", "applied"],
+  required: ["schema", "jobId", "mutationId", "commandHash", "proposalHash", "applied", "undo"],
   additionalProperties: false,
 };
 //#endregion 🔖️Surface
@@ -289,7 +309,15 @@ export function proveMcpInferenceBridgeFixture(repoRoot: string): InferenceBridg
 
   const approvalReceipt = compile(approvalReceiptSchema);
   ajv += 1;
-  const approvalReceiptBody = { schema: "semio.hub.inference-approval-receipt/v1", jobId, mutationId: jobId, commandHash: proposalHash, proposalHash, applied: false };
+  const approvalReceiptBody = {
+    schema: "semio.hub.inference-approval-receipt/v1",
+    jobId,
+    mutationId: jobId,
+    commandHash: proposalHash,
+    proposalHash,
+    applied: false,
+    undo: { targetId: "22".repeat(16), expectedCurrent: { documentId: "document-map", headEditOrdinal: 2, headEditId: "approval-edit", lastCommitSeq: 2, chainSha256: proposalHash } },
+  };
   must(approvalReceipt(approvalReceiptBody), `a well-formed approval receipt was rejected: ${JSON.stringify(approvalReceipt.errors)}`);
   reject(approvalReceipt, { ...approvalReceiptBody, command: "server bytes" }, "leaked-command-bytes");
 

@@ -2,7 +2,7 @@
 name = "semio-framework-ui-backend-d3d12"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Hand-written Direct3D 12 backend for Windows"
 
 [package.metadata.semio]

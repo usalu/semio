@@ -319,6 +319,7 @@ impl UiNodeTable {
         self.entries.iter_mut().find(|record| &record.id == id)
     }
 
+    #[expect(clippy::result_large_err, reason = "Node-table capacity refusal hands back the exact record and all typed payload owners.")]
     pub fn try_insert(&mut self, record: UiNodeRecord) -> Result<Option<UiNodeRecord>, UiNodeRecord> {
         if let Some(current) = self.get_mut(&record.id) {
             return Ok(Some(std::mem::replace(current, record)));
@@ -577,6 +578,7 @@ impl UiDocumentArena {
         (slot.occupied && slot.epoch == handle.epoch && slot.generation == handle.generation).then_some(slot)
     }
 
+    #[expect(clippy::result_large_err, reason = "A refused resident reservation returns the original fixed surface identity without another allocation.")]
     fn reserve(&mut self, generation: u64, surface: SurfaceId, revision: UiRevision, root: Option<UiNodeId>, layout_epoch: u64) -> Result<UiDocumentHandle, (UiDocumentBuildError, SurfaceId)> {
         if generation == 0 {
             return Err((UiDocumentBuildError::InvalidGeneration, surface));
@@ -594,6 +596,7 @@ impl UiDocumentArena {
         Ok(UiDocumentHandle { slot: slot_index, epoch, generation })
     }
 
+    #[expect(clippy::result_large_err, reason = "Stale or duplicate document admission returns the exact record for retry or typed retirement.")]
     fn push(&mut self, handle: UiDocumentHandle, record: UiNodeRecord) -> Result<(), (UiDocumentBuildError, UiNodeRecord)> {
         let Some(slot) = self.slot_mut(handle) else { return Err((UiDocumentBuildError::StaleHandle, record)) };
         if slot.retiring || slot.complete {
@@ -677,10 +680,12 @@ pub struct UiDocumentBuilder {
 }
 
 impl UiDocumentBuilder {
+    #[expect(clippy::result_large_err, reason = "Document-builder admission returns the original surface identity when no resident slot is available.")]
     pub fn try_new(generation: u64, surface: SurfaceId, revision: UiRevision, root: Option<UiNodeId>, layout_epoch: u64) -> Result<Self, (UiDocumentBuildError, SurfaceId)> {
         with_ui_document_arena(|arena| arena.reserve(generation, surface, revision, root, layout_epoch)).map(|handle| Self { handle: Some(handle), released: false, claimed: false })
     }
 
+    #[expect(clippy::result_large_err, reason = "A refused document page returns its exact typed record without allocating on the error path.")]
     pub fn try_push(&mut self, record: UiNodeRecord) -> Result<(), (UiDocumentBuildError, UiNodeRecord)> {
         let Some(handle) = self.handle else { return Err((UiDocumentBuildError::StaleHandle, record)) };
         with_ui_document_arena(|arena| arena.push(handle, record))
@@ -775,7 +780,7 @@ mod document_component_compare;
 pub use document_component_compare::{UiDocumentComponentCompare, UiDocumentCompareAdmission, UiDocumentCompareError};
 #[path = "../../📃️document/🎟️assembly/🦀️.rs"]
 mod document_assembly;
-pub use document_assembly::{UiDocumentAssembly, UiDocumentAssemblyError, UiDocumentAssemblyErrorKind, UiDocumentAssemblyProgress, UiDocumentRead, UiDocumentRootIdentity};
+pub use document_assembly::{UiDocumentAssemblyIdentity, UiDocumentAssembly, UiDocumentAssemblyError, UiDocumentAssemblyErrorKind, UiDocumentAssemblyProgress, UiDocumentRead, UiDocumentRootIdentity};
 //#endregion 🪪️DocumentLease
 
 //#region 🧪️Tests

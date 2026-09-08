@@ -1,0 +1,845 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "success"
+        },
+        "committed": {
+          "const": true
+        },
+        "publicEvents": {
+          "const": 3
+        },
+        "terminal": {
+          "const": "ready"
+        },
+        "delivery": {
+          "const": "broadcast"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ack-loss"
+        },
+        "committed": {
+          "const": true
+        },
+        "publicEvents": {
+          "const": 3
+        },
+        "terminal": {
+          "const": "ready"
+        },
+        "delivery": {
+          "const": "broadcast"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "fault-descriptor"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "enum": ["fault-index", "fault-index-missing", "fault-index-digest"]
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "fault-checkpoint"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "fault-authority"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "fault-cas-ledger"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "fault-cas-reference"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "fault-completion"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "revoked-session"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "expired-session"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "changed-generation"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "archived-space"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "removed-member"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "spectator"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "future-clock"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "wrong-event-order"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "wrong-event-actor"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "wrong-event-user"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "wrong-event-space"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "wrong-index-name"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "wrong-checkpoint-id"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "wrong-pack-locator"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "wrong-spr-locator"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "wrong-reservation-generation"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "wrong-reservation-epoch"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "wrong-reservation-expiry"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "preparing"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "cancelled"
+        },
+        "committed": {
+          "const": false
+        },
+        "publicEvents": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "cancelled"
+        },
+        "delivery": {
+          "const": "none"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ack-receipt-unreadable"
+        },
+        "committed": {
+          "const": true
+        },
+        "publicEvents": {
+          "const": 3
+        },
+        "terminal": {
+          "const": "ready"
+        },
+        "delivery": {
+          "const": "reconnect"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "committed",
+        "publicEvents",
+        "terminal",
+        "delivery"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ack-events-unreadable"
+        },
+        "committed": {
+          "const": true
+        },
+        "publicEvents": {
+          "const": 3
+        },
+        "terminal": {
+          "const": "ready"
+        },
+        "delivery": {
+          "const": "reconnect"
+        }
+      }
+    }
+  ]
+}

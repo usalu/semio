@@ -77,10 +77,8 @@ fn indexed_between<T: Clone + PartialEq, D>(base: &[T], other: &[T], diff_betwee
 fn indexed_apply<T: Clone, D>(triple: &IndexedTripleDiff<D, T>, base: &[T], diff_apply: impl Fn(&D, &T) -> T) -> Vec<T> {
     let mut next: Vec<Option<T>> = base.iter().cloned().map(Some).collect();
     for m in &triple.modified {
-        if let Some(slot) = next.get_mut(m.index) {
-            if let Some(item) = slot {
-                *item = diff_apply(&m.diff, item);
-            }
+        if let Some(Some(item)) = next.get_mut(m.index) {
+            *item = diff_apply(&m.diff, item);
         }
     }
     let mut removed_sorted = triple.removed.clone();
@@ -114,11 +112,11 @@ fn indexed_absorb<T: Clone, D: Clone>(mine: &mut IndexedTripleDiff<D, T>, other:
     let modified2: Vec<(usize, D)> = other.modified.into_iter().map(|m| (m.index, m.diff)).collect();
     let added2: Vec<(usize, T)> = other.added.into_iter().map(|a| (a.index, a.item)).collect();
 
-    let mut removed1_sorted = removed1.clone();
+    let mut removed1_sorted = removed1;
     removed1_sorted.sort_unstable();
     let mut added1_index_sorted: Vec<usize> = added1.iter().map(|(i, _)| *i).collect();
     added1_index_sorted.sort_unstable();
-    let mut removed2_sorted = removed2.clone();
+    let mut removed2_sorted = removed2;
     removed2_sorted.sort_unstable();
     let mut added2_index_sorted: Vec<usize> = added2.iter().map(|(i, _)| *i).collect();
     added2_index_sorted.sort_unstable();
@@ -273,7 +271,7 @@ fn channels_apply(d: &SemioAudioChannelsDiff, base: &[SemioAudioChannel]) -> Vec
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn channels_absorb(mine: &mut SemioAudioChannelsDiff, other: SemioAudioChannelsDiff) {
-    indexed_absorb(mine, other, |d, o| d.absorb(o), |diff, item| diff.apply(item))
+    indexed_absorb(mine, other, |d, o| d.absorb(o), |diff, item| diff.apply(item));
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn channels_inverse(d: &SemioAudioChannelsDiff, base_items: &[SemioAudioChannel]) -> SemioAudioChannelsDiff {
@@ -296,7 +294,7 @@ fn tags_apply(d: &SemioAudioTagsDiff, base: &[SemioAudioTag]) -> Vec<SemioAudioT
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn tags_absorb(mine: &mut SemioAudioTagsDiff, other: SemioAudioTagsDiff) {
-    indexed_absorb(mine, other, |d, o| *d = o, |diff, _item| diff.clone())
+    indexed_absorb(mine, other, |d, o| *d = o, |diff, _item| diff.clone());
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn tags_inverse(d: &SemioAudioTagsDiff, base_items: &[SemioAudioTag]) -> SemioAudioTagsDiff {
@@ -323,7 +321,7 @@ pub struct SemioAudioDiff {
 impl SemioAudioDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty_diff(&self) -> bool {
-        self.sample_rate.is_none() && self.format.is_none() && self.channels.as_ref().map(indexed_is_empty).unwrap_or(true) && self.tags.as_ref().map(indexed_is_empty).unwrap_or(true)
+        self.sample_rate.is_none() && self.format.is_none() && self.channels.as_ref().is_none_or(indexed_is_empty) && self.tags.as_ref().is_none_or(indexed_is_empty)
     }
 }
 
@@ -420,7 +418,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()

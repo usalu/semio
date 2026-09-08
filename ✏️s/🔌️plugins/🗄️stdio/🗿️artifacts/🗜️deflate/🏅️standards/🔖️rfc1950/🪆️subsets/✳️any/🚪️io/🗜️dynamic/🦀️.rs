@@ -85,7 +85,7 @@ impl Encoder {
 
     fn hash(&self, position: usize) -> usize {
         let bits = self.policy.memory_level + 7;
-        let shift = (bits + MIN_MATCH - 1) / MIN_MATCH;
+        let shift = bits.div_ceil(MIN_MATCH);
         let mask = (1usize << bits) - 1;
         let mut hash = self.input[position] as usize;
         hash = ((hash << shift) ^ self.input[position + 1] as usize) & mask;
@@ -280,8 +280,8 @@ impl Encoder {
             self.writer.write_bits((literal.max_code + 1 - 257) as u32, 5);
             self.writer.write_bits((distance.max_code + 1 - 1) as u32, 5);
             self.writer.write_bits((max_bl + 1 - 4) as u32, 4);
-            for index in 0..=max_bl {
-                self.writer.write_bits(bit.lengths[BL_ORDER[index]] as u32, 3);
+            for &code in &BL_ORDER[..=max_bl] {
+                self.writer.write_bits(bit.lengths[code] as u32, 3);
             }
             send_runs(&mut self.writer, &literal_runs, &bit.codes);
             send_runs(&mut self.writer, &distance_runs, &bit.codes);
@@ -338,8 +338,8 @@ fn build_tree(frequencies: &[u32], maximum_bits: usize) -> Tree {
     let mut heap_length = 0usize;
     let mut heap_maximum = HEAP_SIZE;
     let mut max_code = 0usize;
-    for index in 0..elements {
-        if frequency[index] != 0 {
+    for (index, &count) in frequency[..elements].iter().enumerate() {
+        if count != 0 {
             heap_length += 1;
             heap[heap_length] = index;
             max_code = index;
@@ -378,8 +378,7 @@ fn build_tree(frequencies: &[u32], maximum_bits: usize) -> Tree {
     heap[heap_maximum] = heap[1];
     let mut counts = vec![0usize; maximum_bits + 1];
     let mut overflow = 0isize;
-    for index in heap_maximum + 1..HEAP_SIZE {
-        let value = heap[index];
+    for &value in &heap[heap_maximum + 1..HEAP_SIZE] {
         let mut bits = lengths[parent[value]] as usize + 1;
         if bits > maximum_bits {
             bits = maximum_bits;
@@ -455,7 +454,7 @@ fn length_runs(lengths: &[u8], max_code: usize) -> Vec<LengthRun> {
             continue;
         }
         if count < minimum {
-            output.extend(std::iter::repeat(LengthRun::Code(current as usize)).take(count));
+            output.extend(std::iter::repeat_n(LengthRun::Code(current as usize), count));
         } else if current != 0 {
             if current != previous {
                 output.push(LengthRun::Code(current as usize));
@@ -804,7 +803,7 @@ fn miniz_tree(frequencies: &[u32], maximum_bits: usize) -> Tree {
             }
         }
     }
-    let mut counts = vec![0i32; 33];
+    let mut counts = [0i32; 33];
     for symbol in &symbols {
         counts[symbol.0 as usize] += 1;
     }
@@ -842,7 +841,7 @@ fn miniz_runs(lengths: &[u8]) -> Vec<LengthRun> {
     let flush_repeats = |output: &mut Vec<LengthRun>, repeats: &mut usize, previous: u8| {
         if *repeats != 0 {
             if *repeats < 3 {
-                output.extend(std::iter::repeat(LengthRun::Code(previous as usize)).take(*repeats));
+                output.extend(std::iter::repeat_n(LengthRun::Code(previous as usize), *repeats));
             } else {
                 output.push(LengthRun::Previous(*repeats));
             }
@@ -852,7 +851,7 @@ fn miniz_runs(lengths: &[u8]) -> Vec<LengthRun> {
     let flush_zeros = |output: &mut Vec<LengthRun>, zeros: &mut usize| {
         if *zeros != 0 {
             if *zeros < 3 {
-                output.extend(std::iter::repeat(LengthRun::Code(0)).take(*zeros));
+                output.extend(std::iter::repeat_n(LengthRun::Code(0), *zeros));
             } else if *zeros <= 10 {
                 output.push(LengthRun::ZeroShort(*zeros));
             } else {
@@ -914,7 +913,7 @@ fn miniz_block(writer: &mut BitWriter, start: usize, end: usize, tokens: &[Token
     let literal = miniz_tree(&literal_frequencies, 15);
     let distance = miniz_tree(&distance_frequencies, 15);
     let literal_count = literal.max_code.max(256) + 1;
-    let distance_count = distance.max_code.max(0) + 1;
+    let distance_count = distance.max_code + 1;
     let mut lengths = literal.lengths[..literal_count].to_vec();
     lengths.extend_from_slice(&distance.lengths[..distance_count]);
     let runs = miniz_runs(&lengths);

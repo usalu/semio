@@ -125,8 +125,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: REWRITE_RULE_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.docx", "stdio.json", "stdio.md", "stdio.pdf", "stdio.txt"],
-        import_stdio_kinds: vec!["stdio.docx", "stdio.json", "stdio.md", "stdio.pdf", "stdio.txt"],
+        export_stdio_kinds: vec!["stdio.docx".into(), "stdio.json".into(), "stdio.md".into(), "stdio.pdf".into(), "stdio.txt".into()],
+        import_stdio_kinds: vec!["stdio.docx".into(), "stdio.json".into(), "stdio.md".into(), "stdio.pdf".into(), "stdio.txt".into()],
     }
 }
 //#endregion 🔖️ArtifactKind

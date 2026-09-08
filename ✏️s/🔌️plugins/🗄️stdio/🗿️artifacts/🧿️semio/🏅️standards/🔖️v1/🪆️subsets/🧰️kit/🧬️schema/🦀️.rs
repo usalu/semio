@@ -6,12 +6,8 @@ use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::Se
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
 use schema::ArtifactSchema;
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, ArtifactSchema)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.stdio.semio.kit")]
 pub struct SemioKitArtifact {
     #[state(artifact)]
@@ -28,7 +24,6 @@ pub struct SemioKitArtifact {
     pub models: Vec<store::ArtifactChild<SemioModelSnapshot>>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.value")]
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub properties: Option<store::ArtifactChild<SemioValueSnapshot>>,
     #[state(artifact)]
     #[link_slot(roles("representation"))]
@@ -42,14 +37,7 @@ impl Default for SemioKitArtifact {
 }
 
 //#region 🔖️ValueCodec
-/// 🔀️ Hand-written, not derived: `objects`/`models`/`properties` are `store::ArtifactChild<S>`
-/// composed-artifact CHILD handles and `representations` is a `Vec<store::ArtifactLink>` LINK
-/// slot — both framework types bridged per-field through `to_dsl_value`/`from_dsl_value`
-/// (`🌱️value/🔀️serde`) rather than widening the derive macro. Same pattern as `📦️object`'s
-/// `SemioObjectArtifact` and the fan-out playbook's `PlaybookArtifact` reference — `Vec<T>` bridges
-/// the identical way `Option<T>` does, `to_dsl_value`/`from_dsl_value` only need `T: Serialize +
-/// DeserializeOwned`, which both `ArtifactChild<S>` (`#[serde(bound = "")]`, any `S`) and
-/// `ArtifactLink` already are.
+/// 🔀️ Encodes composite child and link fields through their first-party value contracts.
 impl dsl::ToValue for SemioKitArtifact {
     fn to_value(&self) -> dsl::DslValue {
         dsl::DslValue::object([

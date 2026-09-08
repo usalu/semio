@@ -83,3 +83,49 @@ A full authored `📋️project.json` command scan found three remaining script-
 ## Continuous Task Cancellation Failure
 
 The coordinator built and reached `/healthz` through `bun nx run @semio-tech/repo-coordinator:dev`. Sending SIGTERM to the public Bun wrapper left the Node Nx process orphaned (PPID 1), with the coordinator still running. Sending SIGTERM directly to that known test Nx process shut down both it and the coordinator; both PIDs were absent afterward. The root NxScript used blocking spawnSync and could not forward termination. This is the runtime red case for the asynchronous wrapper correction. The verification used a ticket-local database and an isolated ephemeral localhost port. No external notification configuration was enabled.
+
+
+## Entrypoint and Launcher Verification
+
+The authored-project command audit now enforces a single explicit script command and rejects chained shell pipelines. Its neutral fixture failed on the coordinator `go run` commands and chained logo invocation, then passed after those commands became Nx prerequisites plus script leaves. One existing actor-import fixture already implements `runtime-check` as its default; its metadata now spells that command explicitly. The final test/graph/audit invocation passed with 306 resolved projects / 1,222 edges. The authored inventory contains 304 projects, 2,022 commands, 163 artifacts, and 14 still-open output contracts; this does not claim the broader orchestration audit is complete.
+
+The launcher regression initially found that importing the new caching script through Vite left `import.meta.dir` undefined. The script now derives its directory with Node's standard fileURLToPath/dirname APIs. All five targeted launcher tests passed afterward.
+
+The coordinator executable built successfully and served its isolated health endpoint; cancellation initially failed as recorded above and its correction is being verified separately. The logo SVG and MP4 both restored from Nx after removal with identical contents/modes; independent FFprobe confirmed the restored H.264 video. See `📓️logo-artifacts.md`.
+
+
+## Checkpoint After Bootstrap and Entrypoint Corrections
+
+Coordinator cancellation is now proven on macOS through the public Bun entrypoint, including no surviving health endpoint or child processes; see `📓️coordinator-cancellation.md`. Root NxScript retains optional budgets but now awaits Node asynchronously so cancellation can be forwarded.
+
+Fourteen explicit build-output contracts remain unresolved, plus the broader nested OS development/build orchestration, full CI/environment lifecycle migration, complete polyglot dependency provenance, and bounded owner-specific native/renderer storage retention. The goal and ticket remain active. Logo export's existing shared implementation still needs its cross-platform file URL and detailed progress/backpressure lifecycle reviewed alongside broader process handling; actual current-platform build and restoration are proven.
+
+
+The final post-cancellation `repo:test` invocation passed, and the launch file was regenerated again after the coordinator/logo entrypoints were added. `📓️coordinator-cancellation.md`, `📓️logo-artifacts.md`, `📓️dotnet-artifacts.md`, and `📓️generator-artifacts.md` retain the successful runtime evidence.
+
+## Scale and MCP Follow-Up Contracts
+
+The remaining scale WASI target compiles with `cargo rustc --crate-type cdylib --target wasm32-wasip2 --profile wasm-dev --features component-guest`, verifies the component header, and leaves its only deliverable in Cargo's mutable target tree. Two consumers still build/read that tree: plugin-host UI patch native verification and the OS development native benchmark. The native verifier starts a nested Nx invocation with `--skip-nx-cache`; the benchmark invokes Cargo and the wgpu script directly. These consumers must move together with the staged scale artifact and outer prerequisite graph.
+
+The OS MCP build produces its debug executable through `buildMcpBinary`, which is also called by dev and explicit native conformance checks. Its public `resolveMcpBinaryPath`/`requireMcpBinary` helpers currently resolve Cargo target/debug by default. Any staged MCP build must update public consumers together; fresh conformance probes still require a distinct exact native-compiler path. The Hub build also duplicates its already-declared admin build prerequisite inside BuildScript.
+
+
+## Development Graph Planning Constraint
+
+The installed Nx 21.6.11 watch implementation (`node_modules/nx/src/command-line/watch/watch.js`) explicitly rejects operation when its daemon is disabled. The workspace currently disables the daemon and separately disables plugin isolation to avoid emoji-path IPC corruption. Moving plugin watch rebuilds to Nx therefore requires a real daemon/watch verification before enabling that path; silently wrapping the existing custom scheduler would not satisfy the plan. The native watcher supports project selection, dependent-project inclusion, and initial execution, which can own subsequent affected rebuilds once qualified.
+
+OS development currently has explicit separable operations for one-plugin Cargo compilation (`buildPluginCargo`), one-plugin JCO/descriptor/materialization (`materializePlugin`), shared shard/vendor assets, and WASM engines selected by committed Cargo playground rows plus composition `browserSessionFactories`. Those are the intended task boundaries. Current DevScript still combines generation, lease acquisition, engine builds, streaming plugin compilation, Vite/trunk startup, and its own rebuild watcher. BuildScript still performs a nested plugin pipeline and renderer selection. No completion is claimed for those remaining operations.
+
+## OS MCP and Daemon Follow-through
+
+The MCP binary contract first failed because its build had no restorable output. The build now stages the selected executable in the Rust project's `dist/build`; development depends on that Nx build. TypeScript process suites consume the artifact without recursively forcing another uncached Nx build. The root OS MCP selection resolves before graph creation; Hub's shared executable resolver now consumes the staged binary. Cross-platform path vectors and the repository contract tests passed. The actual Cargo build exposed an existing stale `crate::os_spr` reference in its descriptor fixture; it was corrected to the current kernel module. Runtime artifact restoration remains pending until this real compile succeeds.
+
+The Nx daemon passed an isolated actual-plugin Unicode graph/cache/watch exercise and a full repository graph check. The graph checker now reads the outer invocation's resolved graph and terminates cleanly. Details are retained in `📓️daemon-verification.md`.
+
+The asset encoder now uses file URLs, bounded frame writes, cancellation, and staging before publication. The real FFmpeg/FFprobe test passed exact frame counts and cancellation preservation; see `📓️svg-export.md`. Windows/Linux execution remains unclaimed.
+
+The corrected OS MCP build completed and staged one executable. Deleting its staged output and rerunning restored an Nx cache hit with identical file hashes/modes; the installed MCP SDK completed a real handshake and observed 26 tools consistently. The Cargo compilation emitted existing source warnings, which this artifact proof does not claim to resolve. The combined repository contract test also passed with daemon, MCP and SVG fixture changes.
+
+## Compact Graph Discovery
+
+See [graph discovery verification](📓️graph-discovery.md) for the passing compiler-oracle mutation test and measured memory/CPU reduction. The development materializer and variant graph are still outstanding.

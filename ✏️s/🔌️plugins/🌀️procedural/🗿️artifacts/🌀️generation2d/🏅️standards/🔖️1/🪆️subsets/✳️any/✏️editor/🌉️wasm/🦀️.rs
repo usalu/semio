@@ -34,18 +34,6 @@ enum Generation2dOutputKind {
     Terminal = 3,
 }
 
-impl Generation2dOutputKind {
-    fn from_u8(value: u8) -> Option<Self> {
-        match value {
-            0 => Some(Self::Progress),
-            1 => Some(Self::Checkpoint),
-            2 => Some(Self::Preview),
-            3 => Some(Self::Terminal),
-            _ => None,
-        }
-    }
-}
-
 #[derive(Clone, Copy)]
 struct Generation2dOutputPage {
     operation: u64,
@@ -123,8 +111,6 @@ impl Generation2dIngressCredits {
 struct Generation2dMountedOperation {
     operation: u64,
     generation: u64,
-    base_revision: u64,
-    parent_revision: u64,
     credits: Generation2dIngressCredits,
     admitted_pages: usize,
     admitted_bytes: usize,
@@ -181,16 +167,12 @@ impl Generation2dMountedRegistry {
         Self { operations: std::array::from_fn(|_| None) }
     }
 
-    fn can_insert(&self) -> bool {
-        self.operations.iter().any(Option::is_none)
-    }
-
-    fn insert(&mut self, operation: u64, generation: u64, base_revision: u64, parent_revision: u64, credits: Generation2dIngressCredits) -> Result<(), &'static str> {
+    fn insert(&mut self, operation: u64, generation: u64, credits: Generation2dIngressCredits) -> Result<(), &'static str> {
         if self.operations.iter().flatten().any(|entry| entry.operation == operation) {
             return Err("generation2d-envelope.operation-duplicate");
         }
         let slot = self.operations.iter_mut().find(|slot| slot.is_none()).ok_or("generation2d-envelope.operation-capacity")?;
-        *slot = Some(Generation2dMountedOperation { operation, generation, base_revision, parent_revision, credits, admitted_pages: 0, admitted_bytes: 0, sequence: 0, outputs: std::array::from_fn(|_| Generation2dOutputSlot::empty()) });
+        *slot = Some(Generation2dMountedOperation { operation, generation, credits, admitted_pages: 0, admitted_bytes: 0, sequence: 0, outputs: std::array::from_fn(|_| Generation2dOutputSlot::empty()) });
         Ok(())
     }
 
@@ -329,7 +311,7 @@ mod mounted_laws {
     }
 
     fn insert(registry: &mut Generation2dMountedRegistry, operation: u64, generation: u64, credits: Generation2dIngressCredits) {
-        registry.insert(operation, generation, generation, generation, credits).expect("Generation2d mounted operation admission");
+        registry.insert(operation, generation, credits).expect("Generation2d mounted operation admission");
     }
 
     #[test]
@@ -355,7 +337,7 @@ mod mounted_laws {
         for operation in 1..=GENERATION2D_ENVELOPE_OPERATION_SLOTS as u64 {
             insert(&mut registry, operation, 7, credits);
         }
-        assert_eq!(registry.insert(99, 7, 7, 7, credits), Err("generation2d-envelope.operation-capacity"));
+        assert_eq!(registry.insert(99, 7, credits), Err("generation2d-envelope.operation-capacity"));
 
         let producer_calls = Cell::new(0);
         registry.operation(1, 7).expect("first operation").preflight_page(GENERATION2D_OUTPUT_PAGE_BYTES).expect("exact page");

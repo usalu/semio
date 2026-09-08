@@ -18,6 +18,7 @@ pub struct En1990Artifact {
     pub g_k: f64,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.table")]
+    #[cfg_attr(test, serde(with = "crate::document::child_identity_oracle"))]
     pub q_k: En1990QkChild,
     #[state(artifact)]
     pub resistance_kn: f64,
@@ -660,7 +661,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn de_na_combination_6_10() {
+    async fn de_na_combination_6_10() {
         let annex = NaDe;
         let actions = sample_actions();
         let ed = combination_6_10(&annex, &actions, 0);
@@ -670,7 +671,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn de_combination_6_10a_numeric() {
+    async fn de_combination_6_10a_numeric() {
         let annex = NaDe;
         let actions = sample_actions();
         let ed = combination_6_10a(&annex, &actions, 0);
@@ -678,7 +679,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn de_combination_6_10b_numeric() {
+    async fn de_combination_6_10b_numeric() {
         let annex = NaDe;
         let actions = sample_actions();
         let ed = combination_6_10b(&annex, &actions, 0);
@@ -686,7 +687,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn en_combination_6_10a_differs_on_other_psi() {
+    async fn en_combination_6_10a_differs_on_other_psi() {
         let de = NaDe;
         let en = NaEn;
         let actions = ActionSet { g_k: 100.0, q_k: vec![("office".into(), 50.0), ("other".into(), 30.0)] };
@@ -698,7 +699,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn de_vs_en_congregation_psi_tables() {
+    async fn de_vs_en_congregation_psi_tables() {
         let de = NaDe;
         let en = NaEn;
         assert!((de.psi_1("congregation") - 0.7).abs() < 1e-9);
@@ -721,7 +722,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn de_na_gamma_m_and_xi() {
+    async fn de_na_gamma_m_and_xi() {
         let annex = NaDe;
         assert!((annex.gamma_m("concrete") - 1.5).abs() < 1e-9);
         assert!((annex.gamma_m("steel") - 1.0).abs() < 1e-9);
@@ -731,7 +732,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn imposed_categories_a_to_h_de() {
+    async fn imposed_categories_a_to_h_de() {
         let annex = NaDe;
         for cat in [ImposedCategory::A, ImposedCategory::B, ImposedCategory::C, ImposedCategory::D, ImposedCategory::E, ImposedCategory::F, ImposedCategory::G, ImposedCategory::H] {
             let row = psi_for_imposed(&annex, cat);
@@ -745,7 +746,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn check_combination_set_covers_uls_and_sls() {
+    async fn check_combination_set_covers_uls_and_sls() {
         let annex = NaDe;
         let actions = sample_actions();
         let report = check_combination_set(&annex, DesignSituation::Persistent, &actions, 300.0);
@@ -757,7 +758,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn accidental_situation_uses_unit_gamma() {
+    async fn accidental_situation_uses_unit_gamma() {
         let annex = NaDe;
         let actions = sample_actions();
         let persistent = combination_uls(&annex, DesignSituation::Persistent, CombinationRule::Uls610a, &actions, 0);
@@ -767,7 +768,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn check_design_basis_covers_all_situations() {
+    async fn check_design_basis_covers_all_situations() {
         let annex = NaDe;
         let actions = sample_actions();
         let report = check_design_basis(&annex, &actions, 300.0, 2);
@@ -778,7 +779,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn seismic_combination_de_vs_en_diverge_on_other_psi_2() {
+    async fn seismic_combination_de_vs_en_diverge_on_other_psi_2() {
         let actions = ActionSet { g_k: 100.0, q_k: vec![("other".into(), 50.0)] };
         let de_ed = combination_6_12b(&NaDe, &actions, 40.0);
         let en_ed = combination_6_12b(&NaEn, &actions, 40.0);

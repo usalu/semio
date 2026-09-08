@@ -33,7 +33,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn pack_round_trips_the_reference_fixture() {
+    async fn pack_round_trips_the_reference_fixture() {
         let document = crate::artifacts::vdi3805::reference_fixture();
         let bytes = encode(&document);
         assert_eq!(decode(&bytes).expect("decode"), document);

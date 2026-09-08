@@ -1,14 +1,16 @@
 #!/usr/bin/env bun
 import assert from "node:assert/strict";
-import { readFileSync, mkdirSync, writeFileSync, rmSync, existsSync, readdirSync, lstatSync, realpathSync, copyFileSync, chmodSync, symlinkSync, renameSync, mkdtempSync } from "node:fs";
+import { readFileSync, mkdirSync, writeFileSync, rmSync, existsSync, readdirSync, lstatSync, realpathSync, copyFileSync, chmodSync, symlinkSync, renameSync, mkdtempSync, utimesSync } from "node:fs";
 import { join, resolve, relative, dirname, sep } from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
 import { createHash } from "node:crypto";
-import { BundleScript, ScriptRouter, runBundleScriptMain, getWorkspaceRoot, runCmdStatus, wasmBuildEnvironment, wasmBindgenVersion } from "../📦️packages/🟦️typescript/🟦️.ts";
+import { EventEmitter } from "node:events";
+import { BundleScript, ScriptRouter, runBundleScriptMain, getWorkspaceRoot, runCmdStatus, wasmBuildEnvironment, wasmBindgenVersion, wasmBuildArguments, devToolingEnv } from "../📦️packages/🟦️typescript/🟦️.ts";
 import plugin, { cacheInternals } from "../🟨️.mjs";
+import { stageArtifacts } from "./📦️artifacts/🟦️.ts";
 
 const SCRIPT_ROOT = dirname(fileURLToPath(import.meta.url));
 const POLICY = JSON.parse(readFileSync(join(SCRIPT_ROOT, "🔣️policy.json"), "utf8"));
@@ -123,9 +125,9 @@ class PolicyScript extends BundleScript {
 }
 
 class GraphScript extends BundleScript {
-  async run(): Promise<void> {
-    const { createProjectGraphAsync } = createRequire(import.meta.url)("@nx/devkit");
-    const graph = await createProjectGraphAsync();
+  run(): void {
+    const { readCachedProjectGraph } = createRequire(import.meta.url)("@nx/devkit");
+    const graph = readCachedProjectGraph();
     const edges = Object.values(graph.dependencies).flat() as any[];
     assert.ok(edges.length > 0, "A monorepo graph must contain dependency edges");
     for (const edge of edges) assert.ok(graph.nodes[edge.target] || graph.externalNodes?.[edge.target], `Unknown dependency ${edge.target}`);
@@ -198,97 +200,6 @@ class GeneratorInputsScript extends BundleScript {
   }
 }
 
-/** 🧱️ Replaces only a previously owned deliverable tree and restores it if publication fails. */
-export function stageArtifacts(staging: string, owner: string, files: ReadonlyMap<string, string>): void {
-  const marker = ".nx-artifact.json";
-  for (let parent = resolve(staging); dirname(parent) !== parent; parent = dirname(parent)) if (existsSync(parent) && lstatSync(parent).isSymbolicLink()) throw new Error(`Symlink artifact destination: ${parent}`);
-  if (existsSync(staging) && (!existsSync(join(staging, marker)) || JSON.parse(readFileSync(join(staging, marker), "utf8")).owner !== owner)) throw new Error(`Unowned artifact directory: ${staging}`);
-  mkdirSync(dirname(staging), { recursive: true });
-  const lease = `${staging}.lease`;
-  writeFileSync(lease, JSON.stringify({ owner, pid: process.pid }), { flag: "wx" });
-  let temporary: string | undefined;
-  try { temporary = mkdtempSync(`${staging}.stage-`); }
-  catch (error) { rmSync(lease); throw error; }
-  const previous = `${temporary}.previous`;
-  try {
-    for (const [name, source] of files) {
-      if (name.startsWith("/") || name.split(/[\\/]/).includes("..")) throw new Error(`Invalid artifact path ${name}`);
-      const destination = join(temporary, name);
-      mkdirSync(dirname(destination), { recursive: true });
-      copyFileSync(source, destination);
-      chmodSync(destination, lstatSync(source).mode & 0o777);
-    }
-    writeFileSync(join(temporary, marker), JSON.stringify({ version: 1, owner, files: [...files.keys()].sort() }) + "\n");
-    if (existsSync(staging)) renameSync(staging, previous);
-    try { renameSync(temporary, staging); }
-    catch (error) { if (existsSync(previous)) renameSync(previous, staging); throw error; }
-    rmSync(previous, { recursive: true, force: true });
-  } finally { rmSync(temporary, { recursive: true, force: true }); rmSync(lease); }
-}
-
-/** 📦️ Captures Cargo's declared deliverables, including link dependencies, without copying compiler state. */
-export async function buildCargoArtifacts(manifest: string, args: string[] = [], repoRoot = getWorkspaceRoot()): Promise<void> {
-  const path = resolve(repoRoot, manifest);
-  const sourceRoot = dirname(path);
-  const staging = join(sourceRoot, "dist", "build");
-  const owner = slash(relative(repoRoot, path));
-  const files = new Map<string, string>();
-  const dependencies = new Map<string, string>();
-  let hasLibrary = false;
-  let cancelled = false;
-  let forceKill: ReturnType<typeof setTimeout> | undefined;
-  const child = spawn("cargo", ["build", "--locked", "--manifest-path", path, ...args, "--message-format=json-render-diagnostics"], { cwd: repoRoot, env: process.env, detached: process.platform !== "win32", stdio: ["inherit", "pipe", "inherit"] });
-  const cancel = (): void => {
-    cancelled = true;
-    if (!child.pid) return;
-    if (process.platform === "win32") Bun.spawnSync(["taskkill", "/pid", String(child.pid), "/t", "/f"], { stdout: "ignore", stderr: "ignore" });
-    else {
-      try { process.kill(-child.pid, "SIGTERM"); } catch {}
-      forceKill = setTimeout(() => { try { process.kill(-child.pid!, "SIGKILL"); } catch {} }, 2000);
-      forceKill.unref();
-    }
-  };
-  process.once("SIGINT", cancel);
-  process.once("SIGTERM", cancel);
-  const status = new Promise<number>((accept) => { child.once("error", (error) => { console.error(error.message); accept(1); }); child.once("close", (code) => accept(code ?? 1)); });
-  try {
-    for await (const line of createInterface({ input: child.stdout!, crlfDelay: Infinity })) {
-      let message;
-      try { message = JSON.parse(line); } catch { process.stdout.write(line + "\n"); continue; }
-      if (message.reason !== "compiler-artifact" || message.target?.kind?.includes("custom-build")) continue;
-      const packageUrl = message.package_id?.split("#")[0]?.replace(/^path\+/, "");
-      const bin = args.indexOf("--bin"), example = args.indexOf("--example");
-      const selected = bin >= 0 ? message.target?.kind?.includes("bin") && message.target.name === args[bin + 1] : example >= 0 ? message.target?.kind?.includes("example") && message.target.name === args[example + 1] : args.includes("--bins") ? message.target?.kind?.includes("bin") : true;
-      const primary = selected && packageUrl?.startsWith("file:") && resolve(fileURLToPath(packageUrl)) === sourceRoot;
-      for (const file of message.filenames ?? []) {
-        if (file.endsWith(".d")) continue;
-        const library = primary && file.endsWith(".rmeta") ? message.filenames.find((path: string) => path.endsWith(".rlib")) : undefined;
-        const name = (library ? library.replace(/\.rlib$/, ".rmeta") : file).split(/[\\/]/).at(-1)!;
-        if (primary) { files.set(name, file); hasLibrary ||= file.endsWith(".rlib"); }
-        else if (/\.(rlib|rmeta|so|dylib|dll|lib)$/.test(file)) dependencies.set(`deps/${name}`, file);
-      }
-    }
-    if (await status !== 0 || cancelled) throw new Error(`Cargo artifact build ${cancelled ? "cancelled" : "failed"}: ${owner}`);
-  } finally { if (forceKill) clearTimeout(forceKill); process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
-  if (files.size === 0) throw new Error(`Cargo emitted no final artifacts for ${owner}`);
-  if (hasLibrary) for (const [name, file] of dependencies) files.set(name, file);
-  stageArtifacts(staging, owner, files);
-  console.log(`[nx-native] staged ${files.size} deliverables in ${slash(relative(repoRoot, staging))}`);
-}
-
-class NativeScript extends BundleScript {
-  async run(args: string[]): Promise<void> {
-    const [tool, operation] = args;
-    const index = args.indexOf("--manifest");
-    const manifest = index >= 0 ? args[index + 1] : undefined;
-    if (tool !== "cargo" || !["build", "check", "test"].includes(operation) || !manifest) throw new Error("native cargo build|check|test --manifest <Cargo.toml>");
-    const extra = args.slice(index + 2);
-    if (operation === "build") return buildCargoArtifacts(manifest, extra, this.repoRoot);
-    const status = runCmdStatus("cargo", [operation, "--locked", "--manifest-path", resolve(this.repoRoot, manifest), ...extra], { cwd: this.repoRoot });
-    if (status) throw new Error(`cargo ${operation} failed (${status})`);
-  }
-}
-
 /** 🔁️ Verifies actual Nx execution, reuse, restoration and invalidation in an isolated ticket fixture. */
 class CacheVerifyScript extends BundleScript {
   async run(args: string[]): Promise<void> {
@@ -353,7 +264,7 @@ console.log("[cache-probe] " + command + " executed " + count);
       for (const key of Object.keys(env)) if (key.startsWith("NX_TASK_") || ["NX_SKIP_NX_CACHE", "NX_SKIP_REMOTE_CACHE"].includes(key)) delete env[key];
       const started = performance.now();
       delete env.NX_FORCE_REUSE_CACHED_GRAPH;
-      const child = Bun.spawn(["node", join(this.repoRoot, "node_modules/nx/bin/nx.js"), "run", `probe:${task}`, "--output-style=static"], { cwd: fixture, env, stdout: "pipe", stderr: "pipe" });
+      const child = Bun.spawn(["node", createRequire(join(this.repoRoot, "package.json")).resolve("nx/bin/nx.js"), "run", `probe:${task}`, "--output-style=static"], { cwd: fixture, env, stdout: "pipe", stderr: "pipe" });
       const cancel = (): void => { child.kill(); };
       process.once("SIGINT", cancel);
       process.once("SIGTERM", cancel);
@@ -436,13 +347,203 @@ export async function testCacheContracts(): Promise<void> {
   assert.equal(wasmBuildEnvironment(root, { CARGO_TARGET_DIR: "chosen-cache" }).CARGO_TARGET_DIR, join(root, "chosen-cache"));
   const vectors = JSON.parse(readFileSync(join(SCRIPT_ROOT, "🧫️fixtures/nx-contract/🔣️.json"), "utf8"));
   assert.equal(validate(vectors, JSON.parse(readFileSync(join(SCRIPT_ROOT, "🧫️fixtures/nx-contract/🧬️.schema.json"), "utf8"))).valid, true);
+  const loggingKeys = Object.keys(vectors.daemonEnvironment), savedLogging = Object.fromEntries(loggingKeys.map((key) => [key, process.env[key]]));
+  const quiet = devToolingEnv(Object.fromEntries(loggingKeys.map((key) => [key, undefined])));
+  try {
+    for (const [key, value] of Object.entries(vectors.daemonEnvironment)) { assert.equal(quiet[key], value); process.env[key] = quiet[key]; }
+    const oracle = createRequire(import.meta.url)("nx/src/daemon/client/daemon-environment.js").getDaemonSpawnEnv();
+    for (const [key, value] of Object.entries(vectors.daemonEnvironment)) assert.equal(oracle[key], value, key);
+    assert.equal(devToolingEnv({ NX_NATIVE_LOGGING: "nx=debug" }).NX_NATIVE_LOGGING, "nx=debug");
+  } finally { for (const [key, value] of Object.entries(savedLogging)) if (value === undefined) delete process.env[key]; else process.env[key] = value; }
+  for (const row of vectors.wasmProfiles) {
+    const args = wasmBuildArguments(row.profile);
+    assert.deepEqual(args, { pack: row.pack, cargo: row.cargo });
+    for (const [tool, flags] of [["cargo", args.cargo], ["wasm-pack", args.pack]] as const) {
+      const help = Bun.spawnSync([tool, "build", ...flags, "--help"], { stdout: "pipe", stderr: "pipe" });
+      assert.equal(help.exitCode, 0, `${tool} rejected ${flags.join(" ")}: ${help.stderr.toString()}`);
+    }
+  }
+  const socketFrames = createRequire(import.meta.url)("nx/src/utils/consume-messages-from-socket.js");
+  assert.equal(typeof socketFrames.writeMessage, "function", "Nx must preserve Unicode across socket frame boundaries");
+  for (const size of vectors.socketFrames.chunkSizes) {
+    const frames: Buffer[] = [], received: unknown[] = [];
+    for (const message of vectors.socketFrames.messages) socketFrames.writeMessage({ write: (chunk: Buffer) => frames.push(chunk) }, Buffer.from(JSON.stringify(message)));
+    const consume = socketFrames.consumeMessagesFromSocket((message: Buffer) => received.push(socketFrames.parseMessage(message)));
+    const bytes = Buffer.concat(frames);
+    for (let offset = 0; offset < bytes.length; offset += size) consume(bytes.subarray(offset, offset + size));
+    assert.deepEqual(received, vectors.socketFrames.messages, `Unicode socket frame size ${size}`);
+  }
   for (const row of vectors.policies) {
     const target = cacheInternals.targetPolicy(row.target, { cache: true }, policy);
     assert.deepEqual({ cache: target.cache, continuous: target.continuous ?? false }, { cache: row.cache, continuous: row.continuous }, row.target);
   }
+  const selectionApi = await import("../🎮️playground/🟦️.ts");
+  assert.equal(typeof selectionApi.loadFrameworkOsPlaygroundSelections, "function", "Development selection must read authored metadata before generation");
+  const selectionFixture = mkdtempSync(join(ticketOutput(root, []), "playground-selection-"));
+  try {
+    const vector = vectors.playgroundSelections, manifest = join(selectionFixture, vector.manifest);
+    mkdirSync(dirname(manifest), { recursive: true });
+    writeFileSync(manifest, vector.text);
+    const originalTime = lstatSync(manifest).mtime;
+    for (const port of vector.ports) {
+      const text = vector.text.replace(String(vector.ports[0]), String(port));
+      writeFileSync(manifest, text);
+      utimesSync(manifest, originalTime, originalTime);
+      const authored = createRequire(import.meta.url)("@iarna/toml").parse(text).package.metadata;
+      const rows = selectionApi.loadFrameworkOsPlaygroundSelections(selectionFixture, [vector.manifest]);
+      assert.deepEqual(rows, [{ ...authored.semio.playground[0], pluginId: authored.component.package.slice(6), cratePath: slash(dirname(vector.manifest)) }]);
+      assert.equal(rows[0].variant, vector.variant);
+      assert.deepEqual(rows[0].aliases, [vector.alias]);
+      assert.equal(rows[0].ports.react, port);
+    }
+    const stale = join(selectionFixture, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎠️playgrounds.json");
+    mkdirSync(dirname(stale), { recursive: true });
+    writeFileSync(stale, "invalid generated catalog");
+    assert.equal(selectionApi.loadFrameworkOsPlaygroundSelections(selectionFixture, [vector.manifest])[0].variant, vector.variant);
+    assert.throws(() => selectionApi.loadFrameworkOsPlaygroundSelections(selectionFixture, [vector.manifest, vector.manifest]), /duplicate/i);
+    writeFileSync(manifest, vector.text.replace(String(vector.ports[0]), "65536"));
+    assert.throws(() => selectionApi.loadFrameworkOsPlaygroundSelections(selectionFixture, [vector.manifest]), /port/i);
+    assert.throws(() => selectionApi.loadFrameworkOsPlaygroundSelections(selectionFixture, ["../Cargo.toml"]), /outside/i);
+  } finally { rmSync(selectionFixture, { recursive: true }); }
+  await (await import("./🧪️tests/📜️script.ts")).testCommandInputs(root, ticketOutput(root, []));
+  console.log("[DEBUG] Native command contracts passed; collecting project inventory");
   const result = inventory(root), contracts = result.projects;
+  console.log(`[DEBUG] Project inventory collected: ${contracts.length} projects`);
+  const toml = createRequire(import.meta.url)("@iarna/toml");
+  let componentPackages = 0;
+  const componentLaunchers: { project: string; pluginId: string }[] = [];
+  for (const project of contracts) {
+    const path = join(root, project.root, "Cargo.toml");
+    if (!existsSync(path)) continue;
+    const manifest = toml.parse(readFileSync(path, "utf8"));
+    if (!manifest.package?.metadata?.component?.package || !["plugin", "extension"].includes(manifest.package?.metadata?.semio?.role)) continue;
+    componentPackages++;
+    componentLaunchers.push({ project: project.name, pluginId: manifest.package.metadata.component.package.slice("semio:".length) });
+    const moduleCatalog = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🗺️catalog.json"), "utf8"));
+    const moduleDirectory = moduleCatalog.modules.find((row: any) => row.pluginId === manifest.package.metadata.component.package.slice("semio:".length))?.directoryName;
+    assert.ok(moduleDirectory);
+    for (const row of vectors.materialization.profiles) {
+      const target = project.targets[row.target], shared = contracts.find((project) => project.name === vectors.materialization.project)?.targets[row.support];
+      assert.equal(target?.cache, true, `${project.name}:${row.target} needs a materialization producer`);
+      assert.deepEqual(target.dependsOn, [row.component, `${vectors.materialization.project}:${row.support}`]);
+      assert.deepEqual(target.outputs, [`{workspaceRoot}/${vectors.materialization.root}/dist/${row.profile}/🔌️plugin-modules/${moduleDirectory}`]);
+      assert.ok(target.inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*"));
+      assert.ok(target.options.command.includes(`materialize ${row.profile} --manifest`));
+      assert.equal(shared?.cache, true);
+      assert.equal(shared.outputs.length, 2);
+    }
+    for (const row of vectors.componentProfiles) {
+      const target = project.targets[row.target];
+      assert.equal(target?.cache, true, `${project.name}:${row.target} needs a component producer`);
+      assert.deepEqual(target.outputs, [row.output]);
+      assert.equal(target.parallelism, false);
+      assert.ok(target.options.command.includes(`native component ${row.profile} --manifest`));
+    }
+  }
+  assert.ok(componentPackages > 0, "Component metadata must discover plugin producers");
+  const fontProject = contracts.find((project) => project.name === vectors.fontAssets.project)!;
+  for (const [name, output] of [[vectors.fontAssets.tool, vectors.fontAssets.toolOutput], [vectors.fontAssets.producer, vectors.fontAssets.output]]) {
+    assert.equal(fontProject.targets[name]?.cache, true, `${name} must be separately cacheable`);
+    assert.deepEqual(fontProject.targets[name].outputs, [output]);
+  }
+  assert.deepEqual(fontProject.targets[vectors.fontAssets.producer].dependsOn, [vectors.fontAssets.tool]);
+  assert.ok(fontProject.targets[vectors.fontAssets.producer].inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*"));
+  const activationRoot = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation");
+  const activation = await import(join(activationRoot, "🟦️.ts"));
+  const activationCases = JSON.parse(readFileSync(join(activationRoot, "🧫️cases.json"), "utf8"));
+  const ActivationAjv = createRequire(import.meta.url)("ajv");
+  const validateActivation = new ActivationAjv().compile(JSON.parse(readFileSync(join(activationRoot, "🧬️.schema.json"), "utf8")));
+  const { keyBy, sortBy } = createRequire(import.meta.url)("lodash");
+  let activationReceipt: any;
+  for (const cycle of activationCases.cycles) {
+    const completed = cycle.plugins.map(([pluginId, digest]: string[]) => ({ pluginId, artifactSha256: digest.repeat(64) }));
+    const prior = keyBy(activationReceipt?.plugins ?? [], "pluginId");
+    const nextTimestamp = Math.max(cycle.now, 1, ...Object.values(prior).map((row: any) => row.rebuiltAt + 1));
+    const oracle = sortBy(completed, "pluginId").map((row: any) => ({ ...row, rebuiltAt: prior[row.pluginId]?.artifactSha256 === row.artifactSha256 ? prior[row.pluginId].rebuiltAt : nextTimestamp }));
+    const next = activation.nextActivationReceipt(activationCases.variant, activationCases.profile, completed, activationReceipt, cycle.now);
+    assert.equal(validateActivation(next), true, JSON.stringify(validateActivation.errors));
+    assert.deepEqual(next.plugins, oracle);
+    assert.deepEqual(next.plugins.map((row: any) => [row.pluginId, row.artifactSha256[0], row.rebuiltAt]), cycle.expected);
+    assert.deepEqual(activation.parseActivationReceipt(JSON.parse(JSON.stringify(next))), next);
+    activationReceipt = next;
+  }
+  assert.throws(() => activation.parseActivationReceipt({ ...activationReceipt, plugins: [...activationReceipt.plugins, ...activationReceipt.plugins] }), /Duplicate/);
+  assert.throws(() => activation.parseActivationReceipt({ ...activationReceipt, unknown: true }), /Invalid/);
+  assert.throws(() => activation.nextActivationReceipt("other", "dev", [], activationReceipt, 500), /identity/);
+  assert.throws(() => activation.nextActivationReceipt("../note", "dev", [], undefined, 500), /Invalid/);
+  const sessionProject = contracts.find((project) => project.name === vectors.playgroundSessions.project)!;
+  for (const variant of vectors.playgroundSessions.variants) {
+    const session = sessionProject.targets[`session-${variant}`];
+    assert.equal(session?.cache, true, `${variant} needs its own cacheable playground session`);
+    assert.deepEqual(session.dependsOn, [vectors.playgroundSessions.prerequisite]);
+    assert.deepEqual(session.outputs, [`{projectRoot}/dist/sessions/${variant}`]);
+    assert.ok(session.inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*"));
+  }
+  console.log("[DEBUG] Component and activation contracts passed; checking editor and playground contracts");
+  const registryRoot = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry");
+  const registry = await import(join(registryRoot, "📜️script.ts"));
+  const launch = await import(join(registryRoot, "🖥️launch.ts"));
+  const configurations = Bun.JSONC.parse(launch.generateLaunchJson(root, registry.generatePlaygroundRegistry(root), componentLaunchers)).configurations;
+  for (const project of contracts) for (const [name, target] of Object.entries(project.targets) as [string, any][]) if (target.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts") && ["build", "check", "test"].includes(name)) assert.ok(configurations.some((row: any) => row.command === `bun nx run ${project.name}:${name}`), `Missing native editor command ${project.name}:${name}`);
+  const preparationProject = contracts.find((project) => project.name === vectors.playgroundPreparation.project)!;
+  for (const playground of registry.generatePlaygroundRegistry(root)) {
+    for (const engine of playground.engines) assert.ok(contracts.some((project) => resolve(root, project.root) === resolve(root, engine) && project.targets.wasm), `Engine ${engine} must name an authored producer`);
+    for (const profile of vectors.playgroundPreparation.profiles) {
+      const targetName = `prepare-${playground.variant}-react-${profile}`, preparation = preparationProject.targets[targetName];
+      assert.ok(preparation, `${targetName} needs declared prerequisites`);
+      assert.equal(preparation.cache, false);
+      assert.deepEqual(preparation.outputs, []);
+      const activationName = `activate-${playground.variant}-react-${profile}`, activationTarget = preparationProject.targets[activationName];
+      assert.ok(activationTarget, `${activationName} must follow completed preparation`);
+      assert.equal(activationTarget.cache, false);
+      assert.deepEqual(activationTarget.outputs, []);
+      assert.deepEqual(activationTarget.dependsOn, [targetName]);
+      assert.equal(configurations.filter((configuration: any) => configuration.command === `bun nx run ${preparationProject.name}:${activationName}`).length, 1);
+      for (const command of ["serve", "dev"]) {
+        const serverName = `${command}-${playground.variant}-react-${profile}`, server = preparationProject.targets[serverName];
+        assert.ok(server, `${serverName} needs an Nx server owner`);
+        assert.equal(server.continuous, true);
+        assert.equal(server.cache, false);
+        assert.deepEqual(server.outputs, []);
+        assert.deepEqual(server.dependsOn, [activationName]);
+        assert.equal(server.options.command, `bun ./📜️script.ts serve ${playground.variant} react ${profile}`);
+        assert.equal(configurations.filter((configuration: any) => configuration.command === `bun nx run ${preparationProject.name}:${serverName}`).length, 1);
+      }
+      const components = registry.buildPlaygroundSession(playground.variant).plugins.map((row: any) => `${componentLaunchers.find((entry) => entry.pluginId === row.pluginId)!.project}:materialize-${profile}`);
+      assert.deepEqual([...preparation.dependsOn].sort(), [...new Set([`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-${profile}`, vectors.playgroundPreparation.fonts, ...vectors.playgroundPreparation.engines, ...components])].sort());
+      assert.equal(configurations.filter((configuration: any) => configuration.command === `bun nx run ${preparationProject.name}:${targetName}`).length, 1);
+    }
+    const target = `session-${playground.variant}`;
+    assert.ok(sessionProject.targets[target]);
+    assert.equal(configurations.filter((configuration: any) => configuration.command === `bun nx run ${sessionProject.name}:${target}`).length, 1);
+  }
+  for (const entry of componentLaunchers) for (const row of [...vectors.componentProfiles, ...vectors.materialization.profiles]) assert.equal(configurations.filter((configuration: any) => configuration.command === `bun nx run ${entry.project}:${row.target}`).length, 1, `${entry.project}:${row.target} must have one editor command`);
   assert.deepEqual(result.violations.filter((finding) => finding.rule === "ORCH-01"), [], "All public commands must use one script entrypoint");
   for (const entry of vectors.entrypoints) assert.ok(contracts.find((project) => project.name === entry.project)?.targets[entry.target].dependsOn?.includes(entry.prerequisite), `${entry.project}:${entry.target} needs ${entry.prerequisite} in Nx`);
+  for (const entry of vectors.nativeBinaries) {
+    const project = contracts.find((project) => project.name === entry.project)!;
+    assert.equal(project.targets[entry.target].cache, true, `${entry.project} binary must be restorable`);
+    assert.deepEqual(project.targets[entry.target].outputs, [entry.output]);
+    assert.ok(project.targets[entry.consumer].dependsOn.includes(entry.target));
+  }
+  for (const entry of vectors.components) {
+    const project = contracts.find((project) => project.name === entry.project)!;
+    const target = project.targets[entry.target];
+    assert.ok(project.namedInputs?.default?.includes(entry.schemaInput), `${entry.project} must hash its shared component schema`);
+    assert.equal(target.cache, true, `${entry.project}:${entry.target} component must be restorable`);
+    assert.deepEqual(target.outputs, [entry.output]);
+    assert.ok(contracts.find((project) => project.name === entry.consumerProject)!.targets[entry.consumerTarget].dependsOn.includes(`${entry.project}:${entry.target}`));
+  }
+  console.log("[DEBUG] Editor and playground contracts passed; checking lifecycle and compiler contracts");
+  const mcpRoot = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp";
+  const mcp = await import(join(root, mcpRoot, "🟦️.ts"));
+  const binaryVectors = JSON.parse(readFileSync(join(root, mcpRoot, "🧫️fixtures/🧱️binary-gate.json"), "utf8"));
+  const pathOracle = createRequire(import.meta.url)("node:path");
+  for (const row of binaryVectors.pathCases) {
+    assert.equal(mcp.resolveMcpBinaryPath(row.repoRoot, row.environment, row.platform), row.expected);
+    const paths = row.platform === "win32" ? pathOracle.win32 : pathOracle.posix;
+    assert.equal(paths.resolve(row.repoRoot, row.environment.SEMIO_OS_MCP_BIN ?? binaryVectors.artifactRoot, ...(row.environment.SEMIO_OS_MCP_BIN ? [] : [binaryVectors.cargoBinary + (row.platform === "win32" ? ".exe" : "")])), row.expected);
+  }
   const generators = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")).generatorContracts;
   for (const id of vectors.generators) {
     const authority = generators[id], split = authority.target.lastIndexOf(":"), project = contracts.find((project) => project.name === authority.target.slice(0, split))!;
@@ -460,6 +561,8 @@ export async function testCacheContracts(): Promise<void> {
   assert.deepEqual(workspace.targets.setup.dependsOn, vectors.lifecycle.setupDependencies);
   assert.deepEqual(workspace.targets.prepare.dependsOn, vectors.lifecycle.prepareDependencies);
   for (const target of vectors.lifecycle.setupDependencies) assert.equal(workspace.targets[target]?.cache, false);
+  const hostProject = contracts.find((project) => project.name === vectors.platformEnvironment.project)!;
+  for (const target of Object.values(hostProject.targets) as any[]) for (const key of vectors.platformEnvironment.keys) assert.equal(target.options?.env?.[key], undefined, `Shared target metadata cannot force ${key}`);
   const bootstrap = vectors.bootstrap, dotnet = contracts.find((project) => project.name === bootstrap.dotnetProject);
   assert.ok(dotnet, "The current .NET support library needs an Nx owner");
   assert.deepEqual(dotnet.targets.build.outputs, ["{projectRoot}/dist/build"]);
@@ -477,7 +580,77 @@ export async function testCacheContracts(): Promise<void> {
   for (const target of Object.values(styling.targets) as any[]) if (target.options.command.includes(" test")) assert.ok(target.dependsOn.includes(bootstrap.stylingGenerator));
   assert.ok(!/compose|topologic|vcpkg/i.test(readFileSync(join(root, "CMakeLists.txt"), "utf8") + readFileSync(join(root, "CMakePresets.json"), "utf8")));
   const ts = createRequire(import.meta.url)("typescript");
+  for (const row of vectors.engineOutputs) {
+    const project = contracts.find((project) => project.name === row.project)!;
+    assert.deepEqual(project.targets.wasm.outputs, row.outputs);
+    const engineSource = ts.createSourceFile("engine.ts", readFileSync(join(root, project.root, "📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+    const outputs: string[] = [];
+    const inspect = (node: any): void => {
+      if (ts.isCallExpression(node) && node.expression.getText(engineSource) === "runWasmPackWebBuild") {
+        const output = node.arguments[0].properties.find((property: any) => property.name?.getText(engineSource) === "outputDirectory");
+        outputs.push(output?.initializer.text ?? "pkg");
+      }
+      ts.forEachChild(node, inspect);
+    };
+    inspect(engineSource);
+    assert.deepEqual(outputs, [row.directory]);
+  }
   const source = ts.createSourceFile("📜️script.ts", readFileSync(join(root, "📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+  const coordinator = source.statements.find((node: any) => ts.isClassDeclaration(node) && node.name?.text === "NxScript");
+  const coordinatorCode = ts.transpileModule(coordinator.getText(source).replace(/^export /, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  for (const vector of JSON.parse(readFileSync(join(SCRIPT_ROOT, "🧫️fixtures/🛑️cancellation.json"), "utf8")).cases) {
+    const killed: number[] = [], child = Object.assign(new EventEmitter(), { pid: 1234 });
+    const runtime = Object.assign(new EventEmitter(), { platform: vector.platform, exitCode: 0, kill: (pid: number, signal: number | string) => { if (!signal) throw new Error("No process"); killed.push(pid); } });
+    const Coordinator = new Function("Script", "process", "createRequire", "join", "resolveNxInvocation", "devToolingEnv", "orchestratorBudgetOpts", "spawnNxProcess", "stopNxProcessTree", coordinatorCode + "; return NxScript;")(
+      class { root = root; }, runtime, () => ({ resolve: (name: string) => name }), join, (args: string[]) => ({ args, env: {} }), (env: unknown) => env, () => ({}), () => child,
+      (command: string) => { if (command === "taskkill") { killed.push(child.pid); return { status: 0 }; } if (vector.throws) throw new Error("Snapshot unavailable"); return { status: 0, stdout: vector.stdout }; });
+    const done = new Coordinator().run(["run", "fixture:build"]);
+    assert.doesNotThrow(() => runtime.emit("SIGTERM"), vector.name);
+    child.emit("close", null);
+    await done;
+    assert.equal(runtime.exitCode, vector.expectedExit, vector.name);
+    assert.ok(killed.length > 0, `${vector.name}: owned launch process must still be stopped`);
+    assert.equal(runtime.listenerCount("SIGTERM"), 0);
+  }
+  console.log("[DEBUG] Nx cancellation stops owned launch processes after malformed or unavailable process snapshots PASS");
+  const invocation = source.statements.find((node: any) => ts.isFunctionDeclaration(node) && node.name?.text === "resolveNxInvocation");
+  const route = ts.transpileModule(invocation.getText(source).replace(/^export /, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const resolveInvocation = new Function("process", `${route}; return resolveNxInvocation;`)({ env: {} });
+  const resolvePrint = new Function("process", "readFileSync", "join", "WORKSPACE_ROOT", `${route}; return resolveNxInvocation;`)({ env: {} }, readFileSync, join, root);
+  for (const path of ["🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🧫️invocations.json", "♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/🧫️invocations.json"]) {
+    const invocations = JSON.parse(readFileSync(join(root, path), "utf8"));
+    for (const vector of invocations.valid) {
+      const result = resolvePrint(vector.input);
+      assert.deepEqual(result.args, vector.args);
+      assert.equal(result.watch, vector.watch);
+    }
+    for (const vector of invocations.invalid) assert.throws(() => resolvePrint(vector));
+  }
+  for (const command of ["prepare", "activate", "serve", "dev"]) {
+    const selected = `@semio-tech/framework-os-dev:${command}-note-react-dev`;
+    const invocation = resolveInvocation(["run", selected]);
+    assert.equal(invocation.watch, command === "dev" ? "@semio-tech/framework-os-dev:activate-note-react-dev" : undefined);
+    assert.equal(invocation.env.SEMIO_BUILD_MODE, "dev");
+    assert.equal(resolveInvocation(["run", selected, "--graph=stdout"]).watch, undefined);
+  }
+  assert.deepEqual(resolveInvocation(["run", "workspace:dev", "--", "mcp", "stdio", "os", "--folder", "chosen"]).args, ["run", "@semio-tech/framework-os-mcp-rs:dev", "--", "stdio", "--folder", "chosen"]);
+  assert.deepEqual(resolveInvocation(["run", "workspace:dev", "--", "mcp", "http", "os"]).args, ["run", "@semio-tech/framework-os-mcp-rs:dev", "--", "http", "--port", "6300"]);
+  for (const renderer of vectors.benchmarkRenderers) {
+    const target = `bench-plugins-${renderer}`;
+    const args = resolveInvocation(["run", "workspace:bench", "--", "plugins", `--renderer=${renderer}`, "--count", "3"]).args;
+    assert.deepEqual(args, ["run", `@semio-tech/framework-os-dev:${target}`, "--", "--count", "3"]);
+    assert.equal(hostProject.targets[target].dependsOn.includes("@semio-tech/framework-os-scale-fixture:build-wasm"), renderer === "native");
+    assert.equal(hostProject.targets[target].dependsOn.includes("@semio-tech/framework-renderer-wgpu:native-build"), renderer === "native");
+  }
+  assert.deepEqual(resolveInvocation(["run", "@semio-tech/framework-renderer-wgpu:native", "--", "s", "--release"]).args, ["run", "@semio-tech/framework-renderer-wgpu:native-release", "--", "s"]);
+  const hostSource = ts.createSourceFile("host.ts", readFileSync(join(root, hostProject.root, "📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+  const apple = hostSource.statements.find((node: any) => ts.isFunctionDeclaration(node) && node.name?.text === "ensureAppleDeveloperDir");
+  const selectApple = ts.transpileModule(apple.getText(hostSource), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  for (const platform of vectors.platformEnvironment.platforms) {
+    const host = { platform, env: {} as Record<string, string> };
+    new Function("process", "existsSync", `${selectApple}; ensureAppleDeveloperDir();`)(host, () => true);
+    assert.deepEqual(Object.keys(host.env).sort(), platform === "darwin" ? [...vectors.platformEnvironment.keys].sort() : []);
+  }
   const setup = source.statements.find((node: any) => ts.isClassDeclaration(node) && node.name?.text === "SetupScript").getText(source);
   assert.ok(!/runWorkspaceCodegen|buildRepoMcpClient|runNx|\["nx"|\["build"/.test(setup), "Setup must only provision dependency environments");
   const lock = readFileSync(join(root, "Cargo.lock"), "utf8");
@@ -492,6 +665,7 @@ export async function testCacheContracts(): Promise<void> {
   }
   const ticket = process.env.SEMIO_TICKET_DIR;
   assert.ok(ticket, "SEMIO_TICKET_DIR must point to the active ticket for generated test files");
+  console.log("[DEBUG] Lifecycle and compiler contracts passed; checking source discovery and cancellation");
   const fixture = join(resolve(root, ticket), "🗑️generated", "policy-contract");
   const rustFixture = join(fixture, "rust-inputs");
   for (const [path, contents] of Object.entries(vectors.rust.files)) { mkdirSync(dirname(join(rustFixture, path)), { recursive: true }); writeFileSync(join(rustFixture, path), contents as string); }
@@ -501,6 +675,60 @@ export async function testCacheContracts(): Promise<void> {
   assert.equal(rustOracle.exitCode, 0, rustOracle.stderr.toString());
   const rustDependencies = readFileSync(join(rustFixture, "oracle.d"), "utf8").split("\n")[0]!.split(": ")[1]!.trim().split(/\s+/).map((path) => slash(relative(rustFixture, resolve(rustFixture, path)))).sort();
   assert.deepEqual(rustInputs, [...new Set(rustDependencies)]);
+  const discovery = vectors.rustDiscoveryCache, sourceCache = cacheInternals.createRustSourceCache(discovery.limitBytes);
+  const revisionRoot = join(fixture, "rust-revisions");
+  for (const [path, contents] of Object.entries(discovery.files)) { mkdirSync(dirname(join(revisionRoot, path)), { recursive: true }); writeFileSync(join(revisionRoot, path), contents as string); }
+  mkdirSync(dirname(join(revisionRoot, discovery.entry)), { recursive: true });
+  for (const revision of discovery.revisions) {
+    const entry = join(revisionRoot, discovery.entry);
+    writeFileSync(entry, revision.source);
+    utimesSync(entry, 1_700_000_000, 1_700_000_000);
+    const inputs = cacheInternals.rustSourceFiles([entry], revisionRoot, sourceCache).map((path: string) => slash(relative(revisionRoot, path))).sort();
+    assert.deepEqual(inputs, revision.inputs);
+    const oracle = Bun.spawnSync(["rustc", "--crate-type=lib", "--emit=dep-info", "-o", "oracle.d", discovery.entry], { cwd: revisionRoot, stdout: "pipe", stderr: "pipe" });
+    assert.equal(oracle.exitCode, 0, oracle.stderr.toString());
+    const dependencies = readFileSync(join(revisionRoot, "oracle.d"), "utf8").split("\n")[0]!.split(": ")[1]!.trim().split(/\s+/).map((path) => slash(relative(revisionRoot, resolve(revisionRoot, path)))).sort();
+    assert.deepEqual(inputs, [...new Set(dependencies)]);
+    const hits = sourceCache.hits;
+    assert.deepEqual(cacheInternals.rustSourceFiles([entry], revisionRoot, sourceCache).map((path: string) => slash(relative(revisionRoot, path))).sort(), inputs);
+    assert.ok(sourceCache.hits > hits);
+    assert.ok(sourceCache.bytes <= discovery.limitBytes);
+  }
+  for (let index = 0; index < 100; index++) {
+    const entry = join(revisionRoot, discovery.entry);
+    writeFileSync(entry, `pub const VALUE_${index}: usize = ${index};`);
+    cacheInternals.rustSourceFiles([entry], revisionRoot, sourceCache);
+    assert.ok(sourceCache.bytes <= discovery.limitBytes);
+  }
+  assert.ok(sourceCache.entries.size < 100);
+  const materializerSource = ts.createSourceFile("materializer.ts", readFileSync(join(root, vectors.materialization.root, "🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+  const spawnDeclaration = materializerSource.statements.find((node: any) => ts.isFunctionDeclaration(node) && node.name?.text === "spawnAsync");
+  const spawnCode = ts.transpileModule(spawnDeclaration.getText(materializerSource), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const materializerSpawn = new Function("spawn", `${spawnCode}; return spawnAsync;`)(spawn);
+  const materializerFixture = join(fixture, "materializer-cancel");
+  mkdirSync(materializerFixture, { recursive: true });
+  const childScript = join(materializerFixture, "📜️script.ts"), pidPath = join(materializerFixture, "pid");
+  writeFileSync(childScript, 'import { writeFileSync } from "node:fs"; if (process.argv[2] === "fail") { process.stderr.write("x".repeat(200000)); process.exit(1); } process.on("SIGTERM", () => {}); setInterval(() => {}, 1000); writeFileSync(process.argv[2], String(process.pid));');
+  rmSync(pidPath, { force: true });
+  const controller = new AbortController();
+  const execution = materializerSpawn("bun", [childScript, pidPath], materializerFixture, controller.signal).then(() => undefined, (error: Error) => error);
+  let childPid = 0;
+  try {
+    const startupDeadline = Date.now() + 10000;
+    while (!existsSync(pidPath)) { assert.ok(Date.now() < startupDeadline, "Materializer fixture must become ready"); await new Promise((accept) => setTimeout(accept, 25)); }
+    childPid = Number(readFileSync(pidPath, "utf8"));
+    const started = Date.now();
+    controller.abort(new Error("materializer cancelled"));
+    assert.match(String(await execution), /materializer cancelled/);
+    assert.ok(Date.now() - started < vectors.materialization.cancellation.shutdownMilliseconds);
+    assert.throws(() => process.kill(childPid, 0), "Cancelled code generation must terminate the subprocess");
+  } finally {
+    controller.abort();
+    if (childPid && process.platform !== "win32") try { process.kill(-childPid, "SIGKILL"); } catch {}
+  }
+  const diagnostic = await materializerSpawn("bun", [childScript, "fail"], materializerFixture).then(() => "", (error: Error) => error.message);
+  assert.match(diagnostic, /exited with status 1/);
+  assert.ok(diagnostic.length < vectors.materialization.cancellation.maximumDiagnosticCharacters);
   const kernelInputs = contracts.find((project) => project.name === "@semio-tech/framework-os-kernel")?.namedInputs?.default;
   assert.ok(kernelInputs?.includes("{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"));
   assert.ok(!kernelInputs?.includes("{workspaceRoot}/🧰️framework/🛍️products/💻️os/**/*.{rs,toml,json,semio,wit,wgsl,glsl,h,c,cpp}"));
@@ -570,14 +798,16 @@ export async function testCacheContracts(): Promise<void> {
   assert.ok(!rootTest.includes("run-many"), "The root test target cannot schedule a second Nx graph");
   for (const level of ["fundamental", "quick", "long", "exhaustive"]) assert.ok(workspace.targets[`test-${level}`].dependsOn.length > 0);
   assert.equal(resolveNxInvocation(["run", "workspace:dev", "--", "s"]).args[1], "@semio-tech/framework-os-dev:dev");
+  assert.ok(invocation.getText(source).includes("loadFrameworkOsPlaygroundSelections()"));
+  assert.ok(!invocation.getText(source).includes("loadFrameworkOsPlaygroundCatalog()"));
   assert.equal(root.length > 0, true);
   rmSync(fixture, { recursive: true });
-  console.log("[cache-contract] schema, side effects, continuous tasks, duplicate identities, levels and native dependency cases passed");
+  console.log("[cache-contract] schema, graph ownership, source-byte discovery, native dependency oracles and materializer cancellation passed");
 }
 
 class TestScript extends BundleScript {
   async run(): Promise<void> { await testCacheContracts(); }
 }
 
-const router = new ScriptRouter(SCRIPT_ROOT).register("test", TestScript).register("audit", AuditScript).register("policy-check", PolicyScript).register("artifact-check", PolicyScript).register("graph-check", GraphScript).register("doctor", DoctorScript).register("disk-report", DiskScript).register("disk-prune", DiskPruneScript).register("cache-verify", CacheVerifyScript).register("native", NativeScript).register("toolchain", ToolchainScript).register("generator-inputs", GeneratorInputsScript);
+const router = new ScriptRouter(SCRIPT_ROOT).register("test", TestScript).register("audit", AuditScript).register("policy-check", PolicyScript).register("artifact-check", PolicyScript).register("graph-check", GraphScript).register("doctor", DoctorScript).register("disk-report", DiskScript).register("disk-prune", DiskPruneScript).register("cache-verify", CacheVerifyScript).register("toolchain", ToolchainScript).register("generator-inputs", GeneratorInputsScript);
 if (import.meta.main) await runBundleScriptMain(router, import.meta.url);

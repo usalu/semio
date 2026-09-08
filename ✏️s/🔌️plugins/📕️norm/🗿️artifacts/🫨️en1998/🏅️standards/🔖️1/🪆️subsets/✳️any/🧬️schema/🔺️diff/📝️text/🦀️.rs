@@ -411,7 +411,7 @@ mod tests {
     use protocol::{Mutation as _, MutationDiff};
 
     #[semio_framework_async_macros::async_test]
-    fn change_mutation_diff_updates_only_its_field() {
+    async fn change_mutation_diff_updates_only_its_field() {
         let base = En1998Snapshot::default();
         let mutation = En1998Mutation::ChangeSeismicZone(crate::artifacts::en1998::mutations::change_seismic_zone::ChangeSeismicZone { new_seismic_zone: 3 });
         let outcome = mutation.diff(&base);

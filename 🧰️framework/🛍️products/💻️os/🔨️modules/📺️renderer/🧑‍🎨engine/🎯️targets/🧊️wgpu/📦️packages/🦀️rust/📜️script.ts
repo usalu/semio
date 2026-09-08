@@ -26,6 +26,7 @@ import {
   loadFrameworkOsPlaygroundCatalog,
 } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { startAssetServer } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🟦️.ts";
+import { buildCargoArtifacts } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts";
 import type { PlaygroundAssetSpec } from "../../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts";
 
 const repoRoot = getWorkspaceRoot();
@@ -301,48 +302,32 @@ function scaleModePassthroughArgs(segments: readonly string[]): string[] {
 
 function nativeBinaryPath(ship: boolean): string {
   const name = process.platform === "win32" ? "semio-wgpu-native.exe" : "semio-wgpu-native";
-  const targetRoot = process.env.CARGO_TARGET_DIR ? resolve(repoRoot, process.env.CARGO_TARGET_DIR) : join(repoRoot, "target");
-  return join(targetRoot, ship ? "release" : "debug", name);
+  const path = join(import.meta.dir, "dist", ship ? "native-release" : "native-dev", name);
+  if (!existsSync(path)) throw new Error(`Missing Nx native renderer artifact: ${path}`);
+  return path;
 }
 
 class NativeBuildScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const ship = segments.includes("--dist") || segments.includes("--release");
-    const cargoArgs = ["build", "-p", crateName, "--bin", "semio-wgpu-native", "--features", "native-bin"];
-    if (ship) cargoArgs.push("--release");
-    if (runCmdStatus("cargo", cargoArgs, { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
-      throw new Error("native wgpu renderer build failed");
-    }
-    if (segments.includes("--scale")) {
-      console.log("built native wgpu renderer (scale-bench mode — no plugin catalog build)");
-      return;
-    }
-    const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || "s";
-    const osDevScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
-    // Recurses into os/dev's own `program` build loop, whose per-plugin `cargo build` calls are individually budgeted.
-    const program = runCmdStatus("bun", [osDevScript, "plugin", filterPlugin], {
-      cwd: join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"),
-      env: { ...process.env, SEMIO_RENDERER: "wgpu", SEMIO_PLUGIN: filterPlugin },
-      ...orchestratorBudgetOpts(),
-    });
-    if (program !== 0) throw new Error(`wasm program build failed: ${filterPlugin}`);
-    console.log(`built native wgpu renderer and wasm programs for ${filterPlugin}`);
+  async run([profile, ...args]: string[]): Promise<void> {
+    if (!["dev", "release"].includes(profile) || args.length) throw new Error("Select native-build or native-build-release through Nx without additional arguments");
+    await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["-p", crateName, "--bin", "semio-wgpu-native", "--features", "native-bin", ...(profile === "release" ? ["--release"] : [])], repoRoot, { output: `dist/native-${profile}` });
   }
 }
 
 class NativeRunScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const ship = segments.includes("--dist") || segments.includes("--release");
+  async run([profile, ...segments]: string[]): Promise<void> {
+    if (!["dev", "release"].includes(profile) || segments.some((argument) => argument === "--release" || argument === "--dist")) throw new Error("Select native or native-release through Nx");
+    const ship = profile === "release";
+    const executable = nativeBinaryPath(ship);
     if (segments.includes("--scale")) {
-      await new NativeBuildScript(this.root).run(segments);
-      if (runNativeBinary(nativeBinaryPath(ship), scaleModePassthroughArgs(segments), process.env) !== 0) {
+      if (runNativeBinary(executable, scaleModePassthroughArgs(segments), process.env) !== 0) {
         throw new Error("native wgpu scale-bench run failed");
       }
       return;
     }
     const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || "s";
-    const buildSegments = segments[0] ? segments : [filterPlugin];
-    await new NativeBuildScript(this.root).run(buildSegments);
+    const osDevScript = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
+    if (runCmdStatus("bun", [osDevScript, "plugin", filterPlugin], { cwd: repoRoot, env: { ...process.env, SEMIO_RENDERER: "wgpu", SEMIO_PLUGIN: filterPlugin }, ...orchestratorBudgetOpts() }) !== 0) throw new Error(`Plugin preparation failed: ${filterPlugin}`);
     ensureAssetServer(filterPlugin);
     const nativeEnv = nativeRunnerEnvironment(process.env);
     nativeEnv.SEMIO_PLUGIN_MODULES = pluginOutRoot;
@@ -355,7 +340,7 @@ class NativeRunScript extends BundleScript {
     // through to `semio-wgpu-native` (boots headless, dumps the widget tree as JSON, exits) instead of
     // opening a real window; an honest way to drive/observe this shell in an environment that cannot.
     const smokeArgs = segments.includes("--smoke") ? ["--smoke"] : [];
-    if (runNativeBinary(nativeBinaryPath(ship), ["--plugin", filterPlugin, ...appArgs, ...smokeArgs], nativeEnv) !== 0) {
+    if (runNativeBinary(executable, ["--plugin", filterPlugin, ...appArgs, ...smokeArgs], nativeEnv) !== 0) {
       throw new Error("native wgpu renderer run failed");
     }
   }

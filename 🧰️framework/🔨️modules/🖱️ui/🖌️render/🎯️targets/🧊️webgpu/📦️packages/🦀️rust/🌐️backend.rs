@@ -167,23 +167,6 @@ impl WebGpuBackend {
         self.depth_view = self.depth_texture.create_view(&wgpu::TextureViewDescriptor::default());
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn map_surface_error(&mut self, error: wgpu::SurfaceError) -> Result<RenderReport, BackendError> {
-        match error {
-            wgpu::SurfaceError::Timeout => Ok(RenderReport::SkippedOutOfDate),
-            wgpu::SurfaceError::Outdated => Ok(RenderReport::SkippedOutOfDate),
-            wgpu::SurfaceError::Lost => {
-                self.health = DeviceHealth::Lost(LossReason::Surface);
-                Err(BackendError::SurfaceLost)
-            }
-            wgpu::SurfaceError::OutOfMemory => Err(BackendError::OutOfMemory),
-            wgpu::SurfaceError::Other => {
-                self.health = DeviceHealth::Lost(LossReason::Surface);
-                Err(BackendError::SurfaceLost)
-            }
-        }
-    }
-
     #[cfg(feature = "backend-testing")]
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn kick_off_readback(&mut self, texture: &wgpu::Texture, width: u32, height: u32) {
@@ -239,12 +222,17 @@ impl GraphicsBackend for WebGpuBackend {
         }
 
         let frame = match self.surface.get_current_texture() {
-            Ok(frame) => frame,
-            Err(error) => return self.map_surface_error(error),
+            wgpu::CurrentSurfaceTexture::Success(frame) => frame,
+            wgpu::CurrentSurfaceTexture::Suboptimal(frame) => {
+                self.health = DeviceHealth::Suboptimal;
+                frame
+            }
+            wgpu::CurrentSurfaceTexture::Timeout | wgpu::CurrentSurfaceTexture::Occluded | wgpu::CurrentSurfaceTexture::Outdated => return Ok(RenderReport::SkippedOutOfDate),
+            wgpu::CurrentSurfaceTexture::Lost | wgpu::CurrentSurfaceTexture::Validation => {
+                self.health = DeviceHealth::Lost(LossReason::Surface);
+                return Err(BackendError::SurfaceLost);
+            }
         };
-        if frame.suboptimal && !matches!(self.health, DeviceHealth::Lost(_)) {
-            self.health = DeviceHealth::Suboptimal;
-        }
         let view = frame.texture.create_view(&wgpu::TextureViewDescriptor { format: Some(self.view_format), ..Default::default() });
 
         let width = self.state.size.width;

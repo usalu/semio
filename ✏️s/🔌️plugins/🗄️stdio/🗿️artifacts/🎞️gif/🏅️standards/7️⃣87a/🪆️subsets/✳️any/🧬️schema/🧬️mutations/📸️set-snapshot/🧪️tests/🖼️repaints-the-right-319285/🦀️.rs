@@ -26,13 +26,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> GifSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> GifSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> GifMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// ▶️ `set-snapshot` carries the committed `before` GifSnapshot to exactly the committed `after`.
@@ -75,12 +75,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: GifSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: GifSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "set-snapshot/repaints-the-right-pixel-of-the-single-image: committed {side} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "set-snapshot/repaints-the-right-pixel-of-the-single-image: committed mutation JSON is not canonical");
 }
@@ -98,7 +98,7 @@ async fn declared_outcome_holds() {
         .messages()
         .iter()
         .map(|message| {
-            let level = serde_json::to_value(message.level).expect("severity encodes");
+            let level = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&message.level)).expect("severity encodes");
             (level.as_str().unwrap_or_default().to_string(), message.code.0.clone())
         })
         .collect();
@@ -119,7 +119,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let raised = <GifMutation as protocol::Mutation<GifSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(raised.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(raised.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-snapshot/repaints-the-right-pixel-of-the-single-image: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert!(raised.diff().width.is_none() && raised.diff().height.is_none(), "set-snapshot/repaints-the-right-pixel-of-the-single-image: the logical screen descriptor does not move");
@@ -135,8 +135,8 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to GifDiff.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: GifDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let decoded: GifDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-snapshot/repaints-the-right-pixel-of-the-single-image: committed diff JSON is not canonical");
     assert!(decoded.gct.is_none(), "set-snapshot/repaints-the-right-pixel-of-the-single-image: the tri-state gct slot must round-trip as absent — a committed null would collapse the Some(None) 'global table dropped' state that Option<Option<GifColorTable>> cannot express in JSON");
@@ -146,7 +146,7 @@ async fn committed_diff_is_canonical() {
 /// a complete description of what this `set-snapshot` changed, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: GifDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: GifDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <GifDiff as protocol::MutationDiff<GifSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-snapshot/repaints-the-right-pixel-of-the-single-image: committed diff did not carry before to after");
 }

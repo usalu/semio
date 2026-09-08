@@ -164,7 +164,7 @@ pub fn native_surface_to_brep(s: &Surface) -> BrepSurface {
         Surface::Torus { frame, major_radius, minor_radius } => BrepSurface::Torus { center: pnt3_to_point3(frame.origin), axis: vec3_to_point3(frame.z), major_radius: *major_radius, minor_radius: *minor_radius },
         Surface::Nurbs { u_knots, v_knots, controls, weights } => {
             let u = controls.len();
-            let v = controls.first().map(|row| row.len()).unwrap_or(0);
+            let v = controls.first().map_or(0, |row| row.len());
             let mut control_points = Vec::with_capacity(u * v);
             let mut flat_weights = Vec::with_capacity(u * v);
             for row_c in controls {

@@ -26,6 +26,9 @@
 //! rewiring this file's `BrepKernel` impl, which is out of scope here (see `📌️important.md`,
 //! "BrepKernel — do NOT attempt"). Relocated verbatim only, to satisfy the crate-direction law
 //! now that arena/topo/euler/history/primitives moved into this same crate too.
+/// 🧱 Vertex positions with outer and inner vertex loops for each face.
+pub type SolidFaceLoops = (Vec<[f32; 3]>, Vec<(Vec<u32>, Vec<Vec<u32>>)>);
+
 
 use std::collections::HashMap;
 
@@ -470,11 +473,11 @@ fn vec3(v: EVec3) -> NativeVec3 {
     NativeVec3::new(v[0], v[1], v[2])
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn map_err(e: KernelError) -> BrepError {
+fn map_err(e: &KernelError) -> BrepError {
     BrepError::Operation(e.to_string())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn map_step(e: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::StepError) -> BrepError {
+fn map_step(e: &crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::StepError) -> BrepError {
     BrepError::Operation(e.to_string())
 }
 
@@ -669,38 +672,38 @@ impl Brep {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn box_prim_sync(&mut self, width: f64, depth: f64, height: f64) -> Result<GeometryHandle, BrepError> {
         let mut rec = OpRecorder::new();
-        let solid = make_box(&mut self.body, width, depth, height, &mut rec).map_err(map_err)?;
+        let solid = make_box(&mut self.body, width, depth, height, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn sphere_prim_sync(&mut self, radius: f64) -> Result<GeometryHandle, BrepError> {
         let mut rec = OpRecorder::new();
-        let solid = make_sphere(&mut self.body, radius, &mut rec).map_err(map_err)?;
+        let solid = make_sphere(&mut self.body, radius, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn cylinder_prim_sync(&mut self, radius: f64, height: f64) -> Result<GeometryHandle, BrepError> {
         let mut rec = OpRecorder::new();
-        let solid = make_cylinder(&mut self.body, radius, height, &mut rec).map_err(map_err)?;
+        let solid = make_cylinder(&mut self.body, radius, height, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn cone_prim_sync(&mut self, radius: f64, height: f64) -> Result<GeometryHandle, BrepError> {
         let mut rec = OpRecorder::new();
-        let solid = make_cone(&mut self.body, radius, height, &mut rec).map_err(map_err)?;
+        let solid = make_cone(&mut self.body, radius, height, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn torus_prim_sync(&mut self, major: f64, minor: f64) -> Result<GeometryHandle, BrepError> {
         let mut rec = OpRecorder::new();
-        let solid = make_torus(&mut self.body, major, minor, &mut rec).map_err(map_err)?;
+        let solid = make_torus(&mut self.body, major, minor, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn convex_hull_sync(&mut self, points: &[EVec3]) -> Result<GeometryHandle, BrepError> {
         let pts: Vec<Pnt3> = points.iter().copied().map(pnt).collect();
         let mut rec = OpRecorder::new();
-        let solid = make_convex_hull(&mut self.body, &pts, &mut rec).map_err(map_err)?;
+        let solid = make_convex_hull(&mut self.body, &pts, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -737,19 +740,19 @@ impl Brep {
     pub fn polyline_wire_sync(&mut self, points: &[EVec3]) -> Result<GeometryHandle, BrepError> {
         let pts: Vec<Pnt3> = points.iter().copied().map(pnt).collect();
         let mut rec = OpRecorder::new();
-        let wire = make_polyline_wire(&mut self.body, &pts, false, &mut rec).map_err(map_err)?;
+        let wire = make_polyline_wire(&mut self.body, &pts, false, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_wire(wire))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn rectangle_wire_sync(&mut self, width: f64, height: f64) -> Result<GeometryHandle, BrepError> {
         let mut rec = OpRecorder::new();
-        let wire = make_rectangle_wire(&mut self.body, width, height, &mut rec).map_err(map_err)?;
+        let wire = make_rectangle_wire(&mut self.body, width, height, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_wire(wire))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn regular_polygon_wire_sync(&mut self, radius: f64, sides: usize) -> Result<GeometryHandle, BrepError> {
         let mut rec = OpRecorder::new();
-        let wire = make_regular_polygon_wire(&mut self.body, radius, sides, &mut rec).map_err(map_err)?;
+        let wire = make_regular_polygon_wire(&mut self.body, radius, sides, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_wire(wire))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -794,15 +797,15 @@ impl Brep {
     pub fn planar_face_from_points_sync(&mut self, points: &[EVec3]) -> Result<GeometryHandle, BrepError> {
         let pts: Vec<Pnt3> = points.iter().copied().map(pnt).collect();
         let mut rec = OpRecorder::new();
-        let face = make_planar_face_from_points(&mut self.body, &pts, &mut rec).map_err(map_err)?;
+        let face = make_planar_face_from_points(&mut self.body, &pts, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_face(face))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn planar_face_from_wire_sync(&mut self, wire: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let w = self.wire_ref(wire)?.clone();
-        let origin = self.body.vertices.get(w.vertices[0]).map(|v| v.position).unwrap_or(Pnt3::new(0.0, 0.0, 0.0));
+        let origin = self.body.vertices.get(w.vertices[0]).map_or(Pnt3::new(0.0, 0.0, 0.0), |v| v.position);
         let mut rec = OpRecorder::new();
-        let face = make_planar_face_from_wire(&mut self.body, &w, origin, NativeVec3::Z, &mut rec).map_err(map_err)?;
+        let face = make_planar_face_from_wire(&mut self.body, &w, origin, NativeVec3::Z, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_face(face))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -837,14 +840,14 @@ impl Brep {
     pub fn offset_face_sync(&mut self, face: &GeometryHandle, distance: f64) -> Result<GeometryHandle, BrepError> {
         let id = self.face_id(face)?;
         let mut rec = OpRecorder::new();
-        let out = offset_face(&mut self.body, id, distance, &mut rec).map_err(map_err)?;
+        let out = offset_face(&mut self.body, id, distance, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_face(out))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn thicken_face_sync(&mut self, face: &GeometryHandle, thickness: f64) -> Result<GeometryHandle, BrepError> {
         let id = self.face_id(face)?;
         let mut rec = OpRecorder::new();
-        let solid = thicken_face(&mut self.body, id, thickness, &mut rec).map_err(map_err)?;
+        let solid = thicken_face(&mut self.body, id, thickness, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -858,14 +861,14 @@ impl Brep {
     pub fn extrude_sync(&mut self, face: &GeometryHandle, direction: EVec3, distance: f64) -> Result<GeometryHandle, BrepError> {
         let id = self.face_id(face)?;
         let mut rec = OpRecorder::new();
-        let solid = extrude_face(&mut self.body, id, vec3(direction), distance, &mut rec).map_err(map_err)?;
+        let solid = extrude_face(&mut self.body, id, vec3(direction), distance, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn revolve_sync(&mut self, face: &GeometryHandle, axis_origin: EVec3, axis_direction: EVec3, angle: f64) -> Result<GeometryHandle, BrepError> {
         let id = self.face_id(face)?;
         let mut rec = OpRecorder::new();
-        let solid = revolve_face(&mut self.body, id, pnt(axis_origin), vec3(axis_direction), angle, &mut rec).map_err(map_err)?;
+        let solid = revolve_face(&mut self.body, id, pnt(axis_origin), vec3(axis_direction), angle, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -875,7 +878,7 @@ impl Brep {
             faces.push(self.face_id(p)?);
         }
         let mut rec = OpRecorder::new();
-        let solid = loft_profiles(&mut self.body, &faces, smooth, &mut rec).map_err(map_err)?;
+        let solid = loft_profiles(&mut self.body, &faces, smooth, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -883,7 +886,7 @@ impl Brep {
         let face = self.face_id(profile)?;
         let wire = self.wire_ref(path)?.clone();
         let mut rec = OpRecorder::new();
-        let solid = sweep_along_path(&mut self.body, face, &wire, &mut rec).map_err(map_err)?;
+        let solid = sweep_along_path(&mut self.body, face, &wire, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -895,14 +898,14 @@ impl Brep {
             None => None,
         };
         let mut rec = OpRecorder::new();
-        let solid = pipe(&mut self.body, face, &wire, g.as_ref(), &mut rec).map_err(map_err)?;
+        let solid = pipe(&mut self.body, face, &wire, g.as_ref(), &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn helical_sweep_sync(&mut self, profile: &GeometryHandle, axis_origin: EVec3, axis_dir: EVec3, radius: f64, pitch: f64, turns: f64) -> Result<GeometryHandle, BrepError> {
         let face = self.face_id(profile)?;
         let mut rec = OpRecorder::new();
-        let solid = helical_sweep(&mut self.body, face, pnt(axis_origin), vec3(axis_dir), radius, pitch, turns, &mut rec).map_err(map_err)?;
+        let solid = helical_sweep(&mut self.body, face, (pnt(axis_origin), vec3(axis_dir)), radius, pitch, turns, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -910,7 +913,7 @@ impl Brep {
         let sa = self.solid_id(a)?;
         let sb = self.solid_id(b)?;
         let mut rec = OpRecorder::new();
-        let solid = boolean_solid(&mut self.body, sa, sb, BooleanOp::Unite, 1e-6, &mut rec).map_err(map_err)?;
+        let solid = boolean_solid(&mut self.body, sa, sb, BooleanOp::Unite, 1e-6, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -918,7 +921,7 @@ impl Brep {
         let sa = self.solid_id(a)?;
         let sb = self.solid_id(b)?;
         let mut rec = OpRecorder::new();
-        let solid = boolean_solid(&mut self.body, sa, sb, BooleanOp::Cut, 1e-6, &mut rec).map_err(map_err)?;
+        let solid = boolean_solid(&mut self.body, sa, sb, BooleanOp::Cut, 1e-6, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -926,7 +929,7 @@ impl Brep {
         let sa = self.solid_id(a)?;
         let sb = self.solid_id(b)?;
         let mut rec = OpRecorder::new();
-        let solid = boolean_solid(&mut self.body, sa, sb, BooleanOp::Intersect, 1e-6, &mut rec).map_err(map_err)?;
+        let solid = boolean_solid(&mut self.body, sa, sb, BooleanOp::Intersect, 1e-6, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -937,7 +940,7 @@ impl Brep {
             ids.push(self.solid_id(tool)?);
         }
         let mut rec = OpRecorder::new();
-        let solid = compound_cut(&mut self.body, t, &ids, 1e-6, &mut rec).map_err(map_err)?;
+        let solid = compound_cut(&mut self.body, t, &ids, 1e-6, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     /// 🔁 Dispatches an exact affine transform to whichever geometry kind `shape` resolves to: a
@@ -949,11 +952,11 @@ impl Brep {
     fn transform_shape_sync(&mut self, shape: &GeometryHandle, map: &Affine3) -> Result<GeometryHandle, BrepError> {
         let mut rec = OpRecorder::new();
         if let Ok(id) = self.solid_id(shape) {
-            let out = transform_solid(&mut self.body, id, map, &mut rec).map_err(map_err)?;
+            let out = transform_solid(&mut self.body, id, map, &mut rec).map_err(|error| map_err(&error))?;
             return Ok(self.register_solid(out));
         }
         if let Ok(id) = self.face_id(shape) {
-            let out = transform_face(&mut self.body, id, map, &mut rec).map_err(map_err)?;
+            let out = transform_face(&mut self.body, id, map, &mut rec).map_err(|error| map_err(&error))?;
             return Ok(self.register_face(out));
         }
         if let Ok(wire) = self.wire_ref(shape) {
@@ -1001,7 +1004,7 @@ impl Brep {
     pub fn copy_shape_sync(&mut self, shape: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         if let Ok(id) = self.solid_id(shape) {
             let mut rec = OpRecorder::new();
-            let out = copy_solid(&mut self.body, id, &mut rec).map_err(map_err)?;
+            let out = copy_solid(&mut self.body, id, &mut rec).map_err(|error| map_err(&error))?;
             return Ok(self.register_solid(out));
         }
         self.transform_shape_sync(shape, &Affine3::IDENTITY)
@@ -1028,7 +1031,7 @@ impl Brep {
         Ok(current)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn grid_pattern_sync(&mut self, shape: &GeometryHandle, dir_x: EVec3, dir_y: EVec3, spacing_x: f64, spacing_y: f64, count_x: usize, count_y: usize) -> Result<GeometryHandle, BrepError> {
+    pub fn grid_pattern_sync(&mut self, shape: &GeometryHandle, dir_x: EVec3, dir_y: EVec3, (spacing_x, spacing_y): (f64, f64), count_x: usize, count_y: usize) -> Result<GeometryHandle, BrepError> {
         let mut current = shape.clone();
         for i in 0..count_x.max(1) {
             for j in 0..count_y.max(1) {
@@ -1047,7 +1050,7 @@ impl Brep {
         let solid = self.solid_id(shape)?;
         let edges = all_edges(&self.body, solid);
         let mut rec = OpRecorder::new();
-        let out = fillet_edges(&mut self.body, solid, &edges, radius, &mut rec).map_err(map_err)?;
+        let out = fillet_edges(&mut self.body, solid, &edges, radius, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(out))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -1056,7 +1059,7 @@ impl Brep {
         let edges = all_edges(&self.body, solid);
         let e = *edges.first().ok_or_else(|| BrepError::InvalidInput("no edges".into()))?;
         let mut rec = OpRecorder::new();
-        let out = fillet_variable(&mut self.body, solid, e, radius_start, radius_end, &mut rec).map_err(map_err)?;
+        let out = fillet_variable(&mut self.body, solid, e, radius_start, radius_end, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(out))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -1070,7 +1073,7 @@ impl Brep {
             eids = all_edges(&self.body, solid);
         }
         let mut rec = OpRecorder::new();
-        let out = fillet_edges(&mut self.body, solid, &eids, radius, &mut rec).map_err(map_err)?;
+        let out = fillet_edges(&mut self.body, solid, &eids, radius, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(out))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -1078,7 +1081,7 @@ impl Brep {
         let solid = self.solid_id(shape)?;
         let edges = all_edges(&self.body, solid);
         let mut rec = OpRecorder::new();
-        let out = chamfer_edges(&mut self.body, solid, &edges, distance, distance, &mut rec).map_err(map_err)?;
+        let out = chamfer_edges(&mut self.body, solid, &edges, distance, distance, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(out))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -1086,7 +1089,7 @@ impl Brep {
         let solid = self.solid_id(shape)?;
         let edges = all_edges(&self.body, solid);
         let mut rec = OpRecorder::new();
-        let out = chamfer_edges(&mut self.body, solid, &edges, d1, d2, &mut rec).map_err(map_err)?;
+        let out = chamfer_edges(&mut self.body, solid, &edges, d1, d2, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(out))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -1100,7 +1103,7 @@ impl Brep {
             eids = all_edges(&self.body, solid);
         }
         let mut rec = OpRecorder::new();
-        let out = chamfer_edges(&mut self.body, solid, &eids, distance, distance, &mut rec).map_err(map_err)?;
+        let out = chamfer_edges(&mut self.body, solid, &eids, distance, distance, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(out))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -1108,7 +1111,7 @@ impl Brep {
         let solid = self.solid_id(shape)?;
         let open_ids: Vec<_> = open_faces.iter().filter_map(|h| self.face_id(h).ok()).collect();
         let mut rec = OpRecorder::new();
-        let out = shell_solid_with_open_faces(&mut self.body, solid, thickness.abs(), &open_ids, &mut rec).map_err(map_err)?;
+        let out = shell_solid_with_open_faces(&mut self.body, solid, thickness.abs(), &open_ids, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(out))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -1122,14 +1125,14 @@ impl Brep {
             fids = self.body.solid_faces(solid);
         }
         let mut rec = OpRecorder::new();
-        let out = draft_angle(&mut self.body, solid, &fids, vec3(pull_direction), pnt(neutral_point), vec3(pull_direction), angle, &mut rec).map_err(map_err)?;
+        let out = draft_angle(&mut self.body, solid, &fids, vec3(pull_direction), (pnt(neutral_point), vec3(pull_direction)), angle, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(out))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn offset_solid_sync(&mut self, shape: &GeometryHandle, distance: f64) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let mut rec = OpRecorder::new();
-        let out = offset_solid(&mut self.body, solid, distance, &mut rec).map_err(map_err)?;
+        let out = offset_solid(&mut self.body, solid, distance, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(out))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -1140,21 +1143,21 @@ impl Brep {
             fids.push(self.face_id(f)?);
         }
         let mut rec = OpRecorder::new();
-        let out = defeature(&mut self.body, solid, &fids, &mut rec).map_err(map_err)?;
+        let out = defeature(&mut self.body, solid, &fids, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(out))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn section_sync(&mut self, solid: &GeometryHandle, plane_origin: EVec3, plane_normal: EVec3) -> Result<Vec<GeometryHandle>, BrepError> {
         let id = self.solid_id(solid)?;
         let mut rec = OpRecorder::new();
-        let faces = section_solid_by_plane(&mut self.body, id, pnt(plane_origin), vec3(plane_normal), 1e-6, &mut rec).map_err(map_err)?;
+        let faces = section_solid_by_plane(&mut self.body, id, pnt(plane_origin), vec3(plane_normal), 1e-6, &mut rec).map_err(|error| map_err(&error))?;
         Ok(faces.into_iter().map(|f| self.register_face(f)).collect())
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn split_sync(&mut self, solid: &GeometryHandle, plane_origin: EVec3, plane_normal: EVec3) -> Result<(GeometryHandle, GeometryHandle), BrepError> {
         let id = self.solid_id(solid)?;
         let mut rec = OpRecorder::new();
-        let (a, b) = split_solid_by_plane(&mut self.body, id, pnt(plane_origin), vec3(plane_normal), 1e-6, &mut rec).map_err(map_err)?;
+        let (a, b) = split_solid_by_plane(&mut self.body, id, pnt(plane_origin), vec3(plane_normal), 1e-6, &mut rec).map_err(|error| map_err(&error))?;
         Ok((self.register_solid(a), self.register_solid(b)))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -1228,30 +1231,30 @@ impl Brep {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn volume_sync(&self, shape: &GeometryHandle) -> Result<f64, BrepError> {
         let solid = self.solid_id(shape)?;
-        solid_volume(&self.body, solid, 1e-4).map_err(map_err)
+        solid_volume(&self.body, solid, 1e-4).map_err(|error| map_err(&error))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn area_sync(&self, shape: &GeometryHandle) -> Result<f64, BrepError> {
         match self.entity(shape)? {
-            Entity::Solid(id) => solid_surface_area(&self.body, *id, 1e-4).map_err(map_err),
-            Entity::Face(id) => face_area(&self.body, *id, 1e-4).map_err(map_err),
+            Entity::Solid(id) => solid_surface_area(&self.body, *id, 1e-4).map_err(|error| map_err(&error)),
+            Entity::Face(id) => face_area(&self.body, *id, 1e-4).map_err(|error| map_err(&error)),
             _ => Err(BrepError::InvalidInput("area requires solid or face".into())),
         }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn length_sync(&self, shape: &GeometryHandle) -> Result<f64, BrepError> {
         let edge = self.edge_id(shape)?;
-        edge_length(&self.body, edge).map_err(map_err)
+        edge_length(&self.body, edge).map_err(|error| map_err(&error))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn center_of_mass_sync(&self, shape: &GeometryHandle) -> Result<EVec3, BrepError> {
         let solid = self.solid_id(shape)?;
-        Ok(evec(solid_center_of_mass(&self.body, solid, 1e-4).map_err(map_err)?))
+        Ok(evec(solid_center_of_mass(&self.body, solid, 1e-4).map_err(|error| map_err(&error))?))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn bounding_box_sync(&mut self, shape: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
-        let bb = solid_bounding_box(&self.body, solid).map_err(map_err)?;
+        let bb = solid_bounding_box(&self.body, solid).map_err(|error| map_err(&error))?;
         let corners = [
             evec(bb.min),
             evec(Pnt3::new(bb.max.x, bb.min.y, bb.min.z)),
@@ -1268,7 +1271,7 @@ impl Brep {
     pub fn distance_sync(&self, a: &GeometryHandle, b: &GeometryHandle) -> Result<f64, BrepError> {
         let sa = self.solid_id(a)?;
         let sb = self.solid_id(b)?;
-        distance_solid_solid(&self.body, sa, sb).map_err(map_err)
+        distance_solid_solid(&self.body, sa, sb).map_err(|error| map_err(&error))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn closest_point_sync(&self, shape: &GeometryHandle, point: EVec3) -> Result<ClosestPoint, BrepError> {
@@ -1283,7 +1286,7 @@ impl Brep {
             }
             _ => {
                 let solid = self.solid_id(shape)?;
-                let (p, d) = closest_point_on_solid(&self.body, solid, pnt(point)).map_err(map_err)?;
+                let (p, d) = closest_point_on_solid(&self.body, solid, pnt(point)).map_err(|error| map_err(&error))?;
                 Ok(ClosestPoint { distance: d, point: evec(p), parameter: None, uv: None })
             }
         }
@@ -1291,7 +1294,7 @@ impl Brep {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn classify_point_sync(&self, solid: &GeometryHandle, point: EVec3) -> Result<PointClassification, BrepError> {
         let id = self.solid_id(solid)?;
-        point_in_solid(&self.body, id, pnt(point), 1e-6).map_err(map_err)
+        point_in_solid(&self.body, id, pnt(point), 1e-6).map_err(|error| map_err(&error))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn validate_sync(&self, shape: &GeometryHandle) -> Result<String, BrepError> {
@@ -1325,21 +1328,21 @@ impl Brep {
             fids.push(self.face_id(f)?);
         }
         let mut rec = OpRecorder::new();
-        let solid = sew_faces(&mut self.body, &fids, tolerance, &mut rec).map_err(map_err)?;
+        let solid = sew_faces(&mut self.body, &fids, tolerance, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn heal_solid_sync(&mut self, shape: &GeometryHandle, tolerance: f64) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let mut rec = OpRecorder::new();
-        let _ = heal_solid(&mut self.body, solid, tolerance, &mut rec).map_err(map_err)?;
+        let _ = heal_solid(&mut self.body, solid, tolerance, &mut rec).map_err(|error| map_err(&error))?;
         Ok(shape.clone())
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn convert_to_nurbs_sync(&mut self, shape: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let mut rec = OpRecorder::new();
-        let _ = convert_to_nurbs(&mut self.body, solid, &mut rec).map_err(map_err)?;
+        let _ = convert_to_nurbs(&mut self.body, solid, &mut rec).map_err(|error| map_err(&error))?;
         Ok(shape.clone())
     }
     /// 🏷️ Deterministic per (label, kind) minting (see [`Brep::mint`]) makes this idempotent: two
@@ -1379,17 +1382,17 @@ impl Brep {
         for s in shapes {
             solids.push(self.solid_id(s)?);
         }
-        write_step(&self.body, &solids).map_err(map_step)
+        write_step(&self.body, &solids).map_err(|error| map_step(&error))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn export_stl_sync(&self, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
         let solid = self.solid_id(shapes.first().ok_or_else(|| BrepError::InvalidInput("empty".into()))?)?;
-        export_solid_stl(&self.body, solid, deflection).map_err(map_err)
+        export_solid_stl(&self.body, solid, deflection).map_err(|error| map_err(&error))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn export_obj_sync(&self, shapes: &[GeometryHandle], deflection: f64) -> Result<String, BrepError> {
         let solid = self.solid_id(shapes.first().ok_or_else(|| BrepError::InvalidInput("empty".into()))?)?;
-        export_solid_obj(&self.body, solid, deflection).map_err(map_err)
+        export_solid_obj(&self.body, solid, deflection).map_err(|error| map_err(&error))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn export_gltf_sync(&self, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
@@ -1398,11 +1401,11 @@ impl Brep {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn export_glb_sync(&self, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
         let solid = self.solid_id(shapes.first().ok_or_else(|| BrepError::InvalidInput("empty".into()))?)?;
-        export_solid_glb(&self.body, solid, deflection).map_err(map_err)
+        export_solid_glb(&self.body, solid, deflection).map_err(|error| map_err(&error))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn import_glb_sync(&mut self, data: &[u8], tolerance: f64) -> Result<GeometryHandle, BrepError> {
-        let solid = import_glb_to_body(&mut self.body, data, tolerance).map_err(map_err)?;
+        let solid = import_glb_to_body(&mut self.body, data, tolerance).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     /// 🧩️ Merges the imported body into `self.body` (see [`Body::merge`]) rather than replacing
@@ -1410,29 +1413,29 @@ impl Brep {
     /// is renumbered or dropped; only the freshly imported solids get new handles.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn import_step_sync(&mut self, text: &str) -> Result<Vec<GeometryHandle>, BrepError> {
-        let imported = read_step(text).map_err(map_step)?;
+        let imported = read_step(text).map_err(|error| map_step(&error))?;
         let imported_solid_ids: Vec<_> = imported.solids.ids().collect();
         let map = self.body.merge(&imported);
         Ok(imported_solid_ids.into_iter().map(|id| self.register_solid(map.solids[&id])).collect())
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn import_stl_sync(&mut self, data: &[u8], tolerance: f64) -> Result<GeometryHandle, BrepError> {
-        let solid = import_stl_to_body(&mut self.body, data, tolerance).map_err(map_err)?;
+        let solid = import_stl_to_body(&mut self.body, data, tolerance).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn import_obj_sync(&mut self, text: &str, tolerance: f64) -> Result<GeometryHandle, BrepError> {
-        let solid = import_obj_to_body(&mut self.body, text, tolerance).map_err(map_err)?;
+        let solid = import_obj_to_body(&mut self.body, text, tolerance).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn export_mesh_sync(&self, shapes: &[GeometryHandle], deflection: f64, exporter: &dyn semio_framework_mesh_engine::MeshExporter) -> Result<Vec<u8>, BrepError> {
         let solid = self.solid_id(shapes.first().ok_or_else(|| BrepError::InvalidInput("empty".into()))?)?;
-        export_solid_mesh(&self.body, solid, deflection, exporter).map_err(map_err)
+        export_solid_mesh(&self.body, solid, deflection, exporter).map_err(|error| map_err(&error))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn import_mesh_sync(&mut self, data: &[u8], tolerance: f64, importer: &dyn semio_framework_mesh_engine::MeshImporter) -> Result<GeometryHandle, BrepError> {
-        let solid = import_mesh_to_body(&mut self.body, data, tolerance, importer).map_err(map_err)?;
+        let solid = import_mesh_to_body(&mut self.body, data, tolerance, importer).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -1451,7 +1454,7 @@ impl Brep {
     }
     /// 🧠 Face outer/hole loops as position indices into the returned vertex buffer.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn solid_face_loops_sync(&self, shape: &GeometryHandle) -> Result<(Vec<[f32; 3]>, Vec<(Vec<u32>, Vec<Vec<u32>>)>), BrepError> {
+    pub fn solid_face_loops_sync(&self, shape: &GeometryHandle) -> Result<SolidFaceLoops, BrepError> {
         let solid = self.solid_id(shape)?;
         let mut vertex_to_index: HashMap<u32, u32> = HashMap::new();
         let mut positions: Vec<[f32; 3]> = Vec::new();
@@ -1493,9 +1496,9 @@ impl Brep {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn tessellate_sync(&self, shape: &GeometryHandle, deflection: f64) -> Result<MeshTransfer, BrepError> {
         match self.entity(shape)? {
-            Entity::Solid(id) => tessellate_solid(&self.body, *id, deflection).map_err(map_err),
-            Entity::Face(id) => tessellate_face(&self.body, *id, deflection).map_err(map_err),
-            Entity::Wire(wire, _) => tessellate_wire(&self.body, wire, deflection).map_err(map_err),
+            Entity::Solid(id) => tessellate_solid(&self.body, *id, deflection).map_err(|error| map_err(&error)),
+            Entity::Face(id) => tessellate_face(&self.body, *id, deflection).map_err(|error| map_err(&error)),
+            Entity::Wire(wire, _) => tessellate_wire(&self.body, wire, deflection).map_err(|error| map_err(&error)),
             other => Err(BrepError::InvalidInput(format!("cannot tessellate {}", entity_tag(other)))),
         }
     }
@@ -1752,7 +1755,7 @@ impl BrepKernel for Brep {
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn grid_pattern(&mut self, shape: &GeometryHandle, dir_x: EVec3, dir_y: EVec3, spacing_x: f64, spacing_y: f64, count_x: usize, count_y: usize) -> Result<GeometryHandle, BrepError> {
-        self.grid_pattern_sync(shape, dir_x, dir_y, spacing_x, spacing_y, count_x, count_y)
+        self.grid_pattern_sync(shape, dir_x, dir_y, (spacing_x, spacing_y), count_x, count_y)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn fillet(&mut self, shape: &GeometryHandle, radius: f64) -> Result<GeometryHandle, BrepError> {

@@ -97,7 +97,7 @@ async fn catalog_port_concrete() -> Arc<OsBackbonePorts> {
     // enum, not `store::BackbonePorts` directly — every real transport still routes through the
     // `Store` variant's inner `store::BackbonePorts`.
     let port = Arc::new(OsBackbonePorts::Store(BackbonePorts::LocalStorage(LocalStorageBackbonePort::default())));
-    if list_os_space_catalog_entries(port.clone()).map_or(true, |entries| entries.is_empty()) {
+    if list_os_space_catalog_entries(&port).map_or(true, |entries| entries.is_empty()) {
         // 🧬️ `parse_demo_space_document` yields a `WorkflowSnapshot` (the dissolved `OsProjection`'s
         // workflow-graph half) — the space CATALOG this boot seed populates needs a `SpaceSnapshot`
         // manifest instead. `demo_name` still comes from the bundled fixture's own name; the manifest
@@ -121,7 +121,7 @@ async fn catalog_port_concrete() -> Arc<OsBackbonePorts> {
         // would misattribute ownership of a system-seeded demo space.
         projection.users.push(SpaceUser { id: "local".into(), name: demo_name.clone(), avatar: None, role: SpaceRole::Author });
         let seed: OsSpaceDocument = create_backbone_document(S_SPACE_SCHEMA, OS_BOOT_STUDIO_ID, &demo_name, projection);
-        let _ = seed_os_space_catalog_if_empty(seed, port.clone());
+        let _ = seed_os_space_catalog_if_empty(seed, &port);
     }
     port
 }
@@ -256,7 +256,7 @@ pub async fn resolve_studio_document(space_id: &str) -> Option<OsSpaceDocument> 
         }
     }
     for port in [temp_catalog_port().await, catalog_port().await] {
-        if let Ok(document) = load_os_space_document(space_id, port) {
+        if let Ok(document) = load_os_space_document(space_id, &port) {
             return Some(document);
         }
     }
@@ -411,7 +411,7 @@ pub(crate) async fn list_all_space_catalog_entries() -> Vec<semio_framework_os::
     let mut seen = HashSet::new();
     let mut entries = Vec::new();
     for port in [catalog_port().await, temp_catalog_port().await] {
-        if let Ok(rows) = list_os_space_catalog_entries(port) {
+        if let Ok(rows) = list_os_space_catalog_entries(&port) {
             for entry in rows {
                 if seen.insert(entry.id.clone()) {
                     entries.push(entry);

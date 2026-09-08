@@ -22,13 +22,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioFlowSnapshot {
-    serde_json::from_str(BEFORE).expect("before flow snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("before flow snapshot decodes")
 }
 fn expected_after() -> SemioFlowSnapshot {
-    serde_json::from_str(AFTER).expect("after flow snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("after flow snapshot decodes")
 }
 fn mutation() -> SemioFlowMutation {
-    serde_json::from_str(MUTATION).expect("set-snapshot mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("set-snapshot mutation decodes")
 }
 
 /// ▶️ `set-snapshot` carries the two-node DAG to exactly the committed `after`: node `b` is renamed
@@ -66,12 +66,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioFlowSnapshot = serde_json::from_str(text).expect("flow snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("flow snapshot encodes");
+        let decoded: SemioFlowSnapshot = dsl::json::from_json_str(text).expect("flow snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("flow snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("flow snapshot reparses");
         assert_eq!(reencoded, original, "semio-flow/set-snapshot: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("set-snapshot mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("set-snapshot mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("set-snapshot mutation reparses");
     assert_eq!(reencoded, original, "semio-flow/set-snapshot: committed mutation JSON is not canonical");
 }
@@ -96,7 +96,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioFlowMutation as protocol::Mutation<SemioFlowSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced flow diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced flow diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed flow diff decodes");
     assert_eq!(produced, committed, "semio-flow/set-snapshot: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -105,13 +105,13 @@ async fn produces_committed_diff() {
 /// triple whose single `modified` entry is keyed `"b"`, with nothing removed and nothing added.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: SemioFlowDiff = serde_json::from_str(DIFF).expect("committed flow diff decodes");
+    let decoded: SemioFlowDiff = dsl::json::from_json_str(DIFF).expect("committed flow diff decodes");
     assert!(decoded.edges.is_none(), "semio-flow/set-snapshot: the edge collection must stay untouched");
     let nodes = decoded.nodes.as_ref().expect("the committed diff carries a nodes triple");
     assert!(nodes.removed.is_empty() && nodes.added.is_empty() && nodes.modified.len() == 1 && nodes.modified[0].key == "b", "semio-flow/set-snapshot: exactly node b may be patched, addressed by id");
     let patch = &nodes.modified[0].diff;
     assert!(patch.kind.is_none() && patch.params.is_none(), "semio-flow/set-snapshot: the node's kind and params did not move and must stay absent");
-    let reencoded = serde_json::to_value(&decoded).expect("flow diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("flow diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed flow diff reparses");
     assert_eq!(reencoded, original, "semio-flow/set-snapshot: committed diff JSON is not canonical");
 }
@@ -120,7 +120,7 @@ async fn committed_diff_is_canonical() {
 /// position is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioFlowDiff = serde_json::from_str(DIFF).expect("committed flow diff decodes");
+    let decoded: SemioFlowDiff = dsl::json::from_json_str(DIFF).expect("committed flow diff decodes");
     let produced = <SemioFlowDiff as protocol::MutationDiff<SemioFlowSnapshot>>::apply(&decoded, &before()).expect("committed flow diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "semio-flow/set-snapshot: committed diff did not carry before to after");
 }

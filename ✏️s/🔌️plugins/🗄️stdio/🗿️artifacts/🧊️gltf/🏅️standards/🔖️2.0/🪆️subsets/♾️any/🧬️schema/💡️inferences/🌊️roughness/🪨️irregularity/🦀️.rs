@@ -18,9 +18,7 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn from_raw(context: &GltfGeometryContext<'_>, raw: &super::GltfRoughnessRaw) -> GltfMeasure<f64> {
-    raw.irregularity
-        .map(|value| estimate(value, GltfUnit::Unitless, raw.deviations.len(), Some(context.topology)))
-        .unwrap_or_else(|| unavailable(GltfUnit::Unitless, GltfAvailability::Degenerate, Vec::new(), context.sample_count, Some(context.topology)))
+    raw.irregularity.map_or_else(|| unavailable(GltfUnit::Unitless, GltfAvailability::Degenerate, Vec::new(), context.sample_count, Some(context.topology)), |value| estimate(value, GltfUnit::Unitless, raw.deviations.len(), Some(context.topology)))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

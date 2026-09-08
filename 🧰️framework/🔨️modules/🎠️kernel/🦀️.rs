@@ -1057,6 +1057,7 @@ pub use cold_pair::{ColdDocumentPairApplied, ColdDocumentPairCursor, ColdDocumen
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[expect(clippy::large_enum_variant, reason = "Command ingress carries one fixed bounded page inline; delivery must not allocate an indirect page owner.")]
 pub enum Event {
     /// 🐣️ First event an instance receives — config/assets/capabilities/quotas are preloaded so
     /// the first `poll` never blocks. `actor` is a placeholder `String` until the concurrently
@@ -1343,6 +1344,7 @@ impl UiTurnPatchRetireArena {
         true
     }
 
+    #[expect(clippy::result_large_err, reason = "A refused retirement handback returns the exact patch contents without allocation.")]
     fn handback(&mut self, key: UiTurnPatchRetireKey, contents: UiTurnPatchContents) -> Result<(), UiTurnPatchContents> {
         let Some(slot) = self.slots.get_mut(key.slot).filter(|slot| slot.reserved && slot.epoch == key.epoch && slot.contents.is_none()) else {
             return Err(contents);
@@ -1440,6 +1442,7 @@ impl Default for UiTurnPatchTransportArena {
 }
 
 impl UiTurnPatchTransportArena {
+    #[expect(clippy::result_large_err, reason = "Admission refusal preserves the exact patch owner without allocating.")]
     fn reserve(&mut self, session: u64, owner: UiTurnPatches) -> Result<UiTurnPatchTransportKey, UiTurnPatches> {
         if session == 0 {
             return Err(owner);
@@ -1554,6 +1557,7 @@ pub struct UiTurnPatchTransportProducer {
 }
 
 impl UiTurnPatchTransportProducer {
+    #[expect(clippy::result_large_err, reason = "A contended or full transport arena returns the exact patch owner for retry.")]
     pub fn try_new(session: u64, owner: UiTurnPatches) -> Result<Self, UiTurnPatches> {
         let Ok(mut arena) = UI_TURN_PATCH_TRANSPORT_ARENA.try_lock() else {
             return Err(owner);
@@ -1675,6 +1679,7 @@ impl UiTurnPatchTransportLease {
         Ok(Self { key, owner: Some(owner) })
     }
 
+    #[expect(clippy::result_large_err, reason = "A refused transfer preserves the exact lease and its retirement authority for retry.")]
     pub fn take_owner(mut self) -> Result<UiTurnPatches, Self> {
         let Ok(mut arena) = UI_TURN_PATCH_TRANSPORT_ARENA.try_lock() else {
             return Err(self);
@@ -1743,7 +1748,7 @@ pub fn close_ui_turn_patch_transport_session_one(session: u64) -> Result<UiTurnP
 }
 
 /// 🧰️ The fixed exact-owner patch page emitted by one turn.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct UiTurnPatches {
     contents: UiTurnPatchContents,
     retirement: Option<UiTurnPatchRetireKey>,
@@ -1755,12 +1760,6 @@ pub enum UiTurnPatchTransfer<T> {
     Refused,
 }
 
-impl Default for UiTurnPatches {
-    fn default() -> Self {
-        Self { contents: Default::default(), retirement: None }
-    }
-}
-
 impl PartialEq for UiTurnPatches {
     fn eq(&self, other: &Self) -> bool {
         self.contents.pending.get() == other.contents.pending.get()
@@ -1768,6 +1767,7 @@ impl PartialEq for UiTurnPatches {
 }
 
 impl UiTurnPatches {
+    #[expect(clippy::result_large_err, reason = "Refusal returns the exact fixed patch so the caller retains its retirement obligation.")]
     pub fn try_push_ui_patch(&mut self, patch: UiPatch) -> Result<(), UiPatch> {
         if !self.contents.terminal_is_empty() || self.contents.pending.source_mut().is_err() {
             return Err(patch);

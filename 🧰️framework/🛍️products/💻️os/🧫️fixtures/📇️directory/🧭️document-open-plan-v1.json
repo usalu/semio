@@ -1,5 +1,10 @@
 {
   "formatVersion": 1,
+  "checkpointPresenceCases": [
+    { "kind": "present", "accepted": true },
+    { "kind": "missing", "accepted": false },
+    { "kind": "null", "accepted": false }
+  ],
   "parentDialectNegativeMutations": [
     {
       "path": "parentDialect",

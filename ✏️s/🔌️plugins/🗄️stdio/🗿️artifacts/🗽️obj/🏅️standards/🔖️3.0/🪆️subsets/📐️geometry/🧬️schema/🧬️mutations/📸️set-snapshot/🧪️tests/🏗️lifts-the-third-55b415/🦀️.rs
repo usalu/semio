@@ -26,13 +26,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> ObjSnapshot {
-    serde_json::from_str(BEFORE).expect("before OBJ snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("before OBJ snapshot decodes")
 }
 fn expected_after() -> ObjSnapshot {
-    serde_json::from_str(AFTER).expect("after OBJ snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("after OBJ snapshot decodes")
 }
 fn mutation() -> ObjMutation {
-    serde_json::from_str(MUTATION).expect("set-snapshot mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("set-snapshot mutation decodes")
 }
 
 /// ▶️ `set-snapshot` carries the single-triangle mesh to exactly the committed `after`: vertex 2 is
@@ -71,12 +71,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: ObjSnapshot = serde_json::from_str(text).expect("OBJ snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("OBJ snapshot encodes");
+        let decoded: ObjSnapshot = dsl::json::from_json_str(text).expect("OBJ snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("OBJ snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("OBJ snapshot reparses");
         assert_eq!(reencoded, original, "obj/set-snapshot: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("set-snapshot mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("set-snapshot mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("set-snapshot mutation reparses");
     assert_eq!(reencoded, original, "obj/set-snapshot: committed mutation JSON is not canonical");
 }
@@ -100,7 +100,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <ObjMutation as protocol::Mutation<ObjSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced OBJ diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced OBJ diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed OBJ diff decodes");
     assert_eq!(produced, committed, "obj/set-snapshot: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -109,14 +109,14 @@ async fn produces_committed_diff() {
 /// place, `w` surviving the round trip as `Some(Some(1.0))`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: ObjDiff = serde_json::from_str(DIFF).expect("committed OBJ diff decodes");
+    let decoded: ObjDiff = dsl::json::from_json_str(DIFF).expect("committed OBJ diff decodes");
     assert!(decoded.faces.is_none() && decoded.normals.is_none() && decoded.groups.is_none() && decoded.objects.is_none(), "obj/set-snapshot: no collection other than vertices may be touched");
     assert!(decoded.mtllib.is_none() && decoded.usemtl.is_none() && decoded.smoothing_groups.is_none() && decoded.unknown_statements.is_none(), "obj/set-snapshot: the material, smoothing and raw-retention slots must stay absent");
     let vertices = decoded.vertices.as_ref().expect("the committed diff carries a vertices triple");
     assert!(vertices.removed.is_empty() && vertices.added.is_empty() && vertices.modified.len() == 1 && vertices.modified[0].index == 2, "obj/set-snapshot: exactly vertex 2 may be patched in place");
     assert_eq!(vertices.modified[0].diff.w, Some(Some(1.0)), "obj/set-snapshot: the tri-state w must decode as 'set to 1.0', not as 'unchanged'");
     assert!(vertices.modified[0].diff.x.is_none() && vertices.modified[0].diff.y.is_none(), "obj/set-snapshot: the untouched x/y components must stay absent");
-    let reencoded = serde_json::to_value(&decoded).expect("OBJ diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("OBJ diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed OBJ diff reparses");
     assert_eq!(reencoded, original, "obj/set-snapshot: committed diff JSON is not canonical");
 }
@@ -125,7 +125,7 @@ async fn committed_diff_is_canonical() {
 /// vertex fields are a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: ObjDiff = serde_json::from_str(DIFF).expect("committed OBJ diff decodes");
+    let decoded: ObjDiff = dsl::json::from_json_str(DIFF).expect("committed OBJ diff decodes");
     let produced = <ObjDiff as protocol::MutationDiff<ObjSnapshot>>::apply(&decoded, &before()).expect("committed OBJ diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "obj/set-snapshot: committed diff did not carry before to after");
 }

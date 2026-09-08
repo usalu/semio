@@ -25,7 +25,7 @@ async fn test_restart_registry() -> AppActionRegistry {
         App::builder(TestApp::<true>::APP_ID, LocalizedLabel::data("Restart Fixture"))
             .await.document(["state"])
             .mode("edit", LocalizedLabel::data("Edit"), "pencil").await
-            .window_kind("main", LocalizedLabel::data("Main"), "synthetic.main", semio_framework_ui_contract::SurfaceKind::Canvas2d, IconName::AppWindow).await
+            .window_kind("main", LocalizedLabel::data("Main"), "synthetic.main", SurfaceKind::Canvas2d, IconName::AppWindow).await
             .app_command(TEST_RESTART_TOOL, LocalizedLabel::data("Apply Count From Task"), "task", ActionKind::Mutation).await
             .interactive_jobs(InteractiveJobClassification::Migrated).await,
     ).await;

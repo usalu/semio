@@ -1004,7 +1004,7 @@ mod compliance_helpers_tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    fn zone2_spectrum_sd_at_t1() {
+    async fn zone2_spectrum_sd_at_t1() {
         let a_g = na_de::SeismicZone::Zone2.a_g();
         let (tb, tc, td, s) = na_de::GroundType::B.spectrum_params();
         let s_e = part_1::elastic_response_spectrum_type1(a_g, s, tb, tc, td, 0.3);
@@ -1014,7 +1014,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn zone2_spectrum_sd_at_half_second() {
+    async fn zone2_spectrum_sd_at_half_second() {
         let a_g = na_de::SeismicZone::Zone2.a_g();
         let (tb, tc, td, s) = na_de::GroundType::B.spectrum_params();
         let s_e = part_1::elastic_response_spectrum_type1(a_g, s, tb, tc, td, 0.5);
@@ -1026,7 +1026,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn base_shear_uses_design_spectrum() {
+    async fn base_shear_uses_design_spectrum() {
         let a_g = 0.15;
         let (tb, tc, td, s) = na_de::GroundType::B.spectrum_params();
         let s_e = part_1::elastic_response_spectrum_type1(a_g, s, tb, tc, td, 0.3);
@@ -1041,7 +1041,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn drift_rho_limit() {
+    async fn drift_rho_limit() {
         let rho = part_1::redundancy_factor(false);
         assert!((rho - 1.3).abs() < 1e-9);
         let limit = part_1::drift_limit_mm(12.0, rho, part_1::DuctilityClass::Dcm, 1.0);
@@ -1049,7 +1049,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn building_seismic_base_shear_uses_sd() {
+    async fn building_seismic_base_shear_uses_sd() {
         let a_g = na_de::SeismicZone::Zone2.a_g();
         let (tb, tc, td, s) = na_de::GroundType::B.spectrum_params();
         let s_e = part_1::elastic_response_spectrum_type1(a_g, s, tb, tc, td, 0.3);
@@ -1064,7 +1064,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn en_type1_vs_de_zone_divergence_same_nominal_ag() {
+    async fn en_type1_vs_de_zone_divergence_same_nominal_ag() {
         let a_g = 0.15;
         let annex_de = AnnexParams::De { zone: na_de::SeismicZone::Zone2, ground: na_de::GroundType::B };
         let annex_en = AnnexParams::En { a_gr: a_g, ground: part_1::EnGroundType::B, spectrum: part_1::SpectrumType::Type1 };
@@ -1076,13 +1076,13 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn building_seismic_e2e() {
+    async fn building_seismic_e2e() {
         let report = check_building_seismic(na_de::SeismicZone::Zone2, na_de::GroundType::B, part_1::ImportanceClass::Cc2, part_1::StructuralSystem::MomentFrameDch, 0.3, 500.0, 800.0, 20.0, 12.0, true);
         assert_eq!(report.checks.len(), 2);
     }
 
     #[semio_framework_async_macros::async_test]
-    fn silo_impulsive_convective() {
+    async fn silo_impulsive_convective() {
         let h = 10.0;
         let r = 5.0;
         let t_i = part_4::impulsive_period_s(h, r);
@@ -1093,13 +1093,13 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn silo_behaviour_factor_capped() {
+    async fn silo_behaviour_factor_capped() {
         assert!((part_4::silo_behaviour_factor(2.0) - 1.5).abs() < 1e-9);
         assert!((part_4::silo_behaviour_factor(1.0) - 1.0).abs() < 1e-9);
     }
 
     #[semio_framework_async_macros::async_test]
-    fn tank_base_shear_combines_impulsive_and_convective() {
+    async fn tank_base_shear_combines_impulsive_and_convective() {
         let a_g = 0.15;
         let (tb, tc, td, s) = na_de::GroundType::B.spectrum_params();
         let t_i = part_4::impulsive_period_s(8.0, 4.0);
@@ -1111,13 +1111,13 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn bridge_isolation_distinct() {
+    async fn bridge_isolation_distinct() {
         let q_isol = part_2::isolation_reduction_factor(2.0);
         assert!((q_isol - 4.0).abs() < 1e-9);
     }
 
     #[semio_framework_async_macros::async_test]
-    fn retrofit_confidence_factor_scales_capacity_exactly() {
+    async fn retrofit_confidence_factor_scales_capacity_exactly() {
         let r_k = 400.0;
         let r_d_kl3 = part_3::design_capacity_kn(r_k, part_3::KnowledgeLevel::Kl3.confidence_factor(), 1.0);
         let r_d_kl1 = part_3::design_capacity_kn(r_k, part_3::KnowledgeLevel::Kl1.confidence_factor(), 1.0);
@@ -1125,7 +1125,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn mononobe_okabe_k_ae_matches_hand_calc_and_reduces_to_rankine() {
+    async fn mononobe_okabe_k_ae_matches_hand_calc_and_reduces_to_rankine() {
         let k_ae = part_5::mononobe_okabe_k_ae(30.0, 0.2);
         assert!((k_ae - 0.46407409106465564).abs() < 1e-9);
         let k_a_static = part_5::mononobe_okabe_k_ae(30.0, 0.0);
@@ -1134,7 +1134,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn retaining_wall_thrust_from_k_ae() {
+    async fn retaining_wall_thrust_from_k_ae() {
         let k_h = part_5::horizontal_seismic_coefficient(0.15, 1.0, 1.5);
         assert!((k_h - 0.1).abs() < 1e-9);
         let k_ae = part_5::mononobe_okabe_k_ae(30.0, 0.2);
@@ -1143,13 +1143,13 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn cantilever_modal_participation_factor_matches_closed_form() {
+    async fn cantilever_modal_participation_factor_matches_closed_form() {
         let gamma = part_6::cantilever_modal_participation_factor();
         assert!((gamma - 1.602484997695127).abs() < 1e-9);
     }
 
     #[semio_framework_async_macros::async_test]
-    fn tower_behaviour_factor_capped_by_type() {
+    async fn tower_behaviour_factor_capped_by_type() {
         assert!((part_6::tower_behaviour_factor(3.0, true) - 1.5).abs() < 1e-9);
         assert!((part_6::tower_behaviour_factor(3.0, false) - 2.0).abs() < 1e-9);
     }

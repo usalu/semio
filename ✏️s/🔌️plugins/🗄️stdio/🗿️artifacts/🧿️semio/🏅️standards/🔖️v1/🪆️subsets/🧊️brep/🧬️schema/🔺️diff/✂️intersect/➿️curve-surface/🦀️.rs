@@ -294,7 +294,7 @@ fn subdivide_seed(bez: &crate::artifacts::semio::standards::v1::subsets::brep::s
         let seed = bez.eval(0.5);
         let closest = closest_uv(surface, surf_domain, seed, tol);
         if closest.distance <= tol * 50.0 + size {
-            if let Some(hit) = newton_refine(curve, surface, mid_t, closest.u, closest.v, domain_t, surf_domain, tol) {
+            if let Some(hit) = newton_refine(curve, surface, (mid_t, closest.u, closest.v), domain_t, surf_domain, tol) {
                 push_unique(hits, hit, tol);
             }
         }
@@ -346,7 +346,7 @@ fn wrap_or_clamp(x: f64, lo: f64, hi: f64, periodic: bool) -> f64 {
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn newton_refine(curve: &Curve3, surface: &Surface, mut t: f64, mut u: f64, mut v: f64, domain_t: (f64, f64), surf_domain: ((f64, f64), (f64, f64)), tol: f64) -> Option<CurveSurfaceHit> {
+fn newton_refine(curve: &Curve3, surface: &Surface, (mut t, mut u, mut v): (f64, f64, f64), domain_t: (f64, f64), surf_domain: ((f64, f64), (f64, f64)), tol: f64) -> Option<CurveSurfaceHit> {
     let ((u_lo, u_hi), (v_lo, v_hi)) = surf_domain;
     let u_periodic = surface.is_u_periodic();
     let v_periodic = surface.is_v_periodic();

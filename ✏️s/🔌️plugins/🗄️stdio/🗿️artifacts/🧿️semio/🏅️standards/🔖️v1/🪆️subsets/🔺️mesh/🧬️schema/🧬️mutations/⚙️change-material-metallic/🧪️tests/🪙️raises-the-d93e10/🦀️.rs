@@ -18,13 +18,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioMeshSnapshot {
-    serde_json::from_str(BEFORE).expect("change-material-metallic before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("change-material-metallic before snapshot decodes")
 }
 fn expected_after() -> SemioMeshSnapshot {
-    serde_json::from_str(AFTER).expect("change-material-metallic after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("change-material-metallic after snapshot decodes")
 }
 fn mutation() -> SemioMeshMutation {
-    serde_json::from_str(MUTATION).expect("change-material-metallic mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("change-material-metallic mutation decodes")
 }
 
 /// ▶️ Only the metallic factor moves; roughness and the base color stay.
@@ -58,12 +58,12 @@ async fn the_undo_change_material_metallic_restores_the_original_factor() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioMeshSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: SemioMeshSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-material-metallic/raises-the-metallic-factor-to-fully-metallic: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("change-material-metallic mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("change-material-metallic mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-material-metallic mutation reparses");
     assert_eq!(reencoded, original, "change-material-metallic/raises-the-metallic-factor-to-fully-metallic: committed mutation JSON is not canonical");
 }
@@ -82,7 +82,7 @@ async fn declared_outcome_holds_as_committed() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-material-metallic/raises-the-metallic-factor-to-fully-metallic: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -91,13 +91,13 @@ async fn produces_committed_diff() {
 /// allowed to touch appears in it at all.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioMeshDiff = serde_json::from_str(DIFF).expect("committed change-material-metallic diff decodes");
+    let decoded: SemioMeshDiff = dsl::json::from_json_str(DIFF).expect("committed change-material-metallic diff decodes");
     let materials = decoded.materials.as_ref().expect("change-material-metallic must write the materials triple");
     let mdiff = &materials.modified[0].diff;
     assert_eq!(mdiff.metallic, Some(1.0), "the metallic factor must be written");
     assert!(mdiff.roughness.is_none() && mdiff.base_color.is_none(), "the sibling factor and the color must stay unwritten");
     assert!(decoded.meshes.is_none() && decoded.textures.is_none(), "no mesh or texture slot may appear in the diff");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-material-metallic/raises-the-metallic-factor-to-fully-metallic: committed diff JSON is not canonical");
 }
@@ -105,7 +105,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioMeshDiff = serde_json::from_str(DIFF).expect("committed change-material-metallic diff decodes");
+    let decoded: SemioMeshDiff = dsl::json::from_json_str(DIFF).expect("committed change-material-metallic diff decodes");
     let produced = decoded.apply(&before()).expect("committed change-material-metallic diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-material-metallic/raises-the-metallic-factor-to-fully-metallic: committed diff did not carry before to after");
 }

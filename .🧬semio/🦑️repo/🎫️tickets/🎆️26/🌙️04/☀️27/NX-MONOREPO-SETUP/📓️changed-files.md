@@ -142,3 +142,245 @@ Task-owned changes at this checkpoint; shared unrelated edits are excluded.
 - `🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python/📜️script.ts`
 - `✏️s/🔌️plugins/🔋️energy/🧪️oracle/📦️packages/🐍️python/📋️project.json`
 - `✏️s/🔌️plugins/🔋️energy/🧪️oracle/📦️packages/🐍️python/📜️script.ts`
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/📜️script.ts`
+- `🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️fixtures/🌊️actor-import/📋️project.json`
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts`
+
+- `🌎️hub/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧫️fixtures/🧱️binary-gate.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/📋️project.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/📜️script.ts`
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧫️fixtures/🦀️.rs`
+
+- `🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/🟦️.ts`
+
+- `🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust/📋️project.json`
+
+- `🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust/📜️script.ts`
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📋️project.json`
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📜️script.ts`
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📋️project.json`
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts`
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts`
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts`
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🦀️exact-cargo-laws/🧪️fixture/🔣️.json`
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🦀️exact-cargo-laws/🧬️schema.json`
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🦀️exact-cargo-laws/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📋️project.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📜️script.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🧪️fixtures/🛂️actor-exports/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🧫️fixtures/🔣️.json`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️component-artifacts/📜️script.ts`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️graph-profile/📜️script.ts`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️svg-export/📜️script.ts`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️browser-support/📜️script.ts`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️daemon/📜️script.ts`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️wgpu-artifacts/📜️script.ts`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️mcp-artifacts/📜️script.ts`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️scale-artifacts/📜️script.ts`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️wasm-artifacts.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️development-graph.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️native-test-storage.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️logo-artifacts.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️dotnet-artifacts.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️cache-verification.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️changed-files.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️generator-artifacts.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️mcp-artifacts.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️coordinator-cancellation.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📋️plan.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️scale-artifacts.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️audit.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️bootstrap-audit.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️graph-discovery.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️svg-export.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️native-artifacts.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️browser-materialization.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️nx-inventory.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️daemon-verification.md`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/📋️project.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/Cargo.toml`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️playground-sessions.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️font-preparation.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️playground-selection.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️browser-support-artifacts.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📌️important/📝️.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️browser-component/📜️script.ts`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️playground-session/📜️script.ts`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️font-artifacts/📜️script.ts`
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧬️.schema.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧬️session.d.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧫️cases.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🥒️.feature`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🔌️vite-plugins.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🟦️.ts`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️development-coordinator.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️activation-server/📜️script.ts`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️development-coordinator/📜️script.ts`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️activation-observer/📜️script.ts`
+
+- `.vscode/settings.json`
+
+- `.devcontainer/Dockerfile`
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh`
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️executor-graph.md`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️executor-graph/📜️script.ts`
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🔬️index.test.ts`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️input-closures.md`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️nx-runtime/📜️script.ts`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️nx-runtime/🧫️cases.json`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️nx-runtime/🧬️schema.json`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️font-artifacts.md`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️process-ownership/📜️script.ts`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️process-ownership/🧫️cases.json`
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts`
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts`
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️command-boundaries/📜️script.ts`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️command-boundaries/🧫️cases.json`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️command-boundaries/🧬️schema.json`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️native-inputs/📜️script.ts`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️native-inputs/🧫️cases.json`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️native-inputs/🧬️schema.json`
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📜️script.ts`
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/native-inputs/🧫️cases.json`
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/native-inputs/🧬️schema.json`
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/command-boundaries/🧫️cases.json`
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/command-boundaries/🧬️schema.json`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️native-input-restoration.md`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️native-fallbacks.md`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️native-fallbacks/📜️script.ts`
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/native-preparation/🧫️cases.json`
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/native-preparation/🧬️schema.json`
+
+- `🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/Cargo.toml`
+
+- `🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/build.rs`
+
+- `🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/Cargo.toml`
+
+- `🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/build.rs`
+
+- `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml`
+
+- `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/build.rs`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️native-preparation/📜️script.ts`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️native-preparation.md`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️native-editor-targets.md`
+
+- `.devcontainer/devcontainer.json`
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/nx@23.2.0.patch`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️daemon-patch/📜️script.ts`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/📓️remaining-build-contracts.md`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️04/☀️27/NX-MONOREPO-SETUP/🔬️daemon-tail/📜️script.ts`
+
+## Print Font Preparation — 2026-09-08
+
+Updated the Print font catalog implementation, Print font command adapter, Print pipeline tests, Print and Bericht Nx metadata, Bericht script, and editor launch seed. Added the schema/catalog and minimal 📜️script.ts in Print's 🔤print-font-catalog module; added the retained 🔬️print-fonts/📜️script.ts qualification probe. The canonical generated launch still needs regeneration after the shared graph request settles.
+
+Additional retained compiler research: 📓️print-compiler.md. The existing Nx patch and nx-contract fixtures/tests now cover six exact task/session environment exclusions. The normal shared-daemon contract suite passed after the patch. No daemon was manually terminated, and no active compiler state was deleted.
+
+Print toolchain additions: `🔧️toolchain/🔣️.json`, `🧬️schema.json`, `📜️script.ts` under Print's tectonic-template-compilation module; retained ticket `🔬️print-toolchain/📜️script.ts` and `🧫️release.json`. Updated the compilation module, Print and Bericht Nx metadata, and launch seed. The shared-daemon final graph check before these compiler additions passed with 307 projects and 1225 edges.
+
+## PDF command and report ownership additions
+
+- `♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript/📋️project.json`
+- `♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript/📜️script.ts`
+- `♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/📜️script.ts`
+- `♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/🔣️.json`
+- `♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/🧫️invocations.json`
+- `♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/🧬️schema.json`
+- `🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌗️mixing/🟦️.ts`
+- `🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📜️script.ts`
+- `🧰️framework/🛍️products/📓️print/🎮️commands/🎨️latex-token-stylesheet-generation/🟦️.ts` (removed)
+- `🧰️framework/🛍️products/📓️print/🎮️commands/👁️template-pdf-watch/🟦️.ts` (removed)
+- `🧰️framework/🛍️products/📓️print/🎮️commands/🖨️template-pdf-build/🟦️.ts` (removed)
+- `🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🧫️command-boundaries.json`
+- `🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📋️project.json`
+- `🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📜️script.ts`
+- `🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/📜️script.ts`
+- `🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🟦️.ts`
+- `🧰️framework/🛍️products/📓️print/🔨️modules/📊️visualization-gallery/🟦️.ts`
+- `🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🔣️.json`
+- `🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🟦️.ts`
+- `🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🧫️invocations.json`
+- `🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🧬️schema.json`
+- `🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts`
+- `🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📚️bundle/🔒️dependencies.json`
+- `🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📚️bundle/🧫️cases.json`
+- `🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📚️bundle/🧬️schema.json`
+- `🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📜️script.ts`
+- `🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🟦️.ts`
+
+- `♻️mit-bestand/📋️bericht/🔨️modules/👥️actor-network/📜️script.ts`
+- `♻️mit-bestand/📋️bericht/🧫️tests/🧭️commands.json`
+- `♻️mit-bestand/📋️bericht/🧫️tests/📄️pdf.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/🛑️cancellation.json`
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/📓️daemon-retention.json`
+
+- `🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🟦️.ts`
+- `🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🧫️pdf-consumption.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📜️script.ts` (daemon retention vectors)

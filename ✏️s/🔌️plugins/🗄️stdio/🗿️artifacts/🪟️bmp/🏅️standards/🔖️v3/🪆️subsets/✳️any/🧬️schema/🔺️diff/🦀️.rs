@@ -103,7 +103,7 @@ fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec
 /// removed/modified/added keys reference (0 if it references none).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
-    removed.iter().copied().chain(modified_indices).chain(added_indices).max().map(|m| m + 1).unwrap_or(0)
+    removed.iter().copied().chain(modified_indices).chain(added_indices).max().map_or(0, |m| m + 1)
 }
 
 /// ➕️ Structural, total, base-free absorb of two `palette` triples
@@ -118,7 +118,7 @@ fn absorb_palette(d1: BmpPaletteDiff, d2: BmpPaletteDiff) -> BmpPaletteDiff {
         r.dedup();
         r.len()
     };
-    let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map(|m| m + 1).unwrap_or(0);
+    let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map_or(0, |m| m + 1);
     let base_len = base_len_hint(&d1.removed, d1.modified.iter().map(|m| m.index), d1_added_indices.iter().copied()).max((needed_mid_len + removed_count).saturating_sub(d1.added.len()));
     let mid_slots = simulate_slots(base_len, &d1.removed, &d1_added_indices);
     //#endregion 🔖️PhiBaseToMid
@@ -179,7 +179,7 @@ fn absorb_palette(d1: BmpPaletteDiff, d2: BmpPaletteDiff) -> BmpPaletteDiff {
         })
         .collect();
     let d2_added_indices: Vec<usize> = d2.added.iter().map(|a| a.index).collect();
-    let mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map(|m| m + 1).unwrap_or(0);
+    let mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map_or(0, |m| m + 1);
     let after_slots = simulate_slots(mid_len, &d2.removed, &d2_added_indices);
     let mut mid_to_after: HashMap<usize, usize> = HashMap::new();
     for (pos, slot) in after_slots.iter().enumerate() {
@@ -474,7 +474,7 @@ impl DiffAlgebra<BmpSnapshot> for BmpDiff {
             && self.y_pixels_per_meter.is_none()
             && self.colors_used.is_none()
             && self.colors_important.is_none()
-            && self.palette.as_ref().map_or(true, BmpPaletteDiff::is_empty)
+            && self.palette.as_ref().is_none_or(BmpPaletteDiff::is_empty)
             && self.pixels.is_none()
     }
 }

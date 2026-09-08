@@ -72,13 +72,13 @@ fn as_element(node: &XmlNode) -> Option<(&str, &[XmlAttr], &[XmlNode])> {
 /// 🔎️ First direct child element named `name`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn find_child<'a>(children: &'a [XmlNode], name: &str) -> Option<&'a XmlNode> {
-    children.iter().find(|c| as_element(c).map(|(n, _, _)| n == name).unwrap_or(false))
+    children.iter().find(|c| as_element(c).is_some_and(|(n, _, _)| n == name))
 }
 
 /// 🔎️ All direct child elements named `name`, in document order.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn find_children<'a>(children: &'a [XmlNode], name: &str) -> Vec<&'a XmlNode> {
-    children.iter().filter(|c| as_element(c).map(|(n, _, _)| n == name).unwrap_or(false)).collect()
+    children.iter().filter(|c| as_element(c).is_some_and(|(n, _, _)| n == name)).collect()
 }
 
 /// 🏷️ Attribute value by name.
@@ -285,8 +285,8 @@ fn markup_bcf_bytes(topic: &BcfTopic) -> Vec<u8> {
 //#region 🔖️VisualizationInfoXml
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_point(node: &XmlNode) -> BcfPoint3 {
-    let attrs = as_element(node).map(|(_, a, _)| a).unwrap_or(&[]);
-    BcfPoint3 { x: attr(attrs, "X").map(parse_f64).unwrap_or(0.0), y: attr(attrs, "Y").map(parse_f64).unwrap_or(0.0), z: attr(attrs, "Z").map(parse_f64).unwrap_or(0.0) }
+    let attrs = as_element(node).map_or(&[][..], |(_, a, _)| a);
+    BcfPoint3 { x: attr(attrs, "X").map_or(0.0, parse_f64), y: attr(attrs, "Y").map_or(0.0, parse_f64), z: attr(attrs, "Z").map_or(0.0, parse_f64) }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -301,7 +301,7 @@ fn parse_camera(children: &[XmlNode]) -> Option<BcfCamera> {
         let view_point = find_child(pc, "CameraViewPoint").map(parse_point).unwrap_or_default();
         let direction = find_child(pc, "CameraDirection").map(parse_point).unwrap_or_default();
         let up_vector = find_child(pc, "CameraUpVector").map(parse_point).unwrap_or_default();
-        let field_of_view = find_child(pc, "FieldOfView").map(|n| parse_f64(&text_content(n))).unwrap_or(0.0);
+        let field_of_view = find_child(pc, "FieldOfView").map_or(0.0, |n| parse_f64(&text_content(n)));
         return Some(BcfCamera::Perspective { view_point, direction, up_vector, field_of_view });
     }
     if let Some(ortho) = find_child(children, "OrthogonalCamera") {
@@ -309,7 +309,7 @@ fn parse_camera(children: &[XmlNode]) -> Option<BcfCamera> {
         let view_point = find_child(oc, "CameraViewPoint").map(parse_point).unwrap_or_default();
         let direction = find_child(oc, "CameraDirection").map(parse_point).unwrap_or_default();
         let up_vector = find_child(oc, "CameraUpVector").map(parse_point).unwrap_or_default();
-        let view_to_world_scale = find_child(oc, "ViewToWorldScale").map(|n| parse_f64(&text_content(n))).unwrap_or(0.0);
+        let view_to_world_scale = find_child(oc, "ViewToWorldScale").map_or(0.0, |n| parse_f64(&text_content(n)));
         return Some(BcfCamera::Orthogonal { view_point, direction, up_vector, view_to_world_scale });
     }
     None
@@ -359,7 +359,7 @@ fn parse_components(components_node: &XmlNode) -> BcfComponents {
     let visibility = match find_child(children, "Visibility") {
         Some(v) => {
             let (_, vattrs, vchildren) = as_element(v).unwrap_or(("Visibility", &[], &[]));
-            let default_visibility = attr(vattrs, "DefaultVisibility").map(|s| s != "false").unwrap_or(true);
+            let default_visibility = attr(vattrs, "DefaultVisibility") != Some("false");
             let exceptions = find_child(vchildren, "Exceptions").map(parse_component_list).unwrap_or_default();
             BcfVisibility { default_visibility, exceptions }
         }
@@ -433,18 +433,18 @@ fn visualization_info_bytes(vp: &BcfViewpoint) -> Vec<u8> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_bcf(snap: &BcfSnapshot) -> Result<Vec<u8>, String> {
     let mut entries = Vec::new();
-    entries.push(ZipEntry { name: "bcf.version".into(), data: bcf_version_bytes(&snap.version), ..Default::default() });
+    entries.push(ZipEntry { name: "bcf.version".into(), data: bcf_version_bytes(&snap.version) });
     for topic in &snap.topics {
-        entries.push(ZipEntry { name: format!("{}/markup.bcf", topic.guid), data: markup_bcf_bytes(topic), ..Default::default() });
+        entries.push(ZipEntry { name: format!("{}/markup.bcf", topic.guid), data: markup_bcf_bytes(topic) });
         for vp in &topic.viewpoints {
-            entries.push(ZipEntry { name: format!("{}/{}.bcfv", topic.guid, vp.guid), data: visualization_info_bytes(vp), ..Default::default() });
+            entries.push(ZipEntry { name: format!("{}/{}.bcfv", topic.guid, vp.guid), data: visualization_info_bytes(vp) });
             if let Some(bytes) = &vp.snapshot {
-                entries.push(ZipEntry { name: format!("{}/{}.png", topic.guid, vp.guid), data: bytes.clone(), ..Default::default() });
+                entries.push(ZipEntry { name: format!("{}/{}.png", topic.guid, vp.guid), data: bytes.clone() });
             }
         }
     }
     for part in &snap.parts {
-        entries.push(ZipEntry { name: part.name.clone(), data: part.data.clone(), ..Default::default() });
+        entries.push(ZipEntry { name: part.name.clone(), data: part.data.clone() });
     }
     let zip_snap = crate::artifacts::zip::ZipSnapshot { schema: crate::artifacts::zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: String::new() };
     crate::artifacts::zip::standards::v2_0::subsets::base::io::encode_zip(&zip_snap).map_err(|e| e.to_string())

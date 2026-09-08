@@ -577,7 +577,7 @@ pub mod vector_tiles {
     pub const MAP_VECTOR_TILE_MAX_Z: u32 = 14;
     pub const DEFAULT_MVT_EXTENT: u32 = 4096;
 
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum GeomType {
         Unknown,
         Point,
@@ -966,7 +966,13 @@ pub mod vector_tiles {
         String::new()
     }
 
-    fn decode_geometry(geometry: &[u32], geom_type: GeomType) -> (Vec<Vec<(f64, f64)>>, Vec<Vec<(f64, f64)>>, Vec<(f64, f64)>) {
+    struct DecodedGeometry {
+        rings: Vec<Vec<(f64, f64)>>,
+        lines: Vec<Vec<(f64, f64)>>,
+        points: Vec<(f64, f64)>,
+    }
+
+    fn decode_geometry(geometry: &[u32], geom_type: GeomType) -> DecodedGeometry {
         let mut rings = Vec::new();
         let mut lines = Vec::new();
         let mut points = Vec::new();
@@ -1038,7 +1044,7 @@ pub mod vector_tiles {
                 GeomType::Unknown => {}
             }
         }
-        (rings, lines, points)
+        DecodedGeometry { rings, lines, points }
     }
 
     #[cfg(test)]
@@ -1109,7 +1115,7 @@ pub mod vector_tiles {
         #[test]
         fn linestring_moveto_starts_new_part() {
             let geometry = vec![(1 << 3) | 1, zigzag(0), zigzag(0), (1 << 3) | 2, zigzag(10), zigzag(0), (1 << 3) | 1, zigzag(90), zigzag(100), (1 << 3) | 2, zigzag(10), zigzag(0)];
-            let (_, lines, _) = decode_geometry(&geometry, GeomType::LineString);
+            let lines = decode_geometry(&geometry, GeomType::LineString).lines;
             assert_eq!(lines.len(), 2, "each MoveTo must start a new line part");
             assert_eq!(lines[0], vec![(0.0, 0.0), (10.0, 0.0)]);
             assert_eq!(lines[1], vec![(100.0, 100.0), (110.0, 100.0)]);
@@ -1181,7 +1187,7 @@ pub mod vector_tiles {
                     _ => GeomType::Unknown,
                 };
                 let props = decode_properties(&feat.tags, &layer.keys, &layer.values);
-                let (rings, lines, points) = decode_geometry(&feat.geometry, geom_type.clone());
+                let DecodedGeometry { rings, lines, points } = decode_geometry(&feat.geometry, geom_type);
                 features.push(VectorFeature { id: feat.id.filter(|id| *id != 0), geom_type, rings, lines, points, properties: props });
             }
             layers.push(VectorLayer { name, extent, features });
@@ -1293,8 +1299,8 @@ pub mod vector_tiles {
         match lod_idx {
             0 | 1 => false,
             2 => admin_level == 2,
-            3 | 4 => admin_level >= 2 && admin_level <= 6,
-            _ => admin_level >= 2 && admin_level <= 8,
+            3 | 4 => (2..=6).contains(&admin_level),
+            _ => (2..=8).contains(&admin_level),
         }
     }
 
@@ -1501,7 +1507,7 @@ pub mod vector_tiles {
     pub fn weighted_opaque_fill(color: Color, weight: f64) -> Color {
         let w = super::clamp_map_layer_weight(weight).clamp(0.25, 1.0);
         let rgba = color.to_rgba8();
-        let scale = |c: u8| ((f64::from(c) * w).round() as u8).min(255);
+        let scale = |c: u8| (f64::from(c) * w).round() as u8;
         Color::from_rgba8(scale(rgba.r), scale(rgba.g), scale(rgba.b), 255)
     }
 
@@ -1657,7 +1663,7 @@ pub enum MapTileMode {
 }
 
 impl MapTileMode {
-    pub fn from_str(mode: &str) -> Self {
+    pub fn parse(mode: &str) -> Self {
         match mode {
             "image" => Self::Image,
             "vector" => Self::Vector,
@@ -1675,7 +1681,7 @@ pub enum MapVectorStyle {
 }
 
 impl MapVectorStyle {
-    pub fn from_str(style: &str) -> Self {
+    pub fn parse(style: &str) -> Self {
         match style {
             "figureGround" => Self::FigureGround,
             "invertedFigure" => Self::InvertedFigure,
@@ -1701,7 +1707,7 @@ pub fn map_layer_weight_slider_keys_at_lod(lod_id: &str, render_mode: &str) -> V
         tile_z = tile_z.max(vector_tiles::MAP_VECTOR_TILE_MAX_Z);
     }
     let profile = vector_tiles::vector_detail_profile(span, tile_z, Some(lod_id));
-    let mode = MapTileMode::from_str(render_mode);
+    let mode = MapTileMode::parse(render_mode);
     let mut keys: Vec<&'static str> = Vec::new();
     if matches!(mode, MapTileMode::Image | MapTileMode::Combined) {
         keys.push("raster");
@@ -2124,6 +2130,20 @@ fn map_interaction_matches(left: &MapInteraction, right: &MapInteraction) -> boo
 }
 //#endregion 🔖️InteractionPlan
 
+#[derive(Clone, Copy)]
+struct VectorTileCoordinates {
+    z: u32,
+    x: u32,
+    y: u32,
+    extent: u32,
+}
+
+#[derive(Clone, Copy)]
+struct MapFigurePalette {
+    ink: Color,
+    paper: Color,
+}
+
 fn map_point_segment_distance(px: f64, py: f64, x0: f64, y0: f64, x1: f64, y1: f64) -> f64 {
     let dx = x1 - x0;
     let dy = y1 - y0;
@@ -2138,20 +2158,28 @@ fn map_point_segment_distance(px: f64, py: f64, x0: f64, y0: f64, x1: f64, y1: f
     ((px - qx).powi(2) + (py - qy).powi(2)).sqrt()
 }
 
-fn map_segments_intersect_rect(x0: f64, y0: f64, x1: f64, y1: f64, min_x: f64, min_y: f64, max_x: f64, max_y: f64) -> bool {
+fn map_segments_intersect_rect(start: Point, end: Point, min: Point, max: Point) -> bool {
+    let Point { x: x0, y: y0 } = start;
+    let Point { x: x1, y: y1 } = end;
+    let Point { x: min_x, y: min_y } = min;
+    let Point { x: max_x, y: max_y } = max;
     if (x0 >= min_x && x0 <= max_x && y0 >= min_y && y0 <= max_y) || (x1 >= min_x && x1 <= max_x && y1 >= min_y && y1 <= max_y) {
         return true;
     }
     let edges = [(min_x, min_y, max_x, min_y), (max_x, min_y, max_x, max_y), (max_x, max_y, min_x, max_y), (min_x, max_y, min_x, min_y)];
     for (ax, ay, bx, by) in edges {
-        if map_segments_intersect(x0, y0, x1, y1, ax, ay, bx, by) {
+        if map_segments_intersect(start, end, Point::new(ax, ay), Point::new(bx, by)) {
             return true;
         }
     }
     false
 }
 
-fn map_segments_intersect(ax: f64, ay: f64, bx: f64, by: f64, cx: f64, cy: f64, dx: f64, dy: f64) -> bool {
+fn map_segments_intersect(a: Point, b: Point, c: Point, d: Point) -> bool {
+    let Point { x: ax, y: ay } = a;
+    let Point { x: bx, y: by } = b;
+    let Point { x: cx, y: cy } = c;
+    let Point { x: dx, y: dy } = d;
     fn orient(px: f64, py: f64, qx: f64, qy: f64, rx: f64, ry: f64) -> f64 {
         (qy - py) * (rx - qx) - (qx - px) * (ry - qy)
     }
@@ -2189,7 +2217,7 @@ fn map_polyline_intersects_rect(points: &[Point], min_x: f64, min_y: f64, max_x:
     for pair in points.windows(2) {
         let a = pair[0];
         let b = pair[1];
-        if map_segments_intersect_rect(a.x, a.y, b.x, b.y, min_x, min_y, max_x, max_y) {
+        if map_segments_intersect_rect(a, b, Point::new(min_x, min_y), Point::new(max_x, max_y)) {
             return true;
         }
     }
@@ -2228,7 +2256,7 @@ fn map_polyline_intersects_polygon(points: &[Point], polygon: &[Point]) -> bool 
         for i in 0..n {
             let c = polygon[i];
             let d = polygon[(i + 1) % n];
-            if map_segments_intersect(a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y) {
+            if map_segments_intersect(a, b, c, d) {
                 return true;
             }
         }
@@ -2531,7 +2559,7 @@ impl MapHost {
     }
 
     pub fn set_render_mode(&mut self, mode: &str) {
-        let next = MapTileMode::from_str(mode);
+        let next = MapTileMode::parse(mode);
         if self.render_mode != next {
             self.render_mode = next;
             self.interaction_revision = self.interaction_revision.wrapping_add(1);
@@ -2539,7 +2567,7 @@ impl MapHost {
     }
 
     pub fn set_vector_style(&mut self, style: &str) {
-        self.vector_style = MapVectorStyle::from_str(style);
+        self.vector_style = MapVectorStyle::parse(style);
     }
 
     pub fn set_lod_mode(&mut self, mode: &str) {
@@ -2885,7 +2913,7 @@ impl MapHost {
         for pos in self.features.positions.values() {
             let w = projection::lonlat_to_world(pos.lon, pos.lat);
             let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
-            let hit = if crossing { s.x >= min_x && s.x <= max_x && s.y >= min_y && s.y <= max_y } else { s.x >= min_x && s.x <= max_x && s.y >= min_y && s.y <= max_y };
+            let hit = s.x >= min_x && s.x <= max_x && s.y >= min_y && s.y <= max_y;
             if hit {
                 positions.push(pos.id.clone());
             }
@@ -3085,7 +3113,7 @@ impl MapHost {
     }
 
     fn push_event(&mut self, kind: &str, payload: serde_json::Value) {
-        self.events.push(serde_json::json!({ "type": kind, "payload": payload }));
+        self.events.push(serde_json::Value::Object(serde_json::Map::from_iter([("type".into(), kind.into()), ("payload".into(), payload)])));
     }
 
     pub fn prepare_visible_tiles(&mut self) {
@@ -3240,7 +3268,8 @@ impl MapHost {
         path.close_path();
     }
 
-    fn append_vector_tile_polygon(&self, scene: &mut Scene, tz: u32, tx: u32, ty: u32, extent: u32, rings: &[Vec<(f64, f64)>], fill: Color, stroke: Color, stroke_width: f64) {
+    fn append_vector_tile_polygon(&self, scene: &mut Scene, tile: VectorTileCoordinates, rings: &[Vec<(f64, f64)>], fill: Color, stroke: Color, stroke_width: f64) {
+        let VectorTileCoordinates { z: tz, x: tx, y: ty, extent } = tile;
         if rings.is_empty() {
             return;
         }
@@ -3263,17 +3292,18 @@ impl MapHost {
         }
     }
 
-    fn append_vector_tile_polygon_rings_nonzero(&self, scene: &mut Scene, tz: u32, tx: u32, ty: u32, extent: u32, rings: &[Vec<(f64, f64)>], fill: Color) {
-        self.append_vector_tile_polygon(scene, tz, tx, ty, extent, rings, fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
+    fn append_vector_tile_polygon_rings_nonzero(&self, scene: &mut Scene, tile: VectorTileCoordinates, rings: &[Vec<(f64, f64)>], fill: Color) {
+        self.append_vector_tile_polygon(scene, tile, rings, fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
     }
 
-    fn append_vector_tile_polygon_filled_rings(&self, scene: &mut Scene, tz: u32, tx: u32, ty: u32, extent: u32, rings: &[Vec<(f64, f64)>], fill: Color) {
+    fn append_vector_tile_polygon_filled_rings(&self, scene: &mut Scene, tile: VectorTileCoordinates, rings: &[Vec<(f64, f64)>], fill: Color) {
         for ring in rings {
-            self.append_vector_tile_polygon(scene, tz, tx, ty, extent, std::slice::from_ref(ring), fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
+            self.append_vector_tile_polygon(scene, tile, std::slice::from_ref(ring), fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
         }
     }
 
-    fn append_vector_tile_lines(&self, scene: &mut Scene, tz: u32, tx: u32, ty: u32, extent: u32, lines: &[Vec<(f64, f64)>], stroke: Color, width: f64) {
+    fn append_vector_tile_lines(&self, scene: &mut Scene, tile: VectorTileCoordinates, lines: &[Vec<(f64, f64)>], stroke: Color, width: f64) {
+        let VectorTileCoordinates { z: tz, x: tx, y: ty, extent } = tile;
         if lines.is_empty() || stroke.to_rgba8().a <= 5 || width <= 0.0 {
             return;
         }
@@ -3371,7 +3401,7 @@ impl MapHost {
     /// any geometry — used on a cached-scene hit, where [`Self::append_vector_tiles`] itself (the
     /// call that would otherwise touch these keys) is skipped.
     fn touch_visible_vector_tiles(&self) {
-        for (key, _) in &self.tiles.vector_tiles {
+        for key in self.tiles.vector_tiles.keys() {
             let Some((tz, tx, ty)) = tiles::parse_tile_key(key) else {
                 continue;
             };
@@ -3418,13 +3448,10 @@ impl MapHost {
                 };
                 let draw_buildings = profile.draw_buildings && vis.buildings;
                 let draw_land_backdrop = profile.draw_land_backdrop && vis.land;
-                let draw_coastline = profile.draw_coastline && vis.water;
                 Some(if draw_buildings {
                     paper
                 } else if draw_land_backdrop {
                     ink
-                } else if draw_coastline {
-                    paper
                 } else {
                     paper
                 })
@@ -3500,12 +3527,12 @@ impl MapHost {
             MapVectorStyle::FigureGround => {
                 let ink = self.theme.label_fill;
                 let paper = self.theme.surface_clear;
-                self.append_vector_tiles_figure(scene, &draw, render_z, span, forced_lod, ink, paper);
+                self.append_vector_tiles_figure(scene, &draw, render_z, span, forced_lod, MapFigurePalette { ink, paper });
             }
             MapVectorStyle::InvertedFigure => {
                 let ink = self.theme.surface_clear;
                 let paper = self.theme.label_fill;
-                self.append_vector_tiles_figure(scene, &draw, render_z, span, forced_lod, ink, paper);
+                self.append_vector_tiles_figure(scene, &draw, render_z, span, forced_lod, MapFigurePalette { ink, paper });
             }
         }
         if self.layer_visibility.labels {
@@ -3611,29 +3638,29 @@ impl MapHost {
                     match lname {
                         "water" if draw_water => {
                             if !feat.rings.is_empty() && vector_tiles::water_polygon_visible_for_lod(lod_idx, &feat.properties) {
-                                self.append_vector_tile_polygon(scene, *tz, *tx, *ty, extent, &feat.rings, water_fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
+                                self.append_vector_tile_polygon(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, water_fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
                             }
                         }
                         "landcover" | "landuse" if draw_landcover => {
                             if !feat.rings.is_empty() {
-                                self.append_vector_tile_polygon(scene, *tz, *tx, *ty, extent, &feat.rings, land_fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
+                                self.append_vector_tile_polygon(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, land_fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
                             }
                         }
                         "park" if draw_land => {
                             if !feat.rings.is_empty() {
-                                self.append_vector_tile_polygon(scene, *tz, *tx, *ty, extent, &feat.rings, park_fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
+                                self.append_vector_tile_polygon(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, park_fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
                             }
                         }
                         "building" if draw_buildings => {
                             if !feat.rings.is_empty() {
-                                self.append_vector_tile_polygon(scene, *tz, *tx, *ty, extent, &feat.rings, building_fill, border_stroke, 0.5 * weights.buildings);
+                                self.append_vector_tile_polygon(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, building_fill, border_stroke, 0.5 * weights.buildings);
                             }
                         }
                         "transportation" if draw_roads => {
                             let class = vector_tiles::property_class(&feat.properties);
                             if vector_tiles::transportation_visible(class, span, *tz, forced_lod) && !feat.lines.is_empty() {
                                 let w = vector_tiles::transportation_stroke_width(class, line_scale) * road_lod_scale * weights.roads;
-                                self.append_vector_tile_lines(scene, *tz, *tx, *ty, extent, &feat.lines, road_stroke, w);
+                                self.append_vector_tile_lines(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.lines, road_stroke, w);
                             }
                         }
                         "boundary" | "geolines" if draw_borders || draw_coastline => {
@@ -3641,14 +3668,14 @@ impl MapHost {
                             if maritime {
                                 if draw_coastline && !feat.lines.is_empty() {
                                     let w = vector_tiles::coastline_stroke_width(line_scale) * weights.water;
-                                    self.append_vector_tile_lines(scene, *tz, *tx, *ty, extent, &feat.lines, border_stroke, w);
+                                    self.append_vector_tile_lines(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.lines, border_stroke, w);
                                 }
                                 continue;
                             }
                             if lname == "geolines" {
                                 if draw_coastline && !feat.lines.is_empty() {
                                     let w = vector_tiles::coastline_stroke_width(line_scale) * weights.water;
-                                    self.append_vector_tile_lines(scene, *tz, *tx, *ty, extent, &feat.lines, border_stroke, w);
+                                    self.append_vector_tile_lines(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.lines, border_stroke, w);
                                 }
                                 continue;
                             }
@@ -3657,22 +3684,20 @@ impl MapHost {
                             };
                             if vector_tiles::boundary_visible(admin, span, *tz, forced_lod) && !feat.lines.is_empty() {
                                 let w = vector_tiles::boundary_stroke_width(admin, line_scale) * weights.borders;
-                                self.append_vector_tile_lines(scene, *tz, *tx, *ty, extent, &feat.lines, region_stroke, w);
+                                self.append_vector_tile_lines(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.lines, region_stroke, w);
                             }
                         }
                         "waterway" if draw_water && vector_tiles::waterway_visible_for_lod(lod_idx) => {
                             if !feat.lines.is_empty() {
-                                self.append_vector_tile_lines(scene, *tz, *tx, *ty, extent, &feat.lines, water_fill, (1.0 * line_scale * weights.water).clamp(0.5, 6.0));
+                                self.append_vector_tile_lines(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.lines, water_fill, (1.0 * line_scale * weights.water).clamp(0.5, 6.0));
                             }
                         }
-                        "countries" if draw_tile_countries => {
-                            if !feat.rings.is_empty() {
+                        "countries" if draw_tile_countries && !feat.rings.is_empty() => {
                                 if vector_tiles::country_polygon_holes_visible_for_lod(lod_idx) {
-                                    self.append_vector_tile_polygon(scene, *tz, *tx, *ty, extent, &feat.rings, land_fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
+                                    self.append_vector_tile_polygon(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, land_fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
                                 } else {
-                                    self.append_vector_tile_polygon_filled_rings(scene, *tz, *tx, *ty, extent, &feat.rings, land_fill);
+                                    self.append_vector_tile_polygon_filled_rings(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, land_fill);
                                 }
-                            }
                         }
                         _ => {}
                     }
@@ -3681,7 +3706,8 @@ impl MapHost {
         }
     }
 
-    fn append_vector_tiles_figure(&self, scene: &mut Scene, draw: &[(u32, u32, u32, &vector_tiles::VectorTile)], render_z: u32, span: f64, forced_lod: Option<&str>, ink: Color, paper: Color) {
+    fn append_vector_tiles_figure(&self, scene: &mut Scene, draw: &[(u32, u32, u32, &vector_tiles::VectorTile)], render_z: u32, span: f64, forced_lod: Option<&str>, palette: MapFigurePalette) {
+        let MapFigurePalette { ink, paper } = palette;
         let vis = self.layer_visibility;
         let transparent_stroke = Color::from_rgba8(0, 0, 0, 0);
         let profile = vector_tiles::vector_detail_profile(span, render_z, forced_lod);
@@ -3708,7 +3734,7 @@ impl MapHost {
                     let extent = layer.extent.max(1);
                     for feat in &layer.features {
                         if !feat.rings.is_empty() {
-                            self.append_vector_tile_polygon(scene, *tz, *tx, *ty, extent, &feat.rings, ink, transparent_stroke, 0.0);
+                            self.append_vector_tile_polygon(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, ink, transparent_stroke, 0.0);
                         }
                     }
                 }
@@ -3726,22 +3752,20 @@ impl MapHost {
                     match lname {
                         "landcover" | "landuse" | "park" if draw_land && !use_land_mass_silhouette => {
                             if !feat.rings.is_empty() {
-                                self.append_vector_tile_polygon_rings_nonzero(scene, *tz, *tx, *ty, extent, &feat.rings, ink);
+                                self.append_vector_tile_polygon_rings_nonzero(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, ink);
                             }
                         }
                         "countries" if draw_countries => {
                             if !feat.rings.is_empty() {
                                 if vector_tiles::country_polygon_holes_visible_for_lod(lod_idx) {
-                                    self.append_vector_tile_polygon_rings_nonzero(scene, *tz, *tx, *ty, extent, &feat.rings, ink);
+                                    self.append_vector_tile_polygon_rings_nonzero(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, ink);
                                 } else {
-                                    self.append_vector_tile_polygon_filled_rings(scene, *tz, *tx, *ty, extent, &feat.rings, ink);
+                                    self.append_vector_tile_polygon_filled_rings(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, ink);
                                 }
                             }
                         }
-                        "water" if draw_water => {
-                            if !feat.rings.is_empty() && vector_tiles::water_polygon_visible_for_lod(lod_idx, &feat.properties) {
-                                self.append_vector_tile_polygon(scene, *tz, *tx, *ty, extent, &feat.rings, paper, transparent_stroke, 0.0);
-                            }
+                        "water" if draw_water && !feat.rings.is_empty() && vector_tiles::water_polygon_visible_for_lod(lod_idx, &feat.properties) => {
+                            self.append_vector_tile_polygon(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, paper, transparent_stroke, 0.0);
                         }
                         _ => {}
                     }
@@ -4658,18 +4682,18 @@ mod tests {
     }
 
     #[test]
-    fn map_render_mode_from_str() {
-        assert_eq!(super::MapTileMode::from_str("image"), super::MapTileMode::Image);
-        assert_eq!(super::MapTileMode::from_str("vector"), super::MapTileMode::Vector);
-        assert_eq!(super::MapTileMode::from_str("combined"), super::MapTileMode::Combined);
+    fn map_render_mode_parse() {
+        assert_eq!(super::MapTileMode::parse("image"), super::MapTileMode::Image);
+        assert_eq!(super::MapTileMode::parse("vector"), super::MapTileMode::Vector);
+        assert_eq!(super::MapTileMode::parse("combined"), super::MapTileMode::Combined);
     }
 
     #[test]
-    fn map_vector_style_from_str() {
-        assert_eq!(super::MapVectorStyle::from_str("colored"), super::MapVectorStyle::Colored);
-        assert_eq!(super::MapVectorStyle::from_str("figureGround"), super::MapVectorStyle::FigureGround);
-        assert_eq!(super::MapVectorStyle::from_str("invertedFigure"), super::MapVectorStyle::InvertedFigure);
-        assert_eq!(super::MapVectorStyle::from_str("unknown"), super::MapVectorStyle::Colored);
+    fn map_vector_style_parse() {
+        assert_eq!(super::MapVectorStyle::parse("colored"), super::MapVectorStyle::Colored);
+        assert_eq!(super::MapVectorStyle::parse("figureGround"), super::MapVectorStyle::FigureGround);
+        assert_eq!(super::MapVectorStyle::parse("invertedFigure"), super::MapVectorStyle::InvertedFigure);
+        assert_eq!(super::MapVectorStyle::parse("unknown"), super::MapVectorStyle::Colored);
     }
 
     #[test]
@@ -4925,7 +4949,6 @@ mod tests {
         assert_eq!(host.vector_scene_rebuild_count.get(), 2, "a vector-style change must invalidate the cache");
     }
 
-    #[test]
     /// 🚫️ The vector-tile layer must NOT key on interaction. Selection and hover are painted by the
     /// regions/routes/positions layers, which are rebuilt every frame outside this cache, so keying on
     /// `interaction_revision` bought nothing — and because `pointer_move_screen`/`set_camera` bump that
@@ -5626,9 +5649,9 @@ mod tests {
     #[test]
     fn map_vector_style_as_str_round_trips_all_variants() {
         for style in [super::MapVectorStyle::Colored, super::MapVectorStyle::FigureGround, super::MapVectorStyle::InvertedFigure] {
-            assert_eq!(super::MapVectorStyle::from_str(style.as_str()), style);
+            assert_eq!(super::MapVectorStyle::parse(style.as_str()), style);
         }
-        assert_eq!(super::MapVectorStyle::from_str("bogus"), super::MapVectorStyle::Colored);
+        assert_eq!(super::MapVectorStyle::parse("bogus"), super::MapVectorStyle::Colored);
     }
 
     #[test]

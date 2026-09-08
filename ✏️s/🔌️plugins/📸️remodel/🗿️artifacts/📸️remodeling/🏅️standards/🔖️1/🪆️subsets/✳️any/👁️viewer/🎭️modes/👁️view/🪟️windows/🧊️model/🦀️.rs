@@ -183,7 +183,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
         let scene = crate::artifacts::remodeling::default_remodeling_scene();
-        let _node = render(&scene).await;
+        let _node = render(&scene);
     }
 
     #[semio_framework_async_macros::async_test]

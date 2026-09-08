@@ -1415,7 +1415,7 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
                     ActionArgOption::new("jack", LocalizedLabel::native("Jack", "Jack")),
                     ActionArgOption::new("dag.jack", LocalizedLabel::native("Dag Jack", "Dag Jack")),
-                ]).default_value("jack"),
+                ]).default_value(&"jack"),
             ])
             .action_args("setSnapshotJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Document JSON", "Dokument-JSON"))])
             .action_args("setFixtureJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Fixture JSON", "Fixture-JSON"))])
@@ -1630,7 +1630,7 @@ mod tests {
             assert!(wire.len() <= MAX_WRITER_COMMAND_RAW_BYTES);
             assert_eq!(<WriterCommand as protocol::OpBinary>::decode_op(&wire).expect("owned retained decoder"), command);
             let owned_wire = dsl::os_pack::json::to_json_string(&command);
-            let oracle: serde_json::Value = serde_json::from_str(&owned_wire).expect("third-party JSON decoder");
+            let oracle: Value = serde_json::from_str(&owned_wire).expect("third-party JSON decoder");
             let serde_wire = serde_json::to_string(&oracle).expect("third-party JSON encoder");
             assert_eq!(dsl::os_pack::json::from_json_str::<WriterCommand>(&serde_wire).expect("owned command decoder"), command);
         }
@@ -1658,7 +1658,7 @@ mod tests {
     #[test]
     fn writer_completion_rejection_retires_child_before_command_without_reemission() {
         let mut emit: Emit<WriterMutation, WriterConfigMutation, NoDraftMutation> = Emit::default();
-        emit.child_emits.push(semio_framework_plugin::app::ChildEmit::of::<WriterSnapshot, WriterMutation>("member", "writer-child", Vec::new()));
+        emit.child_emits.push(semio_framework_plugin::app::ChildEmit::of::<WriterSnapshot, WriterMutation>("member", "writer-child", &[]));
         let rejected = ArtifactToolCompletionRejection::<EditorApp<WriterPlayApp>> {
             emit: Ok(emit),
             ephemeral: EphemeralEmit::default(),
@@ -1847,7 +1847,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn writer_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed() {
-        let mut app = crate::editor::writer::testkit::new_app().await;
+        let mut app = testkit::new_app().await;
         let base_generation = app.artifact_generation_now();
         let handle = admit_writer_envelope(&mut app, &writer_envelope_wire());
         assert_eq!(handle.generation, base_generation);
@@ -1859,7 +1859,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn writer_live_envelope_cancel_closes_retained_pages_without_publication() {
-        let mut app = crate::editor::writer::testkit::new_app().await;
+        let mut app = testkit::new_app().await;
         let base_generation = app.artifact_generation_now();
         let wire = writer_envelope_wire();
         let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);

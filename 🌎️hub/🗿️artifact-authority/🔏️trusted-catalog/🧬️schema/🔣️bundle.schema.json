@@ -121,13 +121,17 @@
     "package": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["pluginId", "packageId", "version", "role", "dependencies", "component", "descriptor", "browserActor", "nativeCodecs", "openTargets"],
+      "required": ["pluginId", "packageId", "version", "role", "dependencies", "component", "descriptor", "executionProtocol", "browserActor", "nativeCodecs", "openTargets"],
       "properties": {
         "pluginId": { "$ref": "#/$defs/identity" },
         "packageId": { "$ref": "#/$defs/identity" },
         "version": { "$ref": "#/$defs/identity" },
         "role": { "enum": ["plugin", "extension"] },
         "dependencies": { "type": "array", "maxItems": 256, "items": { "$ref": "#/$defs/dependency" } },
+        "executionProtocol": {
+          "type": "object", "additionalProperties": false, "required": ["appChannelVersion"],
+          "properties": { "appChannelVersion": { "type": "integer", "minimum": 1, "maximum": 4294967295 } }
+        },
         "component": { "$ref": "#/$defs/component" },
         "descriptor": { "$ref": "#/$defs/file" },
         "browserActor": { "$ref": "#/$defs/browserActor" },

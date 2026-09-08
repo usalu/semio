@@ -50,7 +50,7 @@ mod tests {
     use semio_framework_plugin::HistoryView;
 
     #[semio_framework_async_macros::async_test]
-    fn handle_commits_the_payload_document_under_its_action_id() {
+    async fn handle_commits_the_payload_document_under_its_action_id() {
         let projection = En1990Snapshot::default();
         let config = NormConfig::default();
         let text = crate::document::escape_op_text_field(&<En1990Snapshot as store::ArtifactDsl>::print_dsl(&En1990Snapshot::default()));

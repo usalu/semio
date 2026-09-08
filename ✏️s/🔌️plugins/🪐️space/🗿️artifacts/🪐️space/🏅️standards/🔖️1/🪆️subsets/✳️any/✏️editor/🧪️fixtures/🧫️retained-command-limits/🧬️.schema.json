@@ -47,7 +47,7 @@
             },
             "lanes": {
               "const": [
-                "artifact"
+                "hostOnly"
               ]
             }
           },

@@ -236,9 +236,7 @@ impl PagedCommand {
     }
 
     pub fn release_front_page(&mut self, maximum_bytes: usize) -> Option<(bool, usize)> {
-        let Some(page_len) = self.pages.front().map(FixedCommandPage::len) else {
-            return None;
-        };
+        let page_len = self.pages.front().map(FixedCommandPage::len)?;
         if page_len > maximum_bytes {
             return None;
         }
@@ -491,6 +489,12 @@ pub struct RejectedCommandBuildRegistry<const CAPACITY: usize> {
     occupied: usize,
 }
 
+impl<const CAPACITY: usize> Default for RejectedCommandBuildRegistry<CAPACITY> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<const CAPACITY: usize> RejectedCommandBuildRegistry<CAPACITY> {
     pub fn new() -> Self {
         assert!(CAPACITY > 0);
@@ -612,6 +616,12 @@ pub struct CommandDriverRegistry<const CAPACITY: usize> {
     close_head: Option<u16>,
     close_tail: Option<u16>,
     occupied: usize,
+}
+
+impl<const CAPACITY: usize> Default for CommandDriverRegistry<CAPACITY> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<const CAPACITY: usize> CommandDriverRegistry<CAPACITY> {
@@ -1447,6 +1457,7 @@ impl PagedAppCommandDecodeCursor {
 //#region 🔖️AppCommand
 /// @emoji 📨️ One frame a client (UI or headless runner) sends to the app engine.
 #[derive(Debug, PartialEq)]
+#[expect(clippy::large_enum_variant, reason = "Presence commands transfer the admitted fixed roster slots inline without another channel allocation.")]
 pub enum AppCommand {
     ConfigCommand {
         seq: u64,
@@ -2571,7 +2582,7 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::P
 /// 📤️ Atomic bounded frame encoding into caller-admitted storage; failure never modifies output.
 pub fn encode_local_interaction_query_frame_into(reply: &protocol::LocalInteractionQueryReply, out: &mut Vec<u8>) -> Result<(), &'static str> {
     let length = protocol::local_interaction_query_reply_encoded_len(reply)?;
-    let prefix = 1 + ((usize::BITS - length.leading_zeros()).max(1) as usize + 6) / 7;
+    let prefix = 1 + ((usize::BITS - length.leading_zeros()).max(1) as usize).div_ceil(7);
     if out.capacity() - out.len() < prefix + length {
         return Err("local-interaction.frame-not-admitted");
     }

@@ -1,0 +1,12 @@
+import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+const output = join(dirname(import.meta.dir), "🗑️generated");
+const response = await fetch("https://data1b.fullyjustified.net/tlextras-2022.0r0.tar", { headers: { Range: "bytes=774656-1315173" }, signal: AbortSignal.timeout(20000) });
+assert.equal(response.status, 206);
+assert.equal(response.headers.get("content-range"), "bytes 774656-1315173/2881562112");
+const bytes = Buffer.from(await response.arrayBuffer());
+assert.equal(bytes.length, 540518);
+assert.deepEqual(bytes, readFileSync(join(output, "latex-range.bin")));
+console.log(`[DEBUG] Bun range acquisition agrees with independent curl bytes: ${createHash("sha256").update(bytes).digest("hex")} PASS`);

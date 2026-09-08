@@ -43,7 +43,7 @@ mod tests {
         use std::sync::Arc;
         let port = Arc::new(OsBackbonePorts::Store(store::BackbonePorts::Memory(MemoryBackbonePort::default())));
         let owner = SpaceUser { id: "tester".into(), name: "Tester".into(), avatar: None, role: SpaceRole::Author };
-        let entry = create_os_space("Opened Empty", SpaceKind::Atelier, SpaceVisibility::Private, owner, port.clone()).expect("create");
+        let entry = create_os_space("Opened Empty", SpaceKind::Atelier, SpaceVisibility::Private, owner, &port).expect("create");
         crate::register_studio_port_for_test(&entry.id, port).await;
         let empty = empty_workflow_snapshot().await;
         let config = SpaceConfig::default();

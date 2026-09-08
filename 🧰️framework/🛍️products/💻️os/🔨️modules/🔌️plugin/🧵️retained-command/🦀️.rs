@@ -11,6 +11,7 @@ pub const ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES: usize = 512;
 const ARTIFACT_COMMAND_CHECKPOINT_HEADER_BYTES: usize = 48;
 const ARTIFACT_COMMAND_CHECKPOINT_MAGIC: [u8; 4] = *b"ARC1";
 
+#[derive(Clone, Copy)]
 struct ArtifactCommandCheckpoint<'a> {
     work_phase: bool,
     raw_page_cursor: u64,
@@ -84,6 +85,18 @@ pub enum ArtifactCommandWorkStep<A: ArtifactApp> {
     CompleteWithEphemeral { emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, ephemeral: EphemeralEmit<A> },
 }
 
+/// 🧾️ Immutable command roots and authority observed by one retained work step.
+pub struct ArtifactCommandInputs<'a, A: ArtifactApp> {
+    pub command: &'a A::Command,
+    pub snapshot: &'a A::Snapshot,
+    pub config: &'a A::Config,
+    pub history: &'a HistoryView,
+    pub interaction: &'a protocol::InteractionState,
+    pub hover: &'a InteractionHoverState,
+    pub context: Option<&'a ArtifactOwnedToolJobContext<A>>,
+    pub operation: &'a AppOperationContext,
+}
+
 pub trait ArtifactCommandWork<A: ArtifactApp>: Send {
     fn tool_id(&self) -> &'static str;
     /// 🧰 Stable identity of the factory-provided mutable workspace retained by this job.
@@ -91,17 +104,7 @@ pub trait ArtifactCommandWork<A: ArtifactApp>: Send {
         0
     }
     fn extent(&self, command: &A::Command, snapshot: &A::Snapshot, interaction: &protocol::InteractionState, context: Option<&ArtifactOwnedToolJobContext<A>>) -> Option<usize>;
-    fn step(
-        &mut self,
-        command: &A::Command,
-        snapshot: &A::Snapshot,
-        config: &A::Config,
-        history: &HistoryView,
-        interaction: &protocol::InteractionState,
-        hover: &InteractionHoverState,
-        context: Option<&ArtifactOwnedToolJobContext<A>>,
-        operation: &AppOperationContext,
-    ) -> Result<ArtifactCommandWorkStep<A>, Fault>;
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, A>) -> Result<ArtifactCommandWorkStep<A>, Fault>;
     fn checkpoint(&self, _target: &mut [u8]) -> Result<usize, Fault> {
         Ok(0)
     }
@@ -139,17 +142,8 @@ impl<A: ArtifactApp> ArtifactCommandWork<A> for BoundedArtifactCommandWork<A> {
         (self.extent)(command, snapshot, interaction)
     }
 
-    fn step(
-        &mut self,
-        command: &A::Command,
-        snapshot: &A::Snapshot,
-        config: &A::Config,
-        history: &HistoryView,
-        interaction: &protocol::InteractionState,
-        hover: &InteractionHoverState,
-        _context: Option<&ArtifactOwnedToolJobContext<A>>,
-        operation: &AppOperationContext,
-    ) -> Result<ArtifactCommandWorkStep<A>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, A>) -> Result<ArtifactCommandWorkStep<A>, Fault> {
+        let ArtifactCommandInputs { command, snapshot, config, history, interaction, hover, context: _context, operation } = *input;
         if self.consumed {
             return Err(Fault::from("retained-command-bounded-work-repeated"));
         }
@@ -160,6 +154,19 @@ impl<A: ArtifactApp> ArtifactCommandWork<A> for BoundedArtifactCommandWork<A> {
 //#endregion 🔖️Work
 
 //#region 🧳️Payload
+/// 🧳️ Owned command roots and completion authority admitted into a retained payload.
+pub struct ArtifactRetainedCommandInputs<A: ArtifactApp> {
+    pub command: A::Command,
+    pub snapshot: Arc<A::Snapshot>,
+    pub config: Arc<A::Config>,
+    pub history: Arc<HistoryView>,
+    pub interaction_state: Arc<protocol::InteractionState>,
+    pub interaction_hover: Arc<InteractionHoverState>,
+    pub context: Option<Arc<ArtifactOwnedToolJobContext<A>>>,
+    pub operation: AppOperationContext,
+    pub completion: ArtifactToolCompletion<A>,
+}
+
 pub struct ArtifactRetainedCommandPayload<A: ArtifactApp> {
     pub command: A::Command,
     pub snapshot: Arc<A::Snapshot>,
@@ -179,45 +186,19 @@ pub struct ArtifactRetainedCommandPayload<A: ArtifactApp> {
 
 impl<A: ArtifactApp> ArtifactRetainedCommandPayload<A> {
     pub fn try_new(
-        command: A::Command,
-        snapshot: Arc<A::Snapshot>,
-        config: Arc<A::Config>,
-        history: Arc<HistoryView>,
-        interaction_state: Arc<protocol::InteractionState>,
-        interaction_hover: Arc<InteractionHoverState>,
-        operation: AppOperationContext,
-        completion: ArtifactToolCompletion<A>,
+        inputs: ArtifactRetainedCommandInputs<A>,
         command_id: fn(&A::Command) -> &'static str,
         maximum_raw_bytes: usize,
         maximum_work_items: usize,
         work: Box<dyn ArtifactCommandWork<A>>,
     ) -> Result<Self, Fault> {
+        let ArtifactRetainedCommandInputs { command, snapshot, config, history, interaction_state, interaction_hover, context, operation, completion } = inputs;
         if maximum_raw_bytes == 0 || maximum_work_items == 0 {
             return Err(Fault::from("retained-command-capacity-is-zero"));
         }
         let mut raw = Vec::new();
         raw.try_reserve_exact(maximum_raw_bytes).map_err(|_| Fault::from("retained-command-raw-capacity-rejected"))?;
-        Ok(Self { command, snapshot, config, history, interaction_state, interaction_hover, context: None, operation, completion, command_id, maximum_raw_bytes, maximum_work_items, raw, work })
-    }
-
-    pub fn try_new_with_context(
-        command: A::Command,
-        snapshot: Arc<A::Snapshot>,
-        config: Arc<A::Config>,
-        history: Arc<HistoryView>,
-        interaction_state: Arc<protocol::InteractionState>,
-        interaction_hover: Arc<InteractionHoverState>,
-        context: Arc<ArtifactOwnedToolJobContext<A>>,
-        operation: AppOperationContext,
-        completion: ArtifactToolCompletion<A>,
-        command_id: fn(&A::Command) -> &'static str,
-        maximum_raw_bytes: usize,
-        maximum_work_items: usize,
-        work: Box<dyn ArtifactCommandWork<A>>,
-    ) -> Result<Self, Fault> {
-        let mut payload = Self::try_new(command, snapshot, config, history, interaction_state, interaction_hover, operation, completion, command_id, maximum_raw_bytes, maximum_work_items, work)?;
-        payload.context = Some(context);
-        Ok(payload)
+        Ok(Self { command, snapshot, config, history, interaction_state, interaction_hover, context, operation, completion, command_id, maximum_raw_bytes, maximum_work_items, raw, work })
     }
 }
 //#endregion 🧳️Payload
@@ -476,7 +457,7 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
                 else {
                     return self.fault(cx, b"retained command reducer owner is absent");
                 };
-                match work.step(command, snapshot, config, history, interaction, hover, self.context.as_deref(), operation) {
+                match work.step(&ArtifactCommandInputs { command, snapshot, config, history, interaction, hover, context: self.context.as_deref(), operation }) {
                     Ok(ArtifactCommandWorkStep::Replay { stage, preview }) => {
                         cx.set_stage(stage);
                         self.checkpoint_pending = true;

@@ -2,7 +2,7 @@
 name = "semio-framework-ui-contract"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Language-neutral semantic UI contract: UiSnapshot/UiPatch/UiIntent, the single boundary every renderer consumes"
 
 [package.metadata.semio]

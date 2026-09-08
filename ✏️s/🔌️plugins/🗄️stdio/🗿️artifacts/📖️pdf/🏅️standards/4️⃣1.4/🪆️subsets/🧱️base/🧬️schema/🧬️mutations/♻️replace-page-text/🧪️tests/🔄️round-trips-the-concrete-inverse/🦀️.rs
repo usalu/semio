@@ -19,13 +19,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> PdfSnapshot {
-    serde_json::from_str(BEFORE).expect("committed before-snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("committed before-snapshot decodes")
 }
 fn expected_after() -> PdfSnapshot {
-    serde_json::from_str(AFTER).expect("committed after-snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("committed after-snapshot decodes")
 }
 fn mutation() -> PdfMutation {
-    serde_json::from_str(MUTATION).expect("committed replace-page-text payload decodes")
+    dsl::json::from_json_str(MUTATION).expect("committed replace-page-text payload decodes")
 }
 
 /// ▶️ Applying the committed payload to the committed before-snapshot reaches the committed
@@ -59,12 +59,12 @@ fn inverse_restores_before() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: PdfSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: PdfSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "replace-page-text/round-trips-the-concrete-inverse: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("payload encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("payload encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("payload reparses");
     assert_eq!(reencoded, original, "replace-page-text/round-trips-the-concrete-inverse: committed payload JSON is not canonical");
 }
@@ -85,7 +85,7 @@ fn declared_outcome_holds() {
 /// diff is what replication ships and what undo inverts.
 #[test]
 fn produces_committed_diff() {
-    let produced = serde_json::to_value(mutation().diff(&before()).diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(mutation().diff(&before()).diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "replace-page-text/round-trips-the-concrete-inverse: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -94,7 +94,7 @@ fn produces_committed_diff() {
 #[test]
 fn committed_diff_applies_to_after() {
     let base = before();
-    let decoded: PdfDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: PdfDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = decoded.apply(&base).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-page-text/round-trips-the-concrete-inverse: committed diff did not carry before to after");
 }
@@ -107,6 +107,6 @@ fn op_codecs_round_trip() {
     for step in std::iter::once(payload.clone()).chain(payload.inverse(&before())) {
         assert_eq!(PdfMutation::parse_op(&step.print_op()).expect("the text op parses"), step, "replace-page-text/round-trips-the-concrete-inverse: the text op form does not round-trip");
         assert_eq!(PdfMutation::decode_op(&step.encode_op().expect("the binary op encodes")).expect("the binary op decodes"), step, "replace-page-text/round-trips-the-concrete-inverse: the binary op form does not round-trip");
-        assert_eq!(serde_json::from_value::<PdfMutation>(serde_json::to_value(&step).expect("the payload encodes")).expect("the payload decodes"), step, "replace-page-text/round-trips-the-concrete-inverse: the JSON form does not round-trip");
+        assert_eq!(dsl::from_dsl_value::<PdfMutation>((serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&step)).expect("the payload encodes")).into()).expect("the payload decodes"), step, "replace-page-text/round-trips-the-concrete-inverse: the JSON form does not round-trip");
     }
 }

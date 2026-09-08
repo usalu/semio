@@ -1,0 +1,715 @@
+{
+  "version": 1,
+  "sourceDateEpoch": 1782864000,
+  "documents": [
+    {
+      "id": "report",
+      "texPath": "🧾️template/📋️report/📋️report.tex",
+      "collection": "templates",
+      "sources": [
+        "🧾️template/📋️report/📋️report.tex",
+        "🧾️template/📋️report/🧩️report.content.tex",
+        "🧾️template/📋️report/📎️report.appendix.tex",
+        "🧾️template/📋️report/📚️references.bib",
+        "🖼️assets/🎞️demo-strip.png"
+      ]
+    },
+    {
+      "id": "paper",
+      "texPath": "🧾️template/📃️paper/🎓️paper.tex",
+      "collection": "templates",
+      "sources": [
+        "🧾️template/📃️paper/🎓️paper.tex",
+        "🧾️template/📃️paper/🧩️paper.content.tex",
+        "🧾️template/📃️paper/📚️references.bib"
+      ]
+    },
+    {
+      "id": "flyer",
+      "texPath": "🧾️template/📰️flyer/📰️flyer.tex",
+      "collection": "templates",
+      "sources": [
+        "🧾️template/📰️flyer/📰️flyer.tex",
+        "🧾️template/📰️flyer/🧩️flyer.content.tex"
+      ]
+    },
+    {
+      "id": "forschungsbericht",
+      "texPath": "🧾️template/🏗️zukunftbau/📑️forschungsbericht.tex",
+      "collection": "templates",
+      "sources": [
+        "🧾️template/🏗️zukunftbau/📑️forschungsbericht.tex",
+        "🧾️template/🏗️zukunftbau/🔬️forschungsbericht.content.tex",
+        "🧾️template/🏗️zukunftbau/📚️references.bib"
+      ]
+    },
+    {
+      "id": "zwischenbericht",
+      "texPath": "🧾️template/🏗️zukunftbau/🚧️zwischenbericht.tex",
+      "collection": "templates",
+      "sources": [
+        "🧾️template/🏗️zukunftbau/🚧️zwischenbericht.tex",
+        "🧾️template/🏗️zukunftbau/🧩️zwischenbericht.content.tex",
+        "🧾️template/🏗️zukunftbau/📎️zwischenbericht.anlage.tex"
+      ]
+    },
+    {
+      "id": "kompaktbericht",
+      "texPath": "🧾️template/🏗️zukunftbau/📝️kompaktbericht.tex",
+      "collection": "templates",
+      "sources": [
+        "🧾️template/🏗️zukunftbau/📝️kompaktbericht.tex",
+        "🧾️template/🏗️zukunftbau/🗜️kompaktbericht.content.tex",
+        "🧾️template/🏗️zukunftbau/📚️references.bib"
+      ]
+    },
+    {
+      "id": "viz-2",
+      "texPath": "🧾️template/📊️viz-gallery/⏱️viz-2.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/⏱️viz-2.tex"
+      ]
+    },
+    {
+      "id": "viz-56",
+      "texPath": "🧾️template/📊️viz-gallery/♟️viz-56.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/♟️viz-56.tex"
+      ]
+    },
+    {
+      "id": "viz-38",
+      "texPath": "🧾️template/📊️viz-gallery/♾️viz-38.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/♾️viz-38.tex"
+      ]
+    },
+    {
+      "id": "viz-33",
+      "texPath": "🧾️template/📊️viz-gallery/⚗️viz-33.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/⚗️viz-33.tex"
+      ]
+    },
+    {
+      "id": "viz-14",
+      "texPath": "🧾️template/📊️viz-gallery/⚙️viz-14.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/⚙️viz-14.tex"
+      ]
+    },
+    {
+      "id": "viz-30",
+      "texPath": "🧾️template/📊️viz-gallery/⚛️viz-30.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/⚛️viz-30.tex"
+      ]
+    },
+    {
+      "id": "viz-43",
+      "texPath": "🧾️template/📊️viz-gallery/⚽️viz-43.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/⚽️viz-43.tex"
+      ]
+    },
+    {
+      "id": "viz-64",
+      "texPath": "🧾️template/📊️viz-gallery/⛓️viz-64.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/⛓️viz-64.tex"
+      ]
+    },
+    {
+      "id": "viz-23",
+      "texPath": "🧾️template/📊️viz-gallery/❓️viz-23.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/❓️viz-23.tex"
+      ]
+    },
+    {
+      "id": "viz-27",
+      "texPath": "🧾️template/📊️viz-gallery/➡️viz-27.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/➡️viz-27.tex"
+      ]
+    },
+    {
+      "id": "viz-61",
+      "texPath": "🧾️template/📊️viz-gallery/🌀️viz-61.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🌀️viz-61.tex"
+      ]
+    },
+    {
+      "id": "viz-9",
+      "texPath": "🧾️template/📊️viz-gallery/🌊️viz-9.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🌊️viz-9.tex"
+      ]
+    },
+    {
+      "id": "viz-35",
+      "texPath": "🧾️template/📊️viz-gallery/🌦️viz-35.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🌦️viz-35.tex"
+      ]
+    },
+    {
+      "id": "viz-7",
+      "texPath": "🧾️template/📊️viz-gallery/🌳️viz-7.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🌳️viz-7.tex"
+      ]
+    },
+    {
+      "id": "viz-34",
+      "texPath": "🧾️template/📊️viz-gallery/🌿️viz-34.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🌿️viz-34.tex"
+      ]
+    },
+    {
+      "id": "viz-6",
+      "texPath": "🧾️template/📊️viz-gallery/🍰️viz-6.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🍰️viz-6.tex"
+      ]
+    },
+    {
+      "id": "viz-45",
+      "texPath": "🧾️template/📊️viz-gallery/🎓️viz-45.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🎓️viz-45.tex"
+      ]
+    },
+    {
+      "id": "viz-18",
+      "texPath": "🧾️template/📊️viz-gallery/🎚️viz-18.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🎚️viz-18.tex"
+      ]
+    },
+    {
+      "id": "viz-5",
+      "texPath": "🧾️template/📊️viz-gallery/🎛️viz-5.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🎛️viz-5.tex"
+      ]
+    },
+    {
+      "id": "viz-73",
+      "texPath": "🧾️template/📊️viz-gallery/🎞️viz-73.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🎞️viz-73.tex"
+      ]
+    },
+    {
+      "id": "viz-74",
+      "texPath": "🧾️template/📊️viz-gallery/🎨️viz-74.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🎨️viz-74.tex"
+      ]
+    },
+    {
+      "id": "viz-24",
+      "texPath": "🧾️template/📊️viz-gallery/🎯️viz-24.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🎯️viz-24.tex"
+      ]
+    },
+    {
+      "id": "viz-41",
+      "texPath": "🧾️template/📊️viz-gallery/🎲️viz-41.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🎲️viz-41.tex"
+      ]
+    },
+    {
+      "id": "viz-3",
+      "texPath": "🧾️template/📊️viz-gallery/🎻️viz-3.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🎻️viz-3.tex"
+      ]
+    },
+    {
+      "id": "viz-44",
+      "texPath": "🧾️template/📊️viz-gallery/🎼️viz-44.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🎼️viz-44.tex"
+      ]
+    },
+    {
+      "id": "viz-53",
+      "texPath": "🧾️template/📊️viz-gallery/🏁️viz-53.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🏁️viz-53.tex"
+      ]
+    },
+    {
+      "id": "viz-62",
+      "texPath": "🧾️template/📊️viz-gallery/🏎️viz-62.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🏎️viz-62.tex"
+      ]
+    },
+    {
+      "id": "viz-28",
+      "texPath": "🧾️template/📊️viz-gallery/🏔️viz-28.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🏔️viz-28.tex"
+      ]
+    },
+    {
+      "id": "viz-79",
+      "texPath": "🧾️template/📊️viz-gallery/🏗️viz-79.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🏗️viz-79.tex"
+      ]
+    },
+    {
+      "id": "viz-37",
+      "texPath": "🧾️template/📊️viz-gallery/🏛️viz-37.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🏛️viz-37.tex"
+      ]
+    },
+    {
+      "id": "viz-42",
+      "texPath": "🧾️template/📊️viz-gallery/🐟️viz-42.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🐟️viz-42.tex"
+      ]
+    },
+    {
+      "id": "viz-63",
+      "texPath": "🧾️template/📊️viz-gallery/👣️viz-63.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/👣️viz-63.tex"
+      ]
+    },
+    {
+      "id": "viz-50",
+      "texPath": "🧾️template/📊️viz-gallery/💬️viz-50.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/💬️viz-50.tex"
+      ]
+    },
+    {
+      "id": "viz-17",
+      "texPath": "🧾️template/📊️viz-gallery/💹️viz-17.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/💹️viz-17.tex"
+      ]
+    },
+    {
+      "id": "viz-57",
+      "texPath": "🧾️template/📊️viz-gallery/💻️viz-57.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/💻️viz-57.tex"
+      ]
+    },
+    {
+      "id": "viz-54",
+      "texPath": "🧾️template/📊️viz-gallery/📅️viz-54.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/📅️viz-54.tex"
+      ]
+    },
+    {
+      "id": "viz-25",
+      "texPath": "🧾️template/📊️viz-gallery/📈️viz-25.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/📈️viz-25.tex"
+      ]
+    },
+    {
+      "id": "viz-19",
+      "texPath": "🧾️template/📊️viz-gallery/📉️viz-19.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/📉️viz-19.tex"
+      ]
+    },
+    {
+      "id": "viz-1",
+      "texPath": "🧾️template/📊️viz-gallery/📊️viz-1.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/📊️viz-1.tex"
+      ]
+    },
+    {
+      "id": "viz-16",
+      "texPath": "🧾️template/📊️viz-gallery/📋️viz-16.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/📋️viz-16.tex"
+      ]
+    },
+    {
+      "id": "viz-52",
+      "texPath": "🧾️template/📊️viz-gallery/📍️viz-52.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/📍️viz-52.tex"
+      ]
+    },
+    {
+      "id": "viz-51",
+      "texPath": "🧾️template/📊️viz-gallery/📏️viz-51.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/📏️viz-51.tex"
+      ]
+    },
+    {
+      "id": "viz-26",
+      "texPath": "🧾️template/📊️viz-gallery/📐️viz-26.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/📐️viz-26.tex"
+      ]
+    },
+    {
+      "id": "viz-72",
+      "texPath": "🧾️template/📊️viz-gallery/📖️viz-72.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/📖️viz-72.tex"
+      ]
+    },
+    {
+      "id": "viz-69",
+      "texPath": "🧾️template/📊️viz-gallery/📝️viz-69.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/📝️viz-69.tex"
+      ]
+    },
+    {
+      "id": "viz-46",
+      "texPath": "🧾️template/📊️viz-gallery/📰️viz-46.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/📰️viz-46.tex"
+      ]
+    },
+    {
+      "id": "viz-32",
+      "texPath": "🧾️template/📊️viz-gallery/📶️viz-32.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/📶️viz-32.tex"
+      ]
+    },
+    {
+      "id": "viz-78",
+      "texPath": "🧾️template/📊️viz-gallery/🔄️viz-78.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🔄️viz-78.tex"
+      ]
+    },
+    {
+      "id": "viz-31",
+      "texPath": "🧾️template/📊️viz-gallery/🔌️viz-31.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🔌️viz-31.tex"
+      ]
+    },
+    {
+      "id": "viz-api",
+      "texPath": "🧾️template/📊️viz-gallery/🔓️viz-api.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🔓️viz-api.tex"
+      ]
+    },
+    {
+      "id": "viz-4",
+      "texPath": "🧾️template/📊️viz-gallery/🔗️viz-4.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🔗️viz-4.tex"
+      ]
+    },
+    {
+      "id": "viz-13",
+      "texPath": "🧾️template/📊️viz-gallery/🔤️viz-13.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🔤️viz-13.tex"
+      ]
+    },
+    {
+      "id": "viz-11",
+      "texPath": "🧾️template/📊️viz-gallery/🔥️viz-11.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🔥️viz-11.tex"
+      ]
+    },
+    {
+      "id": "viz-36",
+      "texPath": "🧾️template/📊️viz-gallery/🔧️viz-36.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🔧️viz-36.tex"
+      ]
+    },
+    {
+      "id": "viz-60",
+      "texPath": "🧾️template/📊️viz-gallery/🔬️viz-60.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🔬️viz-60.tex"
+      ]
+    },
+    {
+      "id": "viz-0",
+      "texPath": "🧾️template/📊️viz-gallery/🔺️viz-0.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🔺️viz-0.tex"
+      ]
+    },
+    {
+      "id": "viz-8",
+      "texPath": "🧾️template/📊️viz-gallery/🕸️viz-8.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🕸️viz-8.tex"
+      ]
+    },
+    {
+      "id": "viz-15",
+      "texPath": "🧾️template/📊️viz-gallery/🖥️viz-15.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🖥️viz-15.tex"
+      ]
+    },
+    {
+      "id": "viz-76",
+      "texPath": "🧾️template/📊️viz-gallery/🗂️viz-76.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🗂️viz-76.tex"
+      ]
+    },
+    {
+      "id": "viz-66",
+      "texPath": "🧾️template/📊️viz-gallery/🗄️viz-66.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🗄️viz-66.tex"
+      ]
+    },
+    {
+      "id": "viz-70",
+      "texPath": "🧾️template/📊️viz-gallery/🗳️viz-70.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🗳️viz-70.tex"
+      ]
+    },
+    {
+      "id": "viz-10",
+      "texPath": "🧾️template/📊️viz-gallery/🗺️viz-10.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🗺️viz-10.tex"
+      ]
+    },
+    {
+      "id": "viz-59",
+      "texPath": "🧾️template/📊️viz-gallery/🚚️viz-59.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🚚️viz-59.tex"
+      ]
+    },
+    {
+      "id": "viz-40",
+      "texPath": "🧾️template/📊️viz-gallery/🚦️viz-40.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🚦️viz-40.tex"
+      ]
+    },
+    {
+      "id": "viz-58",
+      "texPath": "🧾️template/📊️viz-gallery/🛡️viz-58.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🛡️viz-58.tex"
+      ]
+    },
+    {
+      "id": "viz-65",
+      "texPath": "🧾️template/📊️viz-gallery/🛰️viz-65.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🛰️viz-65.tex"
+      ]
+    },
+    {
+      "id": "viz-29",
+      "texPath": "🧾️template/📊️viz-gallery/🧊️viz-29.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🧊️viz-29.tex"
+      ]
+    },
+    {
+      "id": "viz-67",
+      "texPath": "🧾️template/📊️viz-gallery/🧠️viz-67.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🧠️viz-67.tex"
+      ]
+    },
+    {
+      "id": "viz-48",
+      "texPath": "🧾️template/📊️viz-gallery/🧩️viz-48.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🧩️viz-48.tex"
+      ]
+    },
+    {
+      "id": "viz-68",
+      "texPath": "🧾️template/📊️viz-gallery/🧪️viz-68.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🧪️viz-68.tex"
+      ]
+    },
+    {
+      "id": "viz-21",
+      "texPath": "🧾️template/📊️viz-gallery/🧬️viz-21.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🧬️viz-21.tex"
+      ]
+    },
+    {
+      "id": "viz-20",
+      "texPath": "🧾️template/📊️viz-gallery/🧭️viz-20.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🧭️viz-20.tex"
+      ]
+    },
+    {
+      "id": "viz-75",
+      "texPath": "🧾️template/📊️viz-gallery/🧮️viz-75.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🧮️viz-75.tex"
+      ]
+    },
+    {
+      "id": "viz-47",
+      "texPath": "🧾️template/📊️viz-gallery/🧱️viz-47.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🧱️viz-47.tex"
+      ]
+    },
+    {
+      "id": "viz-12",
+      "texPath": "🧾️template/📊️viz-gallery/🧾️viz-12.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🧾️viz-12.tex"
+      ]
+    },
+    {
+      "id": "viz-22",
+      "texPath": "🧾️template/📊️viz-gallery/🩺️viz-22.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🩺️viz-22.tex"
+      ]
+    },
+    {
+      "id": "viz-77",
+      "texPath": "🧾️template/📊️viz-gallery/🪆️viz-77.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🪆️viz-77.tex"
+      ]
+    },
+    {
+      "id": "viz-55",
+      "texPath": "🧾️template/📊️viz-gallery/🪑️viz-55.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🪑️viz-55.tex"
+      ]
+    },
+    {
+      "id": "viz-49",
+      "texPath": "🧾️template/📊️viz-gallery/🪞️viz-49.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🪞️viz-49.tex"
+      ]
+    },
+    {
+      "id": "viz-71",
+      "texPath": "🧾️template/📊️viz-gallery/🫂️viz-71.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🫂️viz-71.tex"
+      ]
+    },
+    {
+      "id": "viz-39",
+      "texPath": "🧾️template/📊️viz-gallery/🫧️viz-39.tex",
+      "collection": "visualizations",
+      "sources": [
+        "🧾️template/📊️viz-gallery/🫧️viz-39.tex"
+      ]
+    }
+  ]
+}

@@ -235,6 +235,30 @@ fn prepared_scene_pass_usage(pass: &ScenePass3d) -> Option<(usize, usize)> {
     Some((items, bytes))
 }
 
+/// 🧾️ A retained draw grant could not be admitted or completed.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RetainedOutputError {
+    Allocation,
+    Capacity,
+    AlreadyActive,
+    NoActiveGrant,
+    LimitExceeded,
+}
+
+impl std::fmt::Display for RetainedOutputError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Self::Allocation => "retained output allocation failed",
+            Self::Capacity => "retained output capacity overflowed",
+            Self::AlreadyActive => "a retained output grant is already active",
+            Self::NoActiveGrant => "no retained output grant is active",
+            Self::LimitExceeded => "retained output exceeded its grant",
+        })
+    }
+}
+
+impl std::error::Error for RetainedOutputError {}
+
 impl DrawList {
     /// 🪣 Creates an allocation-free transfer slot for a later exact draw admission.
     pub fn empty() -> Self {
@@ -242,40 +266,40 @@ impl DrawList {
     }
 
     /// 🎟️ Pre-admits fixed candidate backing before a retained paint child transfers output.
-    pub fn try_reserve_retained_items(&mut self, items: usize) -> Result<(), ()> {
+    pub fn try_reserve_retained_items(&mut self, items: usize) -> Result<(), RetainedOutputError> {
         if self.layers.is_empty() {
-            self.layers.try_reserve_exact(1).map_err(|_| ())?;
+            self.layers.try_reserve_exact(1).map_err(|_| RetainedOutputError::Allocation)?;
             self.layers.push(DrawLayer::default());
         }
-        let vertices = items.checked_mul(6).ok_or(())?;
-        let layer = self.layers.last_mut().ok_or(())?;
-        layer.ui_instances.try_reserve_exact(items).map_err(|_| ())?;
-        layer.overlay_ui_instances.try_reserve_exact(items).map_err(|_| ())?;
-        layer.vector_vertices.try_reserve_exact(vertices).map_err(|_| ())?;
-        layer.overlay_vector_vertices.try_reserve_exact(vertices).map_err(|_| ())?;
-        layer.raster_instances.try_reserve_exact(items).map_err(|_| ())?;
+        let vertices = items.checked_mul(6).ok_or(RetainedOutputError::Capacity)?;
+        let layer = self.layers.last_mut().ok_or(RetainedOutputError::Capacity)?;
+        layer.ui_instances.try_reserve_exact(items).map_err(|_| RetainedOutputError::Allocation)?;
+        layer.overlay_ui_instances.try_reserve_exact(items).map_err(|_| RetainedOutputError::Allocation)?;
+        layer.vector_vertices.try_reserve_exact(vertices).map_err(|_| RetainedOutputError::Allocation)?;
+        layer.overlay_vector_vertices.try_reserve_exact(vertices).map_err(|_| RetainedOutputError::Allocation)?;
+        layer.raster_instances.try_reserve_exact(items).map_err(|_| RetainedOutputError::Allocation)?;
         Ok(())
     }
 
     /// 🎫️ Starts one exact retained output grant and pre-admits all fixed container backing.
-    pub fn begin_retained_output(&mut self, item_limit: usize, byte_limit: usize) -> Result<(), ()> {
+    pub fn begin_retained_output(&mut self, item_limit: usize, byte_limit: usize) -> Result<(), RetainedOutputError> {
         if self.retained_output.is_some() {
-            return Err(());
+            return Err(RetainedOutputError::AlreadyActive);
         }
         self.try_reserve_retained_items(item_limit)?;
-        self.layers.try_reserve_exact(item_limit).map_err(|_| ())?;
-        self.glass_regions.try_reserve_exact(item_limit).map_err(|_| ())?;
-        self.scissor_stack.try_reserve_exact(item_limit).map_err(|_| ())?;
-        self.glass_content_stack.try_reserve_exact(item_limit).map_err(|_| ())?;
+        self.layers.try_reserve_exact(item_limit).map_err(|_| RetainedOutputError::Allocation)?;
+        self.glass_regions.try_reserve_exact(item_limit).map_err(|_| RetainedOutputError::Allocation)?;
+        self.scissor_stack.try_reserve_exact(item_limit).map_err(|_| RetainedOutputError::Allocation)?;
+        self.glass_content_stack.try_reserve_exact(item_limit).map_err(|_| RetainedOutputError::Allocation)?;
         self.retained_output = Some(RetainedOutputGrant { item_limit, byte_limit, items: 0, bytes: 0, faulted: false });
         Ok(())
     }
 
     /// 🧾️ Closes the exact retained output grant and reports any attempted overflow.
-    pub fn finish_retained_output(&mut self) -> Result<(usize, usize), ()> {
-        let Some(grant) = self.retained_output.take() else { return Err(()) };
+    pub fn finish_retained_output(&mut self) -> Result<(usize, usize), RetainedOutputError> {
+        let Some(grant) = self.retained_output.take() else { return Err(RetainedOutputError::NoActiveGrant) };
         if grant.faulted {
-            return Err(());
+            return Err(RetainedOutputError::LimitExceeded);
         }
         Ok((grant.items, grant.bytes))
     }

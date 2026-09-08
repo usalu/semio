@@ -1,0 +1,4 @@
+{
+  "messages": [{"root":"🧰️framework/🛍️products/💻️os/📋️project.json","name":"semio"},{"name":"🧩️puzzle","source":"Grüße 日本語"},{"result":true}],
+  "chunkSizes": [1, 2, 3, 7, 64, 65536]
+}

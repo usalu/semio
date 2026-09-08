@@ -414,7 +414,7 @@ fn decode_revision_hex(value: crate::value::DslValue) -> Result<[u8; 32], crate:
         return Err(crate::value::ValueError::new("invalid full revision"));
     }
     let mut bytes = [0; 32];
-    for (index, pair) in text.as_bytes().chunks_exact(2).enumerate() { bytes[index] = nibble(pair[0]) * 16 + nibble(pair[1]); }
+    for (index, pair) in text.as_bytes().as_chunks::<2>().0.iter().enumerate() { bytes[index] = nibble(pair[0]) * 16 + nibble(pair[1]); }
     Ok(bytes)
 }
 fn nibble(byte: u8) -> u8 { if byte <= b'9' { byte - b'0' } else { byte - b'a' + 10 } }

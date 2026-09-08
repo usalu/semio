@@ -90,14 +90,14 @@ mod surface_tests {
     //! belong to their own owning plugins' surface tests, not this one).
     use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
 
-    #[test]
-    fn playground_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::playground::PlaygroundViewer>();
+    #[semio_framework_async_macros::async_test]
+    async fn playground_viewer_never_mutates() {
+        assert_viewer_never_mutates::<crate::viewer::playground::PlaygroundViewer>().await;
     }
 
-    #[test]
-    fn playground_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::playground::PlaygroundEditor, crate::viewer::playground::PlaygroundViewer>();
+    #[semio_framework_async_macros::async_test]
+    async fn playground_editor_and_viewer_share_dialect() {
+        assert_editor_and_viewer_share_dialect::<crate::editor::playground::PlaygroundEditor, crate::viewer::playground::PlaygroundViewer>().await;
     }
 }
 //#endregion 🧪️SurfaceTests
@@ -127,7 +127,7 @@ mod tests {
     /// built manifest's own app dialects, so adding a borrowed app without its dependency fails here.
     #[test]
     fn every_borrowed_surface_is_backed_by_a_declared_dependency() {
-        semio_framework_plugin::testkit::assert_surface_dependencies_declared(&test_bundle().manifest);
+        testkit::assert_surface_dependencies_declared(&test_bundle().manifest);
     }
 
     /// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: playground's own two native
@@ -173,7 +173,7 @@ mod tests {
             if let Some(command) = app.commands.iter().find(|command| command.id == "setContributions") {
                 assert!(!command.in_palette, "host catalogue command leaked into {}'s palette", app.id);
                 assert_eq!(command.args.iter().map(|arg| arg.id.as_str()).collect::<Vec<_>>(), vec!["json"]);
-                assert_eq!(command.semantics.execution.interactive_job, semio_framework_plugin::InteractiveJobClassification::Migrated, "host catalogue command in {} must be admitted as migrated interactive work", app.id);
+                assert_eq!(command.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "host catalogue command in {} must be admitted as migrated interactive work", app.id);
             }
         }
         let procedural = test_bundle().manifest.apps.into_iter().find(|app| app.id == "s.procedural.generation3d@1/*#editor").expect("procedural surface");
@@ -182,7 +182,7 @@ mod tests {
         assert!(tick.args.is_empty());
     }
 
-    fn assert_tree_reconciles(tree: semio_framework_ui_runtime::ComponentTree, generation: u64, label: &str) {
+    fn assert_tree_reconciles(tree: ComponentTree, generation: u64, label: &str) {
         assert!(!tree.root.key.is_empty(), "{label} must contain an authored root");
         let mut producer = semio_framework_ui_runtime::ComponentTreeProducer::try_new(tree.root, generation).expect("nonzero aggregate tree generation");
         for _ in 0..65_536 {

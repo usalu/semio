@@ -499,6 +499,6 @@ mod tests {
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/⭕️dims-the-walls-layer-and-widens-the-circle/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/⭕️dims-the-walls-103ae9/🦀️.rs"]
 mod set_snapshot_dims_the_walls_layer_and_widens_the_circle;
 //#endregion 🧪️FixtureCases

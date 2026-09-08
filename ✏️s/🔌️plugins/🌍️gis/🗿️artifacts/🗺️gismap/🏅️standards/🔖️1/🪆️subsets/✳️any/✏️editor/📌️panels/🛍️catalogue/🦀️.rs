@@ -39,8 +39,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn catalogue_lists_layer_toggles() {
-        let mut app = app();
-        assert!(render_body(&mut app, GIS2D_PLAY_BODY_CATALOGUE).contains("gis2d-play-catalogue.layer.water"));
+        let mut app = app().await;
+        assert!(render_body(&mut app, GIS2D_PLAY_BODY_CATALOGUE).await.contains("gis2d-play-catalogue.layer.water"));
     }
 
     #[semio_framework_async_macros::async_test]

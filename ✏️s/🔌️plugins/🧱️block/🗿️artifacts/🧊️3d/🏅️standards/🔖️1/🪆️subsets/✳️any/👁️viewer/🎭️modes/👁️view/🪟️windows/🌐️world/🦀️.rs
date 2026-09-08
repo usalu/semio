@@ -9,7 +9,7 @@
 
 use crate::artifacts::block3d::{vortex_kinds_of, Block3dSnapshot};
 use crate::BlockRepresentation;
-use semio_framework_plugin::{world3d_camera_projection_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, BuiltNode, UiAssemblyResult, WindowKindDefinition, WorldProjectionConfig};
+use semio_framework_plugin::{world3d_camera_projection_json, world3d_mesh_id_from_url, World3dScene, world3d_selection_json, BuiltNode, UiAssemblyResult, WindowKindDefinition, WorldProjectionConfig};
 use semio_framework_ui_contract::SurfaceKind;
 // 🚧️ SDK GAP: `MeshWindowKit`/`WindowKit` (contract §2.6) are only reachable through the `app`
 // submodule they're declared in — not (yet) in `semio_framework_plugin`'s curated crate-root
@@ -46,7 +46,8 @@ pub fn render(document: &Block3dSnapshot) -> UiAssemblyResult<BuiltNode> {
     let instances_json = instances_json(document, &document.representations);
     let selection_json = world3d_selection_json("rectangle", &[], None);
     let vortices_json = vortices_json(document);
-    let scene = world3d_scene_extended(camera_json, meshes_json, instances_json, selection_json, Some(vortices_json), None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None);
+    let mut scene = World3dScene::base(camera_json, meshes_json, instances_json, selection_json);
+    scene.vortices_json = Some(vortices_json);
     semio_framework_plugin::scene_surface(SURFACE_ID, SurfaceKind::World3d, &scene)
 }
 

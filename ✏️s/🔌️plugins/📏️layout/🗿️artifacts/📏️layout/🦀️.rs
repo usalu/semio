@@ -457,8 +457,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: LAYOUT_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.svg", "stdio.png"],
-        import_stdio_kinds: vec!["stdio.svg", "stdio.png"],
+        export_stdio_kinds: vec!["stdio.svg".into(), "stdio.png".into()],
+        import_stdio_kinds: vec!["stdio.svg".into(), "stdio.png".into()],
     }
 }
 

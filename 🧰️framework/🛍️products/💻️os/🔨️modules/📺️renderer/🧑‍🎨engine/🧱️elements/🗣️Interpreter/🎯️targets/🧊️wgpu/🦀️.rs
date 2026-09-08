@@ -7,7 +7,10 @@
 //! with zero other changes.
 //! 🧩️ Maps framework UiNode trees to ui_wgpu widget nodes.
 
-use crate::scenes::{queue_canvas_image_upload_sized, queue_canvas_image_upload_with, render_component_scene_step, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
+
+#[cfg(test)]
+use crate::scenes::queue_canvas_image_upload_sized;
+use crate::scenes::{queue_canvas_image_upload_with, render_component_scene_step, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
 use infinite_world::world::{WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind};
 use serde_json::Value;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -234,10 +237,6 @@ pub fn validate_window_body_surface(kind: &semio_framework::WindowKindDefinition
     }
 }
 
-#[cfg(test)]
-fn render_plan_error_widget(message: &str, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
-    render_widget(&WidgetNode::Text { value: format!("Render plan rejected: {message}"), emphasize: true }, bounds, ctx);
-}
 //#endregion RenderPlanValidator
 
 //#region RetainedEngineCutover
@@ -374,6 +373,7 @@ impl SceneInteractionIntent {
 static SCENE_INTENTS: WorkerCell<SceneIntentQueue> = WorkerCell::new();
 /// 👆️ Last-seen `(pointer_down, pointer_button)` per `window_id`, so `dispatch_pointer_events` can
 /// detect Down/Up edges from `InputState`'s per-frame aggregate.
+#[cfg(test)]
 static POINTER_EDGE_STATE: WorkerCell<std::collections::HashMap<String, (bool, i16)>> = WorkerCell::new();
 
 /** 🖇️ Public hook for the sibling `w3-shell-input-cutover` workstream (region `shell::ShellInput`,
@@ -755,6 +755,7 @@ fn apply_clipboard_paste_requested(window_id: &str, _input: &mut ui_wgpu::wgpu::
 /// into a real `i16` for those same `scenes` handlers; nothing previously read `UiEvent::PointerDown/
 /// Up`'s `button` field on this path (`events::EventRouter::dispatch` itself never branches on it), so
 /// the swap had no observable effect before this ticket.
+#[cfg(test)]
 fn pointer_button_from_code(code: i16) -> ui_wgpu::wgpu::PointerButton {
     match code {
         1 => ui_wgpu::wgpu::PointerButton::Middle,
@@ -1007,6 +1008,7 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
  * stealing keys from whichever window/panel doesn't happen to run first; that needs "which window
  * currently has keyboard focus" bookkeeping this ticket's `must_not_touch` `shell` regions own. Use
  * `dispatch_ui_event` (above) for that once `w3-shell-input-cutover` lands it. */
+#[cfg(test)]
 fn dispatch_pointer_events(engine: &mut ui_wgpu::wgpu::Ui, window_id: &str, bounds: Rect, input: &ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ui_wgpu::wgpu::UiCommand> {
     let local_x = input.pointer_x - bounds.x;
     let local_y = input.pointer_y - bounds.y;
@@ -1031,6 +1033,7 @@ fn dispatch_pointer_events(engine: &mut ui_wgpu::wgpu::Ui, window_id: &str, boun
     commands
 }
 
+#[cfg(test)]
 fn shift_instance(instance: &ui_wgpu::wgpu::draw::UiInstance, dx: f32, dy: f32) -> ui_wgpu::wgpu::draw::UiInstance {
     let mut shifted = *instance;
     shifted.rect[0] += dx;
@@ -1038,6 +1041,7 @@ fn shift_instance(instance: &ui_wgpu::wgpu::draw::UiInstance, dx: f32, dy: f32) 
     shifted
 }
 
+#[cfg(test)]
 fn shift_vertex(vertex: &ui_wgpu::wgpu::draw::VectorVertex, dx: f32, dy: f32) -> ui_wgpu::wgpu::draw::VectorVertex {
     let mut shifted = *vertex;
     shifted.position[0] += dx;
@@ -1045,6 +1049,7 @@ fn shift_vertex(vertex: &ui_wgpu::wgpu::draw::VectorVertex, dx: f32, dy: f32) ->
     shifted
 }
 
+#[cfg(test)]
 fn shift_scissor(scissor: ui_wgpu::wgpu::draw::ScissorRect, dx: f32, dy: f32) -> ui_wgpu::wgpu::draw::ScissorRect {
     ui_wgpu::wgpu::draw::ScissorRect { x: ((scissor.x as f32) + dx).max(0.0) as u32, y: ((scissor.y as f32) + dy).max(0.0) as u32, w: scissor.w, h: scissor.h }
 }
@@ -1062,6 +1067,7 @@ fn shift_scissor(scissor: ui_wgpu::wgpu::draw::ScissorRect, dx: f32, dy: f32) ->
  * arm, which calls into `infinite_world::world::render_world_3d`'s own `ctx.draw.push_scene_pass`) rides
  * along through this exact rebasing, no special-casing needed here now that a real `SceneHost` is
  * registered. */
+#[cfg(test)]
 fn composite_retained_draw_list(target: &mut ui_wgpu::wgpu::DrawList, retained: &ui_wgpu::wgpu::DrawList, offset_x: f32, offset_y: f32) {
     let glass_base = target.glass_regions.len();
     for region in &retained.glass_regions {
@@ -1167,70 +1173,6 @@ fn drive_mounted_layout_text_one(engine: &mut ui_wgpu::wgpu::Ui, window_id: &str
     progress
 }
 
-/** 🔁️ The live cutover entry point (was `ui_node_to_widget`+`render_widget`, now
- * `ui_wgpu::wgpu::Ui::apply_tree`/`frame`/`dispatch_event`). `window_id` identifies which retained window
- * bucket this call's `node`/`bounds` belong to — see `RetainedEngineCutover`'s doc comment for why
- * this had to become a new parameter and which two call sites outside `interpreter` were touched.
- *
- * ✅️ RESOLVED (was the "SceneHost — deliberately not implemented" gap, `report-w3-interpreter-
- * cutover.md`): `ComponentScene`/`Image` leaves are now painted by `FrameworkSceneHost` — a real
- * `scene_slots::SceneHost` — through `Ui::frame`'s per-tick `scene_host` parameter, not by the
- * separate immediate-mode shadow walk (`paint_unbridged_scene_and_image_leaves`, `measure_ui_node`/
- * `layout_vertical`/`layout_horizontal`-driven) that used to run after `Ui::frame` returned. That
- * function and its bounds-divergence-for-`Field`/`Section` gap are gone: `ui_wgpu`'s own
- * `collect_scene_slots` resolves bounds from the SAME retained taffy layout the rest of the tree
- * already painted with, for every container kind (including `Group`/`Tree`, which the shadow walk's
- * hard-coded `Stack`/`Section`/`Field` recursion never covered). */
-#[cfg(test)]
-pub fn render_ui_node(
-    node: &UiNode,
-    bounds: Rect,
-    ctx: &mut FrameworkWidgetContext<'_>,
-    window_id: &str,
-    engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
-    world_resources: &mut infinite_world::world::World3dBuildContext,
-    world3d_states: &mut AdmittedSurfaceMap<infinite_world::world::World3dState>,
-    node_graph_states: &mut AdmittedSurfaceMap<NodeGraphSurface>,
-    tiled_map_states: &mut AdmittedSurfaceMap<TiledMapSurface>,
-    icon_render_states: &mut std::collections::HashMap<String, infinite_world::world::World3dState>,
-    board2d_states: &mut AdmittedSurfaceMap<Board2dSurface>,
-) {
-    #[cfg(all(not(target_arch = "wasm32"), not(test)))]
-    pump_clipboard_io_one();
-    if let Err(message) = validate_ui_node(node, &RENDER_PLAN_LIMITS) {
-        return render_plan_error_widget(&message, bounds, ctx);
-    }
-    let theme = *ctx.theme;
-    let viewport_w = bounds.w.max(1.0);
-    let viewport_h = bounds.h.max(1.0);
-    let commands = UI_ENGINE.with(|cell| {
-        let mut engine = cell.borrow_mut();
-        engine.set_theme(theme);
-        engine.apply_tree(window_id, node);
-        engine.set_viewport(window_id, viewport_w, viewport_h);
-        let _ = drive_mounted_layout_text_one(&mut engine, window_id, ctx.atlas);
-        let commands = dispatch_pointer_events(&mut engine, window_id, bounds, ctx.input);
-        let mut scene_host = FrameworkSceneHost {
-            engine_resources,
-            world_resources,
-            input: ctx.input,
-            theme: ctx.theme,
-            scroll_offsets: ctx.scroll_offsets,
-            collapsed_sections: ctx.collapsed_sections,
-            open_selects: ctx.open_selects,
-            world3d_states,
-            node_graph_states,
-            tiled_map_states,
-            icon_render_states,
-            board2d_states,
-        };
-        if let Some(retained_draw) = engine.frame(window_id, viewport_w, viewport_h, ctx.atlas, ctx.icons, Some(&mut scene_host)) {
-            composite_retained_draw_list(ctx.draw, retained_draw, bounds.x, bounds.y);
-        }
-        commands
-    });
-    apply_ui_commands(&commands, ctx.input);
-}
 
 //#region 📄️RetainedDocumentConsumer
 static DOCUMENT_PAGE_OPPORTUNITY_CONSUMED: AtomicBool = AtomicBool::new(false);
@@ -1363,7 +1305,7 @@ pub(crate) fn render_ui_document_step(
 }
 
 #[cfg(test)]
-pub fn render_ui_document(
+pub(crate) fn render_ui_document(
     document: &UiDocumentLease,
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
@@ -1434,7 +1376,8 @@ pub fn render_ui_document(
             icon_render_states,
             board2d_states,
         };
-        if let Some(retained_draw) = engine.frame(window_id, viewport_w, viewport_h, ctx.atlas, ctx.icons, Some(&mut scene_host)) {
+        if matches!(engine.frame_step(window_id, viewport_w, viewport_h, ctx.atlas, ctx.icons, Some(&mut scene_host)), ui_wgpu::wgpu::UiFrameStep::Ready) {
+            let retained_draw = engine.draw_list(window_id).expect("completed fixture frame retains its draw list");
             composite_retained_draw_list(ctx.draw, retained_draw, bounds.x, bounds.y);
         }
         commands
@@ -1482,12 +1425,12 @@ mod ui_command_wiring_tests {
     #[test]
     fn merge_action_args_lets_the_patch_win_over_existing_args() {
         let existing = serde_json::json!({"id": "abc", "kept": true});
-        let existing_dsl = semio_framework::to_dsl_value(&existing).unwrap();
+        let existing_dsl = existing.into();
         let mut patch = serde_json::Map::new();
         patch.insert("id".to_string(), Value::from("overridden"));
         patch.insert("targetId".to_string(), Value::from("t1"));
 
-        let merged = semio_framework::from_dsl_value::<Value>(merge_action_args(Some(&existing_dsl), patch).expect("merged args")).expect("json args");
+        let merged: Value = serde_json::from_str(&dsl::json::from_dsl_value(&merge_action_args(Some(&existing_dsl), patch).expect("merged args")).to_string()).expect("json args");
 
         assert_eq!(merged.get("id").and_then(Value::as_str), Some("overridden"));
         assert_eq!(merged.get("kept").and_then(Value::as_bool), Some(true));
@@ -1523,9 +1466,9 @@ mod ui_command_wiring_tests {
         payload.insert("application/x-semio-catalogue-item".into(), "{\"id\":\"abc\"}".into());
         let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
 
-        apply_drop_committed(window_id, target, &payload, &mut input);
+        apply_drop_committed(window_id, target, &payload, &mut input).expect("fixture drop admission succeeds");
 
-        let queued = input.drain_events();
+        let queued = crate::collect_fixture_actions(&mut input);
         assert_eq!(queued.len(), 1);
         assert_eq!(queued[0].controller_id, "ctrl");
         assert_eq!(queued[0].action, "onDrop");
@@ -1541,9 +1484,9 @@ mod ui_command_wiring_tests {
         let target = UI_ENGINE.with(|cell| cell.borrow().tree(window_id).unwrap().root.unwrap());
         let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
 
-        apply_drop_committed(window_id, target, &DragPayload::new(), &mut input);
+        apply_drop_committed(window_id, target, &DragPayload::new(), &mut input).expect("fixture drop admission succeeds");
 
-        assert!(input.drain_events().is_empty());
+        assert!(crate::collect_fixture_actions(&mut input).is_empty());
     }
     //#endregion 🔖️DropCommittedTests
 
@@ -1602,7 +1545,7 @@ mod ui_command_wiring_tests {
 
         apply_clipboard_paste_requested(window_id, &mut input);
 
-        assert!(input.drain_events().is_empty());
+        assert!(crate::collect_fixture_actions(&mut input).is_empty());
     }
     //#endregion 🔖️ClipboardTests
 
@@ -1623,7 +1566,7 @@ mod ui_command_wiring_tests {
             &mut input,
         );
 
-        assert!(input.drain_events().is_empty(), "none of these three commands should ever queue an ActionDescriptor");
+        assert!(crate::collect_fixture_actions(&mut input).is_empty(), "none of these three commands should ever queue an ActionDescriptor");
     }
     //#endregion 🔖️NoOpCommandTests
 
@@ -1694,7 +1637,7 @@ mod ui_command_wiring_tests {
             &mut input,
         );
 
-        let queued = input.drain_events();
+        let queued = crate::collect_fixture_actions(&mut input);
         assert!(queued.iter().any(|action| action.action == "canvasPointerDown"), "a real per-event PointerDown over a canvas-2d scene should reach the same handler apply_scene_pointer used to sample, got {queued:?}");
     }
 
@@ -1717,7 +1660,7 @@ mod ui_command_wiring_tests {
             &mut input,
         );
 
-        let queued = input.drain_events();
+        let queued = crate::collect_fixture_actions(&mut input);
         assert!(queued.iter().any(|action| action.action == "setCamera"), "a real per-event Scroll over an ink-canvas scene should reach handle_scene_wheel, got {queued:?}");
     }
 
@@ -1732,7 +1675,7 @@ mod ui_command_wiring_tests {
         UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("root", None, vec![component_scene_ui("replacement", ui_wgpu::wgpu::SurfaceKind::Canvas2d)])));
 
         assert!(drive_scene_interaction_step(&mut input));
-        assert!(input.drain_events().is_empty());
+        assert!(crate::collect_fixture_actions(&mut input).is_empty());
         assert!(scene_interaction_terminal_is_empty());
     }
 
@@ -1755,7 +1698,7 @@ mod ui_command_wiring_tests {
             &mut input,
         );
 
-        assert!(input.drain_events().is_empty(), "node-graph already gets real input through its own bespoke dock/engine_canvas host and must not be double-dispatched via UiCommand::Scene");
+        assert!(crate::collect_fixture_actions(&mut input).is_empty(), "node-graph already gets real input through its own bespoke dock/engine_canvas host and must not be double-dispatched via UiCommand::Scene");
     }
 
     #[test]
@@ -1834,7 +1777,7 @@ mod ui_command_wiring_tests {
             &mut input,
         );
 
-        assert!(input.drain_events().is_empty(), "no ENGINE_SURFACES entry exists without a real paint pass, so this should no-op rather than panic or queue a stale action");
+        assert!(crate::collect_fixture_actions(&mut input).is_empty(), "no ENGINE_SURFACES entry exists without a real paint pass, so this should no-op rather than panic or queue a stale action");
     }
     //#endregion 🔖️SceneCommandTests
 }
@@ -1957,6 +1900,7 @@ fn svg_dimensions(svg_text: &str) -> Option<(u32, u32)> {
     Some(((natural_w * scale).round().max(1.0) as u32, (natural_h * scale).round().max(1.0) as u32))
 }
 
+#[cfg(test)]
 fn percent_decode_basic(input: &str) -> Vec<u8> {
     let bytes = input.as_bytes();
     let mut out = Vec::with_capacity(bytes.len());
@@ -1978,6 +1922,7 @@ fn percent_decode_basic(input: &str) -> Vec<u8> {
 /** 🖊️ Decodes a `data:image/svg+xml[;base64],...` URL's SVG text (base64 or percent-encoded/plain
  * UTF-8 body) — `decode_canvas_image` only handles `image/png`/`image/jpeg`, so inline SVG data URLs
  * previously fell straight through to the `alt`-text fallback. */
+#[cfg(test)]
 fn parse_svg_data_url_bytes(src: &str) -> Option<Vec<u8>> {
     use base64::Engine;
     #[cfg(test)]
@@ -1993,6 +1938,7 @@ fn parse_svg_data_url_bytes(src: &str) -> Option<Vec<u8>> {
     }
 }
 
+#[cfg(test)]
 fn resolve_ui_image_svg(id: &str, src: &str) -> (Option<String>, Option<(u32, u32)>) {
     let size = std::cell::Cell::new(None);
     let key = queue_canvas_image_upload_with(
@@ -2013,6 +1959,7 @@ fn resolve_ui_image_svg(id: &str, src: &str) -> (Option<String>, Option<(u32, u3
     (key, size.get())
 }
 
+#[cfg(test)]
 fn resolve_ui_image_url(id: &str, url: &str) -> (Option<String>, Option<(u32, u32)>) {
     queue_ui_image_url_fetch(id, url);
     let Some(key) = UI_IMAGE_URL_CACHE.with(|cell| cell.borrow().get(id).cloned()) else {
@@ -2027,6 +1974,7 @@ fn resolve_ui_image_url(id: &str, url: &str) -> (Option<String>, Option<(u32, u3
  * (`http(s)://` absolute or a relative path) is treated as a URL and admitted to the fixed renderer
  * asset authority, rendering whatever was previously cached (or nothing) in the
  * meantime — matches the React reference's plain `<img src>`, which resolves any URL natively. */
+#[cfg(test)]
 pub(crate) fn resolve_ui_image(id: &str, src: &str) -> (Option<String>, Option<(u32, u32)>) {
     if src.is_empty() {
         return (None, None);
@@ -2124,18 +2072,6 @@ fn render_ui_image_step(image: &ui_wgpu::wgpu::UiImageNode, bounds: Rect, ctx: &
     }
 }
 
-#[cfg(test)]
-fn render_ui_image(image: &ui_wgpu::wgpu::UiImageNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
-    let (key, natural_size) = resolve_ui_image(&image.id, image.src.trim());
-    let Some(key) = key else {
-        if let Some(alt) = &image.alt {
-            draw_text(ctx, alt.as_str(), bounds.x + 4.0, bounds.y + 16.0, ctx.theme.font_size_small, ctx.theme.text_muted);
-        }
-        return;
-    };
-    let target = natural_size.filter(|(width, height)| *width > 0 && *height > 0).map(|(width, height)| object_contain_rect(bounds, width as f32, height as f32)).unwrap_or(bounds);
-    ctx.draw.push_raster_quad(&key, [target.x, target.y, target.w, target.h], [0.0, 0.0, 1.0, 1.0], 1.0);
-}
 
 pub fn framework_widget_context<'a>(
     draw: &'a mut ui_wgpu::wgpu::DrawList,

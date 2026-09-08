@@ -341,7 +341,7 @@ mod tests {
     async fn dwg_import_falls_back_to_default_document_when_empty() {
         let drawing = DwgDrawing::default();
         let value = gis2d_document_json_from_dwg(&drawing).expect("import empty dwg");
-        let snapshot: GisMapSnapshot = serde_json::from_value(value).expect("document");
+        let snapshot: GisMapSnapshot = dsl::json::from_json_str(&value.to_string()).expect("document");
         assert!(!snapshot.positions.is_empty(), "fallback seeds the reuse-map document");
     }
 

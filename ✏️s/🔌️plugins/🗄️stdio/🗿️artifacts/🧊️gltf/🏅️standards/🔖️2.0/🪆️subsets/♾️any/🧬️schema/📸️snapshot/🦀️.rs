@@ -43,7 +43,9 @@ pub enum GltfSourceForm {
 /// free-form JSON with no `bufferView`-precision requirement, unlike `stdio.json`'s own
 /// arbitrary-precision lexeme retention).
 #[derive(Clone, Debug, PartialEq)]
+#[derive(Default)]
 pub enum GltfJson {
+    #[default]
     Null,
     Bool(bool),
     Number(f64),
@@ -52,11 +54,6 @@ pub enum GltfJson {
     Object(Vec<(String, GltfJson)>),
 }
 
-impl Default for GltfJson {
-    fn default() -> Self {
-        GltfJson::Null
-    }
-}
 
 /// 🌱️ Additive alongside [`dsl::ToValue`]/[`dsl::FromValue`] below, not a replacement: `🚪️io/🦀️.rs`'s
 /// `.gltf`/`.glb` codec no longer needs this pair (it round-trips `GltfDocument` through `pack::json`
@@ -1227,6 +1224,7 @@ impl dsl::FromValue for GltfCamera {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(Default)]
 pub struct GltfDocument {
     pub asset: GltfAsset,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1285,31 +1283,6 @@ pub struct GltfDocument {
     pub extras: Option<GltfJson>,
 }
 
-impl Default for GltfDocument {
-    fn default() -> Self {
-        Self {
-            asset: GltfAsset::default(),
-            scene: None,
-            scenes: Vec::new(),
-            nodes: Vec::new(),
-            meshes: Vec::new(),
-            accessors: Vec::new(),
-            buffer_views: Vec::new(),
-            buffers: Vec::new(),
-            materials: Vec::new(),
-            textures: Vec::new(),
-            images: Vec::new(),
-            samplers: Vec::new(),
-            skins: Vec::new(),
-            animations: Vec::new(),
-            cameras: Vec::new(),
-            extensions_used: Vec::new(),
-            extensions_required: Vec::new(),
-            extensions: None,
-            extras: None,
-        }
-    }
-}
 //#endregion 🔖️Document
 
 //#region 🔖️Snapshot

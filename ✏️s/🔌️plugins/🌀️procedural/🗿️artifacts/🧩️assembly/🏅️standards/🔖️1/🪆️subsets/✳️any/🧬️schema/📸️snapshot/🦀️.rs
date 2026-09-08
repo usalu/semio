@@ -141,8 +141,8 @@ mod tests {
         snapshot.edges.push(AssemblySlotEdge { id: "e1".into(), from_slot_id: "s1".into(), to_slot_id: "s1".into() });
         snapshot.weights.push(AssemblyModuleWeight { module_id: "m1".into(), weight: 2.5 });
         snapshot.rules.push(AssemblyRule { id: "r1".into(), module_a_id: "m1".into(), module_b_id: "m2".into(), allowed: true, params: SemioValue::default() });
-        let bytes = serde_json::to_vec(&snapshot).expect("encode");
-        let back: AssemblySnapshot = serde_json::from_slice(&bytes).expect("decode");
+        let bytes = dsl::json::to_json_string(&snapshot).into_bytes();
+        let back: AssemblySnapshot = dsl::json::from_json_str(std::str::from_utf8(&bytes).expect("UTF-8 snapshot")).expect("decode");
         assert_eq!(snapshot, back);
     }
 

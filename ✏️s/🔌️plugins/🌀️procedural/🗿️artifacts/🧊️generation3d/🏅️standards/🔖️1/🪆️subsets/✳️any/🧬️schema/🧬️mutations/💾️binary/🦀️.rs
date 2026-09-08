@@ -263,12 +263,12 @@ mod tests {
         assert!(error.to_string().contains("unknown operation"), "unexpected error: {error}");
     }
 
-    #[test]
-    fn document_text_round_trip_with_operation_applied() {
-        let mut store = store::ArtifactStore::<Generation3dSnapshot, Generation3dMutation>::new(create_document_envelope(GENERATION_3D_SCHEMA, "generation3d", Generation3dSnapshot::default(), None)).expect("valid artifact store fixture");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![Generation3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], description: None }).expect("apply");
-        test_support::assert_document_text_round_trip(&store);
-        test_support::assert_document_pack_round_trip(&store);
+    #[semio_framework_async_macros::async_test]
+    async fn document_text_round_trip_with_operation_applied() {
+        let mut store = store::ArtifactStore::<Generation3dSnapshot, Generation3dMutation>::new(create_document_envelope(GENERATION_3D_SCHEMA, "generation3d", Generation3dSnapshot::default(), None)).await.expect("valid artifact store fixture");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Generation3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], description: None }).await.expect("apply");
+        test_support::assert_document_text_round_trip(&store).await;
+        test_support::assert_document_pack_round_trip(&store).await;
     }
 }
 //#endregion 🧪️Tests
@@ -442,7 +442,8 @@ pub fn generation3d_validate_atomic_publication_authority(operation: semio_frame
     let leases = generation3d_publication_leases().try_lock().map_err(|_| "generation3d-publication.contended")?;
     let lease = leases.get_operation(operation).map(|(_, lease)| *lease).ok_or("generation3d-publication.authority-missing")?;
     #[cfg(test)]
-    {
+    let lease = {
+        let mut lease = lease;
         let mut hostiles = generation3d_publication_hostiles().try_lock().map_err(|_| "generation3d-publication.hostile-contended")?;
         if let Some(hostile) = hostiles.iter_mut().flatten().find(|value| value.operation == operation.0) {
             hostile.observed = Some(match hostile.hostile {
@@ -460,7 +461,8 @@ pub fn generation3d_validate_atomic_publication_authority(operation: semio_frame
                 Generation3dPublicationHostile::WrongParent => lease.parent_revision = lease.parent_revision.wrapping_add(1),
             }
         }
-    }
+        lease
+    };
     generation3d_validate_atomic_lease(lease, operation, generation, live_generation)
 }
 

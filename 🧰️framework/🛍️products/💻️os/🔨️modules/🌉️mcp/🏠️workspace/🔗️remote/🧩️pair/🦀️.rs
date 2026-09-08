@@ -869,9 +869,9 @@ impl<'a> Cursor<'a> {
         Ok(u64::from_be_bytes(self.take(8)?.try_into().map_err(|_| CanonicalPairMountError::InvalidResponse("invalid u64 field"))?))
     }
 
-    fn text(&mut self, required: bool) -> Result<String, CanonicalPairMountError> {
+    fn text_with_empty(&mut self, allow_empty: bool) -> Result<String, CanonicalPairMountError> {
         let length = usize::try_from(self.u32()?).map_err(|_| CanonicalPairMountError::ResourceLimit)?;
-        if (required && length == 0) || length > HUB_PAIR_SCOPE_MAX_BYTES {
+        if (!allow_empty && length == 0) || length > HUB_PAIR_SCOPE_MAX_BYTES {
             return Err(CanonicalPairMountError::ResourceLimit);
         }
         let text = std::str::from_utf8(self.take(length)?).map_err(|_| CanonicalPairMountError::InvalidResponse("canonical pair text is not UTF-8"))?;
@@ -881,6 +881,14 @@ impl<'a> Cursor<'a> {
         Ok(text.to_string())
     }
 
+    fn text(&mut self) -> Result<String, CanonicalPairMountError> {
+        self.text_with_empty(false)
+    }
+
+    fn baseline_head(&mut self) -> Result<String, CanonicalPairMountError> {
+        self.text_with_empty(true)
+    }
+
     fn hash(&mut self) -> Result<[u8; 32], CanonicalPairMountError> {
         let hash: [u8; 32] = self.take(32)?.try_into().map_err(|_| CanonicalPairMountError::InvalidResponse("invalid hash width"))?;
         if hash == [0; 32] {
@@ -888,6 +896,10 @@ impl<'a> Cursor<'a> {
         } else {
             Ok(hash)
         }
+    }
+
+    fn baseline_chain_hash(&mut self) -> Result<[u8; 32], CanonicalPairMountError> {
+        self.take(32)?.try_into().map_err(|_| CanonicalPairMountError::InvalidResponse("invalid hash width"))
     }
 }
 
@@ -924,21 +936,25 @@ fn decode_response(
     if cursor.byte()? != PAIR_HEADER || cursor.u32()? != 1 {
         return Err(CanonicalPairMountError::InvalidResponse("canonical pair header version mismatch"));
     }
-    let scope = DocumentScope::new(cursor.text(true)?, cursor.text(true)?);
+    let scope = DocumentScope::new(cursor.text()?, cursor.text()?);
     let descriptor_digest = cursor.hash()?;
     let active_checkpoint_id = cursor.hash()?;
-    let frontier_document_id = cursor.text(true)?;
+    let frontier_document_id = cursor.text()?;
     let head_edit_ordinal = cursor.u64()?;
-    let head_edit_id = cursor.text(false)?;
+    let head_edit_id = cursor.baseline_head()?;
     let last_commit_seq = cursor.u64()?;
-    let chain_hash = cursor.hash()?;
+    let chain_hash = cursor.baseline_chain_hash()?;
     let pack_hash = cursor.hash()?;
     let pack_length = usize::try_from(cursor.u64()?).map_err(|_| CanonicalPairMountError::ResourceLimit)?;
     let spr_hash = cursor.hash()?;
     let spr_length = usize::try_from(cursor.u64()?).map_err(|_| CanonicalPairMountError::ResourceLimit)?;
     let aggregate_hash = cursor.hash()?;
-    if cursor.offset != header.len() || scope != *expected_scope || frontier_document_id != scope.document_id || hex(&descriptor_digest) != expected_descriptor_digest {
+    if cursor.offset != header.len() || scope != *expected_scope || hex(&descriptor_digest) != expected_descriptor_digest {
         return Err(CanonicalPairMountError::InvalidResponse("canonical pair authority identity mismatch"));
+    }
+    let baseline = ArtifactFrontier { document_id: frontier_document_id, head_edit_ordinal, head_edit_id, last_commit_seq, chain_hash: ArtifactHash::new(chain_hash) };
+    if !(baseline.is_genesis_for(&scope) || baseline.is_edited_for(&scope)) {
+        return Err(CanonicalPairMountError::InvalidResponse("canonical pair baseline frontier mismatch"));
     }
     let pair_length = pack_length.checked_add(spr_length).ok_or(CanonicalPairMountError::ResourceLimit)?;
     if pack_length == 0 || spr_length == 0 || pair_length > HUB_PAIR_MAX_VERIFIED_BYTES {
@@ -1011,7 +1027,7 @@ fn decode_response(
             etag: computed_etag,
             catalog_generation,
         },
-        baseline: ArtifactFrontier { document_id: frontier_document_id, head_edit_ordinal, head_edit_id, last_commit_seq, chain_hash: ArtifactHash::new(chain_hash) },
+        baseline,
         bytes: PairBytes { pack: std::mem::take(&mut pack.0), spr: std::mem::take(&mut spr.0) },
     })
 }
@@ -1317,11 +1333,25 @@ mod tests {
         initial[ordinal..ordinal + 8].fill(0);
         initial[length..length + 4].copy_from_slice(&0u32.to_be_bytes());
         initial.drain(edit..edit + 6);
+        initial[length + 4..length + 12].fill(0);
+        initial[length + 12..length + 44].fill(0);
         let header_length = u32::from_be_bytes(initial[0..4].try_into().unwrap()) - 6;
         initial[0..4].copy_from_slice(&header_length.to_be_bytes());
         let ranges = frame_ranges(&initial).unwrap();
         let initial_etag = canonical_etag(&initial[ranges[0].1..ranges[0].2]);
-        assert!(decode_fixture_for_test(initial, &scope, descriptor, &initial_etag, &ctx).is_ok(), "ordinal-zero baseline may carry an empty edit id");
+        assert!(decode_fixture_for_test(initial.clone(), &scope, descriptor, &initial_etag, &ctx).is_ok(), "exact scope-bound genesis baseline must decode");
+        for (name, offset, value) in [("genesis-ordinal", ordinal, 1u64), ("genesis-commit", length + 4, 1u64)] {
+            let mut partial = initial.clone();
+            partial[offset..offset + 8].copy_from_slice(&value.to_be_bytes());
+            let ranges = frame_ranges(&partial).unwrap();
+            let partial_etag = canonical_etag(&partial[ranges[0].1..ranges[0].2]);
+            assert!(decode_fixture_for_test(partial, &scope, descriptor, &partial_etag, &ctx).is_err(), "partial frontier {name} must fail before pair allocation");
+        }
+        let mut partial_chain = initial;
+        partial_chain[length + 12] = 1;
+        let ranges = frame_ranges(&partial_chain).unwrap();
+        let partial_etag = canonical_etag(&partial_chain[ranges[0].1..ranges[0].2]);
+        assert!(decode_fixture_for_test(partial_chain, &scope, descriptor, &partial_etag, &ctx).is_err(), "genesis with a nonzero chain must fail before pair allocation");
     }
 
     #[tokio::test]

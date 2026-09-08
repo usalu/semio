@@ -40,6 +40,7 @@ impl UiDocumentComponentCompare {
     pub const fn required_admission_bytes() -> usize { size_of::<Self>() + size_of::<UiDocumentLease>() + size_of::<Component>() }
 
     /// 🎟️ No cursor initialization, alias minting, component copy, or heap allocation precedes admission.
+    #[expect(clippy::result_large_err, reason = "A refused comparison retains both the input lease and component without exceeding the supplied byte grant.")]
     pub fn try_new(lease: UiDocumentLease, ordinal: usize, id: UiNodeId, incoming: Component, admitted_bytes: usize) -> Result<(Self, UiDocumentCompareAdmission), (UiDocumentCompareError, UiDocumentLease, Component)> {
         if admitted_bytes < Self::required_admission_bytes() { return Err((UiDocumentCompareError::Admission, lease, incoming)); }
         let arena = match UI_DOCUMENT_ARENA.try_lock() {

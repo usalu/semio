@@ -77,16 +77,16 @@ impl ArtifactSerializer for SemioVideoToAvi {
             .collect();
         let first = from.streams.first();
         let main_header = AviMainHeader {
-            micro_sec_per_frame: first.map(|s| if s.rate.num > 0 { (1_000_000 * s.rate.den / s.rate.num).max(0) as u32 } else { 0 }).unwrap_or(0),
+            micro_sec_per_frame: first.map_or(0, |s| if s.rate.num > 0 { (1_000_000 * s.rate.den / s.rate.num).max(0) as u32 } else { 0 }),
             max_bytes_per_sec: 0,
             padding_granularity: 0,
             flags: 0x10,
-            total_frames: first.map(|s| s.samples.len() as u32).unwrap_or(0),
+            total_frames: first.map_or(0, |s| s.samples.len() as u32),
             initial_frames: 0,
             streams: streams.len() as u32,
             suggested_buffer_size: 0,
-            width: first.map(|s| s.width).unwrap_or(0),
-            height: first.map(|s| s.height).unwrap_or(0),
+            width: first.map_or(0, |s| s.width),
+            height: first.map_or(0, |s| s.height),
             reserved: vec![0, 0, 0, 0],
         };
         Ok(AviSnapshot { schema: "stdio.avi".into(), main_header, streams, idx1_present: true, unknown_chunks: Vec::new(), hdrl_extra: Vec::new() })

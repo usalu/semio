@@ -20,6 +20,7 @@ pub struct En1990Diff {
     #[state(artifact)]
     pub g_k: Option<f64>,
     #[state(artifact)]
+    #[cfg_attr(test, serde(with = "crate::document::child_identity_oracle::optional"))]
     pub q_k: Option<En1990QkChild>,
     #[state(artifact)]
     pub resistance_kn: Option<f64>,

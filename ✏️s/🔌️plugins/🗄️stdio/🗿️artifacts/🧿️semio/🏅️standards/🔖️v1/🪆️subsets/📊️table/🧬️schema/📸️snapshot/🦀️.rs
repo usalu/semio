@@ -100,11 +100,11 @@ impl Default for SemioTableSnapshot {
 /// are genuinely local to `table` are defined here.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
-    format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
+    format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

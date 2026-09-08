@@ -12,13 +12,22 @@
   "eslint.useFlatConfig": true,
   "eslint.packageManager": "bun",
   "terminal.integrated.env.windows": {
-    "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.nx/workspace-data-terminal"
+    "NX_VERBOSE_LOGGING": "false",
+    "NX_PERF_LOGGING": "false",
+    "NX_NATIVE_LOGGING": "nx=warn",
+    "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.nx/workspace-data"
   },
   "terminal.integrated.env.linux": {
-    "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.nx/workspace-data-terminal"
+    "NX_VERBOSE_LOGGING": "false",
+    "NX_PERF_LOGGING": "false",
+    "NX_NATIVE_LOGGING": "nx=warn",
+    "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.nx/workspace-data"
   },
   "terminal.integrated.env.osx": {
-    "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.nx/workspace-data-terminal"
+    "NX_VERBOSE_LOGGING": "false",
+    "NX_PERF_LOGGING": "false",
+    "NX_NATIVE_LOGGING": "nx=warn",
+    "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.nx/workspace-data"
   },
   "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
   "eslint.workingDirectories": [

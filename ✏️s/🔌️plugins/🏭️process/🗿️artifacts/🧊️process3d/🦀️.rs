@@ -909,8 +909,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: PROCESS_3D_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl"],
-        import_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl"],
+        export_stdio_kinds: vec!["stdio.dwg".into(), "stdio.gltf".into(), "stdio.ifc".into(), "stdio.json".into(), "stdio.obj".into(), "stdio.png".into(), "stdio.step".into(), "stdio.stl".into()],
+        import_stdio_kinds: vec!["stdio.dwg".into(), "stdio.gltf".into(), "stdio.ifc".into(), "stdio.json".into(), "stdio.obj".into(), "stdio.png".into(), "stdio.step".into(), "stdio.stl".into()],
     }
 }
 //#endregion 🔖️ArtifactKind

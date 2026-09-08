@@ -23,7 +23,7 @@ pub fn handle(payload: &DeleteVirtualFileSystemNode, doc: &ArtifactView<'_, SHom
             // matching `🏗️create-studio`'s own seam.
             let draft_port = semio_framework_plugin::resolve_ready(crate::draft_backbone_port());
             semio_framework_plugin::resolve_ready(crate::ephemeral_draft_catalog()).discard_draft(&draft_port, space_id);
-            let _ = delete_os_space(space_id, semio_framework_plugin::resolve_ready(crate::catalog_port()));
+            let _ = delete_os_space(space_id, &semio_framework_plugin::resolve_ready(crate::catalog_port()));
             Ok(Emit::mutations(vec![change_catalog_generation(generation + 1)]))
         }
         None => Ok(Emit::default()),

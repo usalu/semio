@@ -1,0 +1,126 @@
+diff --git a/dist/src/daemon/client/client.js b/dist/src/daemon/client/client.js
+index cebfd6d1f8ddb2c5b93dcb847904aa9ab0553de6..852f6298fcf9fd9c8a43f799382dbf3769e206bd 100644
+--- a/dist/src/daemon/client/client.js
++++ b/dist/src/daemon/client/client.js
+@@ -1235,7 +1235,18 @@ function daemonProcessException(message) {
+     // which is exactly when the daemon is most likely to fail to start.
+     let body = message;
+     try {
+-        let log = (0, node_fs_1.readFileSync)(tmp_dir_1.DAEMON_OUTPUT_LOG_FILE).toString().split('\n');
++        const descriptor = (0, node_fs_1.openSync)(tmp_dir_1.DAEMON_OUTPUT_LOG_FILE, 'r');
++        let bytes;
++        try {
++            const size = (0, node_fs_1.fstatSync)(descriptor).size;
++            bytes = Buffer.alloc(Math.min(size, 65536));
++            const length = (0, node_fs_1.readSync)(descriptor, bytes, 0, bytes.length, Math.max(0, size - bytes.length));
++            bytes = bytes.subarray(0, length);
++        }
++        finally {
++            (0, node_fs_1.closeSync)(descriptor);
++        }
++        let log = bytes.toString().split('\n');
+         if (log.length > 20) {
+             log = log.slice(log.length - 20);
+         }
+diff --git a/dist/src/daemon/client/daemon-environment.js b/dist/src/daemon/client/daemon-environment.js
+--- a/dist/src/daemon/client/daemon-environment.js
++++ b/dist/src/daemon/client/daemon-environment.js
+@@ -12,9 +12,9 @@
+     NX_CACHE_PROJECTS_CONFIG: 'false',
+ };
+ const DAEMON_ENV_OVERRIDABLE_SETTINGS = {
+-    NX_VERBOSE_LOGGING: 'true',
+-    NX_PERF_LOGGING: 'true',
+-    NX_NATIVE_LOGGING: 'nx=debug',
++    NX_VERBOSE_LOGGING: 'false',
++    NX_PERF_LOGGING: 'false',
++    NX_NATIVE_LOGGING: 'nx=warn',
+ };
+ /**
+  * Env vars that should NOT be sent to the daemon because they cannot affect
+@@ -65,6 +65,13 @@
+     'NX_PROFILE',
+     'NX_DAEMON_VERBOSE_LOGGING',
+     'NX_ORIGINAL_FORCE_COLOR',
++    // Repository task controls preserve one graph across callers.
++    'SEMIO_TICKET_DIR',
++    'SEMIO_PRINT_OUTPUT_DIR',
++    'SEMIO_BUILD_MODE',
++    'SEMIO_PLUGIN',
++    'SEMIO_RENDERER',
++    'CODEX_SESSION_ID',
+     // AI agent detection vars (the daemon itself is not an AI agent)
+     'CLAUDECODE',
+     'CLAUDE_CODE',
+@@ -267,7 +274,7 @@
+ function getDaemonEnv() {
+     const env = { ...DAEMON_ENV_OVERRIDABLE_SETTINGS };
+     for (const key in process.env) {
+-        if (!isExcludedEnvVar(key)) {
++        if (Object.hasOwn(DAEMON_ENV_OVERRIDABLE_SETTINGS, key) || !isExcludedEnvVar(key)) {
+             env[key] = process.env[key];
+         }
+     }
+diff --git a/dist/src/daemon/logger.js b/dist/src/daemon/logger.js
+--- a/dist/src/daemon/logger.js
++++ b/dist/src/daemon/logger.js
+@@ -12,10 +12,43 @@
+  */
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.clientLogger = exports.serverLogger = void 0;
++exports.pruneDaemonLog = pruneDaemonLog;
+ const fs_1 = require("fs");
+ const versions_1 = require("../utils/versions");
+ const client_socket_context_1 = require("./server/client-socket-context");
+ const tmp_dir_1 = require("./tmp-dir");
++const path_1 = require("node:path");
++const daemonLogLimit = 8 * 1024 * 1024;
++const daemonLogTail = 64 * 1024;
++/** 🪵️ Bounds derived diagnostics in place so the daemon's inherited append descriptors remain valid. */
++function pruneDaemonLog() {
++    let descriptor;
++    try {
++        const path = tmp_dir_1.DAEMON_OUTPUT_LOG_FILE;
++        const stat = (0, fs_1.lstatSync)(path);
++        if (!stat.isFile() || stat.nlink > 1 || stat.size <= daemonLogLimit) return;
++        for (let parent = path_1.dirname(path); path_1.dirname(parent) !== parent; parent = path_1.dirname(parent)) if ((0, fs_1.lstatSync)(parent).isSymbolicLink()) return;
++        descriptor = (0, fs_1.openSync)(path, fs_1.constants.O_RDWR | (fs_1.constants.O_NOFOLLOW || 0));
++        const current = (0, fs_1.fstatSync)(descriptor);
++        if (!current.isFile() || current.nlink > 1 || current.ino !== stat.ino || current.dev !== stat.dev || current.size <= daemonLogLimit) return;
++        let tail = Buffer.alloc(Math.min(current.size, daemonLogTail));
++        const length = (0, fs_1.readSync)(descriptor, tail, 0, tail.length, current.size - tail.length);
++        tail = tail.subarray(0, length);
++        const newline = tail.indexOf(10);
++        if (newline >= 0) tail = tail.subarray(newline + 1);
++        (0, fs_1.ftruncateSync)(descriptor, 0);
++        let offset = 0;
++        while (offset < tail.length) {
++            const written = (0, fs_1.writeSync)(descriptor, tail, offset, tail.length - offset, offset);
++            if (!written) break;
++            offset += written;
++        }
++    }
++    catch {}
++    finally { if (descriptor !== undefined) try { (0, fs_1.closeSync)(descriptor); } catch {} }
++}
++const retention = setInterval(() => { if (global.NX_DAEMON) pruneDaemonLog(); }, 30000);
++retention.unref();
+ class DaemonLogger {
+     constructor(source) {
+         this.source = source;
+@@ -32,6 +65,7 @@
+         if (this.source === 'Server') {
+             // Server's stdout is redirected to daemon.log
+             console.log(message);
++            pruneDaemonLog();
+         }
+         else {
+             // Client writes directly to the log file
+@@ -64,6 +98,7 @@
+                 (0, fs_1.mkdirSync)(tmp_dir_1.DAEMON_DIR_FOR_CURRENT_WORKSPACE, { recursive: true });
+             }
+             (0, fs_1.appendFileSync)(tmp_dir_1.DAEMON_OUTPUT_LOG_FILE, message + '\n');
++            pruneDaemonLog();
+         }
+         catch {
+             // Ignore write errors

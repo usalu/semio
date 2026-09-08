@@ -294,7 +294,7 @@ impl DispatchTree {
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn children(&self, id: FrameNodeId) -> &[FrameNodeId] {
-        self.children.get(id.0 as usize).map(Vec::as_slice).unwrap_or(&[])
+        self.children.get(id.0 as usize).map_or(&[], Vec::as_slice)
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -849,8 +849,7 @@ pub struct Dispatcher {
 impl Dispatcher {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new() -> Self {
-        let mut dispatcher = Self::default();
-        dispatcher.hover_chain = Vec::with_capacity(64);
+        let mut dispatcher = Self { hover_chain: Vec::with_capacity(64), ..Self::default() };
         dispatcher.overlays.open = Vec::with_capacity(16);
         dispatcher
     }
@@ -941,15 +940,15 @@ impl Dispatcher {
             self.edit_states.remove(&previous);
         }
         if let Some(next) = target {
-            if !self.edit_states.contains_key(&next) {
+            self.edit_states.entry(next).or_insert_with(|| {
                 let value = tree.element_node(next).and_then(|id| tree.node(id)).and_then(|node| node.listeners.value.as_ref());
                 let text = match value {
                     Some(UiValue::Text(text)) => text.to_string(),
                     _ => String::new(),
                 };
                 let caret = text.len();
-                self.edit_states.insert(next, EditState { text, caret, anchor: caret, composition: None });
-            }
+                EditState { text, caret, anchor: caret, composition: None }
+            });
         }
         self.focus = target;
         true

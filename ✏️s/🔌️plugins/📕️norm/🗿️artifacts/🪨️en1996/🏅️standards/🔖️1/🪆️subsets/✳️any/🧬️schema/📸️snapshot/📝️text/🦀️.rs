@@ -32,12 +32,12 @@ mod tests {
     use crate::document::{AnnexChoice, DesignSituation};
 
     #[semio_framework_async_macros::async_test]
-    fn document_dsl_round_trips() {
+    async fn document_dsl_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&En1996Snapshot::default());
     }
 
     #[semio_framework_async_macros::async_test]
-    fn loadbearing_wall_example_fixture_parses_and_round_trips() {
+    async fn loadbearing_wall_example_fixture_parses_and_round_trips() {
         let document = parse_dsl(EN1996_LOADBEARING_WALL_EXAMPLE_TEXT).expect("parse loadbearing wall example");
         assert_eq!(document.annex, AnnexChoice::En);
         assert_eq!(document.masonry_class, crate::artifacts::en1996::MasonryClass::Class2);

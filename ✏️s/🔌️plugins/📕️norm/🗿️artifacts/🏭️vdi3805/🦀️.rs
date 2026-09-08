@@ -1147,38 +1147,38 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    fn building_system_number_parse_render() {
+    async fn building_system_number_parse_render() {
         let bsn = BuildingSystemNumber::parse("420.10.1").expect("parse");
         assert_eq!(bsn.render(), "420.10.1");
     }
 
     #[semio_framework_async_macros::async_test]
-    fn building_system_number_parse_rejects_wrong_part_count() {
+    async fn building_system_number_parse_rejects_wrong_part_count() {
         let err = BuildingSystemNumber::parse("420.10").unwrap_err();
         assert!(matches!(err, NormError::InvalidValue { field, .. } if field == "building_system_number"));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn building_system_number_parse_rejects_non_numeric_sequence() {
+    async fn building_system_number_parse_rejects_non_numeric_sequence() {
         let err = BuildingSystemNumber::parse("420.10.abc").unwrap_err();
         assert!(matches!(err, NormError::InvalidValue { field, .. } if field == "building_system_number.sequence"));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn security_limits_validate_text_rejects_oversized_input() {
+    async fn security_limits_validate_text_rejects_oversized_input() {
         let limits = SecurityLimits { max_file_bytes: 8, ..SecurityLimits::default() };
         let err = limits.validate_text("this text is way longer than eight bytes").unwrap_err();
         assert!(matches!(err, NormError::InvalidValue { field, .. } if field == "file"));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn security_limits_validate_text_accepts_within_bound() {
+    async fn security_limits_validate_text_accepts_within_bound() {
         let limits = SecurityLimits::default();
         assert!(limits.validate_text("short").is_ok());
     }
 
     #[semio_framework_async_macros::async_test]
-    fn characteristic_curve_interpolates() {
+    async fn characteristic_curve_interpolates() {
         let doc = Vdi3805Snapshot::default();
         let curve = doc.curves.get("curve.kvs").expect("curve");
         let y = curve.interpolate(50.0);
@@ -1186,7 +1186,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn characteristic_curve_interpolate_handles_edges() {
+    async fn characteristic_curve_interpolate_handles_edges() {
         let empty = CharacteristicCurve { id: "empty".into(), x_unit: VdiUnit::delta("%", VdiQuantityKind::Dimensionless, 0.01), y_unit: VdiUnit::absolute("m3/h", VdiQuantityKind::Volume, 1.0), points: Vec::new() };
         assert_eq!(empty.interpolate(10.0), 0.0);
 
@@ -1197,7 +1197,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn bounding_box_overlaps_detects_intersection_and_gap() {
+    async fn bounding_box_overlaps_detects_intersection_and_gap() {
         let a = BoundingBox::from_size(1.0, 1.0, 1.0);
         let b = BoundingBox { min_x: 0.5, min_y: 0.5, min_z: 0.5, max_x: 1.5, max_y: 1.5, max_z: 1.5 };
         assert!(a.overlaps(b, 0.0));
@@ -1206,7 +1206,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn geometry_bbox_volume() {
+    async fn geometry_bbox_volume() {
         let doc = Vdi3805Snapshot::default();
         let geom = doc.geometry.get("geom.valve.50").expect("geom");
         let bbox = geom.evaluate_bbox();
@@ -1214,7 +1214,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn catalog_index_filters_by_dn() {
+    async fn catalog_index_filters_by_dn() {
         let doc = Vdi3805Snapshot::default();
         let matches = doc.index.filter_by_dn(50);
         assert_eq!(matches.len(), 1);
@@ -1222,7 +1222,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn catalog_index_filter_by_sheet_and_tag() {
+    async fn catalog_index_filter_by_sheet_and_tag() {
         let doc = Vdi3805Snapshot::default();
         let by_sheet = doc.index.filter_by_sheet(SheetId(2));
         assert_eq!(by_sheet.len(), 1);
@@ -1232,7 +1232,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn correction_overlay_applicability() {
+    async fn correction_overlay_applicability() {
         let registry = SchemaCatalog::current();
         let corrections = registry.corrections_for_sheet(SheetId(2));
         let corr = corrections.first().expect("part 2 correction");
@@ -1242,7 +1242,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn schema_registry_with_status_and_sheet_lookup() {
+    async fn schema_registry_with_status_and_sheet_lookup() {
         let registry = SchemaCatalog::with_status(SchemaStatus::Reserved);
         assert!(registry.sheets().iter().all(|s| s.status == SchemaStatus::Reserved));
         let full = SchemaCatalog::current();
@@ -1252,7 +1252,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn schema_registry_sheets_in_domain_and_reserved_numbers() {
+    async fn schema_registry_sheets_in_domain_and_reserved_numbers() {
         let registry = SchemaCatalog::current();
         let heating = registry.sheets_in_domain(Domain::Heating);
         assert!(heating.iter().any(|s| s.id == SheetId(2)));
@@ -1262,13 +1262,13 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn sheet_id_part_str_and_edition_id_key() {
+    async fn sheet_id_part_str_and_edition_id_key() {
         assert_eq!(SheetId(42).part_str(), "42");
         assert!(EditionId::new(2023, 3).key() > EditionId::new(2022, 6).key());
     }
 
     #[semio_framework_async_macros::async_test]
-    fn schema_status_is_operative() {
+    async fn schema_status_is_operative() {
         assert!(SchemaStatus::Published.is_operative());
         assert!(SchemaStatus::Checked.is_operative());
         assert!(!SchemaStatus::Draft.is_operative());
@@ -1276,14 +1276,14 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn record_family_id_all_known_contains_expected() {
+    async fn record_family_id_all_known_contains_expected() {
         let known = RecordFamilyId::all_known();
         assert!(known.contains(&RecordFamilyId::R010));
         assert!(known.contains(&RecordFamilyId::R970_41));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn manufacturer_catalog_product_for_sheet() {
+    async fn manufacturer_catalog_product_for_sheet() {
         let doc = Vdi3805Snapshot::default();
         assert!(doc.catalog.product_for_sheet(SheetId(2)).is_some());
         assert!(doc.catalog.product_for_sheet(SheetId(3)).is_none());

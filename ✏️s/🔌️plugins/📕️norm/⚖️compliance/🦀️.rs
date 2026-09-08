@@ -541,7 +541,7 @@ pub trait NormFamily: Send + Sync + 'static {
 /// 🧠️ Retained headless session: document inputs plus the last computed compliance report.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(bound(serialize = "F::Document: Serialize", deserialize = "F::Document: DeserializeOwned")))]
+#[cfg_attr(test, serde(bound(serialize = "F::Document: serde::Serialize", deserialize = "F::Document: serde::de::DeserializeOwned")))]
 #[value(bound = "F::Document: dsl::ToValue, F::Document: dsl::FromValue")]
 pub struct NormHost<F: NormFamily> {
     pub document: F::Document,
@@ -586,6 +586,56 @@ impl<F: NormFamily> NormHost<F> {
     }
 }
 // #endregion 🔖️Family
+
+/// 🪪️ Independent Serde oracle for composed child identities; local materialization never enters JSON.
+#[cfg(test)]
+pub(crate) mod child_identity_oracle {
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Identity {
+        child_id: String,
+        target: Target,
+    }
+
+    #[derive(Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Target {
+        artifact_id: String,
+        dialect: protocol::io_schema::ArtifactDialect,
+    }
+
+    impl Identity {
+        fn observe<T>(child: &store::ArtifactChild<T>) -> Self {
+            Self { child_id: child.child_id.clone(), target: Target { artifact_id: child.target.artifact_id.clone(), dialect: child.target.dialect.clone() } }
+        }
+
+        fn into_child<T>(self) -> store::ArtifactChild<T> {
+            store::ArtifactChild::new(self.child_id, protocol::io_schema::ArtifactRef { artifact_id: self.target.artifact_id, dialect: self.target.dialect })
+        }
+    }
+
+    pub fn serialize<T, S: serde::Serializer>(child: &store::ArtifactChild<T>, serializer: S) -> Result<S::Ok, S::Error> {
+        Identity::observe(child).serialize(serializer)
+    }
+
+    pub fn deserialize<'de, T, D: serde::Deserializer<'de>>(deserializer: D) -> Result<store::ArtifactChild<T>, D::Error> {
+        Identity::deserialize(deserializer).map(Identity::into_child)
+    }
+
+    pub mod optional {
+        use super::*;
+
+        pub fn serialize<T, S: serde::Serializer>(child: &Option<store::ArtifactChild<T>>, serializer: S) -> Result<S::Ok, S::Error> {
+            child.as_ref().map(Identity::observe).serialize(serializer)
+        }
+
+        pub fn deserialize<'de, T, D: serde::Deserializer<'de>>(deserializer: D) -> Result<Option<store::ArtifactChild<T>>, D::Error> {
+            Option::<Identity>::deserialize(deserializer).map(|child| child.map(Identity::into_child))
+        }
+    }
+}
 
 // #region 🔖️OpText
 /// ✂️ Escapes `\`, `"`, `\n` for embedding arbitrary (possibly multi-line) text inside a single quoted
@@ -742,7 +792,7 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    fn check_result_passes_when_utilization_below_one() {
+    async fn check_result_passes_when_utilization_below_one() {
         let clause = ClauseId::new("EN 1990", "§6.4", "6.10");
         let result = CheckResult::from_utilization(clause, Quantity::stress_mpa(250.0), Quantity::stress_mpa(300.0), "ULS stress check", AnnexChoice::De);
         assert_eq!(result.status, CheckStatus::Pass);
@@ -750,13 +800,13 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn table_lookup_linear_interpolates() {
+    async fn table_lookup_linear_interpolates() {
         let table = [TableEntry1D { x: 0.0, y: 1.0 }, TableEntry1D { x: 10.0, y: 2.0 }];
         assert!((table_lookup_linear(&table, 5.0) - 1.5).abs() < 1e-9);
     }
 
     #[semio_framework_async_macros::async_test]
-    fn check_minimum_passes_when_above_threshold() {
+    async fn check_minimum_passes_when_above_threshold() {
         let result = CheckResult::from_minimum(ClauseId::new("DIN 4108-3", "§6", "6.1"), Quantity::new(QuantityKind::Dimensionless, 0.8), Quantity::new(QuantityKind::Dimensionless, 0.25), "f_Rsi", AnnexChoice::De);
         assert_eq!(result.status, CheckStatus::Pass);
     }
@@ -778,7 +828,7 @@ mod tests {
     //#endregion 🔖️ArtifactCodec
 
     #[semio_framework_async_macros::async_test]
-    fn demo_document_dsl_round_trips() {
+    async fn demo_document_dsl_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&DemoDocument { value: 4.5 });
         store::os_store::test_support::assert_dsl_pack_equivalence(&DemoDocument { value: 4.5 });
     }

@@ -288,16 +288,8 @@ describe("Flow compiler output boundaries", () => {
     const text = readFileSync(join(flow, "🫀️core/🧪️bindings.json"), "utf8"), vector = JSON.parse(text);
     expect(parseJsonc(text)).toEqual(vector);
     const library = await import("./🟦️.ts");
-    const previous = process.env.FLOW_BINDINGS_CONTRACT_SKIP;
-    process.env.FLOW_BINDINGS_CONTRACT_SKIP = "1";
-    try {
-      const options = { rsDir: flow, skipEnvVar: "FLOW_BINDINGS_CONTRACT_SKIP", logPrefix: "Flow binding contract", pkg: { name: "flow-test", files: [], main: "flow_core.js", module: "flow_core.js", types: "flow_core.d.ts" }, wasmBaseName: "flow_core" };
-      expect(() => library.runWasmPackWebBuild({ ...options, outputDirectory: vector.outputDirectory })).not.toThrow();
-      for (const outputDirectory of vector.invalidDirectories) expect(() => library.runWasmPackWebBuild({ ...options, outputDirectory })).toThrow();
-    } finally {
-      if (previous === undefined) delete process.env.FLOW_BINDINGS_CONTRACT_SKIP;
-      else process.env.FLOW_BINDINGS_CONTRACT_SKIP = previous;
-    }
+    expect(library.wasmOutputDirectory(flow, vector.outputDirectory)).toBe(join(flow, vector.outputDirectory));
+    for (const outputDirectory of vector.invalidDirectories) expect(() => library.wasmOutputDirectory(flow, outputDirectory)).toThrow();
     const taxonomy = loadTaxonomy();
     const options = { allowJs: true, moduleResolution: ts.ModuleResolutionKind.Bundler, module: ts.ModuleKind.ESNext };
     for (const parent of vector.owners) {
@@ -1445,9 +1437,9 @@ describe("Neo4j graph database registry", () => {
 
 //#region 🧩️NxUnicodeTransport
 describe("Nx Unicode project transport", () => {
-  test("forces in-process plugin discovery even when the caller requests isolated workers", () => {
+  test("preserves the caller’s isolated plugin setting", () => {
     const env = devToolingEnv({ NX_ISOLATE_PLUGINS: "true" });
-    expect(env.NX_ISOLATE_PLUGINS).toBe("false");
+    expect(env.NX_ISOLATE_PLUGINS).toBe("true");
   });
 
   test("builds the describe graph without a lossy duplicate repo-test root", () => {
@@ -4631,13 +4623,13 @@ describe("artifact path projection authority", () => {
     const declaration = parsed.package.metadata.semio.playground[0]!;
     expect(Object.keys(document.devLaunchers)).toEqual([declaration.variant]);
     const playground = { ...declaration, pluginId: parsed.package.metadata.component.package.slice("semio:".length), cratePath: dirname(host.path), aliases: [], examples: [], engines: [], assets: [] };
-    const rendered = generateLaunchJson("", [playground], () => seed.content), output = jsonc.parse(rendered);
+    const rendered = generateLaunchJson("", [playground], [], () => seed.content), output = jsonc.parse(rendered);
     expect(ts.parseConfigFileTextToJson("launch.json", rendered).config).toEqual(output);
-    expect(output.configurations).toHaveLength(3);
+    expect(output.configurations).toHaveLength(12);
     expect(output.configurations[0].env.FIXTURE_PORT).toBe(String(declaration.ports.react));
     expect(rendered).not.toContain("@generated:");
-    expect(() => generateLaunchJson("", [], () => seed.content)).toThrow("no matching playground registry entry");
-    expect(() => generateLaunchJson("", [playground], () => seed.content.replace("@generated:draw-fixture-host:react", "@generated:unknown:react"))).toThrow("seed is missing placeholder");
+    expect(() => generateLaunchJson("", [], [], () => seed.content)).toThrow("no matching playground registry entry");
+    expect(() => generateLaunchJson("", [playground], [], () => seed.content.replace("@generated:draw-fixture-host:react", "@generated:unknown:react"))).toThrow("seed is missing placeholder");
   });
 
   test("authored Draw source producer context captures actual implementations with independent import parity", async () => {

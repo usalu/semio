@@ -99,7 +99,7 @@ where
 /// of a `d1`-added key patches into the carried payload; everything else composes on the shared
 /// key space (canonical cases in `absorb_law` below).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
+fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -252,17 +252,17 @@ impl MutationDiff<SemioMeshSnapshot> for SemioMeshDiff {
         self.meshes = match (self.meshes.take(), other.meshes) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |m: &NamedAdded<SemioMesh>| m.item.id.clone(), absorb_mesh_diff, apply_mesh_added)),
+            (Some(a), Some(b)) => Some(absorb_named(a, &b, |m: &NamedAdded<SemioMesh>| m.item.id.clone(), absorb_mesh_diff, apply_mesh_added)),
         };
         self.materials = match (self.materials.take(), other.materials) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |m: &NamedAdded<SemioMaterial>| m.item.id.clone(), absorb_material_diff, apply_material_added)),
+            (Some(a), Some(b)) => Some(absorb_named(a, &b, |m: &NamedAdded<SemioMaterial>| m.item.id.clone(), |a, b| absorb_material_diff(a, &b), apply_material_added)),
         };
         self.textures = match (self.textures.take(), other.textures) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |t: &NamedAdded<SemioTexture>| t.item.id.clone(), absorb_texture_diff, apply_texture_added)),
+            (Some(a), Some(b)) => Some(absorb_named(a, &b, |t: &NamedAdded<SemioTexture>| t.item.id.clone(), absorb_texture_diff, apply_texture_added)),
         };
     }
 }
@@ -417,7 +417,7 @@ fn absorb_mesh_diff(mut a: SemioMeshItemDiff, b: SemioMeshItemDiff) -> SemioMesh
     a.primitives = match (a.primitives.take(), b.primitives) {
         (None, x) => x,
         (x, None) => x,
-        (Some(x), Some(y)) => Some(absorb_named(x, y, |p: &NamedAdded<SemioPrimitive>| p.item.id.clone(), absorb_primitive_diff, apply_primitive_added)),
+        (Some(x), Some(y)) => Some(absorb_named(x, &y, |p: &NamedAdded<SemioPrimitive>| p.item.id.clone(), absorb_primitive_diff, apply_primitive_added)),
     };
     a
 }
@@ -449,7 +449,7 @@ fn absorb_primitive_diff(mut a: SemioPrimitiveDiff, b: SemioPrimitiveDiff) -> Se
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_material_diff(mut a: SemioMaterialDiff, b: SemioMaterialDiff) -> SemioMaterialDiff {
+fn absorb_material_diff(mut a: SemioMaterialDiff, b: &SemioMaterialDiff) -> SemioMaterialDiff {
     if b.base_color.is_some() {
         a.base_color = b.base_color;
     }
@@ -693,7 +693,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -758,11 +758,11 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
-    format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
+    format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 //#endregion 🔖️Primitives
 

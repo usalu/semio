@@ -109,12 +109,12 @@ pub fn apply_pptx_mutation(snapshot: &mut PptxSnapshot, mutation: &PptxMutation)
 
 //#region 🔖️Helpers
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn slide_at<'a>(base: &'a PptxSnapshot, index: usize) -> Option<&'a PptxSlide> {
+fn slide_at(base: &PptxSnapshot, index: usize) -> Option<&PptxSlide> {
     base.presentation.slides.get(index)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn shape_at<'a>(base: &'a PptxSnapshot, slide_index: usize, shape_index: usize) -> Option<&'a PptxShape> {
+fn shape_at(base: &PptxSnapshot, slide_index: usize, shape_index: usize) -> Option<&PptxShape> {
     base.presentation.slides.get(slide_index)?.shapes.get(shape_index)
 }
 //#endregion 🔖️Helpers
@@ -129,7 +129,7 @@ pub(crate) fn agg_diff(this: &PptxMutation, base: &PptxSnapshot) -> protocol::Mu
         PptxMutation::MoveSlide(move_slide::MoveSlide { from, to }) => diff_move_slide(&base.presentation, *from, *to),
         PptxMutation::InsertShape(insert_shape::InsertShape { slide_index, shape_index, shape }) => diff_insert_shape(*slide_index, *shape_index, shape.clone()),
         PptxMutation::RemoveShape(remove_shape::RemoveShape { slide_index, shape_index }) => diff_remove_shape(*slide_index, *shape_index),
-        PptxMutation::SetShapeText(set_shape_text::SetShapeText { slide_index, shape_index, text_frame }) => diff_set_shape_text(&base.presentation, *slide_index, *shape_index, text_frame.clone()),
+        PptxMutation::SetShapeText(set_shape_text::SetShapeText { slide_index, shape_index, text_frame }) => diff_set_shape_text(&base.presentation, *slide_index, *shape_index, text_frame),
         PptxMutation::SetShapePosition(set_shape_position::SetShapePosition { slide_index, shape_index, position }) => diff_set_shape_position(&base.presentation, *slide_index, *shape_index, *position),
     })
 }
@@ -240,7 +240,6 @@ impl OpText for PptxMutation {
 /// -iteration-order caveat those text forms document.
 /// 🌳 Full `PptxSnapshot`: `[schema,opc,xml-parts,slides]`, mirroring `enc_snapshot`'s text form above.
 //#endregion 🔖️OpBinaryCodec
-
 /// 🧪️ FG-wave: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
 /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
 /// upgraded from F1's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
@@ -888,7 +887,7 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📸️set-snapshot/🧪️tests/🏷️retitles-and-lowers-the-title-placeholder/🦀️.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/🏷️retitles-and-4004a3/🦀️.rs"]
     mod tests_set_snapshot_retitles_and_lowers_the_title_placeholder;
 }
 //#endregion 🧪️FixtureTests

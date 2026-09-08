@@ -2,7 +2,7 @@
 name = "semio-framework-hash"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Content-addressing and Merkle hash utilities for the framework kernel"
 
 [package.metadata.semio]

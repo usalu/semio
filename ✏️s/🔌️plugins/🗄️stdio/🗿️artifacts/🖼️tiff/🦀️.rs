@@ -176,7 +176,7 @@ pub mod io_registry {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        let _ = register_composer_entries(v6_0::entries());
+        register_composer_entries(v6_0::entries()).expect("static Stdio registration must be available and conflict-free");
     }
 }
 //#endregion 🚪️DerivedIoRegistry

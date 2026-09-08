@@ -24,13 +24,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioObjectSnapshot {
-    serde_json::from_str(BEFORE).expect("delete-properties before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("delete-properties before snapshot decodes")
 }
 fn expected_after() -> SemioObjectSnapshot {
-    serde_json::from_str(AFTER).expect("delete-properties after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("delete-properties after snapshot decodes")
 }
 fn mutation() -> SemioObjectMutation {
-    serde_json::from_str(MUTATION).expect("delete-properties mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("delete-properties mutation decodes")
 }
 
 /// ▶️ The properties handle is cleared and the sibling mesh handle is deliberately left in place — the
@@ -69,14 +69,14 @@ async fn the_undo_create_properties_reattaches_the_captured_handle() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioObjectSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: SemioObjectSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-properties/detaches-the-properties-child-and-leaves-the-mesh-child-alone: committed {label} JSON is not canonical");
     }
     let after_json: serde_json::Value = serde_json::from_str(AFTER).expect("after reparses");
     assert!(after_json.get("properties").is_none(), "a cleared snapshot slot is an ABSENT key, never an explicit null");
-    let reencoded = serde_json::to_value(mutation()).expect("delete-properties mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("delete-properties mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("delete-properties mutation reparses");
     assert_eq!(reencoded, original, "delete-properties/detaches-the-properties-child-and-leaves-the-mesh-child-alone: committed mutation JSON is not canonical");
 }
@@ -98,7 +98,7 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::diff(&mutation(), &base);
     assert!(matches!(outcome.diff().properties, Some(None)), "the in-memory diff must be Some(None) — write the slot, clear it");
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-properties/detaches-the-properties-child-and-leaves-the-mesh-child-alone: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert!(committed.get("properties").expect("the committed diff names the properties slot").is_null(), "a cleared DIFF slot is an explicit null, never an absent key");
@@ -111,12 +111,12 @@ async fn produces_committed_diff() {
 /// revisited.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_json_pins_the_option_option_collapse() {
-    let decoded: SemioObjectDiff = serde_json::from_str(DIFF).expect("committed delete-properties diff decodes");
+    let decoded: SemioObjectDiff = dsl::json::from_json_str(DIFF).expect("committed delete-properties diff decodes");
     assert!(decoded.properties.is_none(), "decoding {{\"properties\":null}} yields the OUTER None — the clear intent is lost on the JSON round trip");
-    assert_eq!(serde_json::to_value(&decoded).expect("re-encode"), serde_json::json!({}), "so re-encoding the decoded value drops the key entirely");
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("re-encode"), serde_json::json!({}), "so re-encoding the decoded value drops the key entirely");
     let authored = SemioObjectDiff { properties: Some(None), ..Default::default() };
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
-    assert_eq!(serde_json::to_value(&authored).expect("authored diff encodes"), committed, "the committed JSON IS the canonical encoding of the Some(None) diff, even though it cannot be decoded back into one");
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&authored)).expect("authored diff encodes"), committed, "the committed JSON IS the canonical encoding of the Some(None) diff, even though it cannot be decoded back into one");
 }
 
 /// 🩹 The diff carries `before` to `after` — exercised against the in-memory `Some(None)` diff,
@@ -127,7 +127,7 @@ async fn authored_diff_applies_to_after_while_the_decoded_one_is_inert() {
     let authored = SemioObjectDiff { properties: Some(None), ..Default::default() };
     let produced = authored.apply(&before()).expect("the Some(None) diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-properties/detaches-the-properties-child-and-leaves-the-mesh-child-alone: the Some(None) diff did not carry before to after");
-    let decoded: SemioObjectDiff = serde_json::from_str(DIFF).expect("committed delete-properties diff decodes");
+    let decoded: SemioObjectDiff = dsl::json::from_json_str(DIFF).expect("committed delete-properties diff decodes");
     let inert = decoded.apply(&before()).expect("the collapsed diff still applies, it just does nothing");
     assert_eq!(inert, before(), "the JSON-decoded diff is inert — that is exactly the limitation being pinned");
 }

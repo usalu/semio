@@ -16,6 +16,7 @@ This slice verifies two real mounted `FlowGraphCanvasHost` React consumers shari
 ## Evidence
 
 - Registered exact gate: GREEN, 2 passed / 409 skipped / 411 discovered, duration 15.70s.
+- Current-source rerun session `93673`: GREEN, 2 passed / 409 skipped / 411 discovered, duration 11.10s (747ms test time).
 - Full renderer test-long after the implementation: GREEN, 585 tests across 11 files.
 - Scoped `git diff --check`: GREEN.
 - Plugin launch registry generation and generated-file check: GREEN.

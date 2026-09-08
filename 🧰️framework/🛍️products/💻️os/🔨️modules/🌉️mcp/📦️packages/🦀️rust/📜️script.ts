@@ -9,6 +9,7 @@ import {
   BundleScript,
   ScriptRouter,
   buildBudgetMs,
+  daemonBudgetOpts,
   orchestratorBudgetOpts,
   resolveTestLevel,
   runBundleScriptMain,
@@ -17,7 +18,9 @@ import {
   runCmd,
   runProbe,
 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { MCP_BINARY_NAME, MCP_CARGO_PACKAGE, resolveBuiltMcpBinaryPath, resolveMcpTargetDirectory } from "../../🟦️.ts";
+import { MCP_BINARY_NAME, MCP_CARGO_PACKAGE, resolveBuiltMcpBinaryPath, resolveMcpTargetDirectory, requireMcpBinary } from "../../🟦️.ts";
+
+import { buildCargoArtifacts } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts";
 
 const binaryContract = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🧱️binary-gate.json", import.meta.url), "utf8")) as { cargoPackage: string; cargoBinary: string; profile: "debug" };
 if (binaryContract.cargoPackage !== MCP_CARGO_PACKAGE || binaryContract.cargoBinary !== MCP_BINARY_NAME || binaryContract.profile !== "debug") throw new Error("semio-os-mcp binary fixture disagrees with the shared path contract");
@@ -62,9 +65,9 @@ function proveMcpEntrypointCredentialMarker(executable: string, root: string): v
 }
 
 class BuildScript extends BundleScript {
-  run(): void {
-    const binary = buildMcpBinary(this.repoRoot, this.root);
-    console.log(`[build] ${binary}`);
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("MCP build has a fixed binary output contract");
+    await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot);
   }
 }
 
@@ -382,7 +385,7 @@ class CanonicalCheckpointResourceNativeCheckScript extends BundleScript {
 class DevScript extends BundleScript {
   run(segments: string[]): void {
     const args = segments.length > 0 ? segments : ["stdio"];
-    runCmd(buildMcpBinary(this.repoRoot, this.root), args, { cwd: this.root });
+    runCmd(requireMcpBinary(this.repoRoot), args, { cwd: this.root, ...daemonBudgetOpts() });
   }
 }
 

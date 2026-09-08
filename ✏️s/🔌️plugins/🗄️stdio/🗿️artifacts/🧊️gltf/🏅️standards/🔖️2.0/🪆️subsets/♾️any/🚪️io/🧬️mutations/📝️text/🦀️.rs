@@ -18,7 +18,7 @@ fn encode_hex(bytes: &[u8]) -> String {
 }
 
 fn decode_hex(value: &str) -> Result<Vec<u8>, String> {
-    if value.len() % 2 != 0 || value.len() > GLTF_MUTATION_MAX_PAYLOAD_BYTES * 2 {
+    if !value.len().is_multiple_of(2) || value.len() > GLTF_MUTATION_MAX_PAYLOAD_BYTES * 2 {
         return Err("GLTF mutation text payload exceeds its budget".into());
     }
     fn nibble(value: u8) -> Option<u8> {
@@ -29,7 +29,7 @@ fn decode_hex(value: &str) -> Result<Vec<u8>, String> {
     }
     value
         .as_bytes()
-        .chunks_exact(2)
+        .as_chunks::<2>().0.iter()
         .map(|pair| {
             let high = nibble(pair[0]).ok_or_else(|| "GLTF mutation payload must be lowercase hexadecimal".to_string())?;
             let low = nibble(pair[1]).ok_or_else(|| "GLTF mutation payload must be lowercase hexadecimal".to_string())?;

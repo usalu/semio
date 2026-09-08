@@ -1,15 +1,15 @@
 /* tslint:disable */
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
+export const brep_invoke: (a: number, b: number, c: number, d: number) => [number, number];
+export const dispose: (a: number, b: number) => void;
+export const tessellate: (a: number, b: number, c: number) => [number, number];
 export const flow_bridge_allocate: (a: number) => number;
 export const flow_bridge_begin_close: () => void;
 export const flow_bridge_poll: (a: number, b: number, c: number, d: bigint, e: bigint) => number;
 export const flow_bridge_release: (a: number, b: number) => void;
 export const flow_bridge_send: (a: number, b: number, c: number, d: bigint, e: bigint) => number;
 export const flow_bridge_terminal_is_empty: () => number;
-export const brep_invoke: (a: number, b: number, c: number, d: number) => [number, number];
-export const dispose: (a: number, b: number) => void;
-export const tessellate: (a: number, b: number, c: number) => [number, number];
 export const semio_plugin_bundle_installer_link_shim: () => void;
 export const __wbg_dagsession_free: (a: number, b: number) => void;
 export const dagsession_attachCanvas: (a: number, b: any, c: number, d: number, e: number) => any;
@@ -52,7 +52,7 @@ export const initialize_browser_clock: () => void;
 export const wasm_bindgen_458697782d79938e___convert__closures_____invoke___wasm_bindgen_458697782d79938e___JsValue__core_7a2330d63e03cc2c___result__Result_____wasm_bindgen_458697782d79938e___JsError___true_: (a: number, b: number, c: any) => [number, number];
 export const wasm_bindgen_458697782d79938e___convert__closures_____invoke___js_sys_9fa0e33012cbccdb___Function_fn_wasm_bindgen_458697782d79938e___JsValue_____wasm_bindgen_458697782d79938e___sys__Undefined___js_sys_9fa0e33012cbccdb___Function_fn_wasm_bindgen_458697782d79938e___JsValue_____wasm_bindgen_458697782d79938e___sys__Undefined_______true_: (a: number, b: number, c: any, d: any) => void;
 export const wasm_bindgen_458697782d79938e___convert__closures_____invoke___wasm_bindgen_458697782d79938e___JsValue______true_: (a: number, b: number, c: any) => void;
-export const wasm_bindgen_458697782d79938e___convert__closures_____invoke___wgpu_4c98722cbb2ca842___backend__webgpu__webgpu_sys__gen_GpuUncapturedErrorEvent__GpuUncapturedErrorEvent______true_: (a: number, b: number, c: any) => void;
+export const wasm_bindgen_458697782d79938e___convert__closures_____invoke___wgpu_bd4cf1f8f3ffcf01___backend__webgpu__webgpu_sys__gen_GpuUncapturedErrorEvent__GpuUncapturedErrorEvent______true_: (a: number, b: number, c: any) => void;
 export const wasm_bindgen_458697782d79938e___convert__closures_____invoke___bool__true_: (a: number, b: number) => number;
 export const __wbindgen_malloc: (a: number, b: number) => number;
 export const __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;

@@ -71,7 +71,7 @@ pub fn semio_value_of_node(node: &XmlNode) -> SemioValue {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn semio_value_of_declaration(d: &XmlDeclaration) -> SemioValue {
     SemioValue::Map {
-        entries: vec![entry("version", str_value(&d.version)), entry("encoding", d.encoding.as_deref().map(str_value).unwrap_or(SemioValue::Null)), entry("standalone", d.standalone.map(|b| SemioValue::Bool { value: b }).unwrap_or(SemioValue::Null))],
+        entries: vec![entry("version", str_value(&d.version)), entry("encoding", d.encoding.as_deref().map_or(SemioValue::Null, str_value)), entry("standalone", d.standalone.map_or(SemioValue::Null, |b| SemioValue::Bool { value: b }))],
     }
 }
 
@@ -99,10 +99,10 @@ pub fn semio_value_from_xml_document(doc: &XmlDocument) -> SemioValue {
     SemioValue::Map {
         entries: vec![
             entry("kind", str_value("document")),
-            entry("declaration", doc.declaration.as_ref().map(semio_value_of_declaration).unwrap_or(SemioValue::Null)),
-            entry("doctype", doc.doctype.as_ref().map(semio_value_of_doctype).unwrap_or(SemioValue::Null)),
+            entry("declaration", doc.declaration.as_ref().map_or(SemioValue::Null, semio_value_of_declaration)),
+            entry("doctype", doc.doctype.as_ref().map_or(SemioValue::Null, semio_value_of_doctype)),
             entry("prolog", SemioValue::List { items: doc.prolog.iter().map(semio_value_of_node).collect() }),
-            entry("root", doc.root.as_ref().map(semio_value_of_node).unwrap_or(SemioValue::Null)),
+            entry("root", doc.root.as_ref().map_or(SemioValue::Null, semio_value_of_node)),
         ],
     }
 }

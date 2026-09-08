@@ -9,7 +9,7 @@ use crate::app::{
     ArtifactApp, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, DraftView, Emit, NoConfig,
     NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, UiAssemblyResult, built_text_to_component_tree,
 };
-use protocol::{Mutation, MutationDiff};
+use protocol::MutationDiff;
 use semio_framework::{ActionKind, Fault, IconName, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolOperationSpec};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};

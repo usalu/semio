@@ -556,8 +556,9 @@ pub mod types {
         pub select_handles: bool,
     }
 
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, Default)]
     pub enum Interaction {
+        #[default]
         None,
         Pan { origin: Camera, start_screen: Point },
         DragNodes { offset: Vec2, primary_id: String, start_positions: BTreeMap<String, (f64, f64)>, proximity_pair: Option<(String, String)> },
@@ -567,12 +568,6 @@ pub mod types {
         LinkDragSnap { source_id: String, target_id: Option<String>, end_world: Point },
         LinkTargetNode { source_id: String, target_node_id: String },
         ExternalLinkPreview { source_id: String, end_world: Point, compatible_node_ids: Vec<String>, ring_node_id: Option<String>, ring_handle_ids: Vec<String> },
-    }
-
-    impl Default for Interaction {
-        fn default() -> Self {
-            Self::None
-        }
     }
 
     #[derive(Clone, Copy, Debug)]
@@ -847,6 +842,14 @@ pub mod types {
         }
     }
 
+    /// 🖼️ Center and available screen extents for fitting one icon without coordinate conversion.
+    #[derive(Clone, Copy)]
+    pub struct IconScreenRect {
+        pub center: Point,
+        pub width: f64,
+        pub height: f64,
+    }
+
     /// 🖼️ Shared SVG/raster icon decode cache for board and DAG hosts.
     pub struct IconPaintCache {
         cache: RefCell<ManuallyDrop<IconPaintRegistry>>,
@@ -1004,6 +1007,11 @@ pub mod types {
         }
 
         #[cfg(test)]
+        pub(super) fn has_retiring_scene(&self) -> bool {
+            self.retirement_scene.get().is_some()
+        }
+
+        #[cfg(test)]
         pub(crate) fn occupied_slots(&self) -> usize {
             self.cache.borrow().slots.iter().filter(|slot| slot.key.is_some()).count()
         }
@@ -1130,7 +1138,8 @@ pub mod types {
         }
 
         /// @emoji 🖼️ Paints an icon centered in a screen-space rectangle.
-        pub fn append_icon_at_screen_rect(&self, scene: &mut Scene, icon_kind: &str, center: Point, avail_w: f64, avail_h: f64, fg: Color, bg: Color, preserve_original_style: bool) {
+        pub fn append_icon_at_screen_rect(&self, scene: &mut Scene, icon_kind: &str, rect: IconScreenRect, fg: Color, bg: Color, preserve_original_style: bool) {
+            let IconScreenRect { center, width: avail_w, height: avail_h } = rect;
             let Some(paint) = self.get_or_build(icon_kind, fg, bg, preserve_original_style) else {
                 return;
             };
@@ -1407,7 +1416,7 @@ pub mod hierarchical_tree {
     fn buchheim_ancestor(nodes: &[BuchheimNode], vil: usize, v: usize, default_ancestor: usize) -> usize {
         let par = nodes[v].parent.expect("buchheim ancestor needs parent");
         let pa = nodes[vil].ancestor;
-        if nodes[par].children.iter().any(|&c| c == pa) {
+        if nodes[par].children.contains(&pa) {
             pa
         } else {
             default_ancestor
@@ -1589,8 +1598,8 @@ pub mod hierarchical_tree {
             };
             nodes[i].parent = Some(pidx);
         }
-        for p in 0..=super_idx {
-            nodes[p].children.clear();
+        for node in &mut nodes {
+            node.children.clear();
         }
         for i in 0..super_idx {
             let pi = nodes[i].parent.ok_or_else(|| "tree node missing parent".to_string())?;
@@ -1760,7 +1769,7 @@ pub mod hierarchical_tree {
             depth.entry(id.clone()).or_insert(max_depth + 1);
         }
         let raw = run_buchheim_layout(&id_to_node, &roots, &directed, &depth)?;
-        let mean_half: f64 = id_to_node.values().map(|nv| half_extent(nv)).sum::<f64>() / id_to_node.len().max(1) as f64;
+        let mean_half: f64 = id_to_node.values().map(half_extent).sum::<f64>() / id_to_node.len().max(1) as f64;
         let along_scale = (opts.sibling_gap + 2.0 * mean_half).max(8.0);
         let mut pos: HashMap<String, (f64, f64)> = HashMap::new();
         for (id, (bx, by)) in raw {
@@ -2102,7 +2111,7 @@ mod quadrant_tests {
         assert_eq!(cache.occupied_slots(), 2);
         let mut retained_scene_seen = false;
         while !cache.close_step() {
-            retained_scene_seen |= cache.retirement_scene.get().is_some();
+            retained_scene_seen |= cache.has_retiring_scene();
         }
         assert!(retained_scene_seen, "vector icon scene remains retained until its exact retirement cursor drains");
         assert!(cache.terminal_is_empty());

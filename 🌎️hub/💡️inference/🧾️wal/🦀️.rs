@@ -123,6 +123,17 @@ impl CommittedInferenceWalWitnessV1 {
             && self.transaction_id != 0
             && self.record_index != 0
     }
+
+    /// 🖋️ Derives the durable undo target from every private committed-decision coordinate.
+    pub(super) fn approval_undo_witness_digest(&self) -> String {
+        super::sha256(
+            format!(
+                "semio.hub.gis-map-approval-undo-witness/v1\0{}\0{}\0{}\0{}\0{}\0{}\0{}\0{}\0{}\0{}\0{}",
+                self.scope.space_id, self.scope.document_id, self.generation, self.job_id, self.proposal_hash, self.mutation_id, self.command_hash, self.decision_hash, self.transaction_id, self.segment_index, self.record_index,
+            )
+            .as_bytes(),
+        )
+    }
 }
 
 struct VerifierState {

@@ -63,7 +63,7 @@ pub enum Bootstrap {
     None,
     Snapshot { pack_hash: [u8; 32], inline: Option<Vec<u8>> },
     Tail,
-    ArtifactBootstrap(ArtifactBootstrap),
+    ArtifactBootstrap(Box<ArtifactBootstrap>),
 }
 
 pub const ARTIFACT_BOOTSTRAP_FORMAT_VERSION: u32 = 1;
@@ -772,7 +772,7 @@ async fn decode_bootstrap(bytes: &[u8], pos: &mut usize) -> Result<Bootstrap, cr
             Ok(Bootstrap::Snapshot { pack_hash, inline })
         }
         2 => Ok(Bootstrap::Tail),
-        3 => Ok(Bootstrap::ArtifactBootstrap(decode_artifact_bootstrap(bytes, pos)?)),
+        3 => Ok(Bootstrap::ArtifactBootstrap(Box::new(decode_artifact_bootstrap(bytes, pos)?))),
         other => Err(malformed("wire bootstrap tag", *pos as u64, &format!("unknown tag {other:#x}")).await),
     }
 }
@@ -1290,7 +1290,7 @@ mod tests {
         let fixture = artifact_bootstrap_fixture();
         let inline = fixture_artifact_bootstrap(true);
         let chunked = fixture_artifact_bootstrap(false);
-        let welcome = |bootstrap: ArtifactBootstrap| ServerFrame::Welcome { session_id: "session-bootstrap-1".to_string(), resume_token: "resume-bootstrap-1".to_string(), server_frontier: bootstrap.required_tail_frontier.clone(), bootstrap: Bootstrap::ArtifactBootstrap(bootstrap) };
+        let welcome = |bootstrap: ArtifactBootstrap| ServerFrame::Welcome { session_id: "session-bootstrap-1".to_string(), resume_token: "resume-bootstrap-1".to_string(), server_frontier: bootstrap.required_tail_frontier.clone(), bootstrap: Bootstrap::ArtifactBootstrap(Box::new(bootstrap)) };
         let inline_bytes = encode_server_frame(&welcome(inline), Lane::Command).await;
         let chunked_bytes = encode_server_frame(&welcome(chunked.clone()), Lane::Command).await;
         assert_eq!(inline_bytes, bytes_from_hex(fixture["wire"]["inlineWelcomeHex"].as_str().unwrap()));
@@ -1358,7 +1358,7 @@ mod tests {
             assert!(assembler.finish(Some((valid.descriptor_hash, valid.chunk_count)), &mut control).unwrap_err().to_string().contains("hash"));
             assert_eq!(assembler.retained_bytes(), 0);
         }
-        let bytes = encode_server_frame(&ServerFrame::Welcome { session_id: "bad".to_string(), resume_token: "bad".to_string(), server_frontier: valid.required_tail_frontier.clone(), bootstrap: Bootstrap::ArtifactBootstrap(unknown_version) }, Lane::Command).await;
+        let bytes = encode_server_frame(&ServerFrame::Welcome { session_id: "bad".to_string(), resume_token: "bad".to_string(), server_frontier: valid.required_tail_frontier.clone(), bootstrap: Bootstrap::ArtifactBootstrap(Box::new(unknown_version)) }, Lane::Command).await;
         assert!(decode_server_frame(&bytes).await.unwrap_err().to_string().contains("version"));
     }
 

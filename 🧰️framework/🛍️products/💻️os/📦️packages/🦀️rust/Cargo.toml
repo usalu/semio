@@ -2,7 +2,7 @@
 name = "semio-framework-os-kernel"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Semio framework OS kernel — wasm-safe store/spr/dsl/pack document model"
 
 [package.metadata.semio]

@@ -28,6 +28,12 @@
 //! (`hex_encode`/`split_top_level`/`encode_option`/…) verbatim per artifact convention; `f64` fields
 //! use Rust's own round-trippable `Display`/`FromStr` (no external float-formatting dep needed).
 
+/// 🧩 Ordered removed keys, modified values, and inserted items.
+pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>);
+
+/// 🧩 Ordered removed keys, modified values, and inserted items.
+pub(crate) type NamedDiffParts<D, T> = (Vec<String>, Vec<(String, D)>, Vec<(usize, T)>);
+
 use std::collections::{BTreeSet, HashMap, HashSet};
 
 use crate::artifacts::obj::schema::snapshot::{ObjFace, ObjFaceVertex, ObjGroup, ObjNormal, ObjObject, ObjSmoothingRange, ObjTexCoord, ObjUnknownStatement, ObjUsemtlRange, ObjVertex};
@@ -73,7 +79,7 @@ fn generic_apply<T: ObjIndexElem>(base: &[T], removed: &[usize], modified: &[(us
 /// 🧭️ Pairwise-by-position state delta: `modified` over `0..min(len)`, base tail `removed`,
 /// other tail `added` (recipe's "index keys pairwise by position" `between` rule).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn generic_between<T: ObjIndexElem>(base: &[T], other: &[T]) -> (Vec<usize>, Vec<(usize, T::Diff)>, Vec<(usize, T)>) {
+fn generic_between<T: ObjIndexElem>(base: &[T], other: &[T]) -> IndexedDiffParts<T::Diff, T> {
     let min_len = base.len().min(other.len());
     let mut modified = Vec::new();
     for i in 0..min_len {
@@ -122,10 +128,10 @@ fn generic_absorb_pair<T: ObjIndexElem>(
     d2_removed: &[usize],
     d2_modified: &[(usize, T::Diff)],
     d2_added: &[(usize, T)],
-) -> (Vec<usize>, Vec<(usize, T::Diff)>, Vec<(usize, T)>) {
+) -> IndexedDiffParts<T::Diff, T> {
     let max_ref =
         d1_removed.iter().copied().chain(d1_modified.iter().map(|(i, _)| *i)).chain(d1_added.iter().map(|(i, _)| *i)).chain(d2_removed.iter().copied()).chain(d2_modified.iter().map(|(i, _)| *i)).chain(d2_added.iter().map(|(i, _)| *i)).max();
-    let l1 = max_ref.map(|m| m + 2).unwrap_or(0);
+    let l1 = max_ref.map_or(0, |m| m + 2);
 
     let base_labels: Vec<Lbl> = (0..l1).map(Lbl::Base).collect();
     let d1_added_lbl: Vec<(usize, Lbl)> = d1_added.iter().enumerate().map(|(j, (idx, _))| (*idx, Lbl::Added1(j))).collect();
@@ -852,16 +858,14 @@ fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified
             return Err(MutationApplyError::new("invalid-modify-index", "modification target must exist exactly once and remain present").at([target, &index.to_string()]));
         }
     }
-    let mut length = base_len - removed.len();
     let mut additions: Vec<usize> = added_indices.into_iter().collect();
     additions.sort_unstable();
     let mut previous = None;
-    for index in additions {
+    for (length, index) in (base_len - removed.len()..).zip(additions) {
         if index > length || previous == Some(index) {
             return Err(MutationApplyError::new("invalid-add-index", "addition target must be unique and within the evolving sequence").at([target, &index.to_string()]));
         }
         previous = Some(index);
-        length += 1;
     }
     Ok(())
 }
@@ -892,17 +896,15 @@ fn validate_named_targets<'a>(
             return Err(MutationApplyError::new("invalid-modify-target", "modification target must exist exactly once and remain present").at([target, name]));
         }
     }
-    let mut length = base.len() - removed.len();
     let mut additions: Vec<(usize, &str)> = added.into_iter().collect();
     additions.sort_by_key(|(index, _)| *index);
     let mut added_names = BTreeSet::new();
     let mut previous = None;
-    for (index, name) in additions {
+    for (length, (index, name)) in (base.len() - removed.len()..).zip(additions) {
         if base.contains(name) || !added_names.insert(name) || index > length || previous == Some(index) {
             return Err(MutationApplyError::new("invalid-add-target", "addition name and position must be unique and valid").at([target, name]));
         }
         previous = Some(index);
-        length += 1;
     }
     Ok(())
 }
@@ -1126,12 +1128,12 @@ impl DiffAlgebra<ObjSnapshot> for ObjDiff {
     }
 
     fn is_empty(&self) -> bool {
-        self.vertices.as_ref().map_or(true, ObjVerticesDiff::is_empty)
-            && self.texcoords.as_ref().map_or(true, ObjTexCoordsDiff::is_empty)
-            && self.normals.as_ref().map_or(true, ObjNormalsDiff::is_empty)
-            && self.faces.as_ref().map_or(true, ObjFacesDiff::is_empty)
-            && self.groups.as_ref().map_or(true, ObjGroupsDiff::is_empty)
-            && self.objects.as_ref().map_or(true, ObjObjectsDiff::is_empty)
+        self.vertices.as_ref().is_none_or(ObjVerticesDiff::is_empty)
+            && self.texcoords.as_ref().is_none_or(ObjTexCoordsDiff::is_empty)
+            && self.normals.as_ref().is_none_or(ObjNormalsDiff::is_empty)
+            && self.faces.as_ref().is_none_or(ObjFacesDiff::is_empty)
+            && self.groups.as_ref().is_none_or(ObjGroupsDiff::is_empty)
+            && self.objects.as_ref().is_none_or(ObjObjectsDiff::is_empty)
             && self.mtllib.is_none()
             && self.usemtl.is_none()
             && self.smoothing_groups.is_none()
@@ -1169,7 +1171,7 @@ fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -1519,7 +1521,7 @@ fn enc_index_triple(name: &str, removed: &[usize], modified: &[(usize, String)],
     format!("{name}{{[{removed}];[{modified}];[{added}]}}")
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_index_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<(usize, String)>), String> {
+fn dec_index_triple(body: &str) -> Result<IndexedDiffParts<String, String>, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("collection: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
@@ -1545,7 +1547,7 @@ fn enc_named_triple(name: &str, removed: &[String], modified: &[(String, String)
     format!("{name}{{[{removed}];[{modified}];[{added}]}}")
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_named_triple(body: &str) -> Result<(Vec<String>, Vec<(String, String)>, Vec<(usize, String)>), String> {
+fn dec_named_triple(body: &str) -> Result<NamedDiffParts<String, String>, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("named collection: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(hex_decode_str).collect::<Result<Vec<_>, String>>()?;
@@ -1964,7 +1966,7 @@ fn dec_index_triple_bin<T, D>(
     reader: &mut store::ByteReader<'_>,
     dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
     dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
-) -> Result<(Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>), String> {
+) -> Result<IndexedDiffParts<D, T>, String> {
     let removed = read_vec_bin(reader, read_usize_bin)?;
     let mc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(mc as usize);
@@ -2001,7 +2003,7 @@ fn dec_named_triple_bin<T, D>(
     reader: &mut store::ByteReader<'_>,
     dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
     dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
-) -> Result<(Vec<String>, Vec<(String, D)>, Vec<(usize, T)>), String> {
+) -> Result<NamedDiffParts<D, T>, String> {
     let removed = read_vec_bin(reader, read_str_bin)?;
     let mc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(mc as usize);

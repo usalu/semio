@@ -3,7 +3,11 @@
   "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust",
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host",
   "projectType": "library",
-  "tags": ["lang:rust", "role:framework", "family:os-plugin"],
+  "tags": [
+    "lang:rust",
+    "role:framework",
+    "family:os-plugin"
+  ],
   "targets": {
     "check": {
       "executor": "nx:run-commands",
@@ -57,7 +61,13 @@
       "options": {
         "command": "bun 📜️script.ts ui-patch-marshalling-check --native",
         "cwd": "{projectRoot}"
-      }
+      },
+      "dependsOn": [
+        "@semio-tech/framework-os-scale-fixture:build-wasm"
+      ]
     }
-  }
+  },
+  "implicitDependencies": [
+    "@semio-tech/framework-os-scale-fixture"
+  ]
 }

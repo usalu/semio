@@ -7,8 +7,7 @@ use crate::wfc_engine::ids::PatternId;
 // #region 🔖️Bitset
 /// 🎭️ A dynamic word-packed bitset over `0..len` pattern indices. `len` is the size of the
 /// universe this set is defined over, not its popcount — use [`PatternSet::count_ones`] /
-/// [`PatternSet::is_all_zero`] for cardinality, and [`PatternSet::is_empty_universe`] for the
-/// degenerate zero-pattern-universe case.
+/// [`PatternSet::is_all_zero`] for cardinality. A zero [`PatternSet::len`] identifies an empty universe.
 #[derive(Clone, PartialEq, Debug, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct PatternSet {
     words: Vec<u64>,
@@ -61,12 +60,6 @@ impl PatternSet {
     #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> usize {
         self.len
-    }
-
-    #[inline]
-    #[cfg(test)]
-    pub fn is_empty_universe(&self) -> bool {
-        self.len == 0
     }
 
     #[inline]
@@ -354,8 +347,8 @@ mod tests {
     #[test]
     fn serde_round_trip_preserves_bits_and_len() {
         let s = from_indices(70, &[3, 64, 69]);
-        let json = serde_json::to_string(&s).unwrap();
-        let back: PatternSet = serde_json::from_str(&json).unwrap();
+        let json = protocol::json::to_json_string(&s);
+        let back: PatternSet = protocol::json::from_json_str(&json).unwrap();
         assert_eq!(back, s);
         assert!(back.is_well_formed());
     }

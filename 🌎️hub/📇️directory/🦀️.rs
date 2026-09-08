@@ -518,6 +518,7 @@ use directory::os_directory::{
 };
 use directory::os_identity::time_ordered_id;
 use error::{DirectoryError, DirectoryResult};
+pub use crate::artifact_authority::creation::{ArtifactCreationIntentV1, ArtifactCreationClaimV1, ArtifactCreationFactV1, ArtifactCreationFactAppendV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1, DocumentGenesisCommitV1};
 use model::*;
 use semio_framework_hash::Sha256;
 use std::collections::HashMap;
@@ -1438,7 +1439,7 @@ fn validate_checkpoint_shape(checkpoint: &PublishedArtifactCheckpoint) -> Direct
     if checkpoint.scope.space_id.is_empty()
         || checkpoint.scope.document_id.is_empty()
         || checkpoint.baseline_frontier.document_id != checkpoint.scope.document_id
-        || checkpoint.baseline_frontier.head_edit_id.is_empty()
+        || !(checkpoint.baseline_frontier.is_genesis_for(&checkpoint.scope) || checkpoint.baseline_frontier.is_edited_for(&checkpoint.scope))
         || checkpoint.pack.byte_length == 0
         || checkpoint.spr.byte_length == 0
         || checkpoint.baseline_frontier.head_edit_ordinal > DIRECTORY_WIRE_INTEGER_MAX
@@ -1449,7 +1450,7 @@ fn validate_checkpoint_shape(checkpoint: &PublishedArtifactCheckpoint) -> Direct
         || !valid_hash(checkpoint.checkpoint_id)
         || checkpoint.parent_checkpoint_id.is_some_and(|id| !valid_hash(id))
         || !valid_hash(checkpoint.descriptor_digest_v1)
-        || !valid_hash(checkpoint.baseline_frontier.chain_hash)
+        || checkpoint.baseline_frontier.head_edit_ordinal < checkpoint.baseline_frontier.last_commit_seq
         || !valid_hash(checkpoint.pack.sha256)
         || !valid_hash(checkpoint.spr.sha256)
         || !valid_hash(checkpoint.aggregate_sha256)
@@ -1468,11 +1469,11 @@ fn validate_retention_shape(retention: &ArtifactRetention) -> DirectoryResult<()
     if retention.scope.space_id.is_empty()
         || retention.scope.document_id.is_empty()
         || retention.retained_floor.document_id != retention.scope.document_id
-        || retention.retained_floor.head_edit_id.is_empty()
+        || !(retention.retained_floor.is_genesis_for(&retention.scope) || retention.retained_floor.is_edited_for(&retention.scope))
         || retention.retained_floor.head_edit_ordinal > DIRECTORY_WIRE_INTEGER_MAX
         || retention.retained_floor.last_commit_seq > DIRECTORY_WIRE_INTEGER_MAX
         || !valid_hash(retention.retained_checkpoint_id)
-        || !valid_hash(retention.retained_floor.chain_hash)
+        || retention.retained_floor.head_edit_ordinal < retention.retained_floor.last_commit_seq
         || !valid_hash(retention.checkpoint_lineage_head)
     {
         return Err(DirectoryError::Conflict("artifact retention metadata is invalid".into()));
@@ -1504,15 +1505,77 @@ fn frontier_strictly_advances(previous: &ArtifactFrontier, next: &ArtifactFronti
     previous.document_id == next.document_id && next.head_edit_ordinal > previous.head_edit_ordinal && next.last_commit_seq > previous.last_commit_seq
 }
 
+/// 🧱️ Transaction and replay projections validate the durable parent before changing the active head.
+pub(crate) fn validate_published_checkpoint_lineage(descriptor: &DocumentDescriptor, active: Option<&PublishedArtifactCheckpoint>, count: u64, candidate: &PublishedArtifactCheckpoint) -> DirectoryResult<()> {
+    validate_checkpoint_shape(candidate)?;
+    if descriptor.space_id != candidate.scope.space_id || descriptor.document_id != candidate.scope.document_id || descriptor_digest_v1(descriptor).ok() != Some(candidate.descriptor_digest_v1) || count >= ARTIFACT_CHECKPOINT_LINEAGE_MAX {
+        return Err(DirectoryError::Conflict("artifact checkpoint durable descriptor or lineage bound differs".into()));
+    }
+    match active {
+        None if count == 0 && candidate.parent_checkpoint_id.is_none() && candidate.baseline_frontier.is_genesis_for(&candidate.scope)
+            && descriptor.bootstrap_frontier == (::directory::os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 }) && descriptor.bootstrap_snapshot_hash == candidate.pack.sha256.hex() => Ok(()),
+        Some(previous) if previous.scope == candidate.scope && candidate.parent_checkpoint_id == Some(previous.checkpoint_id)
+            && candidate.baseline_frontier.is_edited_for(&candidate.scope) && frontier_strictly_advances(&previous.baseline_frontier, &candidate.baseline_frontier) => Ok(()),
+        _ => Err(DirectoryError::Conflict("artifact checkpoint durable parent or frontier differs".into())),
+    }
+}
+
+/// 🌱️ Validates the exact prepared creation and its fixed author/author/system event packet.
+pub(crate) fn validate_document_genesis_append_v1(operation: &ArtifactCreationOperationV1, append: &DocumentGenesisAppendV1) -> DirectoryResult<()> {
+    let Some(prepared) = operation.prepared.as_ref() else { return Err(DirectoryError::Conflict("genesis creation has no durable prepared pair".into())); };
+    prepared.validate(&operation.intent)?;
+    if operation.intent != append.intent || operation.phase != ::directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1::Preparing || operation.revision != 2 || append.now_ms >= append.intent.deadline_ms || append.now_ms < prepared.checkpoint.published_at_ms { return Err(DirectoryError::Conflict("genesis creation identity, phase or deadline changed".into())); }
+    let mut canonical = append.checkpoint.clone();
+    canonical.pack.storage_key = prepared.checkpoint.pack.storage_key.clone(); canonical.spr.storage_key = prepared.checkpoint.spr.storage_key.clone();
+    if canonical != prepared.checkpoint { return Err(DirectoryError::Conflict("genesis checkpoint differs from prepared bytes".into())); }
+    crate::artifact_authority::chunk_cas::validate_artifact_cas_publication_v1(&append.reservation.plan, &append.checkpoint).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
+    validate_published_checkpoint_lineage(&prepared.descriptor, None, 0, &published_artifact_checkpoint(&append.checkpoint))?;
+    let expected = [DirectoryEventBody::DocumentAnnounced { descriptor: prepared.descriptor.clone() }, DirectoryEventBody::DocumentIndexed { scope: append.intent.scope.clone(), descriptor_digest_v1: prepared.checkpoint.descriptor_digest_v1, entry: ::directory::os_directory::DocumentIndexEntryV1 { name: append.intent.request.name.clone(), dialect: append.intent.parent_dialect.clone() } }];
+    for (event, body) in append.events[..2].iter().zip(expected) {
+        if event.body != body || event.actor.kind != DirectoryActorKind::User || actor_user_id(&event.actor)? != append.intent.actor.user_id || event.user_id.as_deref() != Some(&append.intent.actor.user_id) || event.space_id.as_deref() != Some(&append.intent.scope.space_id) { return Err(DirectoryError::Conflict("genesis author event packet differs".into())); }
+    }
+    validate_verified_checkpoint_append(&append.events[2], &append.checkpoint)?;
+    Ok(())
+}
+
+/// 🧾️ Only the transaction's actual dense public triple can construct its completion fact.
+pub(crate) fn document_genesis_completion_v1(operation: &ArtifactCreationOperationV1, append: &DocumentGenesisAppendV1, events: &[DirectoryEvent]) -> DirectoryResult<ArtifactCreationFactV1> {
+    validate_document_genesis_append_v1(operation, append)?;
+    if events.len() != 3 || events[0].seq == 0 || events[0].seq.checked_add(1) != Some(events[1].seq) || events[1].seq.checked_add(1) != Some(events[2].seq) || events.iter().zip(&append.events).any(|(event, original)| event.body != original.body || event.actor != original.actor || event.space_id != original.space_id || event.user_id != original.user_id) { return Err(DirectoryError::Conflict("genesis committed event sequence differs".into())); }
+    Ok(ArtifactCreationFactV1 { actor_user_id: append.intent.actor.user_id.clone(), request_id: append.intent.request.request_id.clone(), revision: 3, recorded_at_ms: append.now_ms, body: crate::artifact_authority::creation::ArtifactCreationFactBodyV1::Committed { receipt: crate::artifact_authority::creation::ArtifactCreationReceiptV1 { ready: append.intent.ready(), checkpoint_id: append.checkpoint.checkpoint_id, descriptor_digest_v1: append.checkpoint.descriptor_digest_v1, event_seq_first: events[0].seq, event_seq_last: events[2].seq, event_ids: events.iter().map(|event| event.id.clone()).collect() } } })
+}
+
+/// 🔏️ Validates the exact immutable descriptor binding before any backend indexes a document.
+pub(crate) fn document_index_projection_v1(event: &DirectoryEvent, descriptor: &DocumentDescriptor) -> DirectoryResult<::directory::os_directory::DirectoryIndexedDocumentViewV1> {
+    let DirectoryEventBody::DocumentIndexed { scope, descriptor_digest_v1: digest, entry } = &event.body else { return Err(DirectoryError::Conflict("document index event required".into())); };
+    ::directory::os_directory::validate_directory_event_page_event(event).map_err(|_| DirectoryError::Conflict("document index event is invalid".into()))?;
+    if descriptor.space_id != scope.space_id || descriptor.document_id != scope.document_id || descriptor.artifact_kind != entry.dialect.artifact_kind || descriptor_digest_v1(descriptor).ok().as_ref() != Some(digest) {
+        return Err(DirectoryError::Conflict("document index descriptor binding differs".into()));
+    }
+    Ok(::directory::os_directory::DirectoryIndexedDocumentViewV1 { descriptor: descriptor.clone(), descriptor_digest_v1: *digest, entry: entry.clone(), created_at_ms: event.recorded_at_ms, created_by: event.user_id.clone().ok_or(DirectoryError::Unauthorized)? })
+}
+
+/// 📇️ No active checkpoint may outlive its descriptor-bound discoverable index row.
+pub(crate) fn validate_checkpoint_index_v1(index: Option<&::directory::os_directory::DirectoryIndexedDocumentViewV1>, descriptor: &DocumentDescriptor, checkpoint: &PublishedArtifactCheckpoint) -> DirectoryResult<()> {
+    if index.is_some_and(|row| &row.descriptor == descriptor && row.descriptor_digest_v1 == checkpoint.descriptor_digest_v1 && row.entry.dialect.artifact_kind == descriptor.artifact_kind) { Ok(()) }
+    else { Err(DirectoryError::Conflict("artifact checkpoint requires its descriptor-bound index".into())) }
+}
+
 /// 🧠️ Dependency-free in-memory artifact projection used by embedded hosts and backend parity laws.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct MemoryArtifactProjection {
     descriptors: HashMap<DocumentScope, DocumentDescriptor>,
+    index: HashMap<DocumentScope, ::directory::os_directory::DirectoryIndexedDocumentViewV1>,
     checkpoints: HashMap<DocumentScope, Vec<PublishedArtifactCheckpoint>>,
     retention: HashMap<DocumentScope, ArtifactRetention>,
 }
 
 impl MemoryArtifactProjection {
+    /// 📇️ Returns only a descriptor-verified persisted presentation row.
+    pub fn indexed_document(&self, scope: &DocumentScope) -> Option<&::directory::os_directory::DirectoryIndexedDocumentViewV1> {
+        self.index.get(scope)
+    }
+
     pub fn active_checkpoint(&self, scope: &DocumentScope) -> Option<&PublishedArtifactCheckpoint> {
         self.checkpoints.get(scope).and_then(|lineage| lineage.last())
     }
@@ -1542,12 +1605,22 @@ impl MemoryArtifactProjection {
             }
             DirectoryEventBody::SpaceDeleted { space_id } => {
                 self.descriptors.retain(|scope, _| &scope.space_id != space_id);
+                self.index.retain(|scope, _| &scope.space_id != space_id);
                 self.checkpoints.retain(|scope, _| &scope.space_id != space_id);
                 self.retention.retain(|scope, _| &scope.space_id != space_id);
+            }
+            DirectoryEventBody::DocumentIndexed { scope, .. } => {
+                let descriptor = self.descriptors.get(scope).ok_or_else(|| DirectoryError::NotFound("indexed document descriptor".into()))?;
+                let row = document_index_projection_v1(event, descriptor)?;
+                if self.index.get(scope).is_some_and(|existing| existing != &row) {
+                    return Err(DirectoryError::Conflict("document index is already bound".into()));
+                }
+                self.index.insert(scope.clone(), row);
             }
             DirectoryEventBody::ArtifactCheckpointPublished { checkpoint } => {
                 validate_checkpoint_shape(checkpoint)?;
                 let descriptor = self.descriptors.get(&checkpoint.scope).ok_or_else(|| DirectoryError::NotFound("memory artifact descriptor".into()))?;
+                validate_checkpoint_index_v1(self.index.get(&checkpoint.scope), descriptor, checkpoint)?;
                 if descriptor_digest_v1(descriptor).map_err(|error| DirectoryError::Conflict(error.to_string()))? != checkpoint.descriptor_digest_v1 {
                     return Err(DirectoryError::Conflict("memory artifact descriptor digest mismatch".into()));
                 }
@@ -1555,15 +1628,7 @@ impl MemoryArtifactProjection {
                 if let Some(existing) = lineage.iter().find(|existing| existing.checkpoint_id == checkpoint.checkpoint_id) {
                     return if existing == checkpoint { Ok(()) } else { Err(DirectoryError::Conflict("memory artifact checkpoint identity conflict".into())) };
                 }
-                if lineage.len() as u64 >= ARTIFACT_CHECKPOINT_LINEAGE_MAX {
-                    return Err(DirectoryError::Conflict(format!("artifact checkpoint lineage exceeds fixed maximum {ARTIFACT_CHECKPOINT_LINEAGE_MAX}")));
-                }
-                match lineage.last() {
-                    None if checkpoint.parent_checkpoint_id.is_some() => return Err(DirectoryError::Conflict("memory genesis checkpoint parent".into())),
-                    Some(active) if checkpoint.parent_checkpoint_id != Some(active.checkpoint_id) => return Err(DirectoryError::Conflict("memory artifact checkpoint parent".into())),
-                    Some(active) if !frontier_strictly_advances(&active.baseline_frontier, &checkpoint.baseline_frontier) => return Err(DirectoryError::Conflict("memory artifact checkpoint frontier".into())),
-                    _ => {}
-                }
+                validate_published_checkpoint_lineage(descriptor, lineage.last(), lineage.len() as u64, checkpoint)?;
                 lineage.push(checkpoint.clone());
             }
             DirectoryEventBody::ArtifactRetentionAdvanced { retention } => {
@@ -1868,7 +1933,7 @@ async fn decide_verified_checkpoint(dir: &HubDirectories, actor: &DirectoryActor
         return Err(DirectoryError::Conflict(format!("artifact checkpoint lineage exceeds fixed maximum {ARTIFACT_CHECKPOINT_LINEAGE_MAX}")));
     }
     match dir.get_active_artifact_checkpoint(&published.scope).await? {
-        None if published.parent_checkpoint_id.is_some() => return Err(DirectoryError::Conflict("genesis artifact checkpoint must not name a parent".into())),
+        None => return Err(DirectoryError::Conflict("ordinary artifact publication requires a committed genesis parent".into())),
         Some(ref current) if published.parent_checkpoint_id != Some(current.checkpoint_id) => return Err(DirectoryError::Conflict("artifact checkpoint parent is not the active lineage head".into())),
         Some(ref current) if !frontier_strictly_advances(&current.baseline_frontier, &published.baseline_frontier) => {
             return Err(DirectoryError::Conflict("artifact checkpoint frontier does not strictly advance the active baseline".into()));
@@ -1900,6 +1965,7 @@ impl DirectoryWriterTestFence {
 pub enum DirectoryProjectionRejectionV1 {
     MissingSpace { space_id: String },
     ArchivedAuthor { space_id: String },
+    ArchivedDocument { space_id: String },
 }
 
 impl DirectoryProjectionRejectionV1 {
@@ -1908,6 +1974,7 @@ impl DirectoryProjectionRejectionV1 {
         DirectoryError::Conflict(match self {
             Self::MissingSpace { space_id } => format!("space '{space_id}' no longer exists"),
             Self::ArchivedAuthor { space_id } => format!("space '{space_id}' is an archive; no author memberships are allowed"),
+            Self::ArchivedDocument { space_id } => format!("space '{space_id}' is an archive; document publication is forbidden"),
         })
     }
 }
@@ -1916,6 +1983,9 @@ impl DirectoryProjectionRejectionV1 {
 pub(crate) fn directory_projection_space_v1(body: &DirectoryEventBody) -> Option<&str> {
     match body {
         DirectoryEventBody::SpaceArchived { space_id } | DirectoryEventBody::MemberUpserted { space_id, .. } | DirectoryEventBody::InviteRedeemed { space_id, .. } => Some(space_id),
+        DirectoryEventBody::DocumentAnnounced { descriptor } => Some(&descriptor.space_id),
+        DirectoryEventBody::DocumentIndexed { scope, .. } => Some(&scope.space_id),
+        DirectoryEventBody::ArtifactCheckpointPublished { checkpoint } => Some(&checkpoint.scope.space_id),
         _ => None,
     }
 }
@@ -1928,6 +1998,9 @@ pub(crate) fn directory_projection_rejection_v1(body: &DirectoryEventBody, space
     }
     if space_kind == Some("archive") && matches!(body, DirectoryEventBody::MemberUpserted { role: DirectorySpaceRole::Author, .. } | DirectoryEventBody::InviteRedeemed { role: DirectorySpaceRole::Author, .. }) {
         return Some(DirectoryProjectionRejectionV1::ArchivedAuthor { space_id: space_id.into() });
+    }
+    if space_kind == Some("archive") && matches!(body, DirectoryEventBody::DocumentAnnounced { .. } | DirectoryEventBody::DocumentIndexed { .. } | DirectoryEventBody::ArtifactCheckpointPublished { .. }) {
+        return Some(DirectoryProjectionRejectionV1::ArchivedDocument { space_id: space_id.into() });
     }
     None
 }
@@ -1974,12 +2047,20 @@ pub struct DirectoryService {
     dir: Arc<HubDirectories>,
     write: tokio::sync::Mutex<HubClock>,
     tx: tokio::sync::broadcast::Sender<DirectoryStreamMessage>,
+    delivery_epochs: std::sync::Mutex<(u64, u64, std::collections::BTreeMap<String, u64>)>,
+    delivery_write: tokio::sync::RwLock<()>,
+    delivery_invalidations: tokio::sync::broadcast::Sender<String>,
     artifact_cas_sweep_secret: [u8; 32],
     #[cfg(test)]
     publication_test_fence: std::sync::Mutex<Option<Arc<DirectoryWriterTestFence>>>,
     #[cfg(test)]
     decision_test_fence: std::sync::Mutex<Option<Arc<DirectoryWriterTestFence>>>,
 }
+
+/// 🔐️ A socket retains this opaque read lease only through its bounded final network send.
+pub struct DirectoryDeliveryLeaseV1<'a> { _guard: tokio::sync::RwLockReadGuard<'a, ()> }
+
+const DIRECTORY_DELIVERY_SCOPE_MAX: usize = 4096;
 
 #[derive(Clone, Copy)]
 struct ArtifactCasSweepPosition {
@@ -1990,11 +2071,73 @@ struct ArtifactCasSweepPosition {
 }
 
 impl DirectoryService {
+    /// 🔢️ Captures a monotone reconnect fence before a directory socket subscribes and replays.
+    pub fn delivery_epoch(&self, space_id: Option<&str>) -> u64 {
+        let epochs = self.delivery_epochs.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        space_id.map_or(epochs.0, |space| epochs.2.get(space).copied().unwrap_or(epochs.1))
+    }
+
+    /// 📡️ A wakeup is advisory; consumers recheck the epoch before any later event delivery.
+    pub fn subscribe_delivery_invalidations(&self) -> tokio::sync::broadcast::Receiver<String> { self.delivery_invalidations.subscribe() }
+
+    /// 🛂️ The epoch check and actual send share a lease; authority and visibility reads precede it.
+    pub async fn acquire_delivery_lease(&self, space_id: Option<&str>, expected_epoch: u64) -> Option<DirectoryDeliveryLeaseV1<'_>> {
+        let guard = self.delivery_write.read().await;
+        (self.delivery_epoch(space_id) == expected_epoch).then_some(DirectoryDeliveryLeaseV1 { _guard: guard })
+    }
+
+    async fn invalidate_delivery_locked(&self, _clock: &tokio::sync::MutexGuard<'_, HubClock>, space_id: &str) {
+        let _delivery = self.delivery_write.write().await;
+        let mut epochs = self.delivery_epochs.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        epochs.0 = epochs.0.checked_add(1).expect("directory delivery generation exhausted");
+        let next = epochs.0;
+        if epochs.2.len() == DIRECTORY_DELIVERY_SCOPE_MAX && !epochs.2.contains_key(space_id) {
+            epochs.2.clear();
+            epochs.1 = next;
+        }
+        epochs.2.insert(space_id.into(), next);
+        let _ = self.delivery_invalidations.send(space_id.into());
+    }
+
+    /// 🗄️ Server-owned services share the exact directory backend without exposing a driver.
+    pub(crate) fn backend(&self) -> &Arc<HubDirectories> { &self.dir }
+
+    /// 📣️ Holds one writer through the sole genesis transaction and ordered publication of its triple.
+    pub async fn publish_document_genesis(&self, intent: ArtifactCreationIntentV1, prepared: &crate::artifact_authority::creation::ArtifactCreationPreparedV1, checkpoint: ArtifactCheckpoint, reservation: ArtifactCasReservation, now_ms: u64) -> DirectoryResult<ArtifactCreationOperationV1> {
+        let mut clock = self.write.lock().await;
+        let actor = DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#artifact-creation", intent.actor.user_id) };
+        let bodies = [DirectoryEventBody::DocumentAnnounced { descriptor: prepared.descriptor.clone() }, DirectoryEventBody::DocumentIndexed { scope: intent.scope.clone(), descriptor_digest_v1: checkpoint.descriptor_digest_v1, entry: ::directory::os_directory::DocumentIndexEntryV1 { name: intent.request.name.clone(), dialect: intent.parent_dialect.clone() } }, DirectoryEventBody::ArtifactCheckpointPublished { checkpoint: published_artifact_checkpoint(&checkpoint) }];
+        let mut ordinal = 0;
+        let events = bodies.map(|body| { let system = ordinal == 2; ordinal += 1; NewDirectoryEvent { hlc: clock.tick(), actor: if system { DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-creation".into() } } else { actor.clone() }, space_id: Some(intent.scope.space_id.clone()), user_id: if system { None } else { Some(intent.actor.user_id.clone()) }, body } });
+        let append = DocumentGenesisAppendV1 { intent, events, checkpoint, reservation, now_ms };
+        match self.dir.append_document_genesis(&append).await? {
+            DocumentGenesisCommitV1::Committed { events, operation } => { self.publish_persisted_locked(&clock, events); Ok(operation) }
+            DocumentGenesisCommitV1::Existing(operation) => Ok(operation),
+            DocumentGenesisCommitV1::Indeterminate => {
+                let reconciled = async {
+                let facts = self.dir.read_artifact_creation(&append.intent.actor.user_id, &append.intent.request.request_id).await?;
+                let operation = ArtifactCreationOperationV1::fold(&facts)?;
+                if operation.intent != append.intent { return Err(DirectoryError::Conflict("genesis uncertain receipt belongs to another intent".into())); }
+                let Some(receipt) = operation.receipt.as_ref() else { return Err(DirectoryError::Backend("genesis commit acknowledgement is indeterminate; no durable receipt is readable".into())); };
+                let events = self.dir.events_since(receipt.event_seq_first - 1, 3).await?;
+                let prepared = ArtifactCreationOperationV1::fold(&facts[..2])?;
+                let completion = document_genesis_completion_v1(&prepared, &append, &events)?;
+                if facts.last() != Some(&completion) { return Err(DirectoryError::Conflict("genesis uncertain public triple differs from its exact stored receipt".into())); }
+                self.publish_persisted_locked(&clock, events);
+                Ok(operation)
+                }.await;
+                if reconciled.is_err() { self.invalidate_delivery_locked(&clock, &append.intent.scope.space_id).await; }
+                reconciled
+            }
+        }
+    }
+
     /// @emoji 🏗️ `channel_capacity` sizes the broadcast buffer; a subscriber that falls more than
     /// this many messages behind sees `RecvError::Lagged` and must resync via `events_since`
     /// (`?since=` replay, contract C2) — handled by `bin.rs`'s WS handler, not here.
     pub fn new(dir: Arc<HubDirectories>, channel_capacity: usize) -> Self {
         let (tx, _rx) = tokio::sync::broadcast::channel(channel_capacity);
+        let (delivery_invalidations, _) = tokio::sync::broadcast::channel(channel_capacity);
         let mut sweep_secret = Sha256::new();
         sweep_secret.update(ARTIFACT_CAS_SWEEP_CONTINUATION_DOMAIN_V1);
         sweep_secret.update(time_ordered_id().as_bytes());
@@ -2002,6 +2145,9 @@ impl DirectoryService {
             dir,
             write: tokio::sync::Mutex::new(HubClock::new()),
             tx,
+            delivery_epochs: std::sync::Mutex::new((0, 0, std::collections::BTreeMap::new())),
+            delivery_write: tokio::sync::RwLock::new(()),
+            delivery_invalidations,
             artifact_cas_sweep_secret: sweep_secret.finalize(),
             #[cfg(test)]
             publication_test_fence: std::sync::Mutex::new(None),
@@ -2052,7 +2198,7 @@ impl DirectoryService {
     /// 🪝️ Publishes a committed event page while the caller still owns the single writer guard.
     fn publish_persisted_locked(&self, _clock: &tokio::sync::MutexGuard<'_, HubClock>, persisted: Vec<DirectoryEvent>) -> Vec<DirectoryEvent> {
         for event in &persisted {
-            let _ = self.tx.send(DirectoryStreamMessage::Event { event: event.clone() });
+            let _ = self.tx.send(DirectoryStreamMessage::Event { event: Box::new(event.clone()) });
         }
         persisted
     }
@@ -2675,6 +2821,12 @@ pub trait HubDirectory: Send + Sync + 'static {
     //#endregion
 
     //#region Documents
+    async fn claim_artifact_creation(&self, intent: &ArtifactCreationIntentV1) -> DirectoryResult<ArtifactCreationClaimV1>;
+    async fn read_artifact_creation(&self, actor_user_id: &str, request_id: &str) -> DirectoryResult<Vec<ArtifactCreationFactV1>>;
+    async fn append_artifact_creation_fact(&self, append: &ArtifactCreationFactAppendV1) -> DirectoryResult<ArtifactCreationOperationV1>;
+    async fn append_document_genesis(&self, append: &DocumentGenesisAppendV1) -> DirectoryResult<DocumentGenesisCommitV1>;
+    async fn artifact_creation_recovery_candidates(&self, now_ms: u64, limit: usize) -> DirectoryResult<Vec<ArtifactCreationIntentV1>>;
+    async fn artifact_creation_terminate_uncommitted(&self, intent: &ArtifactCreationIntentV1, now_ms: u64) -> DirectoryResult<ArtifactCreationOperationV1>;
     async fn get_document_descriptor(&self, scope: &DocumentScope) -> DirectoryResult<Option<DocumentDescriptor>>;
     async fn list_document_descriptors(&self, space_id: &str) -> DirectoryResult<Vec<DocumentDescriptor>>;
     async fn list_document_descriptors_page(&self, space_id: Option<&str>, offset: usize, limit: usize) -> DirectoryResult<Vec<DocumentDescriptor>>;
@@ -2956,6 +3108,72 @@ impl ::core::convert::From<neo4j::Neo4jDirectory> for HubDirectories {
 }
 
 impl HubDirectory for HubDirectories {
+    async fn claim_artifact_creation(&self, intent: &ArtifactCreationIntentV1) -> DirectoryResult<ArtifactCreationClaimV1> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.claim_artifact_creation(intent).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.claim_artifact_creation(intent).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.claim_artifact_creation(intent).await,
+        }
+    }
+
+    async fn read_artifact_creation(&self, actor_user_id: &str, request_id: &str) -> DirectoryResult<Vec<ArtifactCreationFactV1>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.read_artifact_creation(actor_user_id, request_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.read_artifact_creation(actor_user_id, request_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.read_artifact_creation(actor_user_id, request_id).await,
+        }
+    }
+
+    async fn append_artifact_creation_fact(&self, append: &ArtifactCreationFactAppendV1) -> DirectoryResult<ArtifactCreationOperationV1> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.append_artifact_creation_fact(append).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.append_artifact_creation_fact(append).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.append_artifact_creation_fact(append).await,
+        }
+    }
+
+    async fn append_document_genesis(&self, append: &DocumentGenesisAppendV1) -> DirectoryResult<DocumentGenesisCommitV1> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.append_document_genesis(append).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.append_document_genesis(append).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.append_document_genesis(append).await,
+        }
+    }
+
+    async fn artifact_creation_terminate_uncommitted(&self, intent: &ArtifactCreationIntentV1, now_ms: u64) -> DirectoryResult<ArtifactCreationOperationV1> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.artifact_creation_terminate_uncommitted(intent, now_ms).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.artifact_creation_terminate_uncommitted(intent, now_ms).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.artifact_creation_terminate_uncommitted(intent, now_ms).await,
+        }
+    }
+
+    async fn artifact_creation_recovery_candidates(&self, now_ms: u64, limit: usize) -> DirectoryResult<Vec<ArtifactCreationIntentV1>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.artifact_creation_recovery_candidates(now_ms, limit).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.artifact_creation_recovery_candidates(now_ms, limit).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.artifact_creation_recovery_candidates(now_ms, limit).await,
+        }
+    }
+
     async fn issue_share_token_as(&self, scope: &DocumentScope, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<IssuedShareToken> {
         match self {
             #[cfg(feature = "sqlite")]
@@ -4029,6 +4247,46 @@ mod tests {
         service.publish_reserved_artifact_checkpoint(actor, checkpoint, reservation, 100).await
     }
 
+    async fn publish_fixture_genesis<S: ArtifactChunkCasStorage>(service: &DirectoryService, user_id: &str, mut descriptor: DocumentDescriptor, storage: Arc<S>, context: &OperationContext<'_>) -> (DocumentDescriptor, ArtifactCheckpoint) {
+        use crate::artifact_authority::creation::{artifact_creation_command_digest_v1, ArtifactCreationActorV1, ArtifactCreationFactBodyV1, ArtifactCreationPreparedV1, ARTIFACT_CREATION_DEADLINE_MS};
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🗿️artifact-authority/🌱️creation/📚️operation-v1/🔣️.json")).expect("creation fixture");
+        let mut intent = ArtifactCreationIntentV1::from_value(DslValue::from(fixture["intent"].clone())).expect("creation intent");
+        let mut prepared = ArtifactCreationPreparedV1::from_value(DslValue::from(fixture["prepared"].clone())).expect("creation pair");
+        let issued = service.dir.issue_auth_session(&AuthSessionIssue { user_id: user_id.into(), identity_provider: "genesis-test".into(), identity_subject_digest: identity_subject_digest("genesis-test", user_id).expect("fixture identity"), ttl_secs: 60, device_instance_id: "genesis-device".into(), session_kind: AuthSessionKind::DevelopmentLocal, correlation_id: "genesis-session".into(), peer_class: "loopback-test".into() }).await.expect("creation session");
+        descriptor.bootstrap_frontier = directory::os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 };
+        descriptor.artifact_schema = "s.gis.gismap/1/any".into();
+        descriptor.bootstrap_snapshot_hash = semio_framework_hash::hex_lower(&Sha256::digest(&prepared.pack));
+        intent.actor = ArtifactCreationActorV1 { user_id: user_id.into(), session_id: issued.record.id, authorization_generation: issued.record.authorization_generation };
+        intent.scope = DocumentScope::new(&descriptor.space_id, &descriptor.document_id);
+        intent.request.request_id = descriptor.document_id.strip_prefix("artifact-").expect("minted fixture document").into();
+        intent.request.kind_id = descriptor.artifact_kind.clone();
+        intent.owner = descriptor.owner.clone();
+        intent.artifact_schema = descriptor.artifact_schema.clone();
+        intent.pack_schema_hash = descriptor.pack_schema_hash.clone();
+        intent.parent_dialect.artifact_kind = descriptor.artifact_kind.clone();
+        intent.accepted_at_ms = now_ms() as u64;
+        intent.deadline_ms = intent.accepted_at_ms + ARTIFACT_CREATION_DEADLINE_MS;
+        intent.command_sha256 = artifact_creation_command_digest_v1(&intent.scope.space_id, &intent.request).expect("creation command digest");
+        prepared.descriptor = descriptor.clone();
+        let mut public = published_artifact_checkpoint(&prepared.checkpoint);
+        public.scope = intent.scope.clone();
+        public.baseline_frontier.document_id = descriptor.document_id.clone();
+        public.descriptor_digest_v1 = descriptor_digest_v1(&descriptor).expect("creation descriptor digest");
+        public.published_at_ms = intent.accepted_at_ms;
+        let pair = ArtifactPair { pack: prepared.pack.clone(), spr: prepared.spr.clone() };
+        let checkpoint = materialized_checkpoint(public, &pair);
+        prepared.checkpoint = checkpoint.clone();
+        prepared.checkpoint.pack.storage_key = format!("sha256/{}", checkpoint.pack.sha256.hex());
+        prepared.checkpoint.spr.storage_key = format!("sha256/{}", checkpoint.spr.sha256.hex());
+        prepared.validate(&intent).expect("exact prepared genesis");
+        assert!(matches!(service.dir.claim_artifact_creation(&intent).await.expect("claim genesis"), ArtifactCreationClaimV1::Accepted(_)));
+        service.dir.append_artifact_creation_fact(&ArtifactCreationFactAppendV1 { actor: intent.actor.clone(), space_id: intent.scope.space_id.clone(), request_id: intent.request.request_id.clone(), command_sha256: intent.command_sha256.clone(), expected_revision: 1, recorded_at_ms: now_ms() as u64, body: ArtifactCreationFactBodyV1::Prepared { candidate: prepared.clone() } }).await.expect("prepare genesis");
+        let system = DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-creation".into() };
+        let reservation = stage_reserved_checkpoint(service, storage, system, &checkpoint, &pair, intent.deadline_ms, now_ms() as u64, context).await.expect("stage genesis");
+        service.publish_document_genesis(intent, &prepared, checkpoint.clone(), reservation, now_ms() as u64).await.expect("publish genesis");
+        (descriptor, checkpoint)
+    }
+
     struct ArtifactCasProbe {
         now_ms: AtomicU64,
         cancel_after_sweep: Option<u64>,
@@ -4465,19 +4723,20 @@ mod tests {
         let space_id = create_space(&service, &owner, DirectorySpaceKind::Studio).await;
         let mut descriptor = template_descriptor;
         descriptor.space_id = space_id.clone();
-        descriptor.document_id = "artifact-cas-retention".into();
-        service.execute(owner.clone(), DirectoryCommand::AnnounceDocument { descriptor: descriptor.clone() }).await.expect("announce CAS document");
+        descriptor.document_id = "artifact-00000000000000000000000000000002".into();
         let system = DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-authority".into() };
         let first_pair = ArtifactPair { pack: b"shared-pack".to_vec(), spr: b"old-spr".to_vec() };
-        let first = scoped_materialized_checkpoint(first_public, &descriptor, &first_pair, None, 1);
         let second_pair = ArtifactPair { pack: first_pair.pack.clone(), spr: b"new-spr".to_vec() };
-        let second = scoped_materialized_checkpoint(second_public, &descriptor, &second_pair, Some(first.checkpoint_id), 2);
         let generic_pool = Arc::new(db::semio_framework_async::process_worker_pool(db::semio_framework_async::WorkerPoolConfig::new(db::semio_framework_async::ProcessKind::HeadlessBatch, 2)));
         let generic = GenericMemoryStorage::new(generic_pool).await.expect("open generic payload storage");
         let generic_hash = generic.put(generic_payload_pages(&first_pair.spr)).await.expect("seed identical generic payload bytes");
         let storage = Arc::new(MemoryArtifactChunkCasStorage::default());
         let control = ArtifactCasProbe::new(100, None);
         let context = OperationContext::new(10_000, AuthorityLimits::maximum(), &control);
+
+        let (descriptor, genesis) = publish_fixture_genesis(&service, "u-owner", descriptor, storage.clone(), &context).await;
+        let first = scoped_materialized_checkpoint(first_public, &descriptor, &first_pair, Some(genesis.checkpoint_id), 1);
+        let second = scoped_materialized_checkpoint(second_public, &descriptor, &second_pair, Some(first.checkpoint_id), 2);
 
         let first_reservation = stage_reserved_checkpoint(&service, storage.clone(), system.clone(), &first, &first_pair, 1_000, 100, &context).await.expect("reserve and stage first");
         service.publish_reserved_artifact_checkpoint(system.clone(), first.clone(), first_reservation, 100).await.expect("publish first");
@@ -4651,27 +4910,28 @@ mod tests {
         orphan_descriptor.space_id = space_id.clone();
         orphan_descriptor.document_id = "artifact-cas-race-orphan".into();
         let mut live_descriptor = orphan_descriptor.clone();
-        live_descriptor.document_id = "artifact-cas-race-live".into();
+        live_descriptor.document_id = "artifact-00000000000000000000000000000003".into();
         service.execute(owner.clone(), DirectoryCommand::AnnounceDocument { descriptor: orphan_descriptor.clone() }).await.expect("announce orphan document");
-        service.execute(owner, DirectoryCommand::AnnounceDocument { descriptor: live_descriptor.clone() }).await.expect("announce live document");
         let pair = ArtifactPair { pack: b"race-pack".to_vec(), spr: b"race-spr".to_vec() };
         let orphan = scoped_materialized_checkpoint(orphan_public, &orphan_descriptor, &pair, None, 1);
-        let live = scoped_materialized_checkpoint(live_public, &live_descriptor, &pair, None, 1);
         let storage = Arc::new(BlockingDeleteArtifactCas::new());
         let system = DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-authority".into() };
         let stage_control = ArtifactCasProbe::new(100, None);
         let stage_context = OperationContext::new(10_000, AuthorityLimits::maximum(), &stage_control);
+        let (live_descriptor, genesis) = publish_fixture_genesis(service.as_ref(), "u-owner", live_descriptor, storage.clone(), &stage_context).await;
+        let live = scoped_materialized_checkpoint(live_public, &live_descriptor, &pair, Some(genesis.checkpoint_id), 1);
         stage_reserved_checkpoint(service.as_ref(), storage.clone(), system.clone(), &orphan, &pair, 200, 100, &stage_context).await.expect("stage orphan");
         let live_plan = prepare_artifact_cas_ownership_v1(&live, &pair).expect("live ownership");
 
         let sweep_service = Arc::new(DirectoryService::new(dir.clone(), 64));
         let sweep_storage = storage.clone();
-        let sweep_task = tokio::spawn(async move {
+        let mut sweep_tasks = tokio::task::JoinSet::new();
+        sweep_tasks.spawn(async move {
             let control = ArtifactCasProbe::new(300, None);
             let context = OperationContext::new(10_000, AuthorityLimits::maximum(), &control);
-            sweep_service.sweep_artifact_cas(sweep_storage.as_ref(), ArtifactCasSweepRequest { execute: true, max_objects: 1, continuation: None }, &context).await
+            sweep_service.sweep_artifact_cas(sweep_storage.as_ref(), ArtifactCasSweepRequest { execute: true, max_objects: ARTIFACT_CAS_SWEEP_OBJECT_MAX, continuation: None }, &context).await
         });
-        storage.entered.notified().await;
+        tokio::time::timeout(std::time::Duration::from_secs(30), storage.entered.notified()).await.expect("sweep reaches an eligible orphan object");
         let reserve_service = DirectoryService::new(dir, 64);
         assert!(matches!(reserve_service.reserve_artifact_cas(system.clone(), live_plan.clone(), 1_000, 300).await, Err(DirectoryError::Conflict(_))));
         let reservation = reserve_service.reserve_artifact_cas(system.clone(), live_plan, 10_000, 5_301).await.expect("reserve after deletion lease expiry");
@@ -4683,7 +4943,8 @@ mod tests {
         let spr = blobs.stage(&space_id, ArtifactBlobIntegrity { sha256: live.spr.sha256, byte_length: live.spr.byte_length }, &pair.spr, &rewrite_context).await.expect("stage raced SPR");
         reserve_service.publish_reserved_artifact_checkpoint(system, live.clone(), reservation, 5_301).await.expect("publish raced checkpoint");
         storage.release.notify_one();
-        assert!(sweep_task.await.expect("join sweep").is_err());
+        let error = tokio::time::timeout(std::time::Duration::from_secs(30), sweep_tasks.join_next()).await.expect("sweep completion deadline").expect("owned sweep task").expect("join sweep").expect_err("stale deletion fence");
+        assert!(matches!(&error, crate::artifact_authority::AuthorityError::Store(message) if message == "artifact CAS deletion fence is stale"), "unexpected raced sweep error: {error:?}");
         assert_eq!(pack.storage_key, live.pack.storage_key);
         assert_eq!(spr.storage_key, live.spr.storage_key);
         assert_eq!(blobs.read(&space_id, &pack, &rewrite_context).await.expect("read raced pack"), pair.pack);
@@ -4701,16 +4962,19 @@ mod tests {
             let service = DirectoryService::new(Arc::new(HubDirectories::from(directory)), 16);
             let storage = FsArtifactChunkCasStorage::open(&root.join("artifact-cas").join("v1")).await.expect("child opens shared filesystem CAS");
             let system = DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-authority".into() };
-            let (mut descriptor, _, live_public, _, _) = artifact_projection_fixture();
-            descriptor.space_id = "default".into();
-            descriptor.document_id = "artifact-cas-process-race-live".into();
+            let (_, _, live_public, _, _) = artifact_projection_fixture();
+            let scope = DocumentScope::new("default", "artifact-00000000000000000000000000000004");
+            let descriptor = service.dir.get_document_descriptor(&scope).await.expect("live descriptor").expect("persisted genesis descriptor");
+            let lineage = service.dir.list_artifact_checkpoint_lineage(&scope, 2).await.expect("live lineage");
+            let genesis = lineage.first().expect("persisted genesis");
+            assert!(genesis.baseline_frontier.is_genesis_for(&scope));
             let pair = ArtifactPair { pack: b"process-race-pack".to_vec(), spr: b"process-race-spr".to_vec() };
-            let live = scoped_materialized_checkpoint(live_public, &descriptor, &pair, None, 1);
+            let live = scoped_materialized_checkpoint(live_public, &descriptor, &pair, Some(genesis.checkpoint_id), 1);
             if mode == "old-sweep" {
                 let storage = ProcessBlockingDeleteArtifactCas { inner: storage, entered: root.join("old-delete-entered"), release: root.join("old-delete-release") };
                 let control = ArtifactCasProbe::new(300, None);
                 let context = OperationContext::new(20_000, AuthorityLimits::maximum(), &control);
-                let error = service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: 1, continuation: None }, &context).await.expect_err("old process deletion fence is stale");
+                let error = service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: ARTIFACT_CAS_SWEEP_OBJECT_MAX, continuation: None }, &context).await.expect_err("old process deletion fence is stale");
                 assert!(matches!(&error, crate::artifact_authority::AuthorityError::Store(message) if message == "artifact CAS deletion fence is stale"), "unexpected old process sweep error: {error:?}");
             } else {
                 assert_eq!(mode, "successor-publication");
@@ -4728,7 +4992,7 @@ mod tests {
             return;
         }
 
-        let root = std::env::temp_dir().join(format!("semio-artifact-cas-directory-process-race-{}", directory::os_identity::time_ordered_id()));
+        let root = std::path::PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("ticket generated artifact root")).join(format!("semio-artifact-cas-directory-process-race-{}", directory::os_identity::time_ordered_id()));
         std::fs::create_dir_all(&root).expect("create process race root");
         let path_text = root.join("directory.sqlite3").to_str().expect("UTF-8 process race path").to_string();
         let cas_root = root.join("artifact-cas").join("v1");
@@ -4736,7 +5000,7 @@ mod tests {
         orphan_descriptor.space_id = "default".into();
         orphan_descriptor.document_id = "artifact-cas-process-race-orphan".into();
         let mut live_descriptor = orphan_descriptor.clone();
-        live_descriptor.document_id = "artifact-cas-process-race-live".into();
+        live_descriptor.document_id = "artifact-00000000000000000000000000000004".into();
         let pair = ArtifactPair { pack: b"process-race-pack".to_vec(), spr: b"process-race-spr".to_vec() };
         let orphan = scoped_materialized_checkpoint(orphan_public, &orphan_descriptor, &pair, None, 1);
         {
@@ -4744,45 +5008,50 @@ mod tests {
             directory.seed().await.expect("seed process race directory");
             let service = DirectoryService::new(Arc::new(HubDirectories::from(directory)), 16);
             service.execute(user_actor("seed"), DirectoryCommand::AnnounceDocument { descriptor: orphan_descriptor }).await.expect("announce process race orphan");
-            service.execute(user_actor("seed"), DirectoryCommand::AnnounceDocument { descriptor: live_descriptor }).await.expect("announce process race live");
             let storage = Arc::new(FsArtifactChunkCasStorage::open(&cas_root).await.expect("open process race filesystem CAS"));
             let system = DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-authority".into() };
             let control = ArtifactCasProbe::new(100, None);
             let context = OperationContext::new(20_000, AuthorityLimits::maximum(), &control);
+            publish_fixture_genesis(&service, "seed", live_descriptor, storage.clone(), &context).await;
             stage_reserved_checkpoint(&service, storage, system, &orphan, &pair, 200, 100, &context).await.expect("stage expired process race orphan");
         }
 
         let executable = std::env::current_exe().expect("process race test executable");
         let spawn = |mode: &str| {
-            std::process::Command::new(&executable)
+            tokio::process::Command::new(&executable)
                 .arg("artifact_chunk_cas_filesystem_process_sweep_and_publication_race_preserves_exact_bytes")
                 .arg("--test-threads=1")
                 .env(ROOT_ENV, &root)
                 .env(MODE_ENV, mode)
+                .kill_on_drop(true)
+                .stdout(std::process::Stdio::piped())
+                .stderr(std::process::Stdio::piped())
                 .spawn()
                 .expect("spawn process race child")
         };
         let mut old = spawn("old-sweep");
         let entered = root.join("old-delete-entered");
-        for _ in 0..4_000 {
-            if entered.exists() {
-                break;
+        tokio::time::timeout(std::time::Duration::from_secs(30), async {
+            while !entered.exists() {
+                assert!(old.try_wait().expect("poll old sweep child").is_none(), "old sweep child exited before conditional deletion");
+                tokio::time::sleep(std::time::Duration::from_millis(5)).await;
             }
-            assert!(old.try_wait().expect("poll old sweep child").is_none(), "old sweep child exited before conditional deletion");
-            tokio::time::sleep(std::time::Duration::from_millis(5)).await;
-        }
-        assert!(entered.exists(), "old sweep reached conditional filesystem deletion");
-        let mut successor = spawn("successor-publication");
-        assert!(successor.wait().expect("wait successor publication child").success());
+        }).await.expect("old sweep conditional filesystem deletion deadline");
+        let successor = tokio::time::timeout(std::time::Duration::from_secs(30), spawn("successor-publication").wait_with_output()).await.expect("successor deadline").expect("wait successor publication child");
+        assert!(successor.status.success(), "successor failed: {} {}", String::from_utf8_lossy(&successor.stdout), String::from_utf8_lossy(&successor.stderr));
         std::fs::write(root.join("old-delete-release"), []).expect("release old process delete");
-        assert!(old.wait().expect("wait old sweep child").success());
+        let old = tokio::time::timeout(std::time::Duration::from_secs(30), old.wait_with_output()).await.expect("old sweep deadline").expect("wait old sweep child");
+        assert!(old.status.success(), "old sweep failed: {} {}", String::from_utf8_lossy(&old.stdout), String::from_utf8_lossy(&old.stderr));
 
         let directory = SqliteDirectory::connect(&path_text).await.expect("reopen process race directory");
         let service = DirectoryService::new(Arc::new(HubDirectories::from(directory)), 16);
-        let (mut live_descriptor, _, live_public, _, _) = artifact_projection_fixture();
-        live_descriptor.space_id = "default".into();
-        live_descriptor.document_id = "artifact-cas-process-race-live".into();
-        let live = scoped_materialized_checkpoint(live_public, &live_descriptor, &pair, None, 1);
+        let (_, _, live_public, _, _) = artifact_projection_fixture();
+        let scope = DocumentScope::new("default", "artifact-00000000000000000000000000000004");
+        let live_descriptor = service.dir.get_document_descriptor(&scope).await.expect("live descriptor").expect("persisted genesis descriptor");
+        let lineage = service.dir.list_artifact_checkpoint_lineage(&scope, 2).await.expect("live lineage");
+        let genesis = lineage.first().expect("persisted genesis");
+        assert!(genesis.baseline_frontier.is_genesis_for(&scope));
+        let live = scoped_materialized_checkpoint(live_public, &live_descriptor, &pair, Some(genesis.checkpoint_id), 1);
         assert_eq!(service.dir.get_verified_artifact_checkpoint(&live.scope, live.checkpoint_id).await.expect("published process race reference"), Some(live.clone()));
         let storage = Arc::new(FsArtifactChunkCasStorage::open(&cas_root).await.expect("reopen process race filesystem CAS"));
         let blobs = ArtifactChunkBlobStore::new(storage);
@@ -4792,8 +5061,10 @@ mod tests {
         let spr = StagedArtifactBlob { storage_key: live.spr.storage_key.clone(), integrity: ArtifactBlobIntegrity { sha256: live.spr.sha256, byte_length: live.spr.byte_length } };
         assert_eq!(blobs.read("default", &pack, &context).await.expect("parent exact pack read"), pair.pack);
         assert_eq!(blobs.read("default", &spr, &context).await.expect("parent exact SPR read"), pair.spr);
+        drop(blobs);
         drop(service);
         std::fs::remove_dir_all(root).expect("remove process race root");
+        println!("[DEBUG] Filesystem CAS process race: dedicated genesis=1 edited successor=1 separate-process stale deletion refusal=1 exact pair readbacks=4");
     }
 
     #[tokio::test]
@@ -4809,21 +5080,31 @@ mod tests {
         let fixture_space = dir.list_spaces(100, 0).await.expect("spaces").into_iter().find(|space| space.name == "Fixture").expect("fixture space");
         let mut announced = descriptor.clone();
         announced.space_id = fixture_space.id.clone();
+        announced.document_id = "artifact-00000000000000000000000000000001".into();
+        let control = ArtifactCasProbe::new(now_ms() as u64, None);
+        let context = OperationContext::new(now_ms() as u64 + 30_000, AuthorityLimits::maximum(), &control);
+        let (announced, genesis) = publish_fixture_genesis(&service, "u-owner", announced, Arc::new(MemoryArtifactChunkCasStorage::default()), &context).await;
         let mut first = first;
         let mut second = second;
         let mut first_retention = first_retention;
         first.scope.space_id = fixture_space.id.clone();
+        first.scope.document_id = announced.document_id.clone();
+        first.baseline_frontier.document_id = announced.document_id.clone();
         second.scope.space_id = fixture_space.id.clone();
+        second.scope.document_id = announced.document_id.clone();
+        second.baseline_frontier.document_id = announced.document_id.clone();
         first_retention.scope.space_id = fixture_space.id.clone();
+        first_retention.scope.document_id = announced.document_id.clone();
+        first_retention.retained_floor.document_id = announced.document_id.clone();
         let digest = descriptor_digest_v1(&announced).expect("digest");
         first.descriptor_digest_v1 = digest;
         second.descriptor_digest_v1 = digest;
+        first.parent_checkpoint_id = Some(genesis.checkpoint_id);
         first.checkpoint_id = ArtifactHash(Sha256::digest(&crate::artifact_authority::checkpoint_id_encoding_v1(&checkpoint_identity_input(&first)).expect("first identity")));
         second.parent_checkpoint_id = Some(first.checkpoint_id);
         second.checkpoint_id = ArtifactHash(Sha256::digest(&crate::artifact_authority::checkpoint_id_encoding_v1(&checkpoint_identity_input(&second)).expect("second identity")));
         first_retention.retained_checkpoint_id = first.checkpoint_id;
         first_retention.checkpoint_lineage_head = second.checkpoint_id;
-        service.execute(owner, DirectoryCommand::AnnounceDocument { descriptor: announced }).await.expect("announce");
         let system = DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-authority".into() };
 
         let first_verified = verified_checkpoint(&first, "one");
@@ -4841,7 +5122,7 @@ mod tests {
         assert!(publish_reserved(&service, system.clone(), first_verified.clone()).await.expect("idempotent first").is_empty());
         assert_eq!(dir.head_seq().await.expect("head unchanged"), head);
         let mut private_conflict = first_verified.clone();
-        private_conflict.pack.storage_key.push_str("-altered");
+        private_conflict.pack.storage_key = artifact_cas_manifest_locator_v1(ArtifactHash([88; 32]));
         assert!(matches!(publish_reserved(&service, system.clone(), private_conflict).await, Err(DirectoryError::Conflict(_))));
         let mut public_conflict = first_verified.clone();
         public_conflict.published_at_ms += 1;
@@ -4863,7 +5144,7 @@ mod tests {
         assert_eq!(dir.get_active_artifact_checkpoint(&scope).await.expect("active"), Some(second.clone()));
         assert_eq!(dir.get_verified_artifact_checkpoint(&scope, first.checkpoint_id).await.expect("released private"), None);
         assert_eq!(dir.get_verified_artifact_checkpoint(&scope, second.checkpoint_id).await.expect("private active"), Some(second_verified.clone()));
-        assert_eq!(dir.list_artifact_checkpoint_lineage(&scope, ARTIFACT_CHECKPOINT_LINEAGE_MAX as usize).await.expect("lineage"), vec![first.clone(), second.clone()]);
+        assert_eq!(dir.list_artifact_checkpoint_lineage(&scope, ARTIFACT_CHECKPOINT_LINEAGE_MAX as usize).await.expect("lineage"), vec![published_artifact_checkpoint(&genesis), first.clone(), second.clone()]);
         assert_eq!(dir.get_artifact_retention(&scope).await.expect("retention"), Some(second_retention.clone()));
         assert!(matches!(dir.list_artifact_checkpoint_lineage(&scope, ARTIFACT_CHECKPOINT_LINEAGE_MAX as usize + 1).await, Err(DirectoryError::Conflict(_))));
 
@@ -4885,11 +5166,21 @@ mod tests {
     #[test]
     fn memory_projection_is_atomic_and_fixed_caps_reject_max_plus_one() {
         let (descriptor, first, second, retention, fixture_maximum) = artifact_projection_fixture();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/📸️artifact-checkpoint-projection.json")).expect("checkpoint projection fixture");
+        let genesis = PublishedArtifactCheckpoint::from_value(DslValue::from(fixture["genesis"].clone())).expect("fixture genesis");
+        let entry = directory::os_directory::DocumentIndexEntryV1::from_value(DslValue::from(fixture["indexEntry"].clone())).expect("fixture index entry");
+        let mut announced = artifact_event(1, DirectoryEventBody::DocumentAnnounced { descriptor });
+        announced.actor = user_actor("creator");
+        announced.user_id = Some("creator".into());
+        let mut indexed = artifact_event(2, DirectoryEventBody::DocumentIndexed { scope: genesis.scope.clone(), descriptor_digest_v1: genesis.descriptor_digest_v1, entry });
+        indexed.actor = announced.actor.clone();
+        indexed.user_id = announced.user_id.clone();
         let events = vec![
-            artifact_event(1, DirectoryEventBody::DocumentAnnounced { descriptor }),
-            artifact_event(2, DirectoryEventBody::ArtifactCheckpointPublished { checkpoint: first.clone() }),
-            artifact_event(3, DirectoryEventBody::ArtifactCheckpointPublished { checkpoint: second.clone() }),
-            artifact_event(4, DirectoryEventBody::ArtifactRetentionAdvanced { retention: retention.clone() }),
+            announced, indexed,
+            artifact_event(3, DirectoryEventBody::ArtifactCheckpointPublished { checkpoint: genesis.clone() }),
+            artifact_event(4, DirectoryEventBody::ArtifactCheckpointPublished { checkpoint: first.clone() }),
+            artifact_event(5, DirectoryEventBody::ArtifactCheckpointPublished { checkpoint: second.clone() }),
+            artifact_event(6, DirectoryEventBody::ArtifactRetentionAdvanced { retention: retention.clone() }),
         ];
         let mut projection = MemoryArtifactProjection::default();
         projection.fold_atomically(&events).expect("memory fold");
@@ -4898,14 +5189,29 @@ mod tests {
         let before = projection.clone();
         let mut backward = retention;
         backward.checkpoint_lineage_head = first.checkpoint_id;
-        assert!(projection.fold_atomically(&[artifact_event(5, DirectoryEventBody::ArtifactRetentionAdvanced { retention: backward })]).is_err());
+        assert!(projection.fold_atomically(&[artifact_event(7, DirectoryEventBody::ArtifactRetentionAdvanced { retention: backward })]).is_err());
         assert_eq!(projection, before);
 
+        let mut rootless = MemoryArtifactProjection::default();
+        rootless.fold_atomically(&events[..1]).expect("descriptor only");
+        let descriptor_only = rootless.clone();
+        assert!(rootless.fold_atomically(&events[2..3]).is_err());
+        assert_eq!(rootless, descriptor_only);
+        rootless.fold_atomically(&events[1..2]).expect("descriptor bound index");
+        let indexed_only = rootless.clone();
+        assert!(rootless.fold_atomically(&events[3..4]).is_err());
+        assert_eq!(rootless, indexed_only);
+        let mut late_root = genesis;
+        late_root.spr.sha256.0[0] ^= 1;
+        late_root.checkpoint_id = ArtifactHash(Sha256::digest(&crate::artifact_authority::checkpoint_id_encoding_v1(&checkpoint_identity_input(&late_root)).expect("late root identity")));
+        assert!(projection.fold_atomically(&[artifact_event(7, DirectoryEventBody::ArtifactCheckpointPublished { checkpoint: late_root })]).is_err());
+
         projection.checkpoints.insert(first.scope.clone(), vec![first.clone(); fixture_maximum as usize]);
-        assert!(projection.fold_atomically(&[artifact_event(6, DirectoryEventBody::ArtifactCheckpointPublished { checkpoint: second })]).is_err());
+        assert!(projection.fold_atomically(&[artifact_event(8, DirectoryEventBody::ArtifactCheckpointPublished { checkpoint: second })]).is_err());
         let probe = RebuildProbe { cancelled: AtomicBool::new(false), cancel_after_first: false, progress: std::sync::Mutex::new(Vec::new()) };
         checkpoint_projection_rebuild(&probe, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS).expect("rebuild exact maximum");
         assert!(checkpoint_projection_rebuild(&probe, 0, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS + 1).is_err());
+        println!("[DEBUG] Neutral checkpoint projection: genuine indexed zero-history root=1 edited children=2 indexless root refusal=1 rootless child refusal=1 late root refusal=1 atomic retention rollback=1 fixed lineage/rebuild caps=2");
     }
 
     #[test]
@@ -4960,10 +5266,10 @@ mod tests {
     async fn artifact_chunk_cas_sqlite_and_filesystem_restart_rebuild_restore_exact_authority() {
         let (mut descriptor, public, _, _, _) = artifact_projection_fixture();
         descriptor.space_id = "default".into();
-        descriptor.document_id = "artifact-cas-restart".into();
+        descriptor.document_id = "artifact-00000000000000000000000000000005".into();
         let pair = ArtifactPair { pack: b"restart-pack".to_vec(), spr: b"restart-spr".to_vec() };
-        let verified = scoped_materialized_checkpoint(public, &descriptor, &pair, None, 1);
-        let mut root = std::env::temp_dir();
+        let verified;
+        let mut root = std::path::PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("ticket generated artifact root"));
         root.push(format!("semio-artifact-checkpoint-{}", directory::os_identity::time_ordered_id()));
         std::fs::create_dir_all(&root).expect("create test directory");
         let path = root.join("directory.sqlite3");
@@ -4976,8 +5282,9 @@ mod tests {
             directory.seed().await.expect("seed");
             let directories = Arc::new(HubDirectories::from(directory));
             let service = DirectoryService::new(directories, 16);
-            service.execute(user_actor("seed"), DirectoryCommand::AnnounceDocument { descriptor: descriptor.clone() }).await.expect("announce descriptor");
             let storage = Arc::new(FsArtifactChunkCasStorage::open(&cas_root).await.expect("open filesystem CAS"));
+            let (descriptor, genesis) = publish_fixture_genesis(&service, "seed", descriptor, storage.clone(), &context).await;
+            verified = scoped_materialized_checkpoint(public, &descriptor, &pair, Some(genesis.checkpoint_id), 1);
             let system = DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-authority".into() };
             let reservation = stage_reserved_checkpoint(&service, storage, system.clone(), &verified, &pair, 1_000, 100, &context).await.expect("reserve and stage restart fixture");
             service.publish_reserved_artifact_checkpoint(system, verified.clone(), reservation, 100).await.expect("publish verified checkpoint");
@@ -4993,8 +5300,10 @@ mod tests {
         assert_eq!(reopened.artifact_cas_ledger_generation().await.expect("rebuilt ledger generation"), generation);
         assert_eq!(reopened.get_verified_artifact_checkpoint(&verified.scope, verified.checkpoint_id).await.expect("rebuilt private"), Some(verified.clone()));
         assert_eq!(blobs.read("default", &pack, &context).await.expect("rebuilt CAS read"), pair.pack);
+        drop(blobs);
         drop(reopened);
         std::fs::remove_dir_all(&root).expect("remove exact restart test directory");
+        println!("[DEBUG] SQLite filesystem checkpoint restart: dedicated genesis=1 edited child=1 same-root reopen=1 exact authority/pair/ledger after rebuild=1");
     }
 
     #[tokio::test]

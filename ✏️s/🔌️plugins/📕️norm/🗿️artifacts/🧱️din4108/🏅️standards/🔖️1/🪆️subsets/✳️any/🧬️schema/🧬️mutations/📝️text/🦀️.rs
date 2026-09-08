@@ -390,7 +390,7 @@ mod tests {
     use protocol::{OpBinary, OpText};
 
     #[semio_framework_async_macros::async_test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

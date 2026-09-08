@@ -16,7 +16,7 @@ fn find_attr<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn child_elements<'a>(node: &'a XmlNode) -> &'a [XmlNode] {
+fn child_elements(node: &XmlNode) -> &[XmlNode] {
     match node {
         XmlNode::Element { children, .. } => children.as_slice(),
         _ => &[],

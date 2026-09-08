@@ -654,8 +654,8 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "trinity.graph".into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md", "stdio.png", "stdio.svg"],
-        import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.md", "stdio.png", "stdio.svg"],
+        export_stdio_kinds: vec!["stdio.csv".into(), "stdio.json".into(), "stdio.md".into(), "stdio.png".into(), "stdio.svg".into()],
+        import_stdio_kinds: vec!["stdio.csv".into(), "stdio.json".into(), "stdio.md".into(), "stdio.png".into(), "stdio.svg".into()],
     }
 }
 // #endregion 🔖️Runtime

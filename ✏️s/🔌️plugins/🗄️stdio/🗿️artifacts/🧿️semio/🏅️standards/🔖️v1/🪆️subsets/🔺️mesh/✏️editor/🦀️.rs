@@ -53,11 +53,10 @@ impl protocol::OpBinary for SemioMeshEditCommand {
         let point = value
             .get("point")
             .and_then(|v| v.as_array())
-            .map(|array| {
+            .map_or([0.0, 0.0, 0.0], |array| {
                 let get = |index: usize| array.get(index).and_then(|value| value.as_f64()).unwrap_or(0.0);
                 [get(0), get(1), get(2)]
-            })
-            .unwrap_or([0.0, 0.0, 0.0]);
+            });
         Ok(SemioMeshEditCommand::SetVertex(SemioMeshSetVertexArgs { mesh_index, primitive_index, vertex_index, point }))
     }
 }
@@ -118,7 +117,7 @@ impl ArtifactEditor for SemioMeshEditor {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
@@ -133,11 +132,10 @@ impl ArtifactEditor for SemioMeshEditor {
         let vertex_index = unsigned_field("vertexIndex").unwrap_or(0);
         let point = field("point")
             .and_then(DslValue::as_array)
-            .map(|array| {
+            .map_or([0.0, 0.0, 0.0], |array| {
                 let get = |index: usize| array.get(index).and_then(DslValue::as_f64).unwrap_or(0.0);
                 [get(0), get(1), get(2)]
-            })
-            .unwrap_or([0.0, 0.0, 0.0]);
+            });
         Ok(SemioMeshEditCommand::SetVertex(SemioMeshSetVertexArgs { mesh_index, primitive_index, vertex_index, point }))
     }
 }
@@ -169,7 +167,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn editor_and_viewer_share_one_dialect() {
-        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<SemioMeshEditor, crate::viewer::semio_mesh::SemioMeshViewer>();
+        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<SemioMeshEditor, crate::viewer::semio_mesh::SemioMeshViewer>().await;
     }
 }
 //#endregion 🧪️Tests

@@ -347,23 +347,23 @@ mod surface_tests {
     }
 
     /// 👁️ A viewer instance never mutates the document store, even when dispatched.
-    #[test]
-    fn generation2d_viewer_never_mutates() {
-        semio_framework_plugin::testkit::assert_viewer_never_mutates::<Generation2dViewer>();
+    #[semio_framework_async_macros::async_test]
+    async fn generation2d_viewer_never_mutates() {
+        semio_framework_plugin::testkit::assert_viewer_never_mutates::<Generation2dViewer>().await;
     }
-    #[test]
-    fn generation3d_viewer_never_mutates() {
-        semio_framework_plugin::testkit::assert_viewer_never_mutates::<Generation3dViewer>();
+    #[semio_framework_async_macros::async_test]
+    async fn generation3d_viewer_never_mutates() {
+        semio_framework_plugin::testkit::assert_viewer_never_mutates::<Generation3dViewer>().await;
     }
 
     /// 🤝️ Editor and viewer surfaces agree on the artifact dialect they address.
-    #[test]
-    fn generation2d_editor_and_viewer_share_dialect() {
-        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<Generation2dPlayApp, Generation2dViewer>();
+    #[semio_framework_async_macros::async_test]
+    async fn generation2d_editor_and_viewer_share_dialect() {
+        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<Generation2dPlayApp, Generation2dViewer>().await;
     }
-    #[test]
-    fn generation3d_editor_and_viewer_share_dialect() {
-        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<Generation3dPlayApp, Generation3dViewer>();
+    #[semio_framework_async_macros::async_test]
+    async fn generation3d_editor_and_viewer_share_dialect() {
+        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<Generation3dPlayApp, Generation3dViewer>().await;
     }
 
     /// 📚️ Ticket 26/09/03/PROCEDURAL-3D-END-TO-END — `.editor_with_examples::<Generation3dPlayApp>`

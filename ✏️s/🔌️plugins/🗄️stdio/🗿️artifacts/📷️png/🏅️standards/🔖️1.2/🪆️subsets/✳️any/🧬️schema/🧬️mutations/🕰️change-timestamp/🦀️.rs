@@ -47,7 +47,7 @@ pub fn contribute(base: &PngSnapshot, time: Option<PngTimestamp>) -> PngDiff {
 
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
-    serde_json::from_str(include_str!("🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-timestamp payload")
+    dsl::json::from_json_str(include_str!("🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-timestamp payload")
 }
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]

@@ -28,6 +28,13 @@
 
 use semio_framework_value_derive::{FromValue, ToValue};
 
+#[path = "🌱️space-artifact-creation-v1/🦀️.rs"]
+pub mod space_artifact_creation;
+
+#[path = "📇️document-index-v1/🦀️.rs"]
+pub mod document_index;
+pub use document_index::{DirectoryIndexedDocumentViewV1, DocumentIndexEntryV1};
+
 #[path = "🌐️browser-actor/🦀️.rs"]
 pub mod browser_actor;
 pub use browser_actor::{
@@ -194,6 +201,8 @@ pub enum DirectoryEventBody {
     InviteRedeemed { space_id: String, user_id: String, invite_id: String, role: DirectorySpaceRole },
     #[value(rename = "document.announced")]
     DocumentAnnounced { descriptor: DocumentDescriptor },
+    #[value(rename = "document.indexed")]
+    DocumentIndexed { scope: DocumentScope, descriptor_digest_v1: ArtifactHash, entry: DocumentIndexEntryV1 },
     #[value(rename = "artifact.checkpoint-published")]
     ArtifactCheckpointPublished { checkpoint: PublishedArtifactCheckpoint },
     #[value(rename = "artifact.retention-advanced")]
@@ -271,6 +280,11 @@ fn directory_event_page_has_control(value: &crate::DslValue) -> bool {
 /// 🛡️ Admits one fully assigned event into the durable directory log and bounded page protocol.
 pub fn validate_directory_event_page_event(event: &DirectoryEvent) -> Result<(), DirectoryEventPageErrorV1> {
     let encoded = crate::os_pack::json::to_json_string(event);
+    if let DirectoryEventBody::DocumentIndexed { scope, descriptor_digest_v1, entry } = &event.body {
+        if !entry.validate() || descriptor_digest_v1.0 == [0; 32] || event.space_id.as_deref() != Some(scope.space_id.as_str()) || event.user_id.as_ref().is_none_or(|author| author.is_empty() || author.len() > 256) {
+            return Err(DirectoryEventPageErrorV1::Invalid);
+        }
+    }
     if event.seq == 0 || event.seq > DOCUMENT_OPEN_MAX_SAFE_INTEGER || encoded.len() > DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES || directory_event_page_has_control(&crate::ToValue::to_value(event)) {
         Err(DirectoryEventPageErrorV1::Invalid)
     } else {
@@ -370,7 +384,8 @@ pub const CHECKPOINT_PUBLICATION_DEADLINE_MS: u64 = 30_000;
 pub const CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES: u64 = 1024 * 1024;
 
 /// 🌊️ Client-declared artifact frontier with a canonical hexadecimal chain hash.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CheckpointPublicationFrontierV1 {
     pub document_id: String,
@@ -407,11 +422,12 @@ impl CheckpointPublicationFrontierV1 {
     }
 }
 
-/// 🎯️ Exact active checkpoint expectation; `none` is explicit and never means skip.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+/// 🎯️ Exact durable parent expectation; genesis carries no caller-invented empty frontier.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToValue, FromValue)]
+#[serde(tag = "state", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
 #[value(tag = "state", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
 pub enum CheckpointPublicationCurrentV1 {
-    None,
+    Genesis { checkpoint_id: String },
     Active { checkpoint_id: String, baseline_frontier: CheckpointPublicationFrontierV1 },
 }
 
@@ -450,7 +466,7 @@ impl CheckpointPublicationCommandV1 {
             && frontier_valid(&self.expected_document_frontier)
             && self.baseline_frontier.validate()
             && match &self.expected_current {
-                CheckpointPublicationCurrentV1::None => true,
+                CheckpointPublicationCurrentV1::Genesis { checkpoint_id } => valid_document_open_hash(checkpoint_id),
                 CheckpointPublicationCurrentV1::Active { checkpoint_id, baseline_frontier } => valid_document_open_hash(checkpoint_id) && baseline_frontier.validate(),
             }
             && blob_valid(&self.pack)
@@ -1280,7 +1296,7 @@ impl DirectorySpaceAdministrationPageV1 {
             | Self::Author { schema, session_binding_sha256, authorization_generation, space_id, .. } => (schema, session_binding_sha256, *authorization_generation, space_id),
         };
         let anonymous = generation == 0 && binding.bytes().all(|byte| byte == b'0');
-        let bound = generation >= 1 && generation <= DOCUMENT_OPEN_MAX_SAFE_INTEGER && !binding.bytes().all(|byte| byte == b'0');
+        let bound = (1..=DOCUMENT_OPEN_MAX_SAFE_INTEGER).contains(&generation) && !binding.bytes().all(|byte| byte == b'0');
         if schema != DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA
             || !valid_document_open_hash(binding)
             || !valid_document_open_hash(self.receipt_sha256())
@@ -1599,8 +1615,7 @@ pub struct DocumentOpenPlanV1 {
     pub surface: DocumentOpenSurfaceV1,
     pub browser_actor: DocumentOpenBrowserActorV1,
     pub grant: DocumentOpenGrantV1,
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub checkpoint: Option<DocumentOpenCheckpointV1>,
+    pub checkpoint: DocumentOpenCheckpointV1,
     pub revalidation: DocumentOpenRevalidationV1,
 }
 
@@ -1723,22 +1738,22 @@ impl DocumentOpenPlanV1 {
         {
             return Err(DocumentOpenPlanErrorCodeV1::Denied);
         }
-        if let Some(checkpoint) = &self.checkpoint {
-            if !valid_document_open_text(&checkpoint.baseline_frontier.head_edit_id, DOCUMENT_OPEN_ID_MAX_BYTES)
+        let checkpoint = &self.checkpoint;
+        if !checkpoint.baseline_frontier.is_genesis_for(&self.scope)
+            && (!valid_document_open_text(&checkpoint.baseline_frontier.head_edit_id, DOCUMENT_OPEN_ID_MAX_BYTES)
                 || checkpoint.baseline_frontier.head_edit_ordinal > DOCUMENT_OPEN_MAX_SAFE_INTEGER
-                || checkpoint.baseline_frontier.last_commit_seq > DOCUMENT_OPEN_MAX_SAFE_INTEGER
-            {
-                return Err(DocumentOpenPlanErrorCodeV1::Denied);
-            }
-            if !valid_document_open_hash(&checkpoint.checkpoint_id)
-                || checkpoint.descriptor_digest_v1 != self.descriptor_digest_v1
-                || !valid_document_open_hash(&checkpoint.aggregate_sha256)
-                || checkpoint.baseline_frontier.document_id != self.scope.document_id
-                || checkpoint.baseline_frontier.head_edit_ordinal < checkpoint.baseline_frontier.last_commit_seq
-                || checkpoint.baseline_frontier.chain_hash.0 == [0; 32]
-            {
-                return Err(DocumentOpenPlanErrorCodeV1::Stale);
-            }
+                || checkpoint.baseline_frontier.last_commit_seq > DOCUMENT_OPEN_MAX_SAFE_INTEGER)
+        {
+            return Err(DocumentOpenPlanErrorCodeV1::Denied);
+        }
+        if !valid_document_open_hash(&checkpoint.checkpoint_id)
+            || checkpoint.descriptor_digest_v1 != self.descriptor_digest_v1
+            || !valid_document_open_hash(&checkpoint.aggregate_sha256)
+            || checkpoint.baseline_frontier.document_id != self.scope.document_id
+            || checkpoint.baseline_frontier.head_edit_ordinal < checkpoint.baseline_frontier.last_commit_seq
+            || !(checkpoint.baseline_frontier.is_genesis_for(&self.scope) || checkpoint.baseline_frontier.is_edited_for(&self.scope))
+        {
+            return Err(DocumentOpenPlanErrorCodeV1::Stale);
         }
         Ok(())
     }
@@ -1795,8 +1810,7 @@ pub struct DocumentExecutionTargetLeaseFieldsV1 {
     pub parent_dialect: DocumentOpenParentDialectV1,
     pub surface: DocumentOpenSurfaceV1,
     pub grant: DocumentOpenGrantV1,
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub checkpoint: Option<DocumentOpenCheckpointV1>,
+    pub checkpoint: DocumentOpenCheckpointV1,
     pub revalidation: DocumentOpenRevalidationV1,
 }
 
@@ -1855,16 +1869,15 @@ impl DocumentExecutionTargetLeaseFieldsV1 {
         {
             return Err(DocumentOpenPlanErrorCodeV1::Denied);
         }
-        if let Some(checkpoint) = &self.checkpoint {
-            if !valid_document_open_hash(&checkpoint.checkpoint_id)
-                || checkpoint.descriptor_digest_v1 != self.descriptor_digest_v1
-                || !valid_document_open_hash(&checkpoint.aggregate_sha256)
-                || checkpoint.baseline_frontier.document_id != self.scope.document_id
-                || checkpoint.baseline_frontier.head_edit_ordinal < checkpoint.baseline_frontier.last_commit_seq
-                || checkpoint.baseline_frontier.chain_hash.0 == [0; 32]
-            {
-                return Err(DocumentOpenPlanErrorCodeV1::Denied);
-            }
+        let checkpoint = &self.checkpoint;
+        if !valid_document_open_hash(&checkpoint.checkpoint_id)
+            || checkpoint.descriptor_digest_v1 != self.descriptor_digest_v1
+            || !valid_document_open_hash(&checkpoint.aggregate_sha256)
+            || checkpoint.baseline_frontier.document_id != self.scope.document_id
+            || checkpoint.baseline_frontier.head_edit_ordinal < checkpoint.baseline_frontier.last_commit_seq
+            || !(checkpoint.baseline_frontier.is_genesis_for(&self.scope) || checkpoint.baseline_frontier.is_edited_for(&self.scope))
+        {
+            return Err(DocumentOpenPlanErrorCodeV1::Denied);
         }
         Ok(())
     }
@@ -2086,7 +2099,8 @@ pub struct GisMapInferenceApprovalReceiptV1 {
 }
 
 /// ↩️ Owner-bound durable undo locator minted only from a committed GIS approval witness.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct GisMapApprovalUndoHandleV1 {
     pub target_id: String,
@@ -2094,7 +2108,8 @@ pub struct GisMapApprovalUndoHandleV1 {
 }
 
 /// 📨️ Closed undo intent: a server-minted target, exact tail expectation and retry identity.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct GisMapApprovalUndoRequestV1 {
     pub schema: String,
@@ -2118,7 +2133,8 @@ impl GisMapApprovalUndoRequestV1 {
 }
 
 /// 🧾️ Durable inverse receipt published only after the second verified WAL decision and pair.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct GisMapApprovalUndoReceiptV1 {
     pub schema: String,
@@ -2472,7 +2488,7 @@ fn decode_descriptor_hash(field: &'static str, value: &str) -> Result<[u8; 32], 
         return Err(DescriptorDigestError::InvalidHash(field));
     }
     let mut output = [0u8; 32];
-    for (index, pair) in value.as_bytes().chunks_exact(2).enumerate() {
+    for (index, pair) in value.as_bytes().as_chunks::<2>().0.iter().enumerate() {
         let digit = |byte| match byte {
             b'0'..=b'9' => byte - b'0',
             b'a'..=b'f' => byte - b'a' + 10,
@@ -2556,6 +2572,21 @@ pub struct ArtifactFrontier {
     pub head_edit_id: String,
     pub last_commit_seq: u64,
     pub chain_hash: ArtifactHash,
+}
+
+impl ArtifactFrontier {
+    /// 🌱️ Empty history is exact, scope-bound, and never represented by an invented edit.
+    pub fn is_genesis_for(&self, scope: &DocumentScope) -> bool {
+        valid_document_open_text(&scope.space_id, DOCUMENT_OPEN_ID_MAX_BYTES) && valid_document_open_text(&scope.document_id, DOCUMENT_OPEN_ID_MAX_BYTES)
+            && self.document_id == scope.document_id && self.head_edit_ordinal == 0 && self.head_edit_id.is_empty() && self.last_commit_seq == 0 && self.chain_hash.0 == [0; 32]
+    }
+
+    /// 🌿️ An edited frontier has positive counters and a real authenticated history head.
+    pub fn is_edited_for(&self, scope: &DocumentScope) -> bool {
+        valid_document_open_text(&scope.space_id, DOCUMENT_OPEN_ID_MAX_BYTES) && self.document_id == scope.document_id && valid_document_open_text(&self.document_id, DOCUMENT_OPEN_ID_MAX_BYTES)
+            && valid_document_open_text(&self.head_edit_id, DOCUMENT_OPEN_ID_MAX_BYTES) && self.head_edit_ordinal > 0 && self.head_edit_ordinal <= DOCUMENT_OPEN_MAX_SAFE_INTEGER
+            && self.last_commit_seq > 0 && self.last_commit_seq <= DOCUMENT_OPEN_MAX_SAFE_INTEGER && self.chain_hash.0 != [0; 32]
+    }
 }
 
 /// 🫧️ Integrity and private storage identity for one staged immutable artifact blob.
@@ -2678,7 +2709,7 @@ pub struct RebootstrapRequired {
 #[value(tag = "kind", rename_all = "lowercase", rename_all_fields = "camelCase")]
 pub enum DirectoryStreamMessage {
     Event {
-        event: DirectoryEvent,
+        event: Box<DirectoryEvent>,
     },
     Connection {
         phase: DirectoryConnectionPhase,
@@ -3022,16 +3053,16 @@ mod tests {
         noncanonical_receipt.receipt = "open.v1.AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyB".into();
         assert_eq!(noncanonical_receipt.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
         let mut frontier_control = fixture.valid_plan.clone();
-        frontier_control.checkpoint.as_mut().expect("checkpoint").baseline_frontier.head_edit_id = "edit:\u{85}".into();
+        frontier_control.checkpoint.baseline_frontier.head_edit_id = "edit:\u{85}".into();
         assert_eq!(frontier_control.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
         let mut frontier_overlong = fixture.valid_plan.clone();
-        frontier_overlong.checkpoint.as_mut().expect("checkpoint").baseline_frontier.head_edit_id = "a".repeat(DOCUMENT_OPEN_ID_MAX_BYTES + 1);
+        frontier_overlong.checkpoint.baseline_frontier.head_edit_id = "a".repeat(DOCUMENT_OPEN_ID_MAX_BYTES + 1);
         assert_eq!(frontier_overlong.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
         let mut unsafe_expiry = fixture.valid_plan.clone();
         unsafe_expiry.expires_at_unix_ms = DOCUMENT_OPEN_MAX_SAFE_INTEGER + 1;
         assert_eq!(unsafe_expiry.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
         let mut unsafe_frontier = fixture.valid_plan.clone();
-        unsafe_frontier.checkpoint.as_mut().expect("checkpoint").baseline_frontier.head_edit_ordinal = DOCUMENT_OPEN_MAX_SAFE_INTEGER + 1;
+        unsafe_frontier.checkpoint.baseline_frontier.head_edit_ordinal = DOCUMENT_OPEN_MAX_SAFE_INTEGER + 1;
         assert_eq!(unsafe_frontier.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
         let mut unsafe_revalidation = fixture.valid_plan;
         unsafe_revalidation.revalidation.directory_revision = DOCUMENT_OPEN_MAX_SAFE_INTEGER + 1;

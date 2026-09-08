@@ -58,7 +58,7 @@ pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &C
     let content = doc.children.typed_read::<SemioFlowSnapshot>("content", child_id)?;
     let mutation = child_add_widget_mutation(&content, cfg.snapshot, session, &descriptor, x, y)?;
     Ok(Emit {
-        child_emits: vec![ChildEmit::of::<SemioFlowSnapshot, _>("content", child_id, vec![mutation])],
+        child_emits: vec![ChildEmit::of::<SemioFlowSnapshot, _>("content", child_id, &[mutation])],
         ui_scope: UiDirtyScope::Full,
         ..Default::default()
     })

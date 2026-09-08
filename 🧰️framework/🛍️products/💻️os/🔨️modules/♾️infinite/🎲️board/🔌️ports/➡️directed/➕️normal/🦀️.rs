@@ -7,7 +7,7 @@ pub mod board_host {
     #![allow(clippy::missing_errors_doc, reason = "Graph board host is internal to directed port normal.")]
     #![allow(clippy::too_many_arguments, reason = "Immediate-mode paint helpers take one positional arg per geometry/style input; grouping them into structs would obscure call sites more than it clarifies.")]
 
-    use crate::infinite::canvas::{Affine, Circle, Color, CubicBez, FillRule, Point, Rect, Scene, Stroke, Vec2};
+    use crate::infinite::canvas::{Affine, Circle, Color, CubicBez, FillRule, OpaqueSceneRetirementStep, OpaqueSceneRetirementToken, Point, Rect, Scene, Stroke, Vec2};
     use serde::Deserialize;
     use std::collections::{BTreeMap, BTreeSet};
 
@@ -485,7 +485,7 @@ pub mod board_host {
         }
 
         fn retire_empty_page(&mut self) -> Option<usize> {
-            let first_unused = (self.len + BOARD_FILL_PAGE_ITEMS - 1) / BOARD_FILL_PAGE_ITEMS;
+            let first_unused = self.len.div_ceil(BOARD_FILL_PAGE_ITEMS);
             let index = self.page_count.checked_sub(1)?;
             if index < first_unused || !self.pages[index].as_ref()?.items.is_empty() {
                 return None;
@@ -875,7 +875,7 @@ pub mod board_host {
         stage: BoardFillStage,
         max_count: u32,
         rng_state: u64,
-        sources: BoardFillFixedPages<BoardFillSource, { (BOARD_FILL_SOURCE_CAPACITY + BOARD_FILL_PAGE_ITEMS - 1) / BOARD_FILL_PAGE_ITEMS }>,
+        sources: BoardFillFixedPages<BoardFillSource, { BOARD_FILL_SOURCE_CAPACITY.div_ceil(BOARD_FILL_PAGE_ITEMS) }>,
         source_scan_cursor: usize,
         source_capture: Option<BoardFillSourceCapture>,
         target_selection_cursor: usize,
@@ -893,8 +893,8 @@ pub mod board_host {
         current_preview: Option<BoardFillCandidatePreview>,
         host_collision_cursor: usize,
         virtual_collision_cursor: usize,
-        virtual_nodes: BoardFillFixedPages<BoardFillVirtualNode, { (BOARD_FILL_PLACEMENT_CAPACITY + BOARD_FILL_PAGE_ITEMS - 1) / BOARD_FILL_PAGE_ITEMS }>,
-        virtual_handles: BoardFillFixedPages<BoardFillVirtualHandle, { (BOARD_FILL_PLACEMENT_CAPACITY * BOARD_FILL_KIND_HANDLE_CAPACITY + BOARD_FILL_PAGE_ITEMS - 1) / BOARD_FILL_PAGE_ITEMS }>,
+        virtual_nodes: BoardFillFixedPages<BoardFillVirtualNode, { BOARD_FILL_PLACEMENT_CAPACITY.div_ceil(BOARD_FILL_PAGE_ITEMS) }>,
+        virtual_handles: BoardFillFixedPages<BoardFillVirtualHandle, { (BOARD_FILL_PLACEMENT_CAPACITY * BOARD_FILL_KIND_HANDLE_CAPACITY).div_ceil(BOARD_FILL_PAGE_ITEMS) }>,
         pending_placement: Option<BoardFillPlacement>,
         accept_pending_virtual_node: Option<BoardFillVirtualNode>,
         accept_handle_template: Option<BoardFillTemplateSnapshot>,
@@ -1022,6 +1022,7 @@ pub mod board_host {
             self.state.as_mut()?.pending_placement.take()
         }
 
+        #[expect(clippy::result_large_err, reason = "Refusal returns the exact event, reservation, placement or checkpoint without allocating outside the bounded operation.")]
         pub fn put_pending_placement(&mut self, placement: BoardFillPlacement) -> Result<(), BoardFillPlacement> {
             let Some(state) = self.state.as_mut() else { return Err(placement) };
             if state.pending_placement.is_some() {
@@ -1124,7 +1125,7 @@ pub mod board_host {
     const BOARD_FILL_COMMIT_HANDLE_OFFSET: usize = BOARD_FILL_COMMIT_HANDLE_COUNT_OFFSET + 2;
     const BOARD_FILL_COMMIT_HANDLE_BYTES: usize = BOARD_FILL_COMMIT_TEXT_SLOT_BYTES * 2 + 8 + 1 + 8;
     const BOARD_FILL_COMMIT_BYTES: usize = BOARD_FILL_COMMIT_HANDLE_OFFSET + BOARD_FILL_KIND_HANDLE_CAPACITY * BOARD_FILL_COMMIT_HANDLE_BYTES;
-    const BOARD_FILL_COMMIT_PAGE_COUNT: usize = (BOARD_FILL_COMMIT_BYTES + semio_framework_job::JOB_PAYLOAD_PAGE_BYTES - 1) / semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const BOARD_FILL_COMMIT_PAGE_COUNT: usize = BOARD_FILL_COMMIT_BYTES.div_ceil(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     enum BoardFillCommitEncodeStage {
@@ -1689,6 +1690,7 @@ pub mod board_host {
             Self { expected_len: 0, expected_bytes: 0, events, len: 1, cursor: 0 }
         }
 
+        #[expect(clippy::result_large_err, reason = "Refusal returns the exact event, reservation, placement or checkpoint without allocating outside the bounded operation.")]
         fn push(&mut self, event: BoardOwnedEvent) -> Result<(), BoardOwnedEvent> {
             let index = usize::from(self.len);
             if index == BOARD_EVENT_BATCH_CAPACITY {
@@ -1808,8 +1810,7 @@ pub mod board_host {
             payload.raw("{")?;
             payload.string(field)?;
             payload.raw(":[")?;
-            let mut count = 0usize;
-            for id in ids {
+            for (count, id) in ids.into_iter().enumerate() {
                 if count == BOARD_POINTER_ITEM_CAPACITY {
                     return Err(BoardEventFault::ItemCredits);
                 }
@@ -1817,7 +1818,6 @@ pub mod board_host {
                     payload.raw(",")?;
                 }
                 payload.string(id)?;
-                count += 1;
             }
             payload.raw("]}")?;
             payload.finish(kind, None)
@@ -2117,6 +2117,7 @@ pub mod board_host {
             Ok(())
         }
 
+        #[expect(clippy::result_large_err, reason = "Refusal returns the exact event, reservation, placement or checkpoint without allocating outside the bounded operation.")]
         fn push_claimed(&mut self, event: BoardOwnedEvent) -> Result<(), BoardOwnedEvent> {
             let bytes = event.owned_bytes();
             if self.closing || self.claimed_items == 0 || self.claimed_bytes < bytes || usize::from(self.len) == BOARD_EVENT_ITEM_CAPACITY {
@@ -2143,6 +2144,7 @@ pub mod board_host {
             true
         }
 
+        #[expect(clippy::result_large_err, reason = "Refusal returns the exact event, reservation, placement or checkpoint without allocating outside the bounded operation.")]
         pub fn push(&mut self, event: BoardOwnedEvent) -> Result<(), BoardOwnedEvent> {
             if self.reserve(1, event.owned_bytes()).is_err() {
                 return Err(event);
@@ -2154,6 +2156,7 @@ pub mod board_host {
             Ok(())
         }
 
+        #[expect(clippy::result_large_err, reason = "Refusal returns the exact event, reservation, placement or checkpoint without allocating outside the bounded operation.")]
         pub fn reserve_event(&self, event: BoardOwnedEvent) -> Result<BoardEventReservation, BoardOwnedEvent> {
             if self.reserve(1, event.owned_bytes()).is_err() {
                 return Err(event);
@@ -2161,6 +2164,7 @@ pub mod board_host {
             Ok(BoardEventReservation { expected_len: self.len, expected_bytes: self.bytes, event: Some(event) })
         }
 
+        #[expect(clippy::result_large_err, reason = "Refusal returns the exact event, reservation, placement or checkpoint without allocating outside the bounded operation.")]
         pub fn publish_reserved(&mut self, mut reservation: BoardEventReservation) -> Result<(), BoardEventReservation> {
             if self.closing || self.len != reservation.expected_len || self.bytes != reservation.expected_bytes {
                 return Err(reservation);
@@ -2173,6 +2177,7 @@ pub mod board_host {
             Ok(())
         }
 
+        #[expect(clippy::result_large_err, reason = "Refusal returns the exact event, reservation, placement or checkpoint without allocating outside the bounded operation.")]
         pub fn reserve_batch(&self, mut reservation: BoardEventBatchReservation) -> Result<BoardEventBatchReservation, BoardEventBatchReservation> {
             let Some(bytes) = reservation.owned_bytes() else {
                 return Err(reservation);
@@ -2185,6 +2190,7 @@ pub mod board_host {
             Ok(reservation)
         }
 
+        #[expect(clippy::result_large_err, reason = "Refusal returns the exact event, reservation, placement or checkpoint without allocating outside the bounded operation.")]
         pub fn publish_batch(&mut self, mut reservation: BoardEventBatchReservation) -> Result<(), BoardEventBatchReservation> {
             if self.closing || self.len != reservation.expected_len || self.bytes != reservation.expected_bytes {
                 return Err(reservation);
@@ -2305,6 +2311,7 @@ pub mod board_host {
         content_scene_generation: u64,
         /// @emoji 🎨️ World-space Vello content reused across pan/zoom when generation and LOD match.
         world_content_cache: RefCell<Option<(u64, BoardDrawLod, Scene)>>,
+        opaque_scene_retirement: Cell<Option<OpaqueSceneRetirementToken>>,
         opaque_scene_fault: Cell<bool>,
         /// @emoji 🔍️ True while the wheel zoom gesture is active (skip grid + per-tile rebuild hot paths).
         wheel_zoom_active: bool,
@@ -2800,7 +2807,7 @@ pub mod board_host {
         }
 
         fn add_bytes(&mut self, bytes: usize) {
-            self.bytes = self.bytes.checked_add(bytes).unwrap_or(usize::MAX);
+            self.bytes = self.bytes.saturating_add(bytes);
             if self.bytes > BOARD_POINTER_BYTE_CAPACITY {
                 self.fault.get_or_insert(BoardEventFault::ByteCredits);
             }
@@ -2908,7 +2915,7 @@ pub mod board_host {
                     .map(|(key, _)| admitted_board_pointer_id(key));
                     match next {
                         Some(Ok(key)) => {
-                            self.bytes = self.bytes.checked_add(key.len()).unwrap_or(usize::MAX);
+                            self.bytes = self.bytes.saturating_add(key.len());
                             if self.bytes > BOARD_POINTER_BYTE_CAPACITY {
                                 self.fault.get_or_insert(BoardEventFault::ByteCredits);
                             }
@@ -3326,12 +3333,10 @@ pub mod board_host {
         fn seal_optional_events<const N: usize>(&mut self, events: &[Option<BoardOwnedEvent>; N]) -> Result<(), BoardPointerPlanFault> {
             self.output_len = 0;
             self.output_raw("[")?;
-            let mut emitted = 0usize;
-            for event in events.iter().flatten() {
+            for (emitted, event) in events.iter().flatten().enumerate() {
                 if emitted > 0 {
                     self.output_raw(",")?;
                 }
-                emitted += 1;
                 self.output_raw("{\"name\":\"")?;
                 self.output_raw(event.kind().name())?;
                 self.output_raw("\",\"payload\":")?;
@@ -3499,6 +3504,7 @@ pub mod board_host {
                 last_preselect_emit_sig: None,
                 content_scene_generation: 0,
                 world_content_cache: RefCell::new(None),
+                opaque_scene_retirement: Cell::new(None),
                 opaque_scene_fault: Cell::new(false),
                 wheel_zoom_active: false,
                 wheel_zoom_render_lod: None,
@@ -3563,7 +3569,34 @@ pub mod board_host {
             self.content_scene_generation = self.content_scene_generation.wrapping_add(1);
         }
 
+        fn advance_opaque_scene_retirement_step(&self) -> bool {
+            let Some(token) = self.opaque_scene_retirement.get() else {
+                return true;
+            };
+            match infinite::canvas::advance_opaque_scene_retirement(token, 1, 4096) {
+                OpaqueSceneRetirementStep::Blocked | OpaqueSceneRetirementStep::Pending { .. } => false,
+                OpaqueSceneRetirementStep::Complete { .. } => {
+                    self.opaque_scene_retirement.set(None);
+                    true
+                }
+                OpaqueSceneRetirementStep::Fault => {
+                    self.opaque_scene_fault.set(true);
+                    false
+                }
+            }
+        }
+
+        fn publish_opaque_scene_retirement(&self, token: OpaqueSceneRetirementToken, scene: Scene) {
+            assert!(self.opaque_scene_retirement.get().is_none(), "board retains at most one exact opaque scene retirement");
+            infinite::canvas::publish_opaque_scene_retirement(token, scene);
+            self.opaque_scene_retirement.set(Some(token));
+        }
+
         pub fn quarantine_world_content_step(&mut self) -> bool {
+            if self.opaque_scene_retirement.get().is_some() {
+                self.advance_opaque_scene_retirement_step();
+                return false;
+            }
             let mut cache = self.world_content_cache.borrow_mut();
             if cache.is_none() {
                 return true;
@@ -3573,8 +3606,8 @@ pub mod board_host {
                 return false;
             };
             let (_, _, scene) = cache.take().expect("world content cache was witnessed occupied");
-            infinite::canvas::publish_opaque_scene_retirement(token, scene);
-            true
+            self.publish_opaque_scene_retirement(token, scene);
+            false
         }
 
         pub fn opaque_scene_faulted(&self) -> bool {
@@ -3894,9 +3927,9 @@ pub mod board_host {
                     }
                 }
                 BoardHostClosePhase::Weights => {
-                    if self.brush_node_kind_weights.keys().next().cloned().and_then(|key| self.brush_node_kind_weights.remove_entry(&key)).is_some() {
-                    } else if self.brush_handle_kind_weights.keys().next().cloned().and_then(|key| self.brush_handle_kind_weights.remove_entry(&key)).is_some() {
-                    } else {
+                    let released = self.brush_node_kind_weights.keys().next().cloned().and_then(|key| self.brush_node_kind_weights.remove_entry(&key)).is_some()
+                        || self.brush_handle_kind_weights.keys().next().cloned().and_then(|key| self.brush_handle_kind_weights.remove_entry(&key)).is_some();
+                    if !released {
                         self.close_phase = BoardHostClosePhase::Done;
                     }
                 }
@@ -3931,6 +3964,7 @@ pub mod board_host {
                 && matches!(self.interaction, Interaction::None)
                 && self.icon_paint_cache.terminal_is_empty()
                 && self.world_content_cache.borrow().is_none()
+                && self.opaque_scene_retirement.get().is_none()
         }
 
         #[doc(hidden)]
@@ -3976,19 +4010,19 @@ pub mod board_host {
             self.port_mode.has_ports()
         }
 
-        fn node_rim_point_toward(&self, node: &NodeData, toward: Point) -> Option<Point> {
+        fn node_rim_point_toward(&self, node: &NodeData, toward: Point) -> Point {
             let center = Point::new(node.x, node.y);
             match node.shape {
                 NodeShape::Circle => {
                     let radius = self.scaled_node_radius(node);
                     let angle = circle_handle_angle_toward(center, toward);
-                    Some(handle_position_on_circle(center, radius, angle))
+                    handle_position_on_circle(center, radius, angle)
                 }
                 NodeShape::Rectangle => {
                     let width = self.scaled_node_width(node);
                     let height = self.scaled_node_height(node);
                     let angle = rectangle_handle_angle_toward(center, width, height, toward);
-                    Some(handle_position_on_rectangle(center, width, height, angle))
+                    handle_position_on_rectangle(center, width, height, angle)
                 }
             }
         }
@@ -4076,7 +4110,7 @@ pub mod board_host {
             let compatible_node_ids: Vec<String> = v.get("compatiblePartIds").and_then(|a| a.as_array()).map(|arr| arr.iter().filter_map(|x| x.as_str().map(str::to_string)).collect()).unwrap_or_default();
             let ring_node_id = v.get("ringPartId").and_then(|n| n.as_str()).map(str::to_string);
             let ring_handle_ids: Vec<String> = v.get("ringAnchorIds").and_then(|a| a.as_array()).map(|arr| arr.iter().filter_map(|x| x.as_str().map(str::to_string)).collect()).unwrap_or_default();
-            self.interaction = Interaction::ExternalLinkPreview { source_id: source.clone(), end_world: Point::new(end_x, end_y), compatible_node_ids, ring_node_id, ring_handle_ids };
+            self.interaction = Interaction::ExternalLinkPreview { source_id: source, end_world: Point::new(end_x, end_y), compatible_node_ids, ring_node_id, ring_handle_ids };
             self.sync_link_gesture_events();
             Ok(())
         }
@@ -4405,7 +4439,7 @@ pub mod board_host {
                 (false, inner)
             };
             let inner = inner.trim();
-            let (main, alpha_slash) = inner.split_once('/').map(|(a, b)| (a.trim(), Some(b.trim()))).unwrap_or((inner, None));
+            let (main, alpha_slash) = inner.split_once('/').map_or((inner, None), |(a, b)| (a.trim(), Some(b.trim())));
             let normalized = main.replace(',', " ");
             let parts: Vec<&str> = normalized.split_whitespace().collect();
             if parts.len() < 3 {
@@ -4428,7 +4462,7 @@ pub mod board_host {
 
         fn parse_css_hsl_hue(tok: &str) -> Option<f64> {
             let t = tok.trim();
-            let n = t.strip_suffix("deg").map(str::trim).unwrap_or(t);
+            let n = t.strip_suffix("deg").map_or(t, str::trim);
             let v: f64 = n.parse().ok()?;
             v.is_finite().then_some(v)
         }
@@ -4850,14 +4884,14 @@ pub mod board_host {
                 _ if lod == BoardDrawLod::Minimap => chrome,
                 _ => Self::lerp_color(base_color, chrome, 0.55),
             };
-            let catalog_w = kind_def.map(|d| d.stroke_width).unwrap_or(2.0);
+            let catalog_w = kind_def.map_or(2.0, |d| d.stroke_width);
             let width_mult = match style_kind {
                 BoardElementStyleKind::Selected => ui_styling::strokes::EDGE_SELECTED_MULT,
                 BoardElementStyleKind::Hovered => ui_styling::strokes::EDGE_HOVERED_MULT,
                 _ => 1.0,
             };
             let width = lod_scale_width * (catalog_w / 2.0) * width_mult;
-            let pattern = kind_def.map(|d| d.pattern).unwrap_or(EdgeStrokePattern::Solid);
+            let pattern = kind_def.map_or(EdgeStrokePattern::Solid, |d| d.pattern);
             (stroke_color, Self::edge_stroke_for_kind_pattern(pattern, width), width)
         }
 
@@ -4868,7 +4902,7 @@ pub mod board_host {
             let source = self.resolve_tip_slot(source_slot);
             let mut target = self.resolve_tip_slot(target_slot);
             if target.is_none() && target_slot.is_none() {
-                let directed = kind_def.map(|d| d.directed).unwrap_or(true);
+                let directed = kind_def.is_none_or(|d| d.directed);
                 if directed {
                     target = self.lookup_edge_tip("arrow");
                 }
@@ -5063,8 +5097,8 @@ pub mod board_host {
             let w_tgt = self.resolve_default_wire_kind_for_handle(target);
             let e_src = self.resolve_default_edge_kind_for_wire_kind(&w_src);
             let e_tgt = self.resolve_default_edge_kind_for_wire_kind(&w_tgt);
-            let sn = self.nodes.get(&source.node_id).map(|n| n.node_kind.as_str()).unwrap_or("");
-            let tn = self.nodes.get(&target.node_id).map(|n| n.node_kind.as_str()).unwrap_or("");
+            let sn = self.nodes.get(&source.node_id).map_or("", |n| n.node_kind.as_str());
+            let tn = self.nodes.get(&target.node_id).map_or("", |n| n.node_kind.as_str());
             let sh = source.handle_kind.as_str();
             let th = target.handle_kind.as_str();
             match rule.specificity {
@@ -5208,7 +5242,7 @@ pub mod board_host {
                 let Some(d) = self.brush_slot_pointer_hit_distance(world, hid.as_str(), h) else {
                     continue;
                 };
-                if best.as_ref().map(|(bd, _)| d < *bd).unwrap_or(true) {
+                if best.as_ref().is_none_or(|(bd, _)| d < *bd) {
                     best = Some((d, hid.clone()));
                 }
             }
@@ -5216,7 +5250,7 @@ pub mod board_host {
         }
 
         fn brush_compatible_candidates(&self, source: &HandleData) -> Option<BrushCandidatePage> {
-            let sn = self.nodes.get(&source.node_id).map(|n| n.node_kind.as_str()).unwrap_or("");
+            let sn = self.nodes.get(&source.node_id).map_or("", |n| n.node_kind.as_str());
             let sh = source.handle_kind.as_str();
             let mut out = BrushCandidatePage::default();
             for (kind_id, kind) in &self.node_kinds {
@@ -5402,7 +5436,7 @@ pub mod board_host {
             Self::next_map_entry_after(self.last_key, values)
         }
 
-        fn next_map_entry_after<'a, T>(last_key: Option<BoardFillText>, values: &'a BTreeMap<String, T>) -> Option<(&'a String, &'a T)> {
+        fn next_map_entry_after<T>(last_key: Option<BoardFillText>, values: &BTreeMap<String, T>) -> Option<(&String, &T)> {
             use std::ops::Bound::{Excluded, Unbounded};
             match last_key {
                 Some(last) => values.range::<str, _>((Excluded(last.as_str()), Unbounded)).next(),
@@ -6261,6 +6295,7 @@ pub mod board_host {
             }
         }
 
+        #[expect(clippy::result_large_err, reason = "Refusal returns the exact event, reservation, placement or checkpoint without allocating outside the bounded operation.")]
         pub fn restore(mut checkpoint: BoardFillCheckpoint, operation: semio_framework_job::Operation) -> Result<Self, BoardFillCheckpoint> {
             if checkpoint.operation.operation != operation.operation || checkpoint.operation.base_revision != operation.base_revision || checkpoint.operation.generation != operation.generation {
                 return Err(checkpoint);
@@ -6277,6 +6312,7 @@ pub mod board_host {
             self.checkpoint.take()
         }
 
+        #[expect(clippy::result_large_err, reason = "Refusal returns the exact event, reservation, placement or checkpoint without allocating outside the bounded operation.")]
         pub fn adopt_checkpoint(&mut self, mut checkpoint: BoardFillCheckpoint) -> Result<(), BoardFillCheckpoint> {
             if self.state.is_some() || checkpoint.operation.operation != self.operation.operation || checkpoint.operation.base_revision != self.operation.base_revision || checkpoint.operation.generation != self.operation.generation {
                 return Err(checkpoint);
@@ -6983,28 +7019,24 @@ pub mod board_host {
             };
             let result = match stage {
                 BoardFillStage::ResetSources => {
-                    if state.sources.pop().is_none() {
-                        if state.sources.retire_empty_page().is_none() {
-                            state.source_scan_cursor = 0;
-                            state.current_target = None;
-                            state.current_candidate = None;
-                            state.current_preview = None;
-                            state.stage = BoardFillStage::PrepareSources;
-                        }
+                    if state.sources.pop().is_none() && state.sources.retire_empty_page().is_none() {
+                        state.source_scan_cursor = 0;
+                        state.current_target = None;
+                        state.current_candidate = None;
+                        state.current_preview = None;
+                        state.stage = BoardFillStage::PrepareSources;
                     }
                     Ok(())
                 }
                 BoardFillStage::PrepareSources => Self::prepare_source(state),
                 BoardFillStage::SelectTarget => Self::select_target(state),
                 BoardFillStage::ResetCandidates => {
-                    if state.candidates.pop().is_none() {
-                        if state.candidates.retire_empty_page().is_none() {
-                            state.current_candidate = None;
-                            state.compatibility_candidate = None;
-                            state.compatibility_cursor = 0;
-                            state.compatibility_matched = false;
-                            state.stage = if state.current_target.is_some() { BoardFillStage::PrepareCandidates } else { BoardFillStage::SelectTarget };
-                        }
+                    if state.candidates.pop().is_none() && state.candidates.retire_empty_page().is_none() {
+                        state.current_candidate = None;
+                        state.compatibility_candidate = None;
+                        state.compatibility_cursor = 0;
+                        state.compatibility_matched = false;
+                        state.stage = if state.current_target.is_some() { BoardFillStage::PrepareCandidates } else { BoardFillStage::SelectTarget };
                     }
                     Ok(())
                 }
@@ -7258,7 +7290,7 @@ pub mod board_host {
                 }
             }
             self.brush_candidates = candidates;
-            self.brush_candidate_index = v.get("index").and_then(|x| x.as_u64()).map(|i| i as usize).unwrap_or(0);
+            self.brush_candidate_index = v.get("index").and_then(|x| x.as_u64()).map_or(0, |i| i as usize);
             if self.brush_candidates.is_empty() {
                 self.brush_candidate_index = 0;
             } else {
@@ -7287,15 +7319,15 @@ pub mod board_host {
             Ok(())
         }
 
-        fn brush_enter_slot(&mut self, source_handle_id: String) {
-            if self.brush_slot_source_id.as_deref() == Some(source_handle_id.as_str()) {
+        fn brush_enter_slot(&mut self, source_handle_id: &str) {
+            if self.brush_slot_source_id.as_deref() == Some(source_handle_id) {
                 return;
             }
             if self.brush_slot_source_id.is_some() {
                 self.brush_finish_slot();
             }
-            self.brush_slot_source_id = Some(source_handle_id.clone());
-            let Some(source) = self.handles.get(source_handle_id.as_str()).cloned() else {
+            self.brush_slot_source_id = Some(source_handle_id.to_string());
+            let Some(source) = self.handles.get(source_handle_id).cloned() else {
                 self.brush_candidates.clear();
                 self.brush_candidate_index = 0;
                 self.brush_rebuild_preview();
@@ -7328,7 +7360,7 @@ pub mod board_host {
 
         fn brush_pointer_move(&mut self, world: Point) {
             if let Some(slot) = self.brush_nearest_slot_source(world) {
-                self.brush_enter_slot(slot);
+                self.brush_enter_slot(&slot);
                 self.set_hovered_id(self.brush_slot_source_id.clone());
             } else if self.brush_slot_source_id.is_some() {
                 self.brush_finish_slot();
@@ -7393,7 +7425,7 @@ pub mod board_host {
             }
             if let Some(source) = self.brush_slot_source_id.clone() {
                 self.brush_slot_source_id = None;
-                self.brush_enter_slot(source);
+                self.brush_enter_slot(&source);
             } else {
                 self.brush_preview_emit_key = None;
                 self.brush_rebuild_preview();
@@ -7434,7 +7466,7 @@ pub mod board_host {
             if !self.handles.contains_key(handle_id) {
                 return;
             }
-            self.brush_enter_slot(handle_id.to_string());
+            self.brush_enter_slot(handle_id);
             self.brush_slot_suggestions_active = true;
             self.brush_rebuild_preview();
             self.set_hovered_id(Some(handle_id.to_string()));
@@ -8461,7 +8493,7 @@ pub mod board_host {
             let mut sorted: Vec<_> = next.iter().cloned().collect();
             sorted.sort();
             let gesture_owned = gesture.map(ToOwned::to_owned);
-            let sig = (sorted.clone(), gesture_owned.clone());
+            let sig = (sorted.clone(), gesture_owned);
             if next == self.selection && self.last_select_emit_sig.as_ref() == Some(&sig) {
                 return;
             }
@@ -8486,7 +8518,7 @@ pub mod board_host {
             let sorted = Self::sorted_selection_ids(&next);
             let removed = Self::sorted_selection_ids(&anchor_ids.difference(&next).cloned().collect());
             let gesture_owned = gesture.map(ToOwned::to_owned);
-            let sig = (sorted.clone(), removed.clone(), gesture_owned.clone());
+            let sig = (sorted.clone(), removed.clone(), gesture_owned);
             if self.preselect == next && self.last_preselect_emit_sig.as_ref() == Some(&sig) {
                 return;
             }
@@ -8546,11 +8578,11 @@ pub mod board_host {
         }
 
         fn node_kind_scale(&self, node_kind: &str) -> f64 {
-            self.node_kinds.get(node_kind).map(|k| k.scale).unwrap_or(1.0)
+            self.node_kinds.get(node_kind).map_or(1.0, |k| k.scale)
         }
 
         fn handle_kind_scale(&self, handle_kind: &str) -> f64 {
-            self.handle_kinds.get(handle_kind).map(|k| k.scale).unwrap_or(1.0)
+            self.handle_kinds.get(handle_kind).map_or(1.0, |k| k.scale)
         }
 
         fn effective_node_scale(&self, n: &NodeData) -> f64 {
@@ -8570,7 +8602,7 @@ pub mod board_host {
         }
 
         fn effective_handle_scale(&self, h: &HandleData) -> f64 {
-            let node_scale = self.nodes.get(h.node_id.as_str()).map(|n| self.effective_node_scale(n)).unwrap_or(1.0);
+            let node_scale = self.nodes.get(h.node_id.as_str()).map_or(1.0, |n| self.effective_node_scale(n));
             (node_scale * h.scale * self.handle_kind_scale(h.handle_kind.as_str())).max(1e-9)
         }
 
@@ -9043,8 +9075,8 @@ pub mod board_host {
                 let target_node = self.nodes.get(&e.target)?;
                 let source_center = Point::new(source_node.x, source_node.y);
                 let target_center = Point::new(target_node.x, target_node.y);
-                let source_pos = self.node_rim_point_toward(source_node, target_center)?;
-                let target_pos = self.node_rim_point_toward(target_node, source_center)?;
+                let source_pos = self.node_rim_point_toward(source_node, target_center);
+                let target_pos = self.node_rim_point_toward(target_node, source_center);
                 return Some(compute_edge_bezier_points(source_pos, target_pos, source_center, target_center));
             }
             let source_handle = self.handles.get(&e.source)?;
@@ -9136,7 +9168,7 @@ pub mod board_host {
                     continue;
                 };
                 let d = distance_between(point, pos);
-                if d <= MAX_D_WORLD && best.as_ref().map(|(bd, _)| d < *bd).unwrap_or(true) {
+                if d <= MAX_D_WORLD && best.as_ref().is_none_or(|(bd, _)| d < *bd) {
                     best = Some((d, h.id.clone()));
                 }
             }
@@ -9715,7 +9747,7 @@ pub mod board_host {
                         if !angle.is_finite() {
                             return false;
                         }
-                        let handle_kind = ho.get("handleKind").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(String::from).unwrap_or_else(|| "port".into());
+                        let handle_kind = ho.get("handleKind").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map_or_else(|| "port".into(), String::from);
                         let handle_color = ho.get("color").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(String::from);
                         let handle_icon_kind = ho.get("iconKind").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
                         let handle_scale = ho.get("scale").and_then(|v| v.as_f64()).filter(|v| v.is_finite() && *v > 0.0);
@@ -10262,7 +10294,7 @@ pub mod board_host {
                     let p2 = self.draw_space_point(c.p2(), world_space);
                     let p3 = self.draw_space_point(c.p3(), world_space);
                     let curve = CubicBez::new(p0, p1, p2, p3);
-                    let chrome_pass = overlay_ids.map(|ids| self.chrome_pass_for_entity(&e.id, ids)).unwrap_or(StyleChromePass::CachedBase);
+                    let chrome_pass = overlay_ids.map_or(StyleChromePass::CachedBase, |ids| self.chrome_pass_for_entity(&e.id, ids));
                     let (stroke_color, edge_stroke, stroke_w) = self.resolve_edge_stroke_paint(e, chrome_pass, lod, edge_sw);
                     scene.stroke(&edge_stroke, Affine::IDENTITY, stroke_color, None, &curve);
                     let (source_tip, target_tip) = self.resolve_edge_tips(e);
@@ -10286,7 +10318,7 @@ pub mod board_host {
                     let p2 = self.draw_space_point(c.p2(), world_space);
                     let p3 = self.draw_space_point(c.p3(), world_space);
                     let curve = CubicBez::new(p0, p1, p2, p3);
-                    let chrome_pass = overlay_ids.map(|ids| self.chrome_pass_for_entity(&w.id, ids)).unwrap_or(StyleChromePass::CachedBase);
+                    let chrome_pass = overlay_ids.map_or(StyleChromePass::CachedBase, |ids| self.chrome_pass_for_entity(&w.id, ids));
                     let wc = Self::wire_stroke_for_style(&self.canvas_theme, self.resolve_wire_style_kind(w, chrome_pass));
                     scene.stroke(&wire_stroke, Affine::IDENTITY, wc, None, &curve);
                 }
@@ -10305,6 +10337,7 @@ pub mod board_host {
         }
 
         fn append_cached_world_content(&self, scene: &mut Scene, lod: BoardDrawLod) {
+            self.advance_opaque_scene_retirement_step();
             let generation = self.content_scene_generation;
             let cam_aff = self.camera_content_affine();
             let overlay_ids = self.interaction_overlay_entity_ids();
@@ -10312,15 +10345,15 @@ pub mod board_host {
             self.append_nodes_and_handles_with_overlay_chrome(&mut fill_layer, None, lod, true, None, &overlay_ids, NodeHandlePaintLayer::Fill);
             scene.append(&fill_layer, Some(cam_aff));
             let mut cache = self.world_content_cache.borrow_mut();
-            let needs_rebuild = cache.as_ref().map(|c| c.0 != generation || c.1 != lod).unwrap_or(true);
-            if needs_rebuild {
+            let needs_rebuild = cache.as_ref().is_none_or(|c| c.0 != generation || c.1 != lod);
+            if needs_rebuild && self.opaque_scene_retirement.get().is_none() {
                 if cache.is_some() {
                     let Some(token) = infinite::canvas::reserve_opaque_scene_retirement() else {
                         self.opaque_scene_fault.set(true);
                         return;
                     };
                     let (_, _, stale) = cache.take().expect("stale world content cache was witnessed occupied");
-                    infinite::canvas::publish_opaque_scene_retirement(token, stale);
+                    self.publish_opaque_scene_retirement(token, stale);
                 }
                 let mut content = Scene::new();
                 self.append_nodes_and_handles(&mut content, None, lod, true, None, StyleChromePass::CachedBase, NodeHandlePaintLayer::Icons);
@@ -10451,7 +10484,7 @@ pub mod board_host {
             let Some(reservation) = self.reserve_owned_event(BoardOwnedEvent::hover(id.as_deref(), event_kind.as_ref().map(|(domain, kind_id)| (domain.as_str(), kind_id.as_str())))) else {
                 return;
             };
-            self.hovered_id = id.clone();
+            self.hovered_id = id;
             self.hovered_kind = None;
             self.publish_event_reservation(reservation);
         }
@@ -10466,7 +10499,7 @@ pub mod board_host {
                 return;
             };
             self.hovered_id = None;
-            self.hovered_kind = next_kind.clone();
+            self.hovered_kind = next_kind;
             self.publish_event_reservation(reservation);
         }
 
@@ -10505,7 +10538,7 @@ pub mod board_host {
 
         pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
             let plan = self.plan_wheel(sx, sy, delta_y);
-            let _ = self.commit_wheel(plan);
+            let _ = self.commit_wheel(&plan);
         }
 
         pub fn plan_wheel(&self, sx: f64, sy: f64, delta_y: f64) -> BoardWheelPlan {
@@ -10514,7 +10547,7 @@ pub mod board_host {
             BoardWheelPlan { revision: self.interaction_revision, expected: self.camera.clone(), next }
         }
 
-        pub fn commit_wheel(&mut self, plan: BoardWheelPlan) -> bool {
+        pub fn commit_wheel(&mut self, plan: &BoardWheelPlan) -> bool {
             if self.interaction_revision != plan.revision || [self.camera.x.to_bits(), self.camera.y.to_bits(), self.camera.zoom.to_bits()] != [plan.expected.x.to_bits(), plan.expected.y.to_bits(), plan.expected.zoom.to_bits()] {
                 return false;
             }
@@ -11038,7 +11071,7 @@ pub mod board_host {
                             None
                         };
                         if let Some((s, t)) = pair {
-                            if best.as_ref().map(|(bd, _, _)| d < *bd).unwrap_or(true) {
+                            if best.as_ref().is_none_or(|(bd, _, _)| d < *bd) {
                                 best = Some((d, s.to_string(), t.to_string()));
                             }
                         }
@@ -11077,7 +11110,7 @@ pub mod board_host {
             if !self.handle_selectable(wire.source.as_str()) {
                 return false;
             }
-            wire.target.as_ref().map(|id| self.handle_selectable(id.as_str())).unwrap_or(true)
+            wire.target.as_ref().is_none_or(|id| self.handle_selectable(id.as_str()))
         }
 
         fn handle_effectively_visible(&self, handle_id: &str) -> bool {
@@ -11092,7 +11125,7 @@ pub mod board_host {
         }
 
         fn wire_effectively_visible(&self, wire: &WireData) -> bool {
-            wire.visible && self.handle_effectively_visible(wire.source.as_str()) && wire.target.as_ref().map(|id| self.handle_effectively_visible(id.as_str())).unwrap_or(true)
+            wire.visible && self.handle_effectively_visible(wire.source.as_str()) && wire.target.as_ref().is_none_or(|id| self.handle_effectively_visible(id.as_str()))
         }
 
         /// @emoji 💫️ True when the handle may be drawn or hit-tested on the indirect-connect ghost ring (`overview`/`normal` LOD).
@@ -11129,7 +11162,7 @@ pub mod board_host {
                 let h_scr = self.world_to_screen(pw);
                 let d_screen = distance_between(p_scr, h_scr);
                 let tol_screen = self.link_snap_drag_tolerance_screen(h);
-                if d_screen <= tol_screen && best.as_ref().map(|(bd, _)| d_screen < *bd).unwrap_or(true) {
+                if d_screen <= tol_screen && best.as_ref().is_none_or(|(bd, _)| d_screen < *bd) {
                     best = Some((d_screen, id.clone()));
                 }
             }
@@ -11179,7 +11212,7 @@ pub mod board_host {
             self.edges.insert(
                 id.clone(),
                 EdgeData {
-                    id: id.clone(),
+                    id,
                     source: source_handle_id.to_string(),
                     target: target_handle_id.to_string(),
                     selected: false,
@@ -11435,14 +11468,14 @@ pub mod board_host {
             Ok(plan)
         }
 
-        fn plan_hover_pointer(&self, hover_id: Option<String>) -> Result<BoardPointerPlan, BoardPointerPlanFault> {
-            let hover_kind = hover_id.as_ref().and_then(|hover_id| self.resolve_element_kind_hover(hover_id));
-            let event = (self.hovered_id != hover_id || self.hovered_kind.is_some())
-                .then(|| BoardOwnedEvent::hover(hover_id.as_deref(), hover_kind.as_ref().map(|(domain, kind_id)| (domain.as_str(), kind_id.as_str()))))
+        fn plan_hover_pointer(&self, hover_id: Option<&str>) -> Result<BoardPointerPlan, BoardPointerPlanFault> {
+            let hover_kind = hover_id.and_then(|hover_id| self.resolve_element_kind_hover(hover_id));
+            let event = (self.hovered_id.as_deref() != hover_id || self.hovered_kind.is_some())
+                .then(|| BoardOwnedEvent::hover(hover_id, hover_kind.as_ref().map(|(domain, kind_id)| (domain.as_str(), kind_id.as_str()))))
                 .transpose()
                 .map_err(|_| BoardPointerPlanFault::ByteCredits)?;
             let mut plan = BoardPointerPlan::empty(self.interaction_revision, BoardPointerPlanKind::Idle);
-            let hover = hover_id.as_deref().map(|hover| plan.push_id(hover)).transpose()?;
+            let hover = hover_id.map(|hover| plan.push_id(hover)).transpose()?;
             plan.kind = BoardPointerPlanKind::Hover { hover };
             plan.seal_optional_events(&[event])?;
             Ok(plan)
@@ -11519,7 +11552,7 @@ pub mod board_host {
                 (BoardPointerPhase::Move, Interaction::LinkTargetNode { .. } | Interaction::ExternalLinkPreview { .. }) => self.plan_link_retain_pointer(world),
                 (BoardPointerPhase::Up, Interaction::LinkTargetNode { source_id, .. }) => self.plan_link_clear_pointer(source_id, world),
                 (BoardPointerPhase::Up, Interaction::ExternalLinkPreview { .. }) => self.plan_link_retain_pointer(world),
-                (BoardPointerPhase::Move, Interaction::None) => self.plan_hover_pointer(self.resolve_hover_world(world)),
+                (BoardPointerPhase::Move, Interaction::None) => self.plan_hover_pointer(self.resolve_hover_world(world).as_deref()),
                 (BoardPointerPhase::Up, Interaction::Pan { origin, start_screen }) => {
                     let delta = screen - *start_screen;
                     let camera = [origin.x - delta.x / origin.zoom, origin.y - delta.y / origin.zoom, origin.zoom];
@@ -11985,7 +12018,6 @@ pub mod board_host {
             }
             match std::mem::replace(&mut self.interaction, Interaction::None) {
                 Interaction::DragNodes { primary_id, offset, start_positions, proximity_pair: retained_proximity_pair } => {
-                    let primary_id = primary_id.clone();
                     let start_positions_cloned = start_positions.clone();
                     let (px0, py0) = start_positions.get(&primary_id).copied().unwrap_or((0.0, 0.0));
                     let nx = world.x - offset.x;
@@ -12256,7 +12288,7 @@ pub mod board_host {
                     self.preselect.clear();
                     self.preselect_removed.clear();
                     self.last_preselect_emit_sig = None;
-                    self.selection = initial_ids.clone();
+                    self.selection = initial_ids;
                     self.sync_selection_flags_to_objects();
                     self.bump_content_scene_generation();
                     self.last_select_emit_sig = None;
@@ -12318,13 +12350,13 @@ pub mod board_host {
             let primary_id = members
                 .iter()
                 .min_by(|a, b| {
-                    let da = self.nodes.get(*a).map(|n| distance_between(world, Point::new(n.x, n.y))).unwrap_or(f64::INFINITY);
-                    let db = self.nodes.get(*b).map(|n| distance_between(world, Point::new(n.x, n.y))).unwrap_or(f64::INFINITY);
+                    let da = self.nodes.get(*a).map_or(f64::INFINITY, |n| distance_between(world, Point::new(n.x, n.y)));
+                    let db = self.nodes.get(*b).map_or(f64::INFINITY, |n| distance_between(world, Point::new(n.x, n.y)));
                     da.partial_cmp(&db).unwrap_or(std::cmp::Ordering::Equal)
                 })
                 .cloned()
                 .unwrap_or_else(|| members[0].clone());
-            let (px0, py0) = self.nodes.get(&primary_id).map(|n| (n.x, n.y)).unwrap_or((0.0, 0.0));
+            let (px0, py0) = self.nodes.get(&primary_id).map_or((0.0, 0.0), |n| (n.x, n.y));
             let mut start_positions = BTreeMap::new();
             for id in &members {
                 if let Some(n) = self.nodes.get(id) {
@@ -12511,13 +12543,13 @@ pub mod board_host {
         planned.set_size(800, 600, 1.0);
         direct.wheel_screen(320.0, 240.0, -12.0);
         let plan = planned.plan_wheel(320.0, 240.0, -12.0);
-        assert!(planned.commit_wheel(plan));
+        assert!(planned.commit_wheel(&plan));
         assert_eq!([direct.camera.x, direct.camera.y, direct.camera.zoom], [planned.camera.x, planned.camera.y, planned.camera.zoom]);
 
         let stale = planned.plan_wheel(320.0, 240.0, -12.0);
         planned.pointer_down_screen(10.0, 10.0, 1, false, false);
         let replacement = [planned.camera.x, planned.camera.y, planned.camera.zoom];
-        assert!(!planned.commit_wheel(stale));
+        assert!(!planned.commit_wheel(&stale));
         assert_eq!([planned.camera.x, planned.camera.y, planned.camera.zoom], replacement);
     }
 
@@ -12965,6 +12997,34 @@ pub mod board_host {
         }
         assert!(turns > 4);
         assert!(retirement.terminal_is_empty());
+    }
+
+    #[cfg(test)]
+    #[test]
+    fn board_world_scene_retirement_retains_exact_token_until_backing_is_released() {
+        let mut host = deletion_fixture("node-a");
+        let mut scene = Scene::new();
+        for _ in 0..128 {
+            scene.pop_layer();
+        }
+        let mut path = crate::BezPath::new();
+        path.move_to((0.0, 0.0));
+        for point in 0..1600 {
+            path.line_to((f64::from(point), f64::from(point)));
+        }
+        scene.fill(FillRule::NonZero, Affine::IDENTITY, Color::from_rgba8(0, 0, 0, 255), None, &path);
+        *host.world_content_cache.borrow_mut() = Some((host.content_scene_generation, BoardDrawLod::Detail, scene));
+        assert!(!host.quarantine_world_content_step());
+        assert!(host.opaque_scene_retirement.get().is_some());
+        let mut turns = 1usize;
+        while !host.quarantine_world_content_step() {
+            turns += 1;
+            assert!(turns < 4_096, "retained world scene cursor reaches exact terminal release");
+        }
+        assert!(turns > 1_600);
+        assert!(host.world_content_cache.borrow().is_none());
+        assert!(host.opaque_scene_retirement.get().is_none());
+        assert!(!host.opaque_scene_faulted());
     }
 
     #[cfg(test)]

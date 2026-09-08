@@ -25,13 +25,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioModelSnapshot {
-    serde_json::from_str(BEFORE).expect("before model snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("before model snapshot decodes")
 }
 fn expected_after() -> SemioModelSnapshot {
-    serde_json::from_str(AFTER).expect("after model snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("after model snapshot decodes")
 }
 fn mutation() -> SemioModelMutation {
-    serde_json::from_str(MUTATION).expect("set-snapshot mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("set-snapshot mutation decodes")
 }
 
 /// ▶️ `set-snapshot` carries the building model to exactly the committed `after`: a relocated wall
@@ -72,12 +72,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioModelSnapshot = serde_json::from_str(text).expect("model snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("model snapshot encodes");
+        let decoded: SemioModelSnapshot = dsl::json::from_json_str(text).expect("model snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("model snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("model snapshot reparses");
         assert_eq!(reencoded, original, "semio-model/set-snapshot: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("set-snapshot mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("set-snapshot mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("set-snapshot mutation reparses");
     assert_eq!(reencoded, original, "semio-model/set-snapshot: committed mutation JSON is not canonical");
 }
@@ -103,7 +103,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioModelMutation as protocol::Mutation<SemioModelSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced model diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced model diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed model diff decodes");
     assert_eq!(produced, committed, "semio-model/set-snapshot: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -112,13 +112,13 @@ async fn produces_committed_diff() {
 /// by id, no removals, no additions, and the tri-state containment slot left absent.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: SemioModelDiff = serde_json::from_str(DIFF).expect("committed model diff decodes");
+    let decoded: SemioModelDiff = dsl::json::from_json_str(DIFF).expect("committed model diff decodes");
     assert!(decoded.spatial.is_none() && decoded.relations.is_none(), "semio-model/set-snapshot: neither the spatial tree nor the relations may be re-emitted");
     let elements = decoded.elements.as_ref().expect("the committed diff carries an elements triple");
     assert!(elements.removed.is_empty() && elements.added.is_empty() && elements.modified.len() == 1 && elements.modified[0].key == "w-1", "semio-model/set-snapshot: exactly the wall may be patched, addressed by id");
     let patch = &elements.modified[0].diff;
     assert!(patch.class.is_none() && patch.geometry.is_none() && patch.spatial_id.is_none(), "semio-model/set-snapshot: class, geometry and the tri-state spatial_id did not move and must stay absent");
-    let reencoded = serde_json::to_value(&decoded).expect("model diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("model diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed model diff reparses");
     assert_eq!(reencoded, original, "semio-model/set-snapshot: committed diff JSON is not canonical");
 }
@@ -127,7 +127,7 @@ async fn committed_diff_is_canonical() {
 /// plus property sets is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioModelDiff = serde_json::from_str(DIFF).expect("committed model diff decodes");
+    let decoded: SemioModelDiff = dsl::json::from_json_str(DIFF).expect("committed model diff decodes");
     let produced = <SemioModelDiff as protocol::MutationDiff<SemioModelSnapshot>>::apply(&decoded, &before()).expect("committed model diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "semio-model/set-snapshot: committed diff did not carry before to after");
 }

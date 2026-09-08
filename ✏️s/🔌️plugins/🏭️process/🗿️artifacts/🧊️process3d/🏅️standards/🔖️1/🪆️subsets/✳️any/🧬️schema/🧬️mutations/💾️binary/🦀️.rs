@@ -371,7 +371,8 @@ pub fn process3d_validate_atomic_publication_authority(operation: semio_framewor
     let leases = process3d_publication_leases().try_lock().map_err(|_| "process3d-publication.contended")?;
     let lease = leases.get_operation(operation).map(|(_, lease)| *lease).ok_or("process3d-publication.authority-missing")?;
     #[cfg(test)]
-    {
+    let lease = {
+        let mut lease = lease;
         let mut hostiles = process3d_publication_hostiles().try_lock().map_err(|_| "process3d-publication.hostile-contended")?;
         if let Some(hostile) = hostiles.iter_mut().flatten().find(|value| value.operation == operation.0) {
             hostile.observed = Some(match hostile.hostile {
@@ -389,7 +390,8 @@ pub fn process3d_validate_atomic_publication_authority(operation: semio_framewor
                 Process3dPublicationHostile::WrongParent => lease.parent_revision = lease.parent_revision.wrapping_add(1),
             }
         }
-    }
+        lease
+    };
     process3d_validate_atomic_lease(lease, operation, generation, live_generation)
 }
 
@@ -3217,7 +3219,7 @@ pub fn process3d_all_retained_mutation_fixtures_for_test() -> Vec<Process3dMutat
         replace_stock_solid::ReplaceStockSolid,
     };
 
-    let pose = Pose { position: [1.0, 2.0, 3.0], axis: [0.0, 1.0, 0.0], angle: 0.5 };
+    let pose = crate::artifacts::process3d::Pose { position: [1.0, 2.0, 3.0], axis: [0.0, 1.0, 0.0], angle: 0.5 };
     let capability = Capability {
         id: "deep-capability".into(),
         label: "Deep Capability".into(),

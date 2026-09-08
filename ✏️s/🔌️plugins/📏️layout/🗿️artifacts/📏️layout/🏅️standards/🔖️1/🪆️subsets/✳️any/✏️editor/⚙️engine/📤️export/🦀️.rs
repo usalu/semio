@@ -4481,7 +4481,7 @@ mod tests {
             let output_chunks = ArtifactOutputChunks::new(MAX_LAYOUT_EXPORT_OUTPUT_BYTES);
             let payload = LayoutExportToolPayload { request: request(kind), output_chunks, completion: None };
             let spec = semio_framework::ToolOperationSpec::new("layout-retained-test", kind.tool_id(), LAYOUT_EXPORT_PAYLOAD_SCHEMA, payload, operation);
-            bus.dispatch_wire_retained_with_spec(admission, input, None, spec).unwrap_or_else(|_| panic!("retained production dispatch"))
+            bus.dispatch_wire_retained_with_spec(&admission, input, None, spec).unwrap_or_else(|_| panic!("retained production dispatch"))
         }
 
         let params = |cancel: semio_framework_job::CancelToken| BatchJobParams {

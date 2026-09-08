@@ -2,7 +2,7 @@
 name = "semio-framework-geometry"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 autotests = false
 description = "First-party 2D geometry (Point/Vec2/Affine/shapes/BezPath, selection and curve math), the fixed-size render matrices Vec3/Mat4, and the seeded reproducible Rng — the framework-internal geometric vocabulary every framework crate may name without reaching a plugin. `kurbo` is a differential-test oracle only — see RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/REIMPLEMENT-KURBO-BACKED-GEOMETRY-TYPES-FIRST-PARTY (26/09/01)."
 

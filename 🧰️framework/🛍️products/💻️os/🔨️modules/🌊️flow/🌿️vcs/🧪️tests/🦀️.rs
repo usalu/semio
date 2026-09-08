@@ -5,7 +5,7 @@ use crate::os_dsl::{DslValue, FromValue, ToValue};
 
 //#region 🧪️FixtureOwnership
 fn cases() -> serde_json::Value { serde_json::from_str(include_str!("🔣️.json")).expect("neutral Flow cases") }
-fn third_party_json<T: ToValue + ?Sized>(value: &T) -> serde_json::Value {
+fn third_party_json<T: ToValue>(value: &T) -> serde_json::Value {
     serde_json::from_str(&crate::os_pack::json::to_json_string(value)).expect("first-party JSON must remain valid RFC 8259")
 }
 fn base() -> FlowFixture { FlowFixture::from_value(DslValue::from(&cases()["fixture"])).expect("Flow fixture") }

@@ -831,17 +831,8 @@ impl ArtifactCommandWork<EditorApp<LowpolyPlayApp>> for LowpolyRetainedCommandWo
         (lowpoly_command_disposition(command.command_id()).is_some()).then_some(2)
     }
 
-    fn step(
-        &mut self,
-        command: &LowpolyCommand,
-        snapshot: &LowpolySnapshot,
-        config: &LowpolyConfig,
-        history: &HistoryView,
-        interaction: &protocol::InteractionState,
-        _hover: &semio_framework_plugin::app::InteractionHoverState,
-        context: Option<&ArtifactOwnedToolJobContext<EditorApp<LowpolyPlayApp>>>,
-        operation: &AppOperationContext,
-    ) -> Result<ArtifactCommandWorkStep<EditorApp<LowpolyPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LowpolyPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<LowpolyPlayApp>>, Fault> {
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, history, interaction, hover: _hover, context, operation } = *input;
         if self.complete {
             return Err(Fault::from("lowpoly-retained-work-repeated"));
         }
@@ -1686,16 +1677,8 @@ impl ArtifactEditor for LowpolyPlayApp {
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
         };
-        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            request.context,
-            operation_context,
-            request.completion,
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
             LowpolyCommand::command_id,
             LOWPOLY_RETAINED_RAW_BYTES,
             LOWPOLY_RETAINED_WORK_ITEMS,
@@ -1949,27 +1932,27 @@ pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
             .view_action("transformBegin", LocalizedLabel::native("Transform Begin", "Transformation beginnen"))
             // 📝️ Staged argument forms for the P1 actions — the panel form seeds from these defaults and
             // stages typed overrides read out of `args`; `config.utility_params_json` remains the live backing store.
-            .action_args("extrude", vec![ActionArgDef::slider("extrudeDistance", LocalizedLabel::native("Extrude Distance", "Extrusionsabstand"), 0.01, 2.0).default_value(0.25)])
-            .action_args("inset", vec![ActionArgDef::number("insetAmount", LocalizedLabel::native("Inset Amount", "Einzugsbetrag")).default_value(0.1)])
+            .action_args("extrude", vec![ActionArgDef::slider("extrudeDistance", LocalizedLabel::native("Extrude Distance", "Extrusionsabstand"), 0.01, 2.0).default_value(&0.25)])
+            .action_args("inset", vec![ActionArgDef::number("insetAmount", LocalizedLabel::native("Inset Amount", "Einzugsbetrag")).default_value(&0.1)])
             .action_args("bevel", vec![
-                ActionArgDef::number("bevelAmount", LocalizedLabel::native("Bevel Amount", "Fasenbetrag")).default_value(0.05),
-                ActionArgDef::number("bevelSegments", LocalizedLabel::native("Bevel Segments", "Fasensegmente")).default_value(1),
+                ActionArgDef::number("bevelAmount", LocalizedLabel::native("Bevel Amount", "Fasenbetrag")).default_value(&0.05),
+                ActionArgDef::number("bevelSegments", LocalizedLabel::native("Bevel Segments", "Fasensegmente")).default_value(&1),
             ])
-            .action_args("loopCut", vec![ActionArgDef::number("loopCuts", LocalizedLabel::native("Loop Cuts", "Schleifenschnitte")).default_value(1)])
-            .action_args("decimate", vec![ActionArgDef::slider("decimateRatio", LocalizedLabel::native("Decimate Ratio", "Dezimierungsverhältnis"), 0.05, 1.0).default_value(0.5)])
+            .action_args("loopCut", vec![ActionArgDef::number("loopCuts", LocalizedLabel::native("Loop Cuts", "Schleifenschnitte")).default_value(&1)])
+            .action_args("decimate", vec![ActionArgDef::slider("decimateRatio", LocalizedLabel::native("Decimate Ratio", "Dezimierungsverhältnis"), 0.05, 1.0).default_value(&0.5)])
             .action_args("mirror", vec![ActionArgDef::select("axis", LocalizedLabel::native("Axis", "Achse"), vec![
                 ActionArgOption::new("x", LocalizedLabel::native("X", "X")),
                 ActionArgOption::new("y", LocalizedLabel::native("Y", "Y")),
                 ActionArgOption::new("z", LocalizedLabel::native("Z", "Z")),
-            ]).default_value("x")])
+            ]).default_value(&"x")])
             .action_args("addPrimitive", vec![ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
                 ActionArgOption::new("box", LocalizedLabel::native("Cube", "Würfel")),
                 ActionArgOption::new("plane", LocalizedLabel::native("Plane", "Ebene")),
                 ActionArgOption::new("cylinder", LocalizedLabel::native("Cylinder", "Zylinder")),
                 ActionArgOption::new("cone", LocalizedLabel::native("Cone", "Kegel")),
                 ActionArgOption::new("ico_sphere", LocalizedLabel::native("Ico Sphere", "Ikokugel")),
-            ]).default_value("box")])
-            .action_args("markUvSeam", vec![ActionArgDef::toggle("seam", LocalizedLabel::native("Seam", "Naht")).default_value(true)])
+            ]).default_value(&"box")])
+            .action_args("markUvSeam", vec![ActionArgDef::toggle("seam", LocalizedLabel::native("Seam", "Naht")).default_value(&true)])
             // 🧰️ Transform gumball + paint utilities — exclusive per-window active utility is host-owned (never a
             // document operation). Selection method/merge/kind live as an always-visible Select window-options group
             // (mirrors puzzle 3d); the transform group defaults to "move", paint bridges into `config.paint_utility`.
@@ -2156,21 +2139,21 @@ mod tests {
         let context = retained_context(LowpolyTransient::default(), 19);
         let context_identity = context.identity_digest();
         let mut uninterrupted = LowpolyRetainedCommandWork::new("toggleShowEdges", LowpolyCommandDisposition::Config, operation.operation_id, operation.generation, operation.canonical_base_revision, context_identity);
-        assert!(matches!(uninterrupted.step(&command, &snapshot, &config, &history, &interaction, &hover, Some(&context), &operation).expect("progress"), ArtifactCommandWorkStep::Progress { .. }));
+        assert!(matches!(uninterrupted.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &operation }).expect("progress"), ArtifactCommandWorkStep::Progress { .. }));
         let mut checkpoint = [0_u8; 88];
         uninterrupted.checkpoint(&mut checkpoint).expect("checkpoint");
         let mut wrong_base = LowpolyRetainedCommandWork::new("toggleShowEdges", LowpolyCommandDisposition::Config, operation.operation_id, operation.generation, [18; 32], context_identity);
         assert!(wrong_base.restore(&checkpoint).is_err());
         let mut replayed = LowpolyRetainedCommandWork::new("toggleShowEdges", LowpolyCommandDisposition::Config, operation.operation_id, operation.generation, operation.canonical_base_revision, context_identity);
         replayed.restore(&checkpoint).expect("work restore");
-        assert!(matches!(replayed.step(&command, &snapshot, &config, &history, &interaction, &hover, Some(&context), &operation).expect("replay"), ArtifactCommandWorkStep::Replay { .. }));
-        assert!(matches!(replayed.step(&command, &snapshot, &config, &history, &interaction, &hover, Some(&context), &operation).expect("complete"), ArtifactCommandWorkStep::Complete(_)));
+        assert!(matches!(replayed.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &operation }).expect("replay"), ArtifactCommandWorkStep::Replay { .. }));
+        assert!(matches!(replayed.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &operation }).expect("complete"), ArtifactCommandWorkStep::Complete(_)));
         let drifted = AppOperationContext { generation: operation.generation + 1, ..operation.clone() };
         let mut rejected = LowpolyRetainedCommandWork::new("toggleShowEdges", LowpolyCommandDisposition::Config, operation.operation_id, operation.generation, operation.canonical_base_revision, context_identity);
-        assert!(rejected.step(&command, &snapshot, &config, &history, &interaction, &hover, Some(&context), &drifted).is_err());
+        assert!(rejected.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &drifted }).is_err());
         let drifted_context = retained_context(LowpolyTransient::default(), 20);
-        assert!(rejected.step(&command, &snapshot, &config, &history, &interaction, &hover, Some(&drifted_context), &operation).is_err());
-        assert!(matches!(rejected.step(&command, &snapshot, &config, &history, &interaction, &hover, Some(&context), &operation).expect("exact retry"), ArtifactCommandWorkStep::Progress { .. }));
+        assert!(rejected.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&drifted_context), operation: &operation }).is_err());
+        assert!(matches!(rejected.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &operation }).expect("exact retry"), ArtifactCommandWorkStep::Progress { .. }));
         assert_eq!(replayed.close_step(0, 0), InteractiveJobCloseStep::Blocked);
         replayed.begin_close();
         assert_eq!(replayed.close_step(1, 1), InteractiveJobCloseStep::Complete);
@@ -2192,7 +2175,7 @@ mod tests {
             let mut work = LowpolyRetainedCommandWork::new(tool_id, disposition, operation.operation_id, operation.generation, operation.canonical_base_revision, context.identity_digest());
             loop {
                 let started = std::time::Instant::now();
-                let step = work.step(&command, &snapshot, &config, &history, &interaction, &hover, Some(&context), &operation).expect("migrated turn");
+                let step = work.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &operation }).expect("migrated turn");
                 assert!(started.elapsed() < std::time::Duration::from_millis(8), "{tool_id} turn exceeded 8 ms");
                 if matches!(step, ArtifactCommandWorkStep::Complete(_) | ArtifactCommandWorkStep::CompleteWithEphemeral { .. }) {
                     break;

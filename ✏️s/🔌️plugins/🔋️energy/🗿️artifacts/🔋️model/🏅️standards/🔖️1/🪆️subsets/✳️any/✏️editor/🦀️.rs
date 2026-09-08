@@ -1195,16 +1195,8 @@ impl ArtifactEditor for EnergyModelEditor {
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
         };
-        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            request.context,
-            operation_context,
-            request.completion,
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
             EnergyModelEditorCommand::action_id,
             ENERGY_MODEL_RETAINED_RAW_BYTES,
             1,

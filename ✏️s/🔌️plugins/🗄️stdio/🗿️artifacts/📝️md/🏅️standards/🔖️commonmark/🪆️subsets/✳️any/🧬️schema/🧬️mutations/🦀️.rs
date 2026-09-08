@@ -476,7 +476,7 @@ mod op_codec_tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📸️set-snapshot/🧪️tests/🔽️demotes-the-tower-heading-to-level-3/🦀️.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/🔽️demotes-the-c9db71/🦀️.rs"]
     mod tests_set_snapshot_demotes_the_tower_heading_to_level_3;
 }
 //#endregion 🧪️FixtureTests

@@ -79,7 +79,7 @@ mod tests {
         // `register_dialect_migration` treats a byte-identical re-registration as `Ok(())`, matching
         // `📓️terra-jobs-runtime-report.md`'s own "last-writer overwrites, identical is not a conflict"
         // convention one layer up in `register_job_kind`.
-        let _ = store::register_dialect_migration(migration).await;
+        let _ = store::register_dialect_migration(migration);
         (from.to_coordinate(), to.to_coordinate())
     }
 

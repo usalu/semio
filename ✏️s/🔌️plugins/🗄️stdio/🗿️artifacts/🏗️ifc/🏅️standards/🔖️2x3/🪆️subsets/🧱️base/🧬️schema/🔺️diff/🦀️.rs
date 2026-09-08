@@ -185,7 +185,7 @@ impl DiffAlgebra<Ifc2x3Snapshot> for Ifc2x3Diff {
         let other_by_id: std::collections::HashMap<u64, &Part21Instance> = other.document.instances.iter().map(|i| (i.id, i)).collect();
         let mut removed_instances: Vec<u64> = base_by_id.keys().filter(|id| !other_by_id.contains_key(id)).copied().collect();
         removed_instances.sort_unstable();
-        let mut upserted_instances: Vec<Part21Instance> = other.document.instances.iter().filter(|i| base_by_id.get(&i.id).map(|b| *b != *i).unwrap_or(true)).cloned().collect();
+        let mut upserted_instances: Vec<Part21Instance> = other.document.instances.iter().filter(|i| base_by_id.get(&i.id).is_none_or(|b| *b != *i)).cloned().collect();
         upserted_instances.sort_by_key(|i| i.id);
         Ifc2x3Diff { schema, header, removed_instances, upserted_instances, edm_preamble, instance_order }
     }
@@ -243,7 +243,7 @@ fn hex_encode_into(bytes: &[u8], encoded: &mut String) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -305,7 +305,7 @@ pub(crate) fn dec_edm_preamble(s: &str) -> Result<Ifc2x3EdmPreamble, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_optional_edm_preamble(preamble: &Option<Ifc2x3EdmPreamble>) -> String {
-    preamble.as_ref().map(|value| format!("[1,{}]", enc_edm_preamble(value))).unwrap_or_else(|| "[0]".into())
+    preamble.as_ref().map_or_else(|| "[0]".into(), |value| format!("[1,{}]", enc_edm_preamble(value)))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_optional_edm_preamble(s: &str) -> Result<Option<Ifc2x3EdmPreamble>, String> {

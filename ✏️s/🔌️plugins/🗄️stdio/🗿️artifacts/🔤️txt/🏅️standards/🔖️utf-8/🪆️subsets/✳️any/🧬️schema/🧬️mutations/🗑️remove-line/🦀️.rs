@@ -79,7 +79,7 @@ mod tests {
     #[test]
     fn canonical_leaf_metadata_matches_descriptor_and_provenance() {
         let expected: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).expect("valid canonical remove-line descriptor");
-        assert_eq!(serde_json::to_value(<RemoveLineMutation as MutationLeaf>::DESCRIPTOR).expect("serializable descriptor"), expected);
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(<RemoveLineMutation as MutationLeaf>::DESCRIPTOR))).expect("serializable descriptor"), expected);
         let provenance = <RemoveLineMutation as MutationLeaf>::PROVENANCE;
         assert_eq!(provenance.mutation_root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
         assert_eq!(provenance.owner, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-line");
@@ -91,7 +91,7 @@ mod tests {
 
     #[test]
     fn semantic_identity_matches_descriptor() {
-        assert_eq!(<RemoveLineMutation as protocol::MutationKind<TxtSnapshot, super::super::TxtMutation>>::SEMANTICS.kind, "remove-line");
+        assert_eq!(<RemoveLineMutation as MutationKind<TxtSnapshot, TxtMutation>>::SEMANTICS.kind, "remove-line");
     }
 
     #[test]
@@ -118,8 +118,8 @@ mod tests {
         let mutation = RemoveLineMutation { index: 0 };
         assert!(<RemoveLineMutation as MutationKind<TxtSnapshot, TxtMutation>>::inverse(&mutation, &base).is_empty());
         assert!(!<RemoveLineMutation as MutationKind<TxtSnapshot, TxtMutation>>::diff(&mutation, &base).messages().is_empty());
-        assert!(serde_json::from_str::<RemoveLineMutation>(r#"{"index":0,"unknown":true}"#).is_err());
-        assert!(serde_json::from_str::<TxtMutation>(r#"{"mutation":"remove-line","payload":{"index":0},"unknown":true}"#).is_err());
+        assert!(dsl::json::from_json_str::<RemoveLineMutation>(r#"{"index":0,"unknown":true}"#).is_err());
+        assert!(dsl::json::from_json_str::<TxtMutation>(r#"{"mutation":"remove-line","payload":{"index":0},"unknown":true}"#).is_err());
     }
 }
 //#endregion 🧪️Tests

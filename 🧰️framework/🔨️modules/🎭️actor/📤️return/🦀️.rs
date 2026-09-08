@@ -2,8 +2,6 @@
 use crate::byte_page::{ActorBytePage, ACTOR_BYTE_PAGE_BYTES};
 use crate::instance_lifetime::{decimal_generation, read_unsigned, request_sequence, valid_request, REQUEST_SEQUENCE_MAXIMUM};
 use semio_framework_value_derive::{FromValue, ToValue};
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
 
 pub const ACTOR_RETURN_DRIVE_MAXIMUM_BYTES: usize = 43;
 pub const ACTOR_RETURN_RESULT_MAXIMUM_BYTES: usize = 4138;
@@ -88,6 +86,7 @@ wire_enum!(ActorReturnFault {
 });
 
 #[derive(Debug, PartialEq, Eq)]
+#[expect(clippy::large_enum_variant, reason = "The return lane transfers an admitted fixed byte page inline without allocation outside its grant.")]
 pub enum ActorReturnResult {
     Refused { origin: ActorReturnOrigin, fault: ActorReturnFault },
     Pending { identity: ActorReturnIdentity, reason: ActorReturnPendingReason },

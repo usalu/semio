@@ -11,6 +11,9 @@
 //!
 //! Mounted as a submodule of `➡️sweep` in ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME wave
 //! W2-C via `#[path]` from `➡️sweep/🦀️.rs`.
+/// 🌀 Lateral surface, four parameter curves with ranges, and orientation.
+pub type LateralSurfaceCurves = (crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SurfaceId, [(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::Curve2Id, (f64, f64)); 4], bool);
+
 
 use std::collections::HashMap;
 use std::f64::consts::TAU;
@@ -149,7 +152,7 @@ fn classify(curve: &Curve3, origin: Pnt3, axis: Vec3) -> Result<RevSurface, Kern
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn axis_orbit_edge(body: &mut Body, axis_origin: Pnt3, axis: Vec3, position: Pnt3, angle: f64, va: VertexId, vb: VertexId, rec: &mut OpRecorder) -> EdgeId {
+fn axis_orbit_edge(body: &mut Body, axis_origin: Pnt3, axis: Vec3, position: Pnt3, angle: f64, (va, vb): (VertexId, VertexId), rec: &mut OpRecorder) -> EdgeId {
     let foot = axis_origin + axis * (position - axis_origin).dot(axis);
     let radial = position - foot;
     let r = radial.norm();
@@ -166,7 +169,7 @@ fn axis_orbit_edge(body: &mut Body, axis_origin: Pnt3, axis: Vec3, position: Pnt
 /// 🌀 Builds one lateral face's surface + its 4 pcurves for `[start_edge(!f_i), left_rail(true),
 /// end_edge(f_i), right_rail(false)]`, dispatching on [`RevSurface`]'s two conventions.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn lateral_pcurves(body: &mut Body, rev: RevSurface, range: (f64, f64), angle: f64) -> (crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SurfaceId, [(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::Curve2Id, (f64, f64)); 4], bool) {
+fn lateral_pcurves(body: &mut Body, rev: RevSurface, range: (f64, f64), angle: f64) -> LateralSurfaceCurves {
     match rev {
         RevSurface::AngleLinear { surface, v_at, flip } => {
             let surf_id = body.surfaces.insert(surface);
@@ -270,11 +273,11 @@ fn revolve_partial(body: &mut Body, profile: FaceId, axis_origin: Pnt3, axis: Ve
             let (surf_id, [pc0, pc_left, pc1, pc_right], flip) = lateral_pcurves(body, rev, range, angle);
             let left_rail = *rail_cache.entry(s_v0).or_insert_with(|| {
                 let p = body.vertices.get(s_v0).unwrap().position;
-                axis_orbit_edge(body, axis_origin, axis, p, angle, s_v0, e_v0, rec)
+                axis_orbit_edge(body, axis_origin, axis, p, angle, (s_v0, e_v0), rec)
             });
             let right_rail = *rail_cache.entry(s_v1).or_insert_with(|| {
                 let p = body.vertices.get(s_v1).unwrap().position;
-                axis_orbit_edge(body, axis_origin, axis, p, angle, s_v1, e_v1, rec)
+                axis_orbit_edge(body, axis_origin, axis, p, angle, (s_v1, e_v1), rec)
             });
             let members = vec![(edge_id, !f_i), (left_rail, true), (edge_id, f_i), (right_rail, false)];
             let pcurves = vec![pc0, pc_left, pc1, pc_right];
@@ -300,9 +303,8 @@ fn revolve_full(body: &mut Body, profile: FaceId, axis_origin: Pnt3, axis: Vec3,
     let mut laterals = Vec::new();
     for &lp in &loops {
         let coedges = body.loop_coedges(lp);
-        let n = coedges.len();
-        for k in 0..n {
-            let edge_id = body.coedges.get(coedges[k]).unwrap().edge;
+        for coedge in coedges {
+            let edge_id = body.coedges.get(coedge).unwrap().edge;
             let (v0, v1) = (body.edges.get(edge_id).unwrap().v0, body.edges.get(edge_id).unwrap().v1);
             let curve = body.curves3.get(body.edges.get(edge_id).unwrap().curve).unwrap().clone();
             let range = body.edges.get(edge_id).unwrap().range;
@@ -310,11 +312,11 @@ fn revolve_full(body: &mut Body, profile: FaceId, axis_origin: Pnt3, axis: Vec3,
             let (surf_id, [pc0, pc_left, pc1, pc_right], flip) = lateral_pcurves(body, rev, range, TAU);
             let c_start = *orbit_cache.entry(v0).or_insert_with(|| {
                 let p = body.vertices.get(v0).unwrap().position;
-                axis_orbit_edge(body, axis_origin, axis, p, TAU, v0, v0, rec)
+                axis_orbit_edge(body, axis_origin, axis, p, TAU, (v0, v0), rec)
             });
             let c_end = *orbit_cache.entry(v1).or_insert_with(|| {
                 let p = body.vertices.get(v1).unwrap().position;
-                axis_orbit_edge(body, axis_origin, axis, p, TAU, v1, v1, rec)
+                axis_orbit_edge(body, axis_origin, axis, p, TAU, (v1, v1), rec)
             });
             let members = vec![(c_start, true), (edge_id, true), (c_end, false), (edge_id, false)];
             let pcurves = vec![pc_left, (pc0.0, range), pc_right, (pc1.0, range)];

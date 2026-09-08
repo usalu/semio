@@ -2,16 +2,12 @@
 
 use crate::artifacts::gismap::{MapFeature, MapFeaturePatch};
 use schema::ArtifactSchema;
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔹Diff
 /// 🔺️ Sparse field delta for the GIS map artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.gis.gismap")]
 pub struct GisMapDiff {
@@ -43,8 +39,6 @@ pub struct GisMapDiff {
 //#region 🔹DeltaHelpers
 /// 📂 Bool-map wrapper so optional map diffs stay scalar across formats.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct GisMapBoolMapDelta {
     pub entries: BTreeMap<String, Option<bool>>,
@@ -52,8 +46,6 @@ pub struct GisMapBoolMapDelta {
 
 /// 📂 Number-map wrapper so optional map diffs stay scalar across formats.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct GisMapNumberMapDelta {
     pub entries: BTreeMap<String, Option<f64>>,
@@ -61,8 +53,6 @@ pub struct GisMapNumberMapDelta {
 
 /// Identified-collection delta for feature lists.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct GisMapFeaturesDelta {
     pub added: Vec<MapFeature>,
@@ -73,8 +63,6 @@ pub struct GisMapFeaturesDelta {
 
 /// 🩹 One patched feature entry.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct GisMapFeaturePatchEntry {
     pub id: String,

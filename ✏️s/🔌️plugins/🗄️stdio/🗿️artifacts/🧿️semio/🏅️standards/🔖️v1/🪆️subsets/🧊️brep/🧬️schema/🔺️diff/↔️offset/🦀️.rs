@@ -543,8 +543,9 @@ fn solve3(mut a: [[f64; 3]; 3], mut b: [f64; 3]) -> Option<Vec3> {
         b.swap(col, piv);
         for r in (col + 1)..3 {
             let f = a[r][col] / a[col][col];
-            for c in col..3 {
-                a[r][c] -= f * a[col][c];
+            let pivot = a[col];
+            for (value, &pivot_value) in a[r][col..].iter_mut().zip(&pivot[col..]) {
+                *value -= f * pivot_value;
             }
             b[r] -= f * b[col];
         }
@@ -587,7 +588,7 @@ fn solve_vertex_displacement(normals: &[Vec3], distance: f64) -> Vec3 {
     a[2][2] += 1e-12;
     solve3(a, b).unwrap_or_else(|| {
         let sum = normals.iter().fold(Vec3::ZERO, |acc, &n| acc + n);
-        sum.normalized().map(|u| u * distance).unwrap_or(Vec3::ZERO)
+        sum.normalized().map_or(Vec3::ZERO, |u| u * distance)
     })
 }
 
@@ -641,17 +642,7 @@ fn face_surface(body: &Body, f: FaceId, new_surface_map: &HashMap<FaceId, Surfac
 /// into new [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Face`]s (used by [`shell_solid_with_open_faces`] to
 /// skip the removed open faces while still using their offset surface to trim the kept faces).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn rebuild_topology<FV, FE, FF>(
-    body: &mut Body,
-    solid: SolidId,
-    new_surface_map: &HashMap<FaceId, Surface>,
-    materialize: &HashSet<FaceId>,
-    flip_new: FF,
-    vertex_target: FV,
-    edge_target: FE,
-    tol: f64,
-    rec: &mut OpRecorder,
-) -> Result<RebuiltTopology, KernelError>
+fn rebuild_topology<FV, FE, FF>(body: &mut Body, solid: SolidId, new_surface_map: &HashMap<FaceId, Surface>, materialize: &HashSet<FaceId>, (flip_new, vertex_target, edge_target): (FF, FV, FE), tol: f64, rec: &mut OpRecorder) -> Result<RebuiltTopology, KernelError>
 where
     FV: Fn(&Body, VertexId, &[(FaceId, Vec3)]) -> Pnt3,
     FE: Fn(&Body, EdgeId, Vec3) -> Pnt3,
@@ -775,7 +766,7 @@ where
         let mut best: Option<(&IntCurve, f64)> = None;
         for cand in &candidates {
             let cp = closest_parameter(&cand.curve3, (cand.domain.min, cand.domain.max), anchor, tol);
-            if best.as_ref().map(|(_, d)| cp.distance < *d).unwrap_or(true) {
+            if best.as_ref().is_none_or(|(_, d)| cp.distance < *d) {
                 best = Some((cand, cp.distance));
             }
         }
@@ -827,7 +818,7 @@ where
             let mut members = Vec::new();
             for cid in body.loop_coedges(*lp) {
                 let c = body.coedges.get(cid).unwrap();
-                let new_edge = edge_new.get(&c.edge).map(|(ne, _, _)| *ne).unwrap_or(c.edge);
+                let new_edge = edge_new.get(&c.edge).map_or(c.edge, |(ne, _, _)| *ne);
                 members.push((new_edge, c.forward));
             }
             member_lists.push(members);
@@ -865,7 +856,7 @@ fn make_edge_entry(body: &mut Body, curve: crate::artifacts::semio::standards::v
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn is_planar_only(body: &Body, solid: SolidId) -> bool {
-    body.solid_faces(solid).iter().all(|&f| body.faces.get(f).and_then(|fd| body.surfaces.get(fd.surface)).map(|s| matches!(s, Surface::Plane { .. })).unwrap_or(false))
+    body.solid_faces(solid).iter().all(|&f| body.faces.get(f).and_then(|fd| body.surfaces.get(fd.surface)).is_some_and(|s| matches!(s, Surface::Plane { .. })))
 }
 
 // #endregion 🔖️Topology
@@ -905,8 +896,8 @@ pub fn offset_solid_with_corner(body: &mut Body, solid: SolidId, distance: f64, 
         curve.eval(0.5 * (edge.range.0 + edge.range.1)) + n * distance
     };
     let flip_new = |_f: FaceId| false;
-    let materialize = solid_faces.clone();
-    let rebuilt = rebuild_topology(body, solid, &new_surface_map, &materialize, flip_new, vertex_target, edge_target, tol, rec)?;
+    let materialize = solid_faces;
+    let rebuilt = rebuild_topology(body, solid, &new_surface_map, &materialize, (flip_new, vertex_target, edge_target), tol, rec)?;
     let mut faces: Vec<FaceId> = Vec::with_capacity(faces_vec.len());
     for &f in &faces_vec {
         faces.push(*rebuilt.face_new.get(&f).ok_or_else(|| KernelError::Operation("offset_solid: face was not rebuilt".into()))?);
@@ -1100,7 +1091,7 @@ pub fn shell_solid_with_open_faces(body: &mut Body, solid: SolidId, thickness: f
         curve.eval(0.5 * (edge.range.0 + edge.range.1)) + n * distance
     };
     let flip_new = |_f: FaceId| true;
-    let rebuilt = rebuild_topology(body, solid, &new_surface_map, &materialize, flip_new, vertex_target, edge_target, tol, rec)?;
+    let rebuilt = rebuild_topology(body, solid, &new_surface_map, &materialize, (flip_new, vertex_target, edge_target), tol, rec)?;
 
     let mut shell_faces: Vec<FaceId> = Vec::new();
     for &f in &faces_vec {
@@ -1210,7 +1201,7 @@ fn draft_one_surface(surface: &Surface, neutral_plane: &Surface, pull: Vec3, ang
 /// adjacent drafted faces automatically (both surfaces of a shared edge are looked up from the
 /// same substitution map).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn draft_angle(body: &mut Body, solid: SolidId, faces: &[FaceId], pull_dir: Vec3, neutral_origin: Pnt3, neutral_normal: Vec3, angle_rad: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+pub fn draft_angle(body: &mut Body, solid: SolidId, faces: &[FaceId], pull_dir: Vec3, (neutral_origin, neutral_normal): (Pnt3, Vec3), angle_rad: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     if body.solids.get(solid).is_none() {
         return Err(KernelError::MissingEntity(format!("solid {solid}")));
     }
@@ -1261,8 +1252,8 @@ pub fn draft_angle(body: &mut Body, solid: SolidId, faces: &[FaceId], pull_dir: 
         curve.eval(0.5 * (edge.range.0 + edge.range.1))
     };
     let flip_new = |_f: FaceId| false;
-    let materialize = solid_faces.clone();
-    let rebuilt = rebuild_topology(body, solid, &new_surface_map, &materialize, flip_new, vertex_target, edge_target, tol, rec)?;
+    let materialize = solid_faces;
+    let rebuilt = rebuild_topology(body, solid, &new_surface_map, &materialize, (flip_new, vertex_target, edge_target), tol, rec)?;
     let mut out_faces = Vec::with_capacity(solid_faces_vec.len());
     for &f in &solid_faces_vec {
         out_faces.push(*rebuilt.face_new.get(&f).ok_or_else(|| KernelError::Operation("draft: face was not rebuilt".into()))?);
@@ -1420,7 +1411,7 @@ mod tests {
             .find(|&&f| matches!(body_plus.surfaces.get(body_plus.faces.get(f).unwrap().surface).unwrap(), Surface::Plane { frame } if (frame.origin.x - a).abs() < 1e-9))
             .unwrap();
         let v0 = solid_volume(&body_plus, solid, 1e-6).unwrap();
-        let drafted_plus = draft_angle(&mut body_plus, solid, &[right], Vec3::Z, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, angle, &mut rec).unwrap();
+        let drafted_plus = draft_angle(&mut body_plus, solid, &[right], Vec3::Z, (Pnt3::new(0.0, 0.0, 0.0), Vec3::Z), angle, &mut rec).unwrap();
         let v_plus = solid_volume(&body_plus, drafted_plus, 1e-6).unwrap();
 
         let mut body_minus = Body::new();
@@ -1431,7 +1422,7 @@ mod tests {
             .iter()
             .find(|&&f| matches!(body_minus.surfaces.get(body_minus.faces.get(f).unwrap().surface).unwrap(), Surface::Plane { frame } if (frame.origin.x - a).abs() < 1e-9))
             .unwrap();
-        let drafted_minus = draft_angle(&mut body_minus, solid2, &[right2], Vec3::Z, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, -angle, &mut rec2).unwrap();
+        let drafted_minus = draft_angle(&mut body_minus, solid2, &[right2], Vec3::Z, (Pnt3::new(0.0, 0.0, 0.0), Vec3::Z), -angle, &mut rec2).unwrap();
         let v_minus = solid_volume(&body_minus, drafted_minus, 1e-6).unwrap();
 
         let expected_delta = b * c * c * angle.tan() / 2.0;
@@ -1447,7 +1438,7 @@ mod tests {
         let mut rec = OpRecorder::new();
         let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
         let face = body.solid_faces(solid)[0];
-        let err = draft_angle(&mut body, solid, &[face], Vec3::Z, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, 0.0, &mut rec).unwrap_err();
+        let err = draft_angle(&mut body, solid, &[face], Vec3::Z, (Pnt3::new(0.0, 0.0, 0.0), Vec3::Z), 0.0, &mut rec).unwrap_err();
         assert!(matches!(err, KernelError::Operation(_)));
     }
 

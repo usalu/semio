@@ -68,9 +68,7 @@ impl ArtifactSerializer for SemioMeshToDwg {
             drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::PolyfaceMesh { vertices, faces } });
         }
 
-        let mut snapshot = DwgSnapshot::default();
-        snapshot.version = DWG_CODEC_VERSION.into();
-        snapshot.drawing = DwgLogicalDrawing::from_native(&drawing).map_err(store::PackError::Schema)?;
+        let snapshot = DwgSnapshot { version: DWG_CODEC_VERSION.into(), drawing: DwgLogicalDrawing::from_native(&drawing).map_err(store::PackError::Schema)?, ..DwgSnapshot::default() };
         Ok(snapshot)
     }
 }

@@ -209,7 +209,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_area_m2_round_trips() {
+    async fn change_area_m2_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeAreaM2(change_area_m2::ChangeAreaM2 { new_area_m2: 77.0 });
         let after = round_trip(&base, &mutation);
@@ -217,7 +217,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_category_round_trips() {
+    async fn change_category_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeCategory(change_category::ChangeCategory { new_category: crate::document::ImposedCategory::D });
         let after = round_trip(&base, &mutation);
@@ -225,7 +225,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_annex_round_trips() {
+    async fn change_annex_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
         let after = round_trip(&base, &mutation);
@@ -233,7 +233,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_self_weight_material_round_trips() {
+    async fn change_self_weight_material_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeSelfWeightMaterial(change_self_weight_material::ChangeSelfWeightMaterial { new_self_weight_material: "steel".to_string() });
         let after = round_trip(&base, &mutation);
@@ -241,7 +241,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_self_weight_thickness_m_round_trips() {
+    async fn change_self_weight_thickness_m_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeSelfWeightThicknessM(change_self_weight_thickness_m::ChangeSelfWeightThicknessM { new_self_weight_thickness_m: 0.3 });
         let after = round_trip(&base, &mutation);
@@ -249,7 +249,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_assumed_gk_kn_m2_round_trips() {
+    async fn change_assumed_gk_kn_m2_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeAssumedGKKnM2(change_assumed_gk_kn_m2::ChangeAssumedGKKnM2 { new_assumed_g_k_kn_m2: 7.5 });
         let after = round_trip(&base, &mutation);
@@ -257,7 +257,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_fire_curve_round_trips() {
+    async fn change_fire_curve_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeFireCurve(change_fire_curve::ChangeFireCurve { new_fire_curve: crate::artifacts::en1991::part_1_2::FireCurve::Hydrocarbon });
         let after = round_trip(&base, &mutation);
@@ -265,7 +265,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_fire_resistance_min_round_trips() {
+    async fn change_fire_resistance_min_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeFireResistanceMin(change_fire_resistance_min::ChangeFireResistanceMin { new_fire_resistance_min: 60.0 });
         let after = round_trip(&base, &mutation);
@@ -273,7 +273,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_fire_member_capacity_c_round_trips() {
+    async fn change_fire_member_capacity_c_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeFireMemberCapacityC(change_fire_member_capacity_c::ChangeFireMemberCapacityC { new_fire_member_capacity_c: 1000.0 });
         let after = round_trip(&base, &mutation);
@@ -281,7 +281,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_snow_zone_round_trips() {
+    async fn change_snow_zone_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeSnowZone(change_snow_zone::ChangeSnowZone { new_snow_zone: 3 });
         let after = round_trip(&base, &mutation);
@@ -289,7 +289,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_snow_altitude_m_round_trips() {
+    async fn change_snow_altitude_m_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeSnowAltitudeM(change_snow_altitude_m::ChangeSnowAltitudeM { new_snow_altitude_m: 300.0 });
         let after = round_trip(&base, &mutation);
@@ -297,7 +297,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_en_sk_kn_m2_round_trips() {
+    async fn change_en_sk_kn_m2_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeEnSKKnM2(change_en_sk_kn_m2::ChangeEnSKKnM2 { new_en_s_k_kn_m2: 1.2 });
         let after = round_trip(&base, &mutation);
@@ -305,7 +305,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_wind_zone_round_trips() {
+    async fn change_wind_zone_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeWindZone(change_wind_zone::ChangeWindZone { new_wind_zone: 3 });
         let after = round_trip(&base, &mutation);
@@ -313,7 +313,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_en_vbms_round_trips() {
+    async fn change_en_vbms_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeEnVBMS(change_en_vbms::ChangeEnVBMS { new_en_v_b_m_s: 28.0 });
         let after = round_trip(&base, &mutation);
@@ -321,7 +321,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_delta_tk_round_trips() {
+    async fn change_delta_tk_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeDeltaTK(change_delta_tk::ChangeDeltaTK { new_delta_t_k: 40.0 });
         let after = round_trip(&base, &mutation);
@@ -329,7 +329,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_construction_activity_round_trips() {
+    async fn change_construction_activity_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeConstructionActivity(change_construction_activity::ChangeConstructionActivity { new_construction_activity: "demolition".to_string() });
         let after = round_trip(&base, &mutation);
@@ -337,7 +337,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_accidental_mass_t_round_trips() {
+    async fn change_accidental_mass_t_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeAccidentalMassT(change_accidental_mass_t::ChangeAccidentalMassT { new_accidental_mass_t: 40.0 });
         let after = round_trip(&base, &mutation);
@@ -345,7 +345,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_accidental_speed_km_h_round_trips() {
+    async fn change_accidental_speed_km_h_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeAccidentalSpeedKmH(change_accidental_speed_km_h::ChangeAccidentalSpeedKmH { new_accidental_speed_km_h: 50.0 });
         let after = round_trip(&base, &mutation);
@@ -353,7 +353,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_bridge_lane_round_trips() {
+    async fn change_bridge_lane_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeBridgeLane(change_bridge_lane::ChangeBridgeLane { new_bridge_lane: 2 });
         let after = round_trip(&base, &mutation);
@@ -361,7 +361,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_bridge_span_m_round_trips() {
+    async fn change_bridge_span_m_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeBridgeSpanM(change_bridge_span_m::ChangeBridgeSpanM { new_bridge_span_m: 35.0 });
         let after = round_trip(&base, &mutation);
@@ -369,7 +369,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_bridge_lane_width_m_round_trips() {
+    async fn change_bridge_lane_width_m_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeBridgeLaneWidthM(change_bridge_lane_width_m::ChangeBridgeLaneWidthM { new_bridge_lane_width_m: 3.5 });
         let after = round_trip(&base, &mutation);
@@ -377,7 +377,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_bridge_moment_resistance_knm_round_trips() {
+    async fn change_bridge_moment_resistance_knm_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeBridgeMomentResistanceKnm(change_bridge_moment_resistance_knm::ChangeBridgeMomentResistanceKnm { new_bridge_moment_resistance_knm: 3500.0 });
         let after = round_trip(&base, &mutation);
@@ -385,7 +385,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_crane_class_round_trips() {
+    async fn change_crane_class_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeCraneClass(change_crane_class::ChangeCraneClass { new_crane_class: "HC3".to_string() });
         let after = round_trip(&base, &mutation);
@@ -393,7 +393,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_hoist_class_round_trips() {
+    async fn change_hoist_class_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeHoistClass(change_hoist_class::ChangeHoistClass { new_hoist_class: "HC3".to_string() });
         let after = round_trip(&base, &mutation);
@@ -401,7 +401,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_hoisting_speed_ms_round_trips() {
+    async fn change_hoisting_speed_ms_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeHoistingSpeedMS(change_hoisting_speed_ms::ChangeHoistingSpeedMS { new_hoisting_speed_m_s: 0.8 });
         let after = round_trip(&base, &mutation);
@@ -409,7 +409,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_silo_bulk_density_kn_m3_round_trips() {
+    async fn change_silo_bulk_density_kn_m3_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeSiloBulkDensityKnM3(change_silo_bulk_density_kn_m3::ChangeSiloBulkDensityKnM3 { new_silo_bulk_density_kn_m3: 9.0 });
         let after = round_trip(&base, &mutation);
@@ -417,7 +417,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_silo_height_m_round_trips() {
+    async fn change_silo_height_m_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeSiloHeightM(change_silo_height_m::ChangeSiloHeightM { new_silo_height_m: 15.0 });
         let after = round_trip(&base, &mutation);
@@ -425,7 +425,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_silo_hydraulic_radius_m_round_trips() {
+    async fn change_silo_hydraulic_radius_m_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeSiloHydraulicRadiusM(change_silo_hydraulic_radius_m::ChangeSiloHydraulicRadiusM { new_silo_hydraulic_radius_m: 2.0 });
         let after = round_trip(&base, &mutation);
@@ -433,7 +433,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_silo_mu_round_trips() {
+    async fn change_silo_mu_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeSiloMu(change_silo_mu::ChangeSiloMu { new_silo_mu: 0.5 });
         let after = round_trip(&base, &mutation);
@@ -441,7 +441,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_silo_k_round_trips() {
+    async fn change_silo_k_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeSiloK(change_silo_k::ChangeSiloK { new_silo_k: 0.5 });
         let after = round_trip(&base, &mutation);
@@ -449,7 +449,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_cs_round_trips() {
+    async fn change_cs_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeCS(change_cs::ChangeCS { new_c_s: 1.1 });
         let after = round_trip(&base, &mutation);
@@ -457,7 +457,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_cd_round_trips() {
+    async fn change_cd_round_trips() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeCD(change_cd::ChangeCD { new_c_d: 0.9 });
         let after = round_trip(&base, &mutation);
@@ -465,7 +465,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn semantic_kinds_cover_every_variant() {
+    async fn semantic_kinds_cover_every_variant() {
         assert_eq!(En1991Mutation::kinds().len(), 32);
         let mutation = En1991Mutation::ChangeAreaM2(change_area_m2::ChangeAreaM2 { new_area_m2: 99.0 });
         assert_eq!(mutation.semantics().kind, "change-area-m2");
@@ -473,7 +473,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_category_inverse_restores_base_category() {
+    async fn change_category_inverse_restores_base_category() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeCategory(change_category::ChangeCategory { new_category: crate::document::ImposedCategory::D });
         let undo = mutation.inverse(&base);
@@ -481,7 +481,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_of_a_string_field_undoes_to_default_value() {
+    async fn change_of_a_string_field_undoes_to_default_value() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeCraneClass(change_crane_class::ChangeCraneClass { new_crane_class: "HC4".to_string() });
         let undo = mutation.inverse(&base);
@@ -494,16 +494,16 @@ mod tests {
     /// `🔖️OutcomeLaws` note for why `assert_missing_target_is_error`/`assert_outcome_policy_matrix`
     /// don't apply/aren't landed yet.
     #[semio_framework_async_macros::async_test]
-    fn change_area_m2_non_finite_is_fatal() {
+    async fn change_area_m2_non_finite_is_fatal() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeAreaM2(change_area_m2::ChangeAreaM2 { new_area_m2: f64::INFINITY });
         let outcome = mutation.diff(&base);
-        protocol::testkit::assert_fatal_never_applies(&outcome);
+        protocol::os_spr::testkit::assert_fatal_never_applies(&outcome).await;
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_category_same_value_is_no_op() {
+    async fn change_category_same_value_is_no_op() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeCategory(change_category::ChangeCategory { new_category: base.category });
         let outcome = mutation.diff(&base);
@@ -512,10 +512,10 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_area_m2_is_deterministic() {
+    async fn change_area_m2_is_deterministic() {
         let base = En1991Snapshot::default();
         let mutation = En1991Mutation::ChangeAreaM2(change_area_m2::ChangeAreaM2 { new_area_m2: 77.0 });
-        protocol::testkit::assert_outcome_deterministic(&base, &mutation);
+        protocol::os_spr::testkit::assert_outcome_deterministic(&base, &mutation).await;
     }
     //#endregion 🔖️OutcomeLaws
 }
@@ -527,69 +527,69 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "🚚️change-accidental-mass-t/🧪️tests/🚚️lightens-impact-vehicle-to-12-5-t/🦀️.rs"]
+    #[path = "🚚️change-accidental-mass-t/🧪️tests/🚚️lightens-impact-192fdd/🦀️.rs"]
     mod tests_change_accidental_mass_t_lightens_impact_vehicle_to_12_5_t;
-    #[path = "🚗️change-accidental-speed-km-h/🧪️tests/🚗️lowers-impact-speed-to-50-km-h/🦀️.rs"]
+    #[path = "🚗️change-accidental-speed-km-h/🧪️tests/🚗️lowers-impact-6b84b8/🦀️.rs"]
     mod tests_change_accidental_speed_km_h_lowers_impact_speed_to_50_km_h;
-    #[path = "🌍️change-annex/🧪️tests/🌍️switches-national-annex-to-en/🦀️.rs"]
+    #[path = "🌍️change-annex/🧪️tests/🌍️switches-national-fbd71a/🦀️.rs"]
     mod tests_change_annex_switches_national_annex_to_en;
-    #[path = "📐️change-area-m2/🧪️tests/📐️enlarges-loaded-area-to-360-m2/🦀️.rs"]
+    #[path = "📐️change-area-m2/🧪️tests/📐️enlarges-loaded-9faf2a/🦀️.rs"]
     mod tests_change_area_m2_enlarges_loaded_area_to_360_m2;
-    #[path = "⚖️change-assumed-gk-kn-m2/🧪️tests/⚖️raises-assumed-gk-to-7-5-kn-m2/🦀️.rs"]
+    #[path = "⚖️change-assumed-gk-kn-m2/🧪️tests/⚖️raises-assumed-gk-b0e106/🦀️.rs"]
     mod tests_change_assumed_gk_kn_m2_raises_assumed_gk_to_7_5_kn_m2;
-    #[path = "🛣️change-bridge-lane/🧪️tests/🛣️widens-carriageway-to-3-notional-lanes/🦀️.rs"]
+    #[path = "🛣️change-bridge-lane/🧪️tests/🛣️widens-carriagewa-b3517a/🦀️.rs"]
     mod tests_change_bridge_lane_widens_carriageway_to_3_notional_lanes;
-    #[path = "↔️change-bridge-lane-width-m/🧪️tests/↔️widens-notional-lane-to-3-5-m/🦀️.rs"]
+    #[path = "↔️change-bridge-lane-width-m/🧪️tests/↔️widens-notional-5b6479/🦀️.rs"]
     mod tests_change_bridge_lane_width_m_widens_notional_lane_to_3_5_m;
-    #[path = "💪️change-bridge-moment-resistance-knm/🧪️tests/💪️raises-bridge-moment-resistance-to-4500-knm/🦀️.rs"]
+    #[path = "💪️change-bridge-moment-resistance-knm/🧪️tests/t024/🦀️.rs"]
     mod tests_change_bridge_moment_resistance_knm_raises_bridge_moment_resistance_to_4500_knm;
-    #[path = "🌉️change-bridge-span-m/🧪️tests/🌉️lengthens-bridge-span-to-36-m/🦀️.rs"]
+    #[path = "🌉️change-bridge-span-m/🧪️tests/🌉️lengthens-bridge-554aed/🦀️.rs"]
     mod tests_change_bridge_span_m_lengthens_bridge_span_to_36_m;
-    #[path = "🗂️change-category/🧪️tests/🗂️reclassifies-imposed-load-to-category-d/🦀️.rs"]
+    #[path = "🗂️change-category/🧪️tests/🗂️reclassifies-cbe16a/🦀️.rs"]
     mod tests_change_category_reclassifies_imposed_load_to_category_d;
-    #[path = "🌀️change-cd/🧪️tests/🌀️lowers-dynamic-factor-cd-to-0-875/🦀️.rs"]
+    #[path = "🌀️change-cd/🧪️tests/🌀️lowers-dynamic-factor-3b36d9/🦀️.rs"]
     mod tests_change_cd_lowers_dynamic_factor_cd_to_0_875;
-    #[path = "🚧️change-construction-activity/🧪️tests/🚧️switches-construction-activity-to-concreting/🦀️.rs"]
+    #[path = "🚧️change-construction-activity/🧪️tests/🚧️switches-bc840d/🦀️.rs"]
     mod tests_change_construction_activity_switches_construction_activity_to_concreting;
-    #[path = "🏗️change-crane-class/🧪️tests/🏗️upgrades-crane-to-class-hc3/🦀️.rs"]
+    #[path = "🏗️change-crane-class/🧪️tests/🏗️upgrades-crane-f41998/🦀️.rs"]
     mod tests_change_crane_class_upgrades_crane_to_class_hc3;
     #[path = "🔎️change-cs/🧪️tests/🔎️raises-size-factor-cs-to-1-125/🦀️.rs"]
     mod tests_change_cs_raises_size_factor_cs_to_1_125;
-    #[path = "🌡️change-delta-tk/🧪️tests/🌡️raises-thermal-delta-tk-to-45-k/🦀️.rs"]
+    #[path = "🌡️change-delta-tk/🧪️tests/🌡️raises-thermal-603dab/🦀️.rs"]
     mod tests_change_delta_tk_raises_thermal_delta_tk_to_45_k;
-    #[path = "❄️change-en-sk-kn-m2/🧪️tests/❄️raises-en-characteristic-snow-load-to-1-25-kn-m2/🦀️.rs"]
+    #[path = "❄️change-en-sk-kn-m2/🧪️tests/❄️raises-en-a78ca2/🦀️.rs"]
     mod tests_change_en_sk_kn_m2_raises_en_characteristic_snow_load_to_1_25_kn_m2;
-    #[path = "🌬️change-en-vbms/🧪️tests/🌬️raises-en-basic-wind-speed-to-30-m-s/🦀️.rs"]
+    #[path = "🌬️change-en-vbms/🧪️tests/🌬️raises-en-basic-3211f2/🦀️.rs"]
     mod tests_change_en_vbms_raises_en_basic_wind_speed_to_30_m_s;
-    #[path = "🔥️change-fire-curve/🧪️tests/🔥️switches-fire-curve-to-hydrocarbon/🦀️.rs"]
+    #[path = "🔥️change-fire-curve/🧪️tests/🔥️switches-fire-5aa4e2/🦀️.rs"]
     mod tests_change_fire_curve_switches_fire_curve_to_hydrocarbon;
-    #[path = "🛡️change-fire-member-capacity-c/🧪️tests/🛡️raises-fire-member-capacity-to-700-c/🦀️.rs"]
+    #[path = "🛡️change-fire-member-capacity-c/🧪️tests/🛡️raises-fire-1c76be/🦀️.rs"]
     mod tests_change_fire_member_capacity_c_raises_fire_member_capacity_to_700_c;
-    #[path = "⏱️change-fire-resistance-min/🧪️tests/⏱️extends-fire-resistance-to-120-min/🦀️.rs"]
+    #[path = "⏱️change-fire-resistance-min/🧪️tests/⏱️extends-fire-8a16e1/🦀️.rs"]
     mod tests_change_fire_resistance_min_extends_fire_resistance_to_120_min;
-    #[path = "🏷️change-hoist-class/🧪️tests/🏷️upgrades-hoist-to-class-hc4/🦀️.rs"]
+    #[path = "🏷️change-hoist-class/🧪️tests/🏷️upgrades-hoist-0a67c2/🦀️.rs"]
     mod tests_change_hoist_class_upgrades_hoist_to_class_hc4;
-    #[path = "🪝️change-hoisting-speed-ms/🧪️tests/🪝️speeds-hoisting-to-1-25-m-s/🦀️.rs"]
+    #[path = "🪝️change-hoisting-speed-ms/🧪️tests/🪝️speeds-hoisting-48dba8/🦀️.rs"]
     mod tests_change_hoisting_speed_ms_speeds_hoisting_to_1_25_m_s;
-    #[path = "🧱️change-self-weight-material/🧪️tests/🧱️switches-self-weight-material-to-structural-steel/🦀️.rs"]
+    #[path = "🧱️change-self-weight-material/🧪️tests/t025/🦀️.rs"]
     mod tests_change_self_weight_material_switches_self_weight_material_to_structural_steel;
-    #[path = "📏️change-self-weight-thickness-m/🧪️tests/📏️thickens-self-weight-layer-to-0-375-m/🦀️.rs"]
+    #[path = "📏️change-self-weight-thickness-m/🧪️tests/📏️thickens-self-853895/🦀️.rs"]
     mod tests_change_self_weight_thickness_m_thickens_self_weight_layer_to_0_375_m;
-    #[path = "🌾️change-silo-bulk-density-kn-m3/🧪️tests/🌾️raises-silo-bulk-density-to-10-5-kn-m3/🦀️.rs"]
+    #[path = "🌾️change-silo-bulk-density-kn-m3/🧪️tests/🌾️raises-silo-bulk-e4e3e3/🦀️.rs"]
     mod tests_change_silo_bulk_density_kn_m3_raises_silo_bulk_density_to_10_5_kn_m3;
     #[path = "🗼️change-silo-height-m/🧪️tests/🗼️raises-silo-to-18-m/🦀️.rs"]
     mod tests_change_silo_height_m_raises_silo_to_18_m;
-    #[path = "⭕️change-silo-hydraulic-radius-m/🧪️tests/⭕️widens-silo-hydraulic-radius-to-2-25-m/🦀️.rs"]
+    #[path = "⭕️change-silo-hydraulic-radius-m/🧪️tests/⭕️widens-silo-86272a/🦀️.rs"]
     mod tests_change_silo_hydraulic_radius_m_widens_silo_hydraulic_radius_to_2_25_m;
-    #[path = "⚙️change-silo-k/🧪️tests/⚙️raises-silo-lateral-pressure-ratio-k-to-0-625/🦀️.rs"]
+    #[path = "⚙️change-silo-k/🧪️tests/⚙️raises-silo-lateral-57ffa8/🦀️.rs"]
     mod tests_change_silo_k_raises_silo_lateral_pressure_ratio_k_to_0_625;
-    #[path = "🧲️change-silo-mu/🧪️tests/🧲️raises-silo-wall-friction-mu-to-0-625/🦀️.rs"]
+    #[path = "🧲️change-silo-mu/🧪️tests/🧲️raises-silo-wall-a0037c/🦀️.rs"]
     mod tests_change_silo_mu_raises_silo_wall_friction_mu_to_0_625;
-    #[path = "🏔️change-snow-altitude-m/🧪️tests/🏔️lifts-snow-altitude-to-780-m/🦀️.rs"]
+    #[path = "🏔️change-snow-altitude-m/🧪️tests/🏔️lifts-snow-230b39/🦀️.rs"]
     mod tests_change_snow_altitude_m_lifts_snow_altitude_to_780_m;
-    #[path = "🗺️change-snow-zone/🧪️tests/🗺️moves-site-to-snow-zone-3/🦀️.rs"]
+    #[path = "🗺️change-snow-zone/🧪️tests/🗺️moves-site-to-8e17f7/🦀️.rs"]
     mod tests_change_snow_zone_moves_site_to_snow_zone_3;
-    #[path = "🪁️change-wind-zone/🧪️tests/🪁️moves-site-to-wind-zone-4/🦀️.rs"]
+    #[path = "🪁️change-wind-zone/🧪️tests/🪁️moves-site-to-962401/🦀️.rs"]
     mod tests_change_wind_zone_moves_site_to_wind_zone_4;
 }
 //#endregion 🧪️FixtureTests

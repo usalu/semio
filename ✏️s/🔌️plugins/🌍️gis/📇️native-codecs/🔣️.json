@@ -10,6 +10,17 @@
       "schema": "gis.map",
       "extension": "gismap",
       "capability": "s.gis.gismap.codec.document",
+      "packRecord": {
+        "keyword": "gismap",
+        "fields": [
+          { "id": 1, "key": "positions", "optional": false },
+          { "id": 2, "key": "routes", "optional": false },
+          { "id": 3, "key": "regions", "optional": false },
+          { "id": 4, "key": "drawing", "optional": false },
+          { "id": 5, "key": "image", "optional": true },
+          { "id": 6, "key": "value", "optional": false }
+        ]
+      },
       "protocolPath": "🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
       "protocolBytes": 337,
       "protocolSha256": "c0570280e7cae9b73a7ad3974379b41a066d2081395f96ed63e7adb9ce0e4c53"
@@ -20,6 +31,14 @@
       "schema": "gis.terrain",
       "extension": "gisterrain",
       "capability": "s.gis.gisterrain.codec.document",
+      "packRecord": {
+        "keyword": "gisterrain",
+        "fields": [
+          { "id": 1, "key": "exaggeration", "optional": false },
+          { "id": 2, "key": "importedFeaturesJson", "optional": false },
+          { "id": 3, "key": "mesh", "optional": true }
+        ]
+      },
       "protocolPath": "🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
       "protocolBytes": 345,
       "protocolSha256": "ac3f653f904ef8675fae602e6c784ea50b222c9220402bc7f5b83196fbdbf984"

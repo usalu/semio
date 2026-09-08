@@ -148,7 +148,7 @@ where
 /// a `d2`-modify of a `d1`-added key patches into the carried payload; everything else composes on
 /// the shared key space. Mirrors bcf's `absorb_named` (same canonical cases, B-R7).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
+fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -239,17 +239,17 @@ impl MutationDiff<SemioCadSnapshot> for SemioCadDiff {
         self.layers = match (self.layers.take(), other.layers) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |l| l.name.clone(), absorb_layer_diff, apply_layer)),
+            (Some(a), Some(b)) => Some(absorb_named(a, &b, |l| l.name.clone(), absorb_layer_diff, apply_layer)),
         };
         self.blocks = match (self.blocks.take(), other.blocks) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |bl| bl.name.clone(), absorb_block_diff, apply_block)),
+            (Some(a), Some(b)) => Some(absorb_named(a, &b, |bl| bl.name.clone(), absorb_block_diff, apply_block)),
         };
         self.entities = match (self.entities.take(), other.entities) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |e| e.handle.clone(), absorb_entity_record_diff, apply_entity_record)),
+            (Some(a), Some(b)) => Some(absorb_named(a, &b, |e| e.handle.clone(), absorb_entity_record_diff, apply_entity_record)),
         };
     }
 }
@@ -309,7 +309,7 @@ fn absorb_block_diff(mut a: CadBlockDiff, b: CadBlockDiff) -> CadBlockDiff {
     a.entities = match (a.entities.take(), b.entities) {
         (None, x) => x,
         (x, None) => x,
-        (Some(x), Some(y)) => Some(absorb_named(x, y, |e| e.handle.clone(), absorb_entity_record_diff, apply_entity_record)),
+        (Some(x), Some(y)) => Some(absorb_named(x, &y, |e| e.handle.clone(), absorb_entity_record_diff, apply_entity_record)),
     };
     a
 }
@@ -423,7 +423,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -463,11 +463,11 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
-    format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
+    format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 //#endregion 🔖️Primitives
 

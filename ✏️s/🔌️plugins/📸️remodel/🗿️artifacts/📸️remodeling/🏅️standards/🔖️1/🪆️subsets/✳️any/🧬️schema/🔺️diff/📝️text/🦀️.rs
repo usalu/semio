@@ -153,6 +153,7 @@ impl MutationDiff<RemodelingSnapshot> for RemodelingDiff {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::remodeling::schema::diff::RemodelingGcpList;
     use crate::artifacts::remodeling::default_remodeling_scene;
 
     #[semio_framework_async_macros::async_test]

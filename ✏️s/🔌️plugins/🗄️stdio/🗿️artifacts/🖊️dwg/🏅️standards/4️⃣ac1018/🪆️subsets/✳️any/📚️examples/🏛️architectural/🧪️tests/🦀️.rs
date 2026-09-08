@@ -115,15 +115,15 @@ async fn every_imported_object_has_a_typed_standard_body() {
 async fn real_decode_stays_lossless_on_reencode() {
     let snap = decode_dwg(FIXTURE_BYTES).expect("real fixture must decode");
     let reencoded = encode_dwg(&snap).expect("re-encode");
-    assert_fixture_bytes(&reencoded, "re-encode");
+    assert_fixture_bytes(&reencoded, "re-encode").await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn snapshot_pack_preserves_signed_zero_semantics() {
     let original = decode_dwg(FIXTURE_BYTES).expect("real fixture must decode");
     let restored = DwgSnapshot::decode_pack(&original.encode_pack()).expect("snapshot pack roundtrip");
-    let expected = serde_json::to_string(&original.drawing).expect("original drawing JSON");
-    let actual = serde_json::to_string(&restored.drawing).expect("restored drawing JSON");
+    let expected = dsl::json::to_json_string(&original.drawing);
+    let actual = dsl::json::to_json_string(&restored.drawing);
     assert!(expected.contains("\"value\":-0.0"), "fixture must exercise negative zero");
     assert_eq!(actual, expected, "snapshot pack must preserve signed zero");
 }
@@ -133,14 +133,14 @@ async fn exact_fixture_roundtrips_through_snapshot_diff_mutation_and_raw_io() {
     let binary = BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: FIXTURE_BYTES.to_vec() };
     let original = raw_import::deserialize(&binary).expect("raw DWG import");
     let exported = raw_export::serialize(&original).expect("raw DWG export").bytes;
-    assert_fixture_bytes(&exported, "raw import/export");
+    assert_fixture_bytes(&exported, "raw import/export").await;
 
     let dsl = original.print_dsl();
     for forbidden in ["section-names", "decode-status", "compressed", "encrypted", "page-number", "start-offset", "declared-size", "decompressed-size", "bytes=", "drawing={entities="] {
         assert!(!dsl.contains(forbidden), "snapshot DSL retained forbidden DWG shadow term {forbidden}");
     }
     let from_dsl = DwgSnapshot::parse_dsl(&dsl).expect("snapshot DSL roundtrip");
-    assert_fixture_bytes(&encode_dwg(&from_dsl).expect("DSL-restored export"), "DSL-restored export");
+    assert_fixture_bytes(&encode_dwg(&from_dsl).expect("DSL-restored export"), "DSL-restored export").await;
 
     let pack = original.encode_pack();
     let pack_text = String::from_utf8_lossy(&pack);
@@ -148,26 +148,26 @@ async fn exact_fixture_roundtrips_through_snapshot_diff_mutation_and_raw_io() {
         assert!(!pack_text.contains(forbidden), "snapshot pack retained forbidden DWG shadow term {forbidden}");
     }
     let from_pack = DwgSnapshot::decode_pack(&pack).expect("snapshot unpack");
-    let restored_json = serde_json::to_string(&from_pack.drawing).expect("restored drawing JSON");
-    let expected_json = serde_json::to_string(&original.drawing).expect("original drawing JSON");
+    let restored_json = dsl::json::to_json_string(&from_pack.drawing);
+    let expected_json = dsl::json::to_json_string(&original.drawing);
     assert_eq!(restored_json, expected_json, "snapshot pack must preserve signed numeric semantics");
-    assert_fixture_bytes(&encode_dwg(&from_pack).expect("pack-restored export"), "pack-restored export");
+    assert_fixture_bytes(&encode_dwg(&from_pack).expect("pack-restored export"), "pack-restored export").await;
 
     let analysis = DwgAnalyzer::analyze(&[AnalyzeSource::Text(&dsl)]);
     let analyzed = analysis.parts.snapshot.expect("analyzer snapshot");
-    assert_fixture_bytes(&encode_dwg(&analyzed).expect("analyzer export"), "analyzer export");
+    assert_fixture_bytes(&encode_dwg(&analyzed).expect("analyzer export"), "analyzer export").await;
     let dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId("*") };
     let composition = crate::artifacts::dwg::standards::v_ac1024::subsets::any::io::derived_composition::DwgComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pack) }]).expect("composer snapshot");
-    assert_fixture_bytes(&encode_dwg(&composition.snapshot).expect("composer export"), "composer export");
+    assert_fixture_bytes(&encode_dwg(&composition.snapshot).expect("composer export"), "composer export").await;
 
     let empty = DwgDiff::between(&original, &original);
     assert!(empty.is_empty());
-    assert_fixture_bytes(&encode_dwg(&empty.apply(&original).expect("empty diff must apply")).expect("empty diff export"), "empty diff export");
+    assert_fixture_bytes(&encode_dwg(&empty.apply(&original).expect("empty diff must apply")).expect("empty diff export"), "empty diff export").await;
 
     let mut no_op = original.clone();
-    let no_op_diff = apply_dwg_mutation(&mut no_op, &DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: original.clone() }));
+    let no_op_diff = apply_dwg_mutation(&mut no_op, &DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(original.clone()) }));
     assert!(no_op_diff.diff().is_empty());
-    assert_fixture_bytes(&encode_dwg(&no_op).expect("no-op mutation export"), "no-op mutation export");
+    assert_fixture_bytes(&encode_dwg(&no_op).expect("no-op mutation export"), "no-op mutation export").await;
 
     let header_change = DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version: original.version.clone(), maintenance_version: original.maintenance_version.wrapping_add(1), codepage: original.codepage.wrapping_add(1) });
     let header_diff = header_change.diff(&original);
@@ -178,10 +178,10 @@ async fn exact_fixture_roundtrips_through_snapshot_diff_mutation_and_raw_io() {
     assert_eq!(redecoded.codepage, changed.codepage);
 
     let inverse_diff = header_diff.diff().inverse(&original);
-    assert_fixture_bytes(&encode_dwg(&inverse_diff.apply(&changed).expect("inverse diff must apply")).expect("inverse diff export"), "inverse diff export");
+    assert_fixture_bytes(&encode_dwg(&inverse_diff.apply(&changed).expect("inverse diff must apply")).expect("inverse diff export"), "inverse diff export").await;
     let mut absorbed = header_diff.diff().clone();
     absorbed.absorb(inverse_diff);
-    assert_fixture_bytes(&encode_dwg(&absorbed.apply(&original).expect("absorbed diff must apply")).expect("absorbed inverse export"), "absorbed inverse export");
+    assert_fixture_bytes(&encode_dwg(&absorbed.apply(&original).expect("absorbed diff must apply")).expect("absorbed inverse export"), "absorbed inverse export").await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -251,7 +251,7 @@ async fn semantic_metadata_edits_materialize_from_logical_content() {
     let original = decode_dwg(FIXTURE_BYTES).expect("decode exact fixture");
     let mut changed = original.clone();
     changed.summary.title = "Architectural Example".into();
-    let mutation = DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: changed });
+    let mutation = DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(changed) });
     let mut dirty = original.clone();
     apply_dwg_mutation(&mut dirty, &mutation);
     let dirty_bytes = encode_dwg(&dirty).expect("logical metadata export");
@@ -262,5 +262,5 @@ async fn semantic_metadata_edits_materialize_from_logical_content() {
         apply_dwg_mutation(&mut dirty, &inverse);
     }
     assert_eq!(dirty, original);
-    assert_fixture_bytes(&encode_dwg(&dirty).expect("inverse mutation export"), "inverse mutation export");
+    assert_fixture_bytes(&encode_dwg(&dirty).expect("inverse mutation export"), "inverse mutation export").await;
 }

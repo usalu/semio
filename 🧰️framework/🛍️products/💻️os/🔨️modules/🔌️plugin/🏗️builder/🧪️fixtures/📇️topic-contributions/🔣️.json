@@ -1,0 +1,8 @@
+{
+  "schema": "semio.plugin.builder-topic-contributions/v1",
+  "cases": [
+    { "id": "empty", "contributions": [] },
+    { "id": "one", "contributions": [{ "topic": "fixture.catalog", "payload": { "identity": "owned", "executable": true } }] },
+    { "id": "repeated-topic", "contributions": [{ "topic": "fixture.catalog", "payload": { "identity": "first", "executable": false } }, { "topic": "fixture.catalog", "payload": { "identity": "second", "executable": true } }] }
+  ]
+}

@@ -128,6 +128,86 @@ function sameStatus(left: OracleStatus, right: OracleStatus): boolean {
   return fields.every((field) => left[field] === right[field]) && JSON.stringify(left.preview) === JSON.stringify(right.preview);
 }
 
+type ApprovalHistoryFixtureRow = Readonly<{
+  name: string;
+  current: string | null;
+  event: "approval-received" | "mounted-current" | "undo" | "rebootstrap" | "close";
+  ownerMatches: boolean;
+  mountedCurrentMatches: boolean;
+  revalidationMatches: boolean;
+  expected: Readonly<{ phase: string; canUndo: boolean; retained: boolean; oldOwnerRetired: boolean }>;
+}>;
+
+/** ↩️ Independently reduces the private durable-approval history lifecycle. */
+function oracleApprovalHistory(row: ApprovalHistoryFixtureRow): ApprovalHistoryFixtureRow["expected"] {
+  const current = row.current ?? "unavailable";
+  if (row.event === "approval-received") return { phase: "unavailable", canUndo: false, retained: true, oldOwnerRetired: false };
+  if (row.event === "close") return row.ownerMatches
+    ? { phase: "unavailable", canUndo: false, retained: false, oldOwnerRetired: true }
+    : { phase: current, canUndo: current === "available", retained: true, oldOwnerRetired: false };
+  if (row.event === "rebootstrap") return row.ownerMatches
+    ? { phase: "unavailable", canUndo: false, retained: true, oldOwnerRetired: true }
+    : { phase: current, canUndo: current === "available", retained: true, oldOwnerRetired: false };
+  if (row.event === "mounted-current") {
+    if (!row.ownerMatches) return { phase: current, canUndo: current === "available", retained: true, oldOwnerRetired: false };
+    if (!row.mountedCurrentMatches || !row.revalidationMatches) return { phase: "unavailable", canUndo: false, retained: false, oldOwnerRetired: true };
+    return { phase: "available", canUndo: true, retained: true, oldOwnerRetired: false };
+  }
+  if (row.event === "undo" && row.ownerMatches && row.mountedCurrentMatches && row.revalidationMatches) return { phase: "submitting", canUndo: false, retained: true, oldOwnerRetired: false };
+  return { phase: current, canUndo: current === "available", retained: true, oldOwnerRetired: false };
+}
+
+/** 🧪️ Validates the private approval-history contract against AJV, an independent reducer, the
+ * Shell arbitration function, and source hostiles for authority retirement and reissue. */
+async function proveGisMapApprovalHistory(repoRoot: string): Promise<Record<string, number>> {
+  const root = join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🧫️fixtures", "↩️gis-map-approval-history-v1");
+  const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as Readonly<{ cases: readonly ApprovalHistoryFixtureRow[]; ordinaryHistory: Readonly<Record<string, string>> }>;
+  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
+  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
+  if (!validate(fixture)) throw new Error(`invalid GIS Map approval history corpus: ${JSON.stringify(validate.errors)}`);
+  if (validate({ ...fixture, cases: fixture.cases.slice(1) })) throw new Error("approval history schema admitted a missing lifecycle law");
+  const deepEqual = (await import("fast-deep-equal")).default;
+  for (const row of fixture.cases) if (!deepEqual(oracleApprovalHistory(row), row.expected)) throw new Error(`approval history oracle disagrees at ${row.name}`);
+
+  const production = await import("../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🪪️host-bootstrap/🟦️.tsx");
+  const routes = {
+    remoteNewerThanLocal: production.shellHistoryUndoRouteV1({ phase: "available", canUndo: true, order: 2 }, { canUndo: true, order: 1 }),
+    localNewerThanRemote: production.shellHistoryUndoRouteV1({ phase: "available", canUndo: true, order: 1 }, { canUndo: true, order: 2 }),
+    remoteSubmitting: production.shellHistoryUndoRouteV1({ phase: "submitting", canUndo: false, order: 2 }, { canUndo: true, order: 1 }),
+    noRemote: production.shellHistoryUndoRouteV1(null, { canUndo: true, order: 1 }),
+  };
+  if (!deepEqual(routes, fixture.ordinaryHistory)) throw new Error("Shell history arbitration disagrees with the neutral corpus");
+
+  const worker = readFileSync(join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🧵️backbone-worker.ts"), "utf8");
+  const shell = readFileSync(join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "📺️renderer", "🧑‍🎨engine", "🧱️elements", "🏛️ShellHost", "🟦️.tsx"), "utf8");
+  const conforms = (candidateWorker: string, candidateShell: string): boolean =>
+    candidateWorker.includes('owner.abort.abort(new Error("gis map approval undo owner rebootstrap"));')
+    && candidateWorker.includes("idempotencyKey: owner.idempotencyKey,")
+    && candidateWorker.includes("fields.revalidation.directoryRevision !== owner.sourceDirectoryRevision")
+    && candidateWorker.includes("fields.revalidation.membershipGeneration !== owner.sourceMembershipGeneration")
+    && candidateWorker.includes("fields.revalidation.sessionGeneration !== owner.sourceSessionGeneration")
+    && candidateWorker.includes("fields.revalidation.shareGeneration !== owner.sourceShareGeneration")
+    && candidateWorker.includes("currentState === undefined || !sameApprovalUndoMountV1(currentState, owner)")
+    && candidateWorker.includes("revokeDirectoryAdministrationForScope(scope.spaceId);\n      closeArtifactRuntime(key);")
+    && candidateShell.includes('kind: "inference-history-undo", historyEpoch: history.historyEpoch');
+  if (!conforms(worker, shell)) throw new Error("approval history production closure is incomplete");
+  const hostiles = [
+    [worker.replace('owner.abort.abort(new Error("gis map approval undo owner rebootstrap"));', "void owner.abort;"), shell],
+    [worker.replace("idempotencyKey: owner.idempotencyKey,", "idempotencyKey: mintInferenceApprovalUndoIdempotencyKeyV1(),"), shell],
+    [worker.replace("fields.revalidation.directoryRevision !== owner.sourceDirectoryRevision", "false"), shell],
+    [worker.replace("fields.revalidation.membershipGeneration !== owner.sourceMembershipGeneration", "false"), shell],
+    [worker.replace("fields.revalidation.sessionGeneration !== owner.sourceSessionGeneration", "false"), shell],
+    [worker.replace("fields.revalidation.shareGeneration !== owner.sourceShareGeneration", "false"), shell],
+    [worker.replace("currentState === undefined || !sameApprovalUndoMountV1(currentState, owner)", "false"), shell],
+    [worker.replace("revokeDirectoryAdministrationForScope(scope.spaceId);\n      closeArtifactRuntime(key);", "revokeDirectoryAdministrationForScope(scope.spaceId);"), shell],
+    [worker, shell.replace('kind: "inference-history-undo", historyEpoch: history.historyEpoch', 'kind: "inference-close", operationEpoch: 0')],
+  ] as const;
+  hostiles.forEach(([candidateWorker, candidateShell], index) => {
+    if (conforms(candidateWorker, candidateShell)) throw new Error(`approval history source oracle admitted hostile ${index}`);
+  });
+  return { ajv: 1, oracle: fixture.cases.length, historyRoutes: Object.keys(routes).length, sourceHostiles: hostiles.length };
+}
+
 /** 🧪️ Validates the neutral corpus with AJV 2020, walks both lifecycles and every hostile
  * transition through an INDEPENDENT hand-written state machine AND the production reducer, checks
  * the explicit EN/DE vocabulary is total with no default language, and cross-checks the corpus
@@ -276,7 +356,8 @@ async function proveGisMapInferencePortFixture(repoRoot: string): Promise<Record
     }
   }
 
-  return { ajv: 1, hostileCorpora: hostileCorpora.length, transitions, strings, twinStrings, crossFixture: 3 };
+  const history = await proveGisMapApprovalHistory(repoRoot);
+  return { ajv: 1, hostileCorpora: hostileCorpora.length, transitions, strings, twinStrings, crossFixture: 3, ...Object.fromEntries(Object.entries(history).map(([key, value]) => [`history${key[0]!.toUpperCase()}${key.slice(1)}`, value])) };
 }
 
 /** ⚖️ `os:gis-map-inference-port-check` — the neutral corpus, its independent oracle, and the
@@ -453,14 +534,61 @@ async function proveGisMapPeerRebootstrap(repoRoot: string): Promise<number> {
 }
 //#endregion 🗺️GisMapPeerRebootstrapCheck
 
+async function proveMountedGisMapProbe(repoRoot: string): Promise<number> {
+  const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧪️fixtures/🔬️mounted-gis-map-probe-v1");
+  const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
+  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
+  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
+  if (!validate(fixture)) throw new Error(`invalid mounted GIS Map probe fixture: ${JSON.stringify(validate.errors)}`);
+  const deepEqual = (await import("fast-deep-equal")).default;
+  const observed = {
+    scope: fixture.source.scope,
+    clientInstanceId: fixture.source.clientInstanceId,
+    activationGeneration: fixture.source.activationGeneration,
+    catalogGenerationId: fixture.source.catalogGenerationId,
+    componentSha256: fixture.source.componentSha256,
+    descriptorSha256: fixture.source.descriptorSha256,
+    browserActorSha256: fixture.source.browserActorSha256,
+    uiRevision: fixture.source.uiRevision,
+    rootKind: "tiled-map",
+    regionIds: fixture.source.regions.map((region: { id: string }) => region.id).sort(),
+  };
+  if (!deepEqual(observed, fixture.expected)) throw new Error("mounted GIS Map independent projection differs from the corpus");
+  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"), "utf8");
+  const shell = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"), "utf8");
+  const conforms = (candidateWorker: string, candidateShell: string): boolean =>
+    candidateWorker.includes('kind: "browser-actor-ui-mounted"')
+    && candidateWorker.includes("uiRevision: result.revision")
+    && candidateShell.includes("state.revision !== source.uiRevision")
+    && candidateShell.includes('root?.component.type !== "surface" || root.component.kind !== "tiled-map"')
+    && candidateShell.includes("decodePackValue(new Uint8Array(root.component.doc.bytes))")
+    && candidateShell.includes("regionIds.includes(id)")
+    && candidateShell.includes("__semioMountedGisMapProbe")
+    && candidateShell.includes("retained?.identity === null || retained?.identity === undefined");
+  if (!conforms(worker, shell)) throw new Error("mounted GIS Map production probe closure is incomplete");
+  const hostiles = [
+    [worker.replace('kind: "browser-actor-ui-mounted"', 'kind: "browser-actor-ui-patch"'), shell],
+    [worker, shell.replace("state.revision !== source.uiRevision", "false")],
+    [worker, shell.replace('root?.component.type !== "surface" || root.component.kind !== "tiled-map"', "false")],
+    [worker, shell.replace("decodePackValue(new Uint8Array(root.component.doc.bytes))", "{}")],
+    [worker, shell.replace("regionIds.includes(id)", "false")],
+  ];
+  if (hostiles.length !== fixture.hostile.length) throw new Error("mounted GIS Map probe hostile count differs");
+  hostiles.forEach(([candidateWorker, candidateShell], index) => {
+    if (conforms(candidateWorker!, candidateShell!)) throw new Error(`mounted GIS Map probe source oracle admitted ${fixture.hostile[index]}`);
+  });
+  console.log(`mounted-gis-map-probe-oracle: AJV=1 deep-equal=1 source-hostiles=${hostiles.length}`);
+  return 2 + hostiles.length;
+}
+
 /** 🧵️ Executes the authenticated Session lifecycle and exact 64 KiB page-transfer browser laws. */
 class ColdDocumentPairBrowserCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    const checks = await proveGisMapPeerRebootstrap(this.repoRoot);
+    const checks = (await proveGisMapPeerRebootstrap(this.repoRoot)) + (await proveMountedGisMapProbe(this.repoRoot));
     await runVitest(
       this.root,
-      ["--testNamePattern", "(?:browser document first open (?:verifies server assets without a prior installed target|rejects hostile assets and retired owners before socket authority)|browser document actor (?:reservation activates only after an exact current socket Session|transfers one verified cold pair only after lifecycle ACK and exact page receipts)|browser document peers refetch the same exact pair after scoped rebootstrap|browser actor patch handoff validates the neutral schema)", ...rest],
+      ["--testNamePattern", "(?:mounted GIS map probe|browser document first open (?:verifies server assets without a prior installed target|rejects hostile assets and retired owners before socket authority)|browser document actor (?:reservation activates only after an exact current socket Session|transfers one verified cold pair only after lifecycle ACK and exact page receipts)|browser document peers refetch the same exact pair after scoped rebootstrap|browser actor patch handoff validates the neutral schema)", ...rest],
       "🧪️tests/🟦️.ts",
     );
     console.log(`cold-document-pair-browser-check: peer-checks=${checks}`);

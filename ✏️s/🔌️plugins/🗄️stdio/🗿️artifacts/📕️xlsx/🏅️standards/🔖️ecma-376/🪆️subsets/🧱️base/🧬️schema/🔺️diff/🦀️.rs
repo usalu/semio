@@ -307,11 +307,11 @@ where
             None => modified.push(NamedModified { key: m2.key.clone(), diff: m2.diff.clone() }),
         }
     }
-    for a2 in &d2.added {
-        let k2 = key_of(a2);
+    for a2 in d2.added {
+        let k2 = key_of(&a2);
         match working_added.iter_mut().find(|a| key_of(a) == k2) {
-            Some(existing) => *existing = a2.clone(),
-            None => working_added.push(a2.clone()),
+            Some(existing) => *existing = a2,
+            None => working_added.push(a2),
         }
     }
     NamedTripleDiff { removed, modified, added: working_added }
@@ -333,11 +333,10 @@ fn diff_cell(old: &XlsxCell, new: &XlsxCell) -> Option<XlsxCellDiff> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_cell(cell: &mut XlsxCell, diff: &XlsxCellDiff) -> MutationApplyResult<()> {
+fn apply_cell(cell: &mut XlsxCell, diff: &XlsxCellDiff) {
     if let Some(v) = &diff.value {
         cell.value = v.clone();
     }
-    Ok(())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -373,7 +372,7 @@ fn diff_sheet(old: &XlsxSheet, new: &XlsxSheet) -> Option<XlsxSheetDiff> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_sheet(sheet: &mut XlsxSheet, diff: &XlsxSheetDiff) -> MutationApplyResult<()> {
     if let Some(cd) = &diff.cells {
-        apply_named(&mut sheet.cells, cd, cell_key, apply_cell).map_err(|error| error.under(["cells"]))?;
+        apply_named(&mut sheet.cells, cd, cell_key, |item, diff| { apply_cell(item, diff); Ok(()) }).map_err(|error| error.under(["cells"]))?;
     }
     Ok(())
 }
@@ -653,7 +652,7 @@ fn apply_rel_list(list: &mut Vec<OpcRelationship>, diff: &XlsxOpcRelListDiff) ->
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn rel_list_with_diff_applied(list: &[OpcRelationship], diff: &XlsxOpcRelListDiff) -> Vec<OpcRelationship> {
     let mut out = list.to_vec();
-    apply_named_for_absorb(&mut out, diff, |relationship| relationship.id.clone(), |relationship, change| apply_rel(relationship, change));
+    apply_named_for_absorb(&mut out, diff, |relationship| relationship.id.clone(), apply_rel);
     out
 }
 
@@ -998,7 +997,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -1082,16 +1081,16 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 /// diff body — same reasoning `f6-recon-report.md` §5 documents for collection-triple entries.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_triple<K, D, T>(triple: &NamedTripleDiff<K, D, T>, enc_key: impl Fn(&K) -> String, enc_diff: impl Fn(&D) -> String, enc_item: impl Fn(&T) -> String) -> String {
-    let removed = triple.removed.iter().map(|k| enc_key(k)).collect::<Vec<_>>().join(",");
+    let removed = triple.removed.iter().map(&enc_key).collect::<Vec<_>>().join(",");
     let modified = triple.modified.iter().map(|m| format!("{}:{}", enc_key(&m.key), enc_diff(&m.diff))).collect::<Vec<_>>().join(",");
-    let added = triple.added.iter().map(|t| enc_item(t)).collect::<Vec<_>>().join(",");
+    let added = triple.added.iter().map(enc_item).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_triple<K, D, T>(body: &str, dec_key: impl Fn(&str) -> Result<K, String>, dec_diff: impl Fn(&str) -> Result<D, String>, dec_item: impl Fn(&str) -> Result<T, String>) -> Result<NamedTripleDiff<K, D, T>, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("triple: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().map(|s| dec_key(s)).collect::<Result<Vec<_>, String>>()?;
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().map(&dec_key).collect::<Result<Vec<_>, String>>()?;
     let modified = split_top_level(strip_brackets(modified_s)?, ',')
         .into_iter()
         .map(|entry| {
@@ -1099,7 +1098,7 @@ fn dec_triple<K, D, T>(body: &str, dec_key: impl Fn(&str) -> Result<K, String>, 
             Ok(NamedModified { key: dec_key(k)?, diff: dec_diff(d)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().map(|s| dec_item(s)).collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().map(dec_item).collect::<Result<Vec<_>, String>>()?;
     Ok(NamedTripleDiff { removed, modified, added })
 }
 //#endregion 🔖️GenericTripleCodec
@@ -1159,7 +1158,7 @@ pub(crate) fn dec_cell(s: &str) -> Result<XlsxCell, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_cell_diff(d: &XlsxCellDiff) -> String {
-    encode_option(&d.value, |v| enc_cell_value(v))
+    encode_option(&d.value, enc_cell_value)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_cell_diff(s: &str) -> Result<XlsxCellDiff, String> {
@@ -1190,7 +1189,7 @@ pub(crate) fn dec_sheet(s: &str) -> Result<XlsxSheet, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_sheet_diff(d: &XlsxSheetDiff) -> String {
-    encode_option(&d.cells, |c| enc_cells_diff(c))
+    encode_option(&d.cells, enc_cells_diff)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_sheet_diff(s: &str) -> Result<XlsxSheetDiff, String> {
@@ -1224,7 +1223,7 @@ fn dec_shared_strings_diff(s: &str) -> Result<XlsxSharedStringsDiff, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_workbook_diff(d: &XlsxWorkbookDiff) -> String {
-    format!("[{},{}]", encode_option(&d.sheets, |t| enc_sheets_diff(t)), encode_option(&d.shared_strings, |t| enc_shared_strings_diff(t)))
+    format!("[{},{}]", encode_option(&d.sheets, enc_sheets_diff), encode_option(&d.shared_strings, enc_shared_strings_diff))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_workbook_diff(s: &str) -> Result<XlsxWorkbookDiff, String> {
@@ -1255,7 +1254,7 @@ fn dec_ct_entries_diff(s: &str) -> Result<XlsxOpcCtEntriesDiff, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_content_types_diff(d: &XlsxOpcContentTypesDiff) -> String {
-    format!("[{},{}]", encode_option(&d.defaults, |t| enc_ct_entries_diff(t)), encode_option(&d.overrides, |t| enc_ct_entries_diff(t)))
+    format!("[{},{}]", encode_option(&d.defaults, enc_ct_entries_diff), encode_option(&d.overrides, enc_ct_entries_diff))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_content_types_diff(s: &str) -> Result<XlsxOpcContentTypesDiff, String> {
@@ -1318,7 +1317,7 @@ pub(crate) fn dec_rel(s: &str) -> Result<OpcRelationship, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_rel_diff(d: &XlsxOpcRelDiff) -> String {
-    format!("[{},{},{}]", encode_option(&d.rel_type, |v| enc_str(v)), encode_option(&d.target, |v| enc_str(v)), encode_option(&d.target_mode, |v| enc_target_mode(v)),)
+    format!("[{},{},{}]", encode_option(&d.rel_type, |v| enc_str(v)), encode_option(&d.target, |v| enc_str(v)), encode_option(&d.target_mode, enc_target_mode),)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_rel_diff(s: &str) -> Result<XlsxOpcRelDiff, String> {
@@ -1356,7 +1355,7 @@ fn dec_relationships_diff(s: &str) -> Result<XlsxOpcRelationshipsDiff, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_opc_diff(d: &XlsxOpcDiff) -> String {
-    format!("[{},{},{}]", encode_option(&d.content_types, |v| enc_content_types_diff(v)), encode_option(&d.parts, |v| enc_parts_diff(v)), encode_option(&d.relationships, |v| enc_relationships_diff(v)),)
+    format!("[{},{},{}]", encode_option(&d.content_types, enc_content_types_diff), encode_option(&d.parts, enc_parts_diff), encode_option(&d.relationships, enc_relationships_diff),)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_opc_diff(s: &str) -> Result<XlsxOpcDiff, String> {
@@ -1647,7 +1646,7 @@ fn dec_cell_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxCellDiff,
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_cells_diff_bin(d: &XlsxCellsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, enc_cell_key_bin, enc_cell_diff_bin, enc_cell_bin, out)
+    enc_named_triple_bin(d, enc_cell_key_bin, enc_cell_diff_bin, enc_cell_bin, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_cells_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxCellsDiff, String> {
@@ -1669,11 +1668,11 @@ fn dec_sheet_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSheetDif
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_sheets_diff_bin(d: &XlsxSheetsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_sheet_diff_bin, enc_sheet_bin, out)
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_sheet_diff_bin, enc_sheet_bin, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_sheets_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSheetsDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_sheet_diff_bin, dec_sheet_bin)
+    dec_named_triple_bin(reader, read_str_lp, dec_sheet_diff_bin, dec_sheet_bin)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1690,11 +1689,11 @@ fn dec_shared_string_item_bin(reader: &mut store::ByteReader<'_>) -> Result<(usi
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_shared_strings_diff_bin(d: &XlsxSharedStringsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| store::pack_rt::write_varint_u64(out, *k as u64), |v: &String, out| write_str_lp(out, v), enc_shared_string_item_bin, out)
+    enc_named_triple_bin(d, |k, out| store::pack_rt::write_varint_u64(out, *k as u64), |v: &String, out| write_str_lp(out, v), enc_shared_string_item_bin, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_shared_strings_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSharedStringsDiff, String> {
-    dec_named_triple_bin(reader, |r| Ok(r.read_varint_u64().map_err(|e| e.to_string())? as usize), |r| read_str_lp(r), dec_shared_string_item_bin)
+    dec_named_triple_bin(reader, |r| Ok(r.read_varint_u64().map_err(|e| e.to_string())? as usize), read_str_lp, dec_shared_string_item_bin)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1717,11 +1716,11 @@ pub(crate) fn dec_workbook_diff_bin(reader: &mut store::ByteReader<'_>) -> Resul
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_ct_entries_diff_bin(d: &XlsxOpcCtEntriesDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), |v: &String, out| write_str_lp(out, v), enc_ct_entry_bin, out)
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), |v: &String, out| write_str_lp(out, v), enc_ct_entry_bin, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_ct_entries_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcCtEntriesDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), |r| read_str_lp(r), dec_ct_entry_bin)
+    dec_named_triple_bin(reader, read_str_lp, read_str_lp, dec_ct_entry_bin)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1762,11 +1761,11 @@ fn dec_opc_part_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcPa
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_parts_diff_bin(d: &XlsxOpcPartsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_opc_part_diff_bin, enc_opc_part_bin, out)
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_opc_part_diff_bin, enc_opc_part_bin, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_parts_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcPartsDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_opc_part_diff_bin, dec_opc_part_bin)
+    dec_named_triple_bin(reader, read_str_lp, dec_opc_part_diff_bin, dec_opc_part_bin)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1794,20 +1793,20 @@ fn dec_rel_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcRelDiff
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_rel_list_diff_bin(d: &XlsxOpcRelListDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_rel_diff_bin, enc_rel_bin, out)
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_rel_diff_bin, enc_rel_bin, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_rel_list_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcRelListDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_rel_diff_bin, dec_rel_bin)
+    dec_named_triple_bin(reader, read_str_lp, dec_rel_diff_bin, dec_rel_bin)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_relationships_diff_bin(d: &XlsxOpcRelationshipsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_rel_list_diff_bin, enc_owner_rels_bin, out)
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_rel_list_diff_bin, enc_owner_rels_bin, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_relationships_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcRelationshipsDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_rel_list_diff_bin, dec_owner_rels_bin)
+    dec_named_triple_bin(reader, read_str_lp, dec_rel_list_diff_bin, dec_owner_rels_bin)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

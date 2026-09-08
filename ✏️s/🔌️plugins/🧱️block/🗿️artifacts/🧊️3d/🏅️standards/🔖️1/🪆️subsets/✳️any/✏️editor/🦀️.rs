@@ -740,14 +740,7 @@ impl ArtifactEditor for Block3dPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            operation_context,
-            request.completion,
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
             Block3dCommand::command_id,
             BLOCK3D_RETAINED_RAW_BYTES,
             BLOCK3D_RETAINED_WORK_ITEMS,
@@ -1036,7 +1029,7 @@ pub fn create_block3d_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::testkit::{meta, new_app as sdk_new_app, new_app_with_registry};
+    use semio_framework_plugin::testkit::{meta, new_app_with_registry};
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
     /// ✏️ `Block3dPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
@@ -1045,8 +1038,8 @@ pub(crate) mod testkit {
     /// `PluginBuilder::editor::<Block3dPlayApp>` builds it.
     pub type Block3dApp = VcsArtifactApp<EditorApp<Block3dPlayApp>>;
 
-    pub fn new_app() -> Block3dApp {
-        sdk_new_app::<EditorApp<Block3dPlayApp>>()
+    pub async fn new_app() -> Block3dApp {
+        app_with_registry().await
     }
 
     /// ✏️ Adapts `create_block3d_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
@@ -1056,20 +1049,20 @@ pub(crate) mod testkit {
         semio_framework_plugin::App { definition: create_block3d_app(), examples: Vec::new() }
     }
 
-    pub fn app_with_registry() -> Block3dApp {
-        new_app_with_registry::<EditorApp<Block3dPlayApp>>(block3d_app_manifest_for_testkit)
+    pub async fn app_with_registry() -> Block3dApp {
+        new_app_with_registry::<EditorApp<Block3dPlayApp>>(block3d_app_manifest_for_testkit).await
     }
 
-    pub fn dispatch(app: &mut Block3dApp, command: Block3dCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+    pub async fn dispatch(app: &mut Block3dApp, command: Block3dCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
     }
 
-    pub fn render(app: &mut Block3dApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+    pub async fn render(app: &mut Block3dApp, body_key: &str) -> String {
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
     }
 
-    pub fn main_window_measures(app: &mut Block3dApp) -> Vec<semio_framework_plugin::WindowMeasure> {
-        app.window_measures().get(BLOCK3D_DEFAULT_WINDOW_ID).cloned().unwrap_or_default()
+    pub async fn main_window_measures(app: &mut Block3dApp) -> Vec<semio_framework_plugin::WindowMeasure> {
+        app.window_measures().await.get(BLOCK3D_DEFAULT_WINDOW_ID).cloned().unwrap_or_default()
     }
 }
 //#endregion 🧪️Testkit
@@ -1192,7 +1185,7 @@ mod tests {
     /// `command_id`.
     #[semio_framework_async_macros::async_test]
     async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
-        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<Block3dPlayApp>>(testkit::block3d_app_manifest_for_testkit);
+        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Block3dPlayApp>>(testkit::block3d_app_manifest_for_testkit).await;
         assert!(<Block3dPlayApp as ArtifactEditor>::command_from_action("noSuchAction", None).is_err());
     }
     //#endregion 🔖️CommandSurface
@@ -1228,10 +1221,10 @@ mod tests {
     /// stale selection the moment `removeRepresentation`/`removeVortex` deletes its target.
     #[semio_framework_async_macros::async_test]
     async fn interaction_topology_covers_every_representation_and_vortex() {
-        let mut app: Block3dApp = new_app();
-        testkit::dispatch(&mut app, Block3dCommand::AddRepresentation(add_representation::AddRepresentation {}));
-        testkit::dispatch(&mut app, Block3dCommand::AddVortexKind(add_vortex_kind::AddVortexKind {}));
-        testkit::dispatch(&mut app, Block3dCommand::AddVortex(add_vortex::AddVortex {}));
+        let mut app: Block3dApp = new_app().await;
+        testkit::dispatch(&mut app, Block3dCommand::AddRepresentation(add_representation::AddRepresentation {})).await;
+        testkit::dispatch(&mut app, Block3dCommand::AddVortexKind(add_vortex_kind::AddVortexKind {})).await;
+        testkit::dispatch(&mut app, Block3dCommand::AddVortex(add_vortex::AddVortex {})).await;
         let snapshot = app.snapshot().expect("snapshot");
         let representation_id = snapshot.representations[0].id.clone();
         let vortex_id = snapshot.vortices[0].id.clone();
@@ -1241,15 +1234,15 @@ mod tests {
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let topology = <Block3dPlayApp as ArtifactEditor>::interaction_topology(&doc, &cfg);
         let domain = topology.domains.get(BLOCK3D_INTERACTION_VORTEX).expect("vortex domain topology present");
-        assert!(domain.contains(&format!("surface:{representation_id}")));
-        assert!(domain.contains(&format!("vortex:{vortex_id}")));
+        assert!(domain.contains(&format!("surface:{representation_id}")).await);
+        assert!(domain.contains(&format!("vortex:{vortex_id}")).await);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn block3d_io_declares_the_catalog_out_port() {
         let io = block3d_io();
         assert_eq!(io.document_schema, BLOCK_3D_SCHEMA);
-        let ports = io.all_ports();
+        let ports = io.all_ports().await;
         assert!(ports.iter().any(|port| port.id == "document:in"));
         assert!(ports.iter().any(|port| port.id == "document:out"));
         let catalog = ports.iter().find(|port| port.id == "catalog:out").expect("catalog:out port declared");
@@ -1260,10 +1253,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_document_tree_and_inspector() {
-        let mut app: Block3dApp = new_app();
-        let json = testkit::render(&mut app, document_panel::BLOCK3D_BODY_DOCUMENT);
+        let mut app: Block3dApp = new_app().await;
+        let json = testkit::render(&mut app, document_panel::BLOCK3D_BODY_DOCUMENT).await;
         assert!(json.contains("Representations"));
-        let inspector = testkit::render(&mut app, inspection_panel::BLOCK3D_BODY_INSPECTOR);
+        let inspector = testkit::render(&mut app, inspection_panel::BLOCK3D_BODY_INSPECTOR).await;
         assert!(inspector.contains("\"type\":\"tree\""));
         assert!(inspector.contains("Name"));
         assert!(inspector.contains("Vortices"));
@@ -1279,7 +1272,7 @@ mod tests {
     /// survives into the rendered tree's JSON any more.
     #[semio_framework_async_macros::async_test]
     async fn the_editor_boots_with_a_renderable_world() {
-        let mut app: Block3dApp = new_app();
+        let mut app: Block3dApp = new_app().await;
         let snapshot = app.snapshot().expect("snapshot");
         assert!(!snapshot.representations.is_empty(), "the boot document must carry at least one representation");
         assert!(snapshot.representations.iter().all(|representation| representation.mesh_url.is_some()), "every boot representation must name a mesh url");
@@ -1288,16 +1281,16 @@ mod tests {
             crate::editor::block3d::world::world_meshes_json(&snapshot, &visible).contains("/mesh/🧊️hexagonal-cut-concrete-forest-left.glb"),
             "the world scene must reference the boot document's mesh"
         );
-        assert!(testkit::render(&mut app, world::BLOCK3D_BODY_WORLD).contains("\"type\":\"surface\""), "the world body must render a semantic scene surface");
+        assert!(testkit::render(&mut app, world::BLOCK3D_BODY_WORLD).await.contains("\"type\":\"surface\""), "the world body must render a semantic scene surface");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn add_representation_then_set_active_then_render_world_shows_mesh() {
-        let mut app: Block3dApp = new_app();
-        testkit::dispatch(&mut app, Block3dCommand::AddRepresentation(add_representation::AddRepresentation {}));
+        let mut app: Block3dApp = new_app().await;
+        testkit::dispatch(&mut app, Block3dCommand::AddRepresentation(add_representation::AddRepresentation {})).await;
         let representation_id = app.snapshot().expect("snapshot").representations[0].id.clone();
-        testkit::dispatch(&mut app, Block3dCommand::SetActiveRepresentation(set_active_representation::SetActiveRepresentation { representation_id: Some(representation_id) }));
-        let json = testkit::render(&mut app, world::BLOCK3D_BODY_WORLD);
+        testkit::dispatch(&mut app, Block3dCommand::SetActiveRepresentation(set_active_representation::SetActiveRepresentation { representation_id: Some(representation_id) })).await;
+        let json = testkit::render(&mut app, world::BLOCK3D_BODY_WORLD).await;
         assert!(json.contains("\"type\":\"surface\""), "world body must render a scene surface");
         assert!(json.contains("world-3d"), "the scene surface must declare the world-3d surface kind");
     }
@@ -1307,21 +1300,21 @@ mod tests {
     /// rather than against a hard-coded 1/0.
     #[semio_framework_async_macros::async_test]
     async fn add_vortex_kind_then_add_vortex_then_remove_round_trips() {
-        let mut app: Block3dApp = new_app();
+        let mut app: Block3dApp = new_app().await;
         let before = app.snapshot().expect("snapshot").vortices.len();
-        testkit::dispatch(&mut app, Block3dCommand::AddVortexKind(add_vortex_kind::AddVortexKind {}));
-        testkit::dispatch(&mut app, Block3dCommand::AddVortex(add_vortex::AddVortex {}));
+        testkit::dispatch(&mut app, Block3dCommand::AddVortexKind(add_vortex_kind::AddVortexKind {})).await;
+        testkit::dispatch(&mut app, Block3dCommand::AddVortex(add_vortex::AddVortex {})).await;
         let projection = app.snapshot().expect("snapshot");
         assert_eq!(projection.vortices.len(), before + 1);
         let vortex_id = projection.vortices[before].id.clone();
-        testkit::dispatch(&mut app, Block3dCommand::RemoveVortex(remove_vortex::RemoveVortex { id: vortex_id }));
+        testkit::dispatch(&mut app, Block3dCommand::RemoveVortex(remove_vortex::RemoveVortex { id: vortex_id })).await;
         assert_eq!(app.snapshot().expect("snapshot").vortices.len(), before);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_active_example_loads_capsule_fixture() {
-        let mut app: Block3dApp = new_app();
-        testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
+        let mut app: Block3dApp = new_app().await;
+        testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() })).await;
         let projection = app.snapshot().expect("snapshot");
         assert_eq!(projection.object_kind.id, "Capsule J");
         // 🥽️ One representation, not two: the former `"1:500"` row named `/mesh/capsule_J.1to500.glb`,
@@ -1334,14 +1327,14 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trips_through_the_wrapper() {
-        let mut app: Block3dApp = new_app();
+        let mut app: Block3dApp = new_app().await;
         let kinds = |app: &mut Block3dApp| crate::artifacts::block3d::vortex_kinds_of(&app.snapshot().expect("snapshot")).len();
         let before = kinds(&mut app);
-        testkit::dispatch(&mut app, Block3dCommand::AddVortexKind(add_vortex_kind::AddVortexKind {}));
+        testkit::dispatch(&mut app, Block3dCommand::AddVortexKind(add_vortex_kind::AddVortexKind {})).await;
         assert_eq!(kinds(&mut app), before + 1);
-        app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
+        app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("undo");
         assert_eq!(kinds(&mut app), before);
-        app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).expect("redo");
+        app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("redo");
         assert_eq!(kinds(&mut app), before + 1);
     }
 
@@ -1350,16 +1343,16 @@ mod tests {
     /// exercises the "view action never touches the document" contract this test used to cover.
     #[semio_framework_async_macros::async_test]
     async fn set_active_representation_writes_config_not_document() {
-        let mut app: Block3dApp = new_app();
+        let mut app: Block3dApp = new_app().await;
         let result =
-            app.dispatch_typed(Block3dCommand::SetActiveRepresentation(set_active_representation::SetActiveRepresentation { representation_id: Some("r0".into()) }), &semio_framework_plugin::testkit::meta("local")).expect("set active representation");
+            app.dispatch_typed(Block3dCommand::SetActiveRepresentation(set_active_representation::SetActiveRepresentation { representation_id: Some("r0".into()) }), &semio_framework_plugin::testkit::meta("local")).await.expect("set active representation");
         assert!(result.mutations.is_empty(), "setActiveRepresentation is config-only and must emit no document operations");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn export_media_catalog_out_wraps_the_puzzle3d_fragment() {
-        let mut app: Block3dApp = new_app();
-        testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
+        let mut app: Block3dApp = new_app().await;
+        testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() })).await;
         let media = semio_framework_plugin::resolve_ready(app.export_media("catalog:out")).expect("export catalog");
         assert_eq!(media.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
         match media.payload {
@@ -1374,9 +1367,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn place_vortex_on_surface_auto_creates_kind_and_vortex() {
-        let mut app: Block3dApp = new_app();
-        testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
-        testkit::dispatch(&mut app, Block3dCommand::PlaceVortex(place_vortex::PlaceVortex { window_id: BLOCK3D_DEFAULT_WINDOW_ID.into(), object_id: "r0".into(), position: [0.5, 0.0, 1.0], normal: [0.0, 1.0, 0.0] }));
+        let mut app: Block3dApp = new_app().await;
+        testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() })).await;
+        testkit::dispatch(&mut app, Block3dCommand::PlaceVortex(place_vortex::PlaceVortex { window_id: BLOCK3D_DEFAULT_WINDOW_ID.into(), object_id: "r0".into(), position: [0.5, 0.0, 1.0], normal: [0.0, 1.0, 0.0] })).await;
         let projection = app.snapshot().expect("snapshot");
         assert!(!crate::artifacts::block3d::vortex_kinds_of(&projection).is_empty());
         assert_eq!(projection.vortices.len(), 2);
@@ -1385,7 +1378,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn command_from_action_bridges_set_active_example() {
         assert!(
-            matches!(<Block3dPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "capsule" }))), Ok(Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "capsule")
+            matches!(<Block3dPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&dsl::json::to_dsl_value(&dsl::json!({ "exampleId": "capsule" })))), Ok(Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "capsule")
         );
     }
     //#endregion 🔖️Behavior
@@ -1396,8 +1389,8 @@ mod tests {
     /// `testkit::app_with_registry` exists.
     #[semio_framework_async_macros::async_test]
     async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
-        let mut app = testkit::app_with_registry();
-        let result = testkit::dispatch(&mut app, Block3dCommand::SetActiveRepresentation(set_active_representation::SetActiveRepresentation { representation_id: Some("r0".into()) }));
+        let mut app = testkit::app_with_registry().await;
+        let result = testkit::dispatch(&mut app, Block3dCommand::SetActiveRepresentation(set_active_representation::SetActiveRepresentation { representation_id: Some("r0".into()) })).await;
         assert!(result.mutations.is_empty(), "setActiveRepresentation is a view action and must never reach document operations under kind discipline");
     }
 
@@ -1405,9 +1398,9 @@ mod tests {
     /// spacing/brush) fresh per frame — never frozen into the manifest.
     #[semio_framework_async_macros::async_test]
     async fn world_window_measures_collect_all_five_options() {
-        let mut app: Block3dApp = new_app();
-        testkit::dispatch(&mut app, Block3dCommand::AddRepresentation(add_representation::AddRepresentation {}));
-        let measures = testkit::main_window_measures(&mut app);
+        let mut app: Block3dApp = new_app().await;
+        testkit::dispatch(&mut app, Block3dCommand::AddRepresentation(add_representation::AddRepresentation {})).await;
+        let measures = testkit::main_window_measures(&mut app).await;
         assert_eq!(measures.len(), 5, "world window must expose representations/quick-pick/arrangement/spacing/brush");
     }
     //#endregion 🔖️WindowMeasures

@@ -13,6 +13,12 @@
 //! `🧰️framework/🔨️modules/🧊️3d/📐️brep/🖋️imprint` (imprint) and
 //! `🧰️framework/🔨️modules/🧊️3d/📐️brep/🔺️euler` (editors) in ticket
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS, waves PEEL and PEEL3.
+/// 🔗 Oriented edge with optional parameter curve and its range.
+pub type ParametricEdge = (EdgeId, bool, Option<Curve2Id>, (f64, f64));
+
+/// 🚶 Ordered vertices and oriented edges around a loop.
+pub type LoopWalk = (Vec<VertexId>, Vec<(EdgeId, bool)>);
+
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, CoedgeId, Curve2Id, Curve3Id, EdgeId, FaceId, LoopId, ShellId, SolidId, SurfaceId, VertexId};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops::closest_parameter;
@@ -339,7 +345,7 @@ pub fn split_planar_face_by_line(body: &mut Body, face: FaceId, p0: Pnt3, p1: Pn
     body.loops.get_mut(loop_b).ok_or_else(|| KernelError::MissingEntity(format!("loop {loop_b}")))?.face = face_b;
 
     for (_, shell) in body.shells.iter_mut() {
-        if shell.faces.iter().any(|&f| f == face) && !shell.faces.iter().any(|&f| f == face_b) {
+        if shell.faces.contains(&face) && !shell.faces.contains(&face_b) {
             shell.faces.push(face_b);
         }
     }
@@ -442,7 +448,7 @@ pub fn split_face_by_edge(body: &mut Body, face: FaceId, edge_id: EdgeId, pcurve
     body.loops.get_mut(loop_b).ok_or_else(|| KernelError::MissingEntity(format!("loop {loop_b}")))?.face = face_b;
 
     for (_, shell) in body.shells.iter_mut() {
-        if shell.faces.iter().any(|&f| f == face) && !shell.faces.iter().any(|&f| f == face_b) {
+        if shell.faces.contains(&face) && !shell.faces.contains(&face_b) {
             shell.faces.push(face_b);
         }
     }
@@ -500,7 +506,7 @@ pub fn split_face_by_interior_curve(body: &mut Body, face: FaceId, edge_id: Edge
     body.loops.get_mut(new_outer).ok_or_else(|| KernelError::MissingEntity(format!("loop {new_outer}")))?.face = new_face;
 
     for (_, shell) in body.shells.iter_mut() {
-        if shell.faces.iter().any(|&f| f == face) && !shell.faces.iter().any(|&f| f == new_face) {
+        if shell.faces.contains(&face) && !shell.faces.contains(&new_face) {
             shell.faces.push(new_face);
         }
     }
@@ -594,7 +600,7 @@ pub fn split_face_by_seam_crossing(body: &mut Body, face: FaceId, edge_id: EdgeI
     body.loops.get_mut(loop_b).ok_or_else(|| KernelError::MissingEntity(format!("loop {loop_b}")))?.face = face_b;
 
     for (_, shell) in body.shells.iter_mut() {
-        if shell.faces.iter().any(|&f| f == face) && !shell.faces.iter().any(|&f| f == face_b) {
+        if shell.faces.contains(&face) && !shell.faces.contains(&face_b) {
             shell.faces.push(face_b);
         }
     }
@@ -748,7 +754,7 @@ fn endpoint_vertex(edge: &Edge, curve_t: f64, linear: f64) -> Option<VertexId> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn loop_walk(body: &Body, loop_id: LoopId) -> Result<(Vec<VertexId>, Vec<(EdgeId, bool)>), KernelError> {
+fn loop_walk(body: &Body, loop_id: LoopId) -> Result<LoopWalk, KernelError> {
     let coedges = body.loop_coedges(loop_id);
     let mut verts = Vec::with_capacity(coedges.len());
     let mut members = Vec::with_capacity(coedges.len());
@@ -772,7 +778,7 @@ fn loop_walk(body: &Body, loop_id: LoopId) -> Result<(Vec<VertexId>, Vec<(EdgeId
 /// lateral piece's own `sample_loop_uv` showed only ONE coedge surviving, because the other three
 /// had silently gone pcurve-`None` and were skipped by every p-curve-only consumer).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn loop_walk_pc(body: &Body, loop_id: LoopId) -> Result<(Vec<VertexId>, Vec<(EdgeId, bool, Option<Curve2Id>, (f64, f64))>), KernelError> {
+fn loop_walk_pc(body: &Body, loop_id: LoopId) -> Result<(Vec<VertexId>, Vec<ParametricEdge>), KernelError> {
     let coedges = body.loop_coedges(loop_id);
     let mut verts = Vec::with_capacity(coedges.len());
     let mut members = Vec::with_capacity(coedges.len());
@@ -786,7 +792,7 @@ fn loop_walk_pc(body: &Body, loop_id: LoopId) -> Result<(Vec<VertexId>, Vec<(Edg
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn member_chain_pc(members: &[(EdgeId, bool, Option<Curve2Id>, (f64, f64))], from: usize, to: usize) -> Vec<(EdgeId, bool, Option<Curve2Id>, (f64, f64))> {
+fn member_chain_pc(members: &[ParametricEdge], from: usize, to: usize) -> Vec<ParametricEdge> {
     let n = members.len();
     let mut out = Vec::new();
     let mut i = from;
@@ -802,7 +808,7 @@ fn member_chain_pc(members: &[(EdgeId, bool, Option<Curve2Id>, (f64, f64))], fro
 
 /// 🖋️ [`make_loop`] plus restoring each member's own `(pcurve, prange)` — see [`loop_walk_pc`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn make_loop_pc(body: &mut Body, face: FaceId, members: &[(EdgeId, bool, Option<Curve2Id>, (f64, f64))]) -> LoopId {
+fn make_loop_pc(body: &mut Body, face: FaceId, members: &[ParametricEdge]) -> LoopId {
     let plain: Vec<(EdgeId, bool)> = members.iter().map(|&(e, f, _, _)| (e, f)).collect();
     let loop_id = make_loop(body, face, &plain);
     for (cid, &(_, _, pc, pr)) in body.loop_coedges(loop_id).into_iter().zip(members.iter()) {

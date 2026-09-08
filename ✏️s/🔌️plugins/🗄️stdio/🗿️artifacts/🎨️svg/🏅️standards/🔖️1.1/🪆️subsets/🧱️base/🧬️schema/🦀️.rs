@@ -191,12 +191,12 @@ pub mod derived_construction {
             self
         }
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-        pub fn arc_to(mut self, rx: f64, ry: f64, x_axis_rotation: f64, large_arc: bool, sweep: bool, x: f64, y: f64) -> Self {
+        pub fn arc_to(mut self, (rx, ry): (f64, f64), x_axis_rotation: f64, large_arc: bool, sweep: bool, x: f64, y: f64) -> Self {
             self.cmds.push(PathCommand::Arc { rx, ry, x_axis_rotation, large_arc, sweep, x, y, relative: false });
             self
         }
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-        pub fn arc_by(mut self, rx: f64, ry: f64, x_axis_rotation: f64, large_arc: bool, sweep: bool, dx: f64, dy: f64) -> Self {
+        pub fn arc_by(mut self, (rx, ry): (f64, f64), x_axis_rotation: f64, large_arc: bool, sweep: bool, dx: f64, dy: f64) -> Self {
             self.cmds.push(PathCommand::Arc { rx, ry, x_axis_rotation, large_arc, sweep, x: dx, y: dy, relative: true });
             self
         }
@@ -264,7 +264,7 @@ pub mod derived_construction {
             self
         }
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-        pub fn add_rect_rounded(mut self, x: f64, y: f64, width: f64, height: f64, rx: f64, ry: f64, common: CommonAttrs) -> Self {
+        pub fn add_rect_rounded(mut self, x: f64, y: f64, width: f64, height: f64, (rx, ry): (f64, f64), common: CommonAttrs) -> Self {
             self.children.push(SvgElement::Rect { common, x, y, width, height, rx: Some(rx), ry: Some(ry) });
             self
         }
@@ -335,7 +335,7 @@ pub mod derived_construction {
             self
         }
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-        pub fn define_radial_gradient(mut self, id: impl Into<String>, cx: Option<f64>, cy: Option<f64>, r: Option<f64>, fx: Option<f64>, fy: Option<f64>, stops: Vec<GradientStopSpec>) -> Self {
+        pub fn define_radial_gradient(mut self, id: impl Into<String>, cx: Option<f64>, cy: Option<f64>, r: Option<f64>, (fx, fy): (Option<f64>, Option<f64>), stops: Vec<GradientStopSpec>) -> Self {
             self.children.push(SvgElement::RadialGradient {
                 common: CommonAttrs::default(),
                 id: Some(id.into()),
@@ -395,8 +395,8 @@ pub mod derived_construction {
             self
         }
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-        pub fn add_rect_rounded(mut self, x: f64, y: f64, width: f64, height: f64, rx: f64, ry: f64, common: CommonAttrs) -> Self {
-            self.elements = self.elements.add_rect_rounded(x, y, width, height, rx, ry, common);
+        pub fn add_rect_rounded(mut self, x: f64, y: f64, width: f64, height: f64, (rx, ry): (f64, f64), common: CommonAttrs) -> Self {
+            self.elements = self.elements.add_rect_rounded(x, y, width, height, (rx, ry), common);
             self
         }
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -455,8 +455,8 @@ pub mod derived_construction {
             self
         }
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-        pub fn define_radial_gradient(mut self, id: impl Into<String>, cx: Option<f64>, cy: Option<f64>, r: Option<f64>, fx: Option<f64>, fy: Option<f64>, stops: Vec<GradientStopSpec>) -> Self {
-            self.elements = self.elements.define_radial_gradient(id, cx, cy, r, fx, fy, stops);
+        pub fn define_radial_gradient(mut self, id: impl Into<String>, cx: Option<f64>, cy: Option<f64>, r: Option<f64>, (fx, fy): (Option<f64>, Option<f64>), stops: Vec<GradientStopSpec>) -> Self {
+            self.elements = self.elements.define_radial_gradient(id, cx, cy, r, (fx, fy), stops);
             self
         }
         //#endregion TypedConstructors
@@ -641,7 +641,7 @@ pub mod derived_analysis {
                 .add_group(CommonAttrs::new().with_id("layer1"), |g: ElementBuilder| {
                     g.add_rect(10.0, 10.0, 80.0, 40.0, CommonAttrs::new().with_fill("url(#grad1)"))
                         .add_circle(150.0, 50.0, 30.0, CommonAttrs::new().with_fill("red").with_stroke("black"))
-                        .add_path(PathBuilder::new().move_to(10.0, 80.0).line_to(50.0, 80.0).arc_to(20.0, 20.0, 0.0, false, true, 90.0, 80.0).close(), CommonAttrs::new().with_stroke("blue"))
+                        .add_path(PathBuilder::new().move_to(10.0, 80.0).line_to(50.0, 80.0).arc_to((20.0, 20.0), 0.0, false, true, 90.0, 80.0).close(), CommonAttrs::new().with_stroke("blue"))
                 })
                 .build()
                 .expect("build succeeds");
@@ -790,7 +790,7 @@ pub mod derived_analysis {
         fn rebuild_one(eb: ElementBuilder, el: &SvgElement) -> ElementBuilder {
             match el {
                 SvgElement::Rect { common, x, y, width, height, rx, ry } => match (rx, ry) {
-                    (Some(rx), Some(ry)) => eb.add_rect_rounded(*x, *y, *width, *height, *rx, *ry, common.clone()),
+                    (Some(rx), Some(ry)) => eb.add_rect_rounded(*x, *y, *width, *height, (*rx, *ry), common.clone()),
                     _ => eb.add_rect(*x, *y, *width, *height, common.clone()),
                 },
                 SvgElement::Circle { common, cx, cy, r } => eb.add_circle(*cx, *cy, *r, common.clone()),

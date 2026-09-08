@@ -420,13 +420,13 @@ mod tests {
     #[test]
     fn dsl_round_trip_with_generation_state() {
         let mut projection = Generation2dSnapshot::default();
-        let mut values = serde_json::Map::new();
+        let mut values = flow::playbook::PlaybookValues::new();
         // 🌱️ A fractional literal, not a whole number: a whole-number float still normalizes to an
         // integer-backed `serde_json::Number` somewhere on this round trip — a real, engine-owned
         // behavior, not a bug in this crate's mirror/conversion code — so a whole-number input like
         // `3.0` would legitimately compare unequal to its round-tripped `3` here. `3.5` has no such
         // ambiguity.
-        values.insert("count".into(), serde_json::json!(3.5));
+        values.insert("count".into(), dsl::DslValue::float(3.5));
         projection.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values });
         projection.generation.cold_builder_mut().expect("unique cold generation owner").selected_generation_id = Some("generation-1".into());
         projection.generation.cold_builder_mut().expect("unique cold generation owner").preview_text = Some("42".into());
@@ -454,16 +454,16 @@ mod tests {
     //#region 🔖️CommandEnvelopeTests
     /// 🎫️ CW7 command-envelope law: proves `Generation2dMutation`'s `Edit` round-trips through
     /// `protocol::MutationEnvelope`s beside this file's existing dsl/pack round-trip laws.
-    #[test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    #[semio_framework_async_macros::async_test]
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::generation2d::op::Generation2dMutation;
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
-        let mut store: ArtifactStore<Generation2dSnapshot, Generation2dMutation> = ArtifactStore::new(create_document_envelope(GENERATION_2D_SCHEMA, "generation2d", Generation2dSnapshot::default(), None)).expect("valid artifact store fixture");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::generation2d::op::replace_widget(Widget::InputNote { id: "note-9".into(), text: String::new() })], description: None }).expect("apply");
+        let mut store: ArtifactStore<Generation2dSnapshot, Generation2dMutation> = ArtifactStore::new(create_document_envelope(GENERATION_2D_SCHEMA, "generation2d", Generation2dSnapshot::default(), None)).await.expect("valid artifact store fixture");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::generation2d::op::replace_widget(Widget::InputNote { id: "note-9".into(), text: String::new() })], description: None }).await.expect("apply");
         let edit: &Edit<Generation2dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        test_support::assert_command_envelope_round_trip::<Generation2dSnapshot, Generation2dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        test_support::assert_command_envelope_round_trip::<Generation2dSnapshot, Generation2dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
     }
     //#endregion 🔖️CommandEnvelopeTests
 

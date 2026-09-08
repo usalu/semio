@@ -1,0 +1,1388 @@
+{
+  "schema": "semio.directory.document-index-fixtures/v1",
+  "cases": [
+    {
+      "id": "ordered",
+      "events": [
+        {
+          "seq": 1,
+          "id": "fixture-event-1",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 1
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "space.created",
+            "spaceId": "space-fixture",
+            "name": "Fixture Space",
+            "spaceKind": "studio",
+            "visibility": "private",
+            "ownerUserId": "user-fixture"
+          },
+          "recordedAtMs": 1000
+        },
+        {
+          "seq": 2,
+          "id": "fixture-event-2",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 2
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "document.announced",
+            "descriptor": {
+              "spaceId": "space-fixture",
+              "documentId": "artifact-11223344556677889900aabbccddeeff",
+              "artifactKind": "s.gis.map",
+              "artifactSchema": "gis.map",
+              "owner": {
+                "pluginId": "gis",
+                "packageId": "semio:gis",
+                "version": "0.1.0",
+                "packageHash": "1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              "packSchemaHash": "2222222222222222222222222222222222222222222222222222222222222222",
+              "bootstrapVersion": 1,
+              "bootstrapFrontier": {
+                "headSeq": 0,
+                "commitSeq": 0,
+                "epoch": 1
+              },
+              "bootstrapSnapshotHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            }
+          },
+          "recordedAtMs": 1000
+        },
+        {
+          "seq": 3,
+          "id": "fixture-event-3",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 3
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "document.indexed",
+            "scope": {
+              "spaceId": "space-fixture",
+              "documentId": "artifact-11223344556677889900aabbccddeeff"
+            },
+            "descriptorDigestV1": [
+              249,
+              125,
+              129,
+              92,
+              193,
+              84,
+              76,
+              103,
+              100,
+              155,
+              190,
+              211,
+              32,
+              23,
+              40,
+              203,
+              54,
+              27,
+              43,
+              74,
+              140,
+              131,
+              63,
+              150,
+              138,
+              127,
+              6,
+              216,
+              62,
+              92,
+              158,
+              127
+            ],
+            "entry": {
+              "name": "Collaborative Map",
+              "dialect": {
+                "artifactKind": "s.gis.map",
+                "standard": "1",
+                "subset": "any"
+              }
+            }
+          },
+          "recordedAtMs": 1000
+        }
+      ],
+      "clientRows": 1,
+      "backendAccepted": true
+    },
+    {
+      "id": "replayed",
+      "events": [
+        {
+          "seq": 1,
+          "id": "fixture-event-1",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 1
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "space.created",
+            "spaceId": "space-fixture",
+            "name": "Fixture Space",
+            "spaceKind": "studio",
+            "visibility": "private",
+            "ownerUserId": "user-fixture"
+          },
+          "recordedAtMs": 1000
+        },
+        {
+          "seq": 2,
+          "id": "fixture-event-2",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 2
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "document.announced",
+            "descriptor": {
+              "spaceId": "space-fixture",
+              "documentId": "artifact-11223344556677889900aabbccddeeff",
+              "artifactKind": "s.gis.map",
+              "artifactSchema": "gis.map",
+              "owner": {
+                "pluginId": "gis",
+                "packageId": "semio:gis",
+                "version": "0.1.0",
+                "packageHash": "1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              "packSchemaHash": "2222222222222222222222222222222222222222222222222222222222222222",
+              "bootstrapVersion": 1,
+              "bootstrapFrontier": {
+                "headSeq": 0,
+                "commitSeq": 0,
+                "epoch": 1
+              },
+              "bootstrapSnapshotHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            }
+          },
+          "recordedAtMs": 1000
+        },
+        {
+          "seq": 3,
+          "id": "fixture-event-3",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 3
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "document.indexed",
+            "scope": {
+              "spaceId": "space-fixture",
+              "documentId": "artifact-11223344556677889900aabbccddeeff"
+            },
+            "descriptorDigestV1": [
+              249,
+              125,
+              129,
+              92,
+              193,
+              84,
+              76,
+              103,
+              100,
+              155,
+              190,
+              211,
+              32,
+              23,
+              40,
+              203,
+              54,
+              27,
+              43,
+              74,
+              140,
+              131,
+              63,
+              150,
+              138,
+              127,
+              6,
+              216,
+              62,
+              92,
+              158,
+              127
+            ],
+            "entry": {
+              "name": "Collaborative Map",
+              "dialect": {
+                "artifactKind": "s.gis.map",
+                "standard": "1",
+                "subset": "any"
+              }
+            }
+          },
+          "recordedAtMs": 1000
+        },
+        {
+          "seq": 3,
+          "id": "fixture-event-3",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 3
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "document.indexed",
+            "scope": {
+              "spaceId": "space-fixture",
+              "documentId": "artifact-11223344556677889900aabbccddeeff"
+            },
+            "descriptorDigestV1": [
+              249,
+              125,
+              129,
+              92,
+              193,
+              84,
+              76,
+              103,
+              100,
+              155,
+              190,
+              211,
+              32,
+              23,
+              40,
+              203,
+              54,
+              27,
+              43,
+              74,
+              140,
+              131,
+              63,
+              150,
+              138,
+              127,
+              6,
+              216,
+              62,
+              92,
+              158,
+              127
+            ],
+            "entry": {
+              "name": "Collaborative Map",
+              "dialect": {
+                "artifactKind": "s.gis.map",
+                "standard": "1",
+                "subset": "any"
+              }
+            }
+          },
+          "recordedAtMs": 1000
+        }
+      ],
+      "clientRows": 1,
+      "backendAccepted": true
+    },
+    {
+      "id": "index-before-announcement",
+      "events": [
+        {
+          "seq": 1,
+          "id": "fixture-event-1",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 1
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "space.created",
+            "spaceId": "space-fixture",
+            "name": "Fixture Space",
+            "spaceKind": "studio",
+            "visibility": "private",
+            "ownerUserId": "user-fixture"
+          },
+          "recordedAtMs": 1000
+        },
+        {
+          "seq": 2,
+          "id": "fixture-event-3",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 3
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "document.indexed",
+            "scope": {
+              "spaceId": "space-fixture",
+              "documentId": "artifact-11223344556677889900aabbccddeeff"
+            },
+            "descriptorDigestV1": [
+              249,
+              125,
+              129,
+              92,
+              193,
+              84,
+              76,
+              103,
+              100,
+              155,
+              190,
+              211,
+              32,
+              23,
+              40,
+              203,
+              54,
+              27,
+              43,
+              74,
+              140,
+              131,
+              63,
+              150,
+              138,
+              127,
+              6,
+              216,
+              62,
+              92,
+              158,
+              127
+            ],
+            "entry": {
+              "name": "Collaborative Map",
+              "dialect": {
+                "artifactKind": "s.gis.map",
+                "standard": "1",
+                "subset": "any"
+              }
+            }
+          },
+          "recordedAtMs": 1000
+        },
+        {
+          "seq": 3,
+          "id": "fixture-event-2",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 2
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "document.announced",
+            "descriptor": {
+              "spaceId": "space-fixture",
+              "documentId": "artifact-11223344556677889900aabbccddeeff",
+              "artifactKind": "s.gis.map",
+              "artifactSchema": "gis.map",
+              "owner": {
+                "pluginId": "gis",
+                "packageId": "semio:gis",
+                "version": "0.1.0",
+                "packageHash": "1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              "packSchemaHash": "2222222222222222222222222222222222222222222222222222222222222222",
+              "bootstrapVersion": 1,
+              "bootstrapFrontier": {
+                "headSeq": 0,
+                "commitSeq": 0,
+                "epoch": 1
+              },
+              "bootstrapSnapshotHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            }
+          },
+          "recordedAtMs": 1000
+        }
+      ],
+      "clientRows": 0,
+      "backendAccepted": false
+    },
+    {
+      "id": "foreign-kind",
+      "events": [
+        {
+          "seq": 1,
+          "id": "fixture-event-1",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 1
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "space.created",
+            "spaceId": "space-fixture",
+            "name": "Fixture Space",
+            "spaceKind": "studio",
+            "visibility": "private",
+            "ownerUserId": "user-fixture"
+          },
+          "recordedAtMs": 1000
+        },
+        {
+          "seq": 2,
+          "id": "fixture-event-2",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 2
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "document.announced",
+            "descriptor": {
+              "spaceId": "space-fixture",
+              "documentId": "artifact-11223344556677889900aabbccddeeff",
+              "artifactKind": "s.gis.map",
+              "artifactSchema": "gis.map",
+              "owner": {
+                "pluginId": "gis",
+                "packageId": "semio:gis",
+                "version": "0.1.0",
+                "packageHash": "1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              "packSchemaHash": "2222222222222222222222222222222222222222222222222222222222222222",
+              "bootstrapVersion": 1,
+              "bootstrapFrontier": {
+                "headSeq": 0,
+                "commitSeq": 0,
+                "epoch": 1
+              },
+              "bootstrapSnapshotHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            }
+          },
+          "recordedAtMs": 1000
+        },
+        {
+          "seq": 3,
+          "id": "fixture-event-3",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 3
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "document.indexed",
+            "scope": {
+              "spaceId": "space-fixture",
+              "documentId": "artifact-11223344556677889900aabbccddeeff"
+            },
+            "descriptorDigestV1": [
+              249,
+              125,
+              129,
+              92,
+              193,
+              84,
+              76,
+              103,
+              100,
+              155,
+              190,
+              211,
+              32,
+              23,
+              40,
+              203,
+              54,
+              27,
+              43,
+              74,
+              140,
+              131,
+              63,
+              150,
+              138,
+              127,
+              6,
+              216,
+              62,
+              92,
+              158,
+              127
+            ],
+            "entry": {
+              "name": "Collaborative Map",
+              "dialect": {
+                "artifactKind": "s.foreign.kind",
+                "standard": "1",
+                "subset": "any"
+              }
+            }
+          },
+          "recordedAtMs": 1000
+        }
+      ],
+      "clientRows": 0,
+      "backendAccepted": false
+    },
+    {
+      "id": "foreign-document",
+      "events": [
+        {
+          "seq": 1,
+          "id": "fixture-event-1",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 1
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "space.created",
+            "spaceId": "space-fixture",
+            "name": "Fixture Space",
+            "spaceKind": "studio",
+            "visibility": "private",
+            "ownerUserId": "user-fixture"
+          },
+          "recordedAtMs": 1000
+        },
+        {
+          "seq": 2,
+          "id": "fixture-event-2",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 2
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "document.announced",
+            "descriptor": {
+              "spaceId": "space-fixture",
+              "documentId": "artifact-11223344556677889900aabbccddeeff",
+              "artifactKind": "s.gis.map",
+              "artifactSchema": "gis.map",
+              "owner": {
+                "pluginId": "gis",
+                "packageId": "semio:gis",
+                "version": "0.1.0",
+                "packageHash": "1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              "packSchemaHash": "2222222222222222222222222222222222222222222222222222222222222222",
+              "bootstrapVersion": 1,
+              "bootstrapFrontier": {
+                "headSeq": 0,
+                "commitSeq": 0,
+                "epoch": 1
+              },
+              "bootstrapSnapshotHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            }
+          },
+          "recordedAtMs": 1000
+        },
+        {
+          "seq": 3,
+          "id": "fixture-event-3",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 3
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "document.indexed",
+            "scope": {
+              "spaceId": "space-fixture",
+              "documentId": "foreign-document"
+            },
+            "descriptorDigestV1": [
+              249,
+              125,
+              129,
+              92,
+              193,
+              84,
+              76,
+              103,
+              100,
+              155,
+              190,
+              211,
+              32,
+              23,
+              40,
+              203,
+              54,
+              27,
+              43,
+              74,
+              140,
+              131,
+              63,
+              150,
+              138,
+              127,
+              6,
+              216,
+              62,
+              92,
+              158,
+              127
+            ],
+            "entry": {
+              "name": "Collaborative Map",
+              "dialect": {
+                "artifactKind": "s.gis.map",
+                "standard": "1",
+                "subset": "any"
+              }
+            }
+          },
+          "recordedAtMs": 1000
+        }
+      ],
+      "clientRows": 0,
+      "backendAccepted": false
+    },
+    {
+      "id": "foreign-space",
+      "events": [
+        {
+          "seq": 1,
+          "id": "fixture-event-1",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 1
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "space.created",
+            "spaceId": "space-fixture",
+            "name": "Fixture Space",
+            "spaceKind": "studio",
+            "visibility": "private",
+            "ownerUserId": "user-fixture"
+          },
+          "recordedAtMs": 1000
+        },
+        {
+          "seq": 2,
+          "id": "fixture-event-2",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 2
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "document.announced",
+            "descriptor": {
+              "spaceId": "space-fixture",
+              "documentId": "artifact-11223344556677889900aabbccddeeff",
+              "artifactKind": "s.gis.map",
+              "artifactSchema": "gis.map",
+              "owner": {
+                "pluginId": "gis",
+                "packageId": "semio:gis",
+                "version": "0.1.0",
+                "packageHash": "1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              "packSchemaHash": "2222222222222222222222222222222222222222222222222222222222222222",
+              "bootstrapVersion": 1,
+              "bootstrapFrontier": {
+                "headSeq": 0,
+                "commitSeq": 0,
+                "epoch": 1
+              },
+              "bootstrapSnapshotHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            }
+          },
+          "recordedAtMs": 1000
+        },
+        {
+          "seq": 3,
+          "id": "fixture-event-3",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 3
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "document.indexed",
+            "scope": {
+              "spaceId": "foreign-space",
+              "documentId": "artifact-11223344556677889900aabbccddeeff"
+            },
+            "descriptorDigestV1": [
+              249,
+              125,
+              129,
+              92,
+              193,
+              84,
+              76,
+              103,
+              100,
+              155,
+              190,
+              211,
+              32,
+              23,
+              40,
+              203,
+              54,
+              27,
+              43,
+              74,
+              140,
+              131,
+              63,
+              150,
+              138,
+              127,
+              6,
+              216,
+              62,
+              92,
+              158,
+              127
+            ],
+            "entry": {
+              "name": "Collaborative Map",
+              "dialect": {
+                "artifactKind": "s.gis.map",
+                "standard": "1",
+                "subset": "any"
+              }
+            }
+          },
+          "recordedAtMs": 1000
+        }
+      ],
+      "clientRows": 0,
+      "backendAccepted": false
+    },
+    {
+      "id": "missing-author",
+      "events": [
+        {
+          "seq": 1,
+          "id": "fixture-event-1",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 1
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "space.created",
+            "spaceId": "space-fixture",
+            "name": "Fixture Space",
+            "spaceKind": "studio",
+            "visibility": "private",
+            "ownerUserId": "user-fixture"
+          },
+          "recordedAtMs": 1000
+        },
+        {
+          "seq": 2,
+          "id": "fixture-event-2",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 2
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "document.announced",
+            "descriptor": {
+              "spaceId": "space-fixture",
+              "documentId": "artifact-11223344556677889900aabbccddeeff",
+              "artifactKind": "s.gis.map",
+              "artifactSchema": "gis.map",
+              "owner": {
+                "pluginId": "gis",
+                "packageId": "semio:gis",
+                "version": "0.1.0",
+                "packageHash": "1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              "packSchemaHash": "2222222222222222222222222222222222222222222222222222222222222222",
+              "bootstrapVersion": 1,
+              "bootstrapFrontier": {
+                "headSeq": 0,
+                "commitSeq": 0,
+                "epoch": 1
+              },
+              "bootstrapSnapshotHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            }
+          },
+          "recordedAtMs": 1000
+        },
+        {
+          "seq": 3,
+          "id": "fixture-event-3",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 3
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "body": {
+            "kind": "document.indexed",
+            "scope": {
+              "spaceId": "space-fixture",
+              "documentId": "artifact-11223344556677889900aabbccddeeff"
+            },
+            "descriptorDigestV1": [
+              249,
+              125,
+              129,
+              92,
+              193,
+              84,
+              76,
+              103,
+              100,
+              155,
+              190,
+              211,
+              32,
+              23,
+              40,
+              203,
+              54,
+              27,
+              43,
+              74,
+              140,
+              131,
+              63,
+              150,
+              138,
+              127,
+              6,
+              216,
+              62,
+              92,
+              158,
+              127
+            ],
+            "entry": {
+              "name": "Collaborative Map",
+              "dialect": {
+                "artifactKind": "s.gis.map",
+                "standard": "1",
+                "subset": "any"
+              }
+            }
+          },
+          "recordedAtMs": 1000
+        }
+      ],
+      "clientRows": 0,
+      "backendAccepted": false
+    },
+    {
+      "id": "invalid-name",
+      "events": [
+        {
+          "seq": 1,
+          "id": "fixture-event-1",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 1
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "space.created",
+            "spaceId": "space-fixture",
+            "name": "Fixture Space",
+            "spaceKind": "studio",
+            "visibility": "private",
+            "ownerUserId": "user-fixture"
+          },
+          "recordedAtMs": 1000
+        },
+        {
+          "seq": 2,
+          "id": "fixture-event-2",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 2
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "document.announced",
+            "descriptor": {
+              "spaceId": "space-fixture",
+              "documentId": "artifact-11223344556677889900aabbccddeeff",
+              "artifactKind": "s.gis.map",
+              "artifactSchema": "gis.map",
+              "owner": {
+                "pluginId": "gis",
+                "packageId": "semio:gis",
+                "version": "0.1.0",
+                "packageHash": "1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              "packSchemaHash": "2222222222222222222222222222222222222222222222222222222222222222",
+              "bootstrapVersion": 1,
+              "bootstrapFrontier": {
+                "headSeq": 0,
+                "commitSeq": 0,
+                "epoch": 1
+              },
+              "bootstrapSnapshotHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            }
+          },
+          "recordedAtMs": 1000
+        },
+        {
+          "seq": 3,
+          "id": "fixture-event-3",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 3
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "document.indexed",
+            "scope": {
+              "spaceId": "space-fixture",
+              "documentId": "artifact-11223344556677889900aabbccddeeff"
+            },
+            "descriptorDigestV1": [
+              249,
+              125,
+              129,
+              92,
+              193,
+              84,
+              76,
+              103,
+              100,
+              155,
+              190,
+              211,
+              32,
+              23,
+              40,
+              203,
+              54,
+              27,
+              43,
+              74,
+              140,
+              131,
+              63,
+              150,
+              138,
+              127,
+              6,
+              216,
+              62,
+              92,
+              158,
+              127
+            ],
+            "entry": {
+              "name": " bad",
+              "dialect": {
+                "artifactKind": "s.gis.map",
+                "standard": "1",
+                "subset": "any"
+              }
+            }
+          },
+          "recordedAtMs": 1000
+        }
+      ],
+      "clientRows": 0,
+      "backendAccepted": false
+    },
+    {
+      "id": "forged-digest",
+      "events": [
+        {
+          "seq": 1,
+          "id": "fixture-event-1",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 1
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "space.created",
+            "spaceId": "space-fixture",
+            "name": "Fixture Space",
+            "spaceKind": "studio",
+            "visibility": "private",
+            "ownerUserId": "user-fixture"
+          },
+          "recordedAtMs": 1000
+        },
+        {
+          "seq": 2,
+          "id": "fixture-event-2",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 2
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "document.announced",
+            "descriptor": {
+              "spaceId": "space-fixture",
+              "documentId": "artifact-11223344556677889900aabbccddeeff",
+              "artifactKind": "s.gis.map",
+              "artifactSchema": "gis.map",
+              "owner": {
+                "pluginId": "gis",
+                "packageId": "semio:gis",
+                "version": "0.1.0",
+                "packageHash": "1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              "packSchemaHash": "2222222222222222222222222222222222222222222222222222222222222222",
+              "bootstrapVersion": 1,
+              "bootstrapFrontier": {
+                "headSeq": 0,
+                "commitSeq": 0,
+                "epoch": 1
+              },
+              "bootstrapSnapshotHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            }
+          },
+          "recordedAtMs": 1000
+        },
+        {
+          "seq": 3,
+          "id": "fixture-event-3",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 3
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "document.indexed",
+            "scope": {
+              "spaceId": "space-fixture",
+              "documentId": "artifact-11223344556677889900aabbccddeeff"
+            },
+            "descriptorDigestV1": [
+              1,
+              125,
+              129,
+              92,
+              193,
+              84,
+              76,
+              103,
+              100,
+              155,
+              190,
+              211,
+              32,
+              23,
+              40,
+              203,
+              54,
+              27,
+              43,
+              74,
+              140,
+              131,
+              63,
+              150,
+              138,
+              127,
+              6,
+              216,
+              62,
+              92,
+              158,
+              127
+            ],
+            "entry": {
+              "name": "Collaborative Map",
+              "dialect": {
+                "artifactKind": "s.gis.map",
+                "standard": "1",
+                "subset": "any"
+              }
+            }
+          },
+          "recordedAtMs": 1000
+        }
+      ],
+      "clientRows": 1,
+      "backendAccepted": false
+    },
+    {
+      "id": "zero-digest",
+      "events": [
+        {
+          "seq": 1,
+          "id": "fixture-event-1",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 1
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "space.created",
+            "spaceId": "space-fixture",
+            "name": "Fixture Space",
+            "spaceKind": "studio",
+            "visibility": "private",
+            "ownerUserId": "user-fixture"
+          },
+          "recordedAtMs": 1000
+        },
+        {
+          "seq": 2,
+          "id": "fixture-event-2",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 2
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "document.announced",
+            "descriptor": {
+              "spaceId": "space-fixture",
+              "documentId": "artifact-11223344556677889900aabbccddeeff",
+              "artifactKind": "s.gis.map",
+              "artifactSchema": "gis.map",
+              "owner": {
+                "pluginId": "gis",
+                "packageId": "semio:gis",
+                "version": "0.1.0",
+                "packageHash": "1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              "packSchemaHash": "2222222222222222222222222222222222222222222222222222222222222222",
+              "bootstrapVersion": 1,
+              "bootstrapFrontier": {
+                "headSeq": 0,
+                "commitSeq": 0,
+                "epoch": 1
+              },
+              "bootstrapSnapshotHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            }
+          },
+          "recordedAtMs": 1000
+        },
+        {
+          "seq": 3,
+          "id": "fixture-event-3",
+          "hlc": {
+            "physicalMs": 1000,
+            "logical": 3
+          },
+          "actor": {
+            "kind": "system",
+            "id": "system:creation"
+          },
+          "spaceId": "space-fixture",
+          "userId": "user-fixture",
+          "body": {
+            "kind": "document.indexed",
+            "scope": {
+              "spaceId": "space-fixture",
+              "documentId": "artifact-11223344556677889900aabbccddeeff"
+            },
+            "descriptorDigestV1": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "entry": {
+              "name": "Collaborative Map",
+              "dialect": {
+                "artifactKind": "s.gis.map",
+                "standard": "1",
+                "subset": "any"
+              }
+            }
+          },
+          "recordedAtMs": 1000
+        }
+      ],
+      "clientRows": 0,
+      "backendAccepted": false
+    }
+  ]
+}

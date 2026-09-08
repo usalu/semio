@@ -4,6 +4,7 @@
   "additionalProperties": false,
   "required": [
     "schema",
+    "compilerStorage",
     "package",
     "target",
     "laws",
@@ -16,18 +17,51 @@
     "cases"
   ],
   "properties": {
-    "stageEnvironment": { "const": { "buildStack": "8388608", "nativeStack": "268435456", "sharedValue": "preserved" } },
-    "nativeArguments": { "const": ["--exact", "--test-threads=1", "--show-output"] },
-    "capturedOutput": { "const": "[DEBUG] retained native owner reached its terminal witness" },
+    "compilerStorage": {
+      "const": {
+        "defaultDirectory": "target",
+        "base": "workspace"
+      }
+    },
+    "stageEnvironment": {
+      "const": {
+        "buildStack": "8388608",
+        "nativeStack": "268435456",
+        "sharedValue": "preserved"
+      }
+    },
+    "nativeArguments": {
+      "const": [
+        "--exact",
+        "--test-threads=1",
+        "--show-output"
+      ]
+    },
+    "capturedOutput": {
+      "const": "[DEBUG] retained native owner reached its terminal witness"
+    },
     "activeLease": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["directoryPrefix", "manifestName", "version", "heartbeatMaxAgeMs"],
+      "required": [
+        "directoryPrefix",
+        "manifestName",
+        "version",
+        "heartbeatMaxAgeMs"
+      ],
       "properties": {
-        "directoryPrefix": { "const": ".exact-cargo-laws-active-" },
-        "manifestName": { "const": "lease.json" },
-        "version": { "const": 1 },
-        "heartbeatMaxAgeMs": { "const": 120000 }
+        "directoryPrefix": {
+          "const": ".exact-cargo-laws-active-"
+        },
+        "manifestName": {
+          "const": "lease.json"
+        },
+        "version": {
+          "const": 1
+        },
+        "heartbeatMaxAgeMs": {
+          "const": 120000
+        }
       }
     },
     "schema": {
@@ -103,7 +137,7 @@
               "hash-after-law",
               "cancel-before",
               "cancel-after-build",
-              "outside-cargo-target"
+              "source-cargo-target"
             ]
           },
           "expected": {

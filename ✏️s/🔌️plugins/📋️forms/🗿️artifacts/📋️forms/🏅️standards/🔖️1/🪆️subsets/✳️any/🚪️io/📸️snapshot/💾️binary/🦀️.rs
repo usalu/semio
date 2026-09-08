@@ -170,7 +170,7 @@ mod tests {
         let step = FormStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() };
         store.dispatch(ArtifactCommand::Apply { mutations: vec![FormMutation::CreateStep(crate::artifacts::forms::mutations::create_step::mutation::CreateStep { step, index: None })], description: None }).await.expect("apply");
         let edit: &Edit<FormMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::os_store::test_support::assert_command_envelope_round_trip::<FormsSnapshot, FormMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store::os_store::test_support::assert_command_envelope_round_trip::<FormsSnapshot, FormMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

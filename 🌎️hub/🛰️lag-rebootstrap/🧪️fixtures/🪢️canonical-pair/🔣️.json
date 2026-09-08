@@ -14,6 +14,18 @@
       "chainHash": "3333333333333333333333333333333333333333333333333333333333333333"
     }
   },
+  "frontierCases": [
+    { "id": "exact-genesis", "documentId": "doc:tokyo", "headEditOrdinal": 0, "headEditId": "", "lastCommitSeq": 0, "chainHash": "0000000000000000000000000000000000000000000000000000000000000000", "accepted": true },
+    { "id": "exact-edited", "documentId": "doc:tokyo", "headEditOrdinal": 7, "headEditId": "edit:7", "lastCommitSeq": 6, "chainHash": "3333333333333333333333333333333333333333333333333333333333333333", "accepted": true },
+    { "id": "genesis-wrong-document", "documentId": "doc:foreign", "headEditOrdinal": 0, "headEditId": "", "lastCommitSeq": 0, "chainHash": "0000000000000000000000000000000000000000000000000000000000000000", "accepted": false },
+    { "id": "genesis-with-ordinal", "documentId": "doc:tokyo", "headEditOrdinal": 1, "headEditId": "", "lastCommitSeq": 0, "chainHash": "0000000000000000000000000000000000000000000000000000000000000000", "accepted": false },
+    { "id": "genesis-with-head", "documentId": "doc:tokyo", "headEditOrdinal": 0, "headEditId": "edit:partial", "lastCommitSeq": 0, "chainHash": "0000000000000000000000000000000000000000000000000000000000000000", "accepted": false },
+    { "id": "genesis-with-commit", "documentId": "doc:tokyo", "headEditOrdinal": 0, "headEditId": "", "lastCommitSeq": 1, "chainHash": "0000000000000000000000000000000000000000000000000000000000000000", "accepted": false },
+    { "id": "genesis-with-chain", "documentId": "doc:tokyo", "headEditOrdinal": 0, "headEditId": "", "lastCommitSeq": 0, "chainHash": "3333333333333333333333333333333333333333333333333333333333333333", "accepted": false },
+    { "id": "edited-with-empty-head", "documentId": "doc:tokyo", "headEditOrdinal": 1, "headEditId": "", "lastCommitSeq": 1, "chainHash": "3333333333333333333333333333333333333333333333333333333333333333", "accepted": false },
+    { "id": "edited-with-zero-commit", "documentId": "doc:tokyo", "headEditOrdinal": 1, "headEditId": "edit:1", "lastCommitSeq": 0, "chainHash": "3333333333333333333333333333333333333333333333333333333333333333", "accepted": false },
+    { "id": "edited-with-zero-chain", "documentId": "doc:tokyo", "headEditOrdinal": 1, "headEditId": "edit:1", "lastCommitSeq": 1, "chainHash": "0000000000000000000000000000000000000000000000000000000000000000", "accepted": false }
+  ],
   "pack": { "length": 5001, "multiplier": 17, "increment": 3, "sha256": "5df441c4e2f9e82241d77329fbca62e4f0817e404796d652f3d258c3d01e137d" },
   "spr": { "length": 4097, "multiplier": 29, "increment": 7, "sha256": "1c33f7415ff963382f8b53da1b7c03352ab29641f939b0e47acdc99c1274e1f3" },
   "expected": {

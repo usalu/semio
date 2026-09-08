@@ -118,11 +118,11 @@ pub mod derived_composition {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::value::schema::semio_value_artifact_schema_descriptor());
-        let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioValueSnapshot, crate::artifacts::semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation>(
+        store::register_document_codec(store::ArtifactCodec::of::<SemioValueSnapshot, crate::artifacts::semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation>(
             crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA,
-        ));
-        let _ = register_subset_validator(validator_entry());
-        let _ = register_composer_entries(io_bridge_entries());
+        )).expect("static Stdio registration must be available and conflict-free");
+        register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
+        register_composer_entries(io_bridge_entries()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
 

@@ -110,11 +110,11 @@ mod tests {
     async fn create_object_obeys_the_inverse_and_absorb_laws() {
         let base = default_snapshot();
         let create = LowpolyMutation::CreateObject(super::super::create_object::CreateObject { index: base.objects.len(), object: tiny_object("obj-99", "Extra") });
-        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &create);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &create).await;
         let d1 = create.diff(&base).into_parts().0;
         let after = d1.apply(&base).expect("valid mutation diff");
         let d2 = LowpolyMutation::RenameObject(super::super::rename_object::RenameObject { id: "obj-99".into(), new_name: "Renamed".into() }).diff(&after).into_parts().0;
-        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -129,7 +129,7 @@ mod tests {
         let base = default_snapshot();
         let id = base.objects[0].id.clone();
         let mutation = LowpolyMutation::MoveObject(super::super::move_object::MoveObject { id, new_position: [4.0, 5.0, 6.0] });
-        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
     }
     //#endregion ⚖️SemanticLaws
 
@@ -141,21 +141,21 @@ mod tests {
     async fn delete_object_missing_target_is_an_error() {
         let base = default_snapshot();
         let mutation = LowpolyMutation::DeleteObject(super::super::delete_object::DeleteObject { id: "does-not-exist".into() });
-        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation);
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn move_object_missing_target_is_an_error() {
         let base = default_snapshot();
         let mutation = LowpolyMutation::MoveObject(super::super::move_object::MoveObject { id: "does-not-exist".into(), new_position: [1.0, 2.0, 3.0] });
-        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation);
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn rename_object_missing_target_is_an_error() {
         let base = default_snapshot();
         let mutation = LowpolyMutation::RenameObject(super::super::rename_object::RenameObject { id: "does-not-exist".into(), new_name: "X".into() });
-        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation);
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &mutation).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -165,14 +165,14 @@ mod tests {
         let mutation = LowpolyMutation::CreateObject(super::super::create_object::CreateObject { index: 0, object: tiny_object(&existing_id, "Dup") });
         let outcome = mutation.diff(&base);
         assert_eq!(outcome.worst_level(), Some(protocol::os_dsl::Severity::Fatal));
-        protocol::os_spr::testkit::assert_fatal_never_applies(&outcome);
+        protocol::os_spr::testkit::assert_fatal_never_applies(&outcome).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn create_object_outcome_obeys_the_policy_matrix() {
         let base = default_snapshot();
         let mutation = LowpolyMutation::CreateObject(super::super::create_object::CreateObject { index: base.objects.len(), object: tiny_object("obj-99", "Extra") });
-        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation);
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -180,7 +180,7 @@ mod tests {
         let base = default_snapshot();
         let existing_id = base.objects[0].id.clone();
         let mutation = LowpolyMutation::DeleteObject(super::super::delete_object::DeleteObject { id: existing_id });
-        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation);
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -188,7 +188,7 @@ mod tests {
         let base = default_snapshot();
         let id = base.objects[0].id.clone();
         let mutation = LowpolyMutation::MoveObject(super::super::move_object::MoveObject { id, new_position: [4.0, 5.0, 6.0] });
-        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation);
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -196,7 +196,7 @@ mod tests {
         let base = default_snapshot();
         let id = base.objects[0].id.clone();
         let mutation = LowpolyMutation::RenameObject(super::super::rename_object::RenameObject { id, new_name: "Renamed".into() });
-        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation);
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &mutation).await;
     }
     //#endregion 🔖️OutcomeLaws
 

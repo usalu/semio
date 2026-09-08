@@ -831,6 +831,6 @@ mod tests {
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🏗️lifts-the-third-vertex-and-gives-it-an-explicit-w/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/🏗️lifts-the-third-55b415/🦀️.rs"]
 mod set_snapshot_lifts_the_third_vertex_and_gives_it_an_explicit_w;
 //#endregion 🧪️FixtureCases

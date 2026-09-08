@@ -172,7 +172,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn every_scalar_change_round_trips() {
+    async fn every_scalar_change_round_trips() {
         let base = Din4108Snapshot::default();
 
         let after = round_trip(&base, &Din4108Mutation::ChangeCategory(change_category::ChangeCategory { new_category: "office".into() }));
@@ -228,7 +228,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn insert_remove_layer_round_trips() {
+    async fn insert_remove_layer_round_trips() {
         let base = Din4108Snapshot::default();
         let new_layer = LayerDocument { thickness_m: 0.05, lambda_w_mk: 0.04 };
 
@@ -247,15 +247,15 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn remove_layer_of_an_out_of_range_index_is_rejected() {
+    async fn remove_layer_of_an_out_of_range_index_is_rejected() {
         let base = Din4108Snapshot::default();
         let remove = Din4108Mutation::RemoveLayer(remove_layer::RemoveLayer { index: 99 });
         assert!(remove.inverse(&base).is_empty(), "removing an absent index has nothing to undo");
-        protocol::testkit::assert_missing_target_is_error(&base, &remove);
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &remove).await;
     }
 
     #[semio_framework_async_macros::async_test]
-    fn reorder_layers_round_trips() {
+    async fn reorder_layers_round_trips() {
         let base = Din4108Snapshot::default();
         assert!(base.layers.len() >= 2, "fixture must have at least two layers to exercise reorder");
 
@@ -266,7 +266,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_layer_thickness_and_lambda_round_trip() {
+    async fn change_layer_thickness_and_lambda_round_trip() {
         let base = Din4108Snapshot::default();
 
         let thickness = Din4108Mutation::ChangeLayerThickness(change_layer_thickness::ChangeLayerThickness { index: 0, new_thickness_m: 0.3 });
@@ -283,7 +283,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn semantic_kinds_cover_every_variant() {
+    async fn semantic_kinds_cover_every_variant() {
         assert_eq!(Din4108Mutation::kinds().len(), 22);
         let mutation = Din4108Mutation::ChangeCategory(change_category::ChangeCategory { new_category: "x".into() });
         assert_eq!(mutation.semantics().kind, "change-category");
@@ -306,49 +306,49 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "🔒️change-airtightness-class/🧪️tests/🔒️upgrades-the-airtightness-class-to-class1/🦀️.rs"]
+    #[path = "🔒️change-airtightness-class/🧪️tests/🔒️upgrades-the-8f5d1d/🦀️.rs"]
     mod tests_change_airtightness_class_upgrades_the_airtightness_class_to_class1;
-    #[path = "💨️change-airtightness-n50/🧪️tests/💨️tightens-n50-to-1-point-5-per-hour/🦀️.rs"]
+    #[path = "💨️change-airtightness-n50/🧪️tests/💨️tightens-n50-to-70dadf/🦀️.rs"]
     mod tests_change_airtightness_n50_tightens_n50_to_1_point_5_per_hour;
-    #[path = "🧩️change-application-type/🧪️tests/🧩️reclassifies-the-application-type-as-wab/🦀️.rs"]
+    #[path = "🧩️change-application-type/🧪️tests/🧩️reclassifies-the-9bd598/🦀️.rs"]
     mod tests_change_application_type_reclassifies_the_application_type_as_wab;
-    #[path = "✅️change-bb2-details-conform/🧪️tests/❌️declares-the-beiblatt-2-details-non-conforming/🦀️.rs"]
+    #[path = "✅️change-bb2-details-conform/🧪️tests/❌️declares-the-048ea4/🦀️.rs"]
     mod tests_change_bb2_details_conform_declares_the_beiblatt_2_details_non_conforming;
-    #[path = "📇️change-catalog-id/🧪️tests/📇️repoints-the-catalogue-entry-to-aw-07/🦀️.rs"]
+    #[path = "📇️change-catalog-id/🧪️tests/📇️repoints-the-e94f3e/🦀️.rs"]
     mod tests_change_catalog_id_repoints_the_catalogue_entry_to_aw_07;
-    #[path = "🗂️change-category/🧪️tests/🏢️retypes-the-assembly-as-office/🦀️.rs"]
+    #[path = "🗂️change-category/🧪️tests/🏢️retypes-the-465c04/🦀️.rs"]
     mod tests_change_category_retypes_the_assembly_as_office;
-    #[path = "🌦️change-climate/🧪️tests/🗺️moves-the-building-to-climate-zone-4/🦀️.rs"]
+    #[path = "🌦️change-climate/🧪️tests/🗺️moves-the-a549e4/🦀️.rs"]
     mod tests_change_climate_moves_the_building_to_climate_zone_4;
-    #[path = "🏷️change-declared-application-class/🧪️tests/🏷️declares-application-class-kh/🦀️.rs"]
+    #[path = "🏷️change-declared-application-class/🧪️tests/🏷️declares-c86fd9/🦀️.rs"]
     mod tests_change_declared_application_class_declares_application_class_kh;
-    #[path = "📐️change-envelope-area-m2/🧪️tests/📐️grows-the-envelope-to-150-m2/🦀️.rs"]
+    #[path = "📐️change-envelope-area-m2/🧪️tests/📐️grows-the-e8c618/🦀️.rs"]
     mod tests_change_envelope_area_m2_grows_the_envelope_to_150_m2;
-    #[path = "🔆️change-irradiance-wm2/🧪️tests/🔆️raises-design-irradiance-to-750-w-per-m2/🦀️.rs"]
+    #[path = "🔆️change-irradiance-wm2/🧪️tests/🔆️raises-design-0e1340/🦀️.rs"]
     mod tests_change_irradiance_w_m2_raises_design_irradiance_to_750_w_per_m2;
-    #[path = "🧊️change-layer-lambda/🧪️tests/🧊️degrades-the-masonry-lambda-to-0-point-5/🦀️.rs"]
+    #[path = "🧊️change-layer-lambda/🧪️tests/🧊️degrades-the-2423eb/🦀️.rs"]
     mod tests_change_layer_lambda_degrades_the_masonry_lambda_to_0_point_5;
-    #[path = "📏️change-layer-thickness/🧪️tests/📏️thickens-the-insulation-layer-to-0-point-2-m/🦀️.rs"]
+    #[path = "📏️change-layer-thickness/🧪️tests/📏️thickens-the-5ccc81/🦀️.rs"]
     mod tests_change_layer_thickness_thickens_the_insulation_layer_to_0_point_2_m;
-    #[path = "🧽️change-material-id/🧪️tests/🧽️swaps-the-insulation-material-to-eps/🦀️.rs"]
+    #[path = "🧽️change-material-id/🧪️tests/🧽️swaps-the-c858ac/🦀️.rs"]
     mod tests_change_material_id_swaps_the_insulation_material_to_eps;
-    #[path = "🌧️change-moisture-mu-exterior/🧪️tests/🌧️raises-the-exterior-mu-value-to-20/🦀️.rs"]
+    #[path = "🌧️change-moisture-mu-exterior/🧪️tests/🌧️raises-the-101323/🦀️.rs"]
     mod tests_change_moisture_mu_exterior_raises_the_exterior_mu_value_to_20;
-    #[path = "💦️change-moisture-mu-interior/🧪️tests/💦️raises-the-interior-mu-value-to-2-point-5/🦀️.rs"]
+    #[path = "💦️change-moisture-mu-interior/🧪️tests/💦️raises-the-8a4745/🦀️.rs"]
     mod tests_change_moisture_mu_interior_raises_the_interior_mu_value_to_2_point_5;
-    #[path = "🌉️change-psi-times-l-sum/🧪️tests/🌉️raises-the-thermal-bridge-sum-to-0-point-05/🦀️.rs"]
+    #[path = "🌉️change-psi-times-l-sum/🧪️tests/🌉️raises-the-a28d71/🦀️.rs"]
     mod tests_change_psi_times_l_sum_raises_the_thermal_bridge_sum_to_0_point_05;
-    #[path = "💧️change-rh-int/🧪️tests/💧️raises-indoor-relative-humidity-to-0-point-65/🦀️.rs"]
+    #[path = "💧️change-rh-int/🧪️tests/💧️raises-indoor-87ac6d/🦀️.rs"]
     mod tests_change_rh_int_raises_indoor_relative_humidity_to_0_point_65;
-    #[path = "☀️change-solar-absorptance/🧪️tests/☀️lightens-the-facade-to-absorptance-0-point-25/🦀️.rs"]
+    #[path = "☀️change-solar-absorptance/🧪️tests/☀️lightens-the-3f2def/🦀️.rs"]
     mod tests_change_solar_absorptance_lightens_the_facade_to_absorptance_0_point_25;
-    #[path = "🌡️change-t-int-c/🧪️tests/🌡️raises-the-indoor-design-temperature-to-22-point-5-c/🦀️.rs"]
+    #[path = "🌡️change-t-int-c/🧪️tests/🌡️raises-the-indoor-a4cb01/🦀️.rs"]
     mod tests_change_t_int_c_raises_the_indoor_design_temperature_to_22_point_5_c;
-    #[path = "➕️insert-layer/🧪️tests/➕️inserts-an-interior-plaster-layer-at-index-1/🦀️.rs"]
+    #[path = "➕️insert-layer/🧪️tests/➕️inserts-an-interior-ed5484/🦀️.rs"]
     mod tests_insert_layer_inserts_an_interior_plaster_layer_at_index_1;
-    #[path = "➖️remove-layer/🧪️tests/🚫️removes-the-load-bearing-masonry-layer/🦀️.rs"]
+    #[path = "➖️remove-layer/🧪️tests/🚫️removes-the-load-69eea4/🦀️.rs"]
     mod tests_remove_layer_removes_the_load_bearing_masonry_layer;
-    #[path = "🔀️reorder-layers/🧪️tests/🧭️moves-the-insulation-in-front-of-the-masonry/🦀️.rs"]
+    #[path = "🔀️reorder-layers/🧪️tests/🧭️moves-the-e15d54/🦀️.rs"]
     mod tests_reorder_layers_moves_the_insulation_in_front_of_the_masonry;
 }
 //#endregion 🧪️FixtureTests

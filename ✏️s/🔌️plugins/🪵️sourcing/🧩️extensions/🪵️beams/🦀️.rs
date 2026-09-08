@@ -39,7 +39,7 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    fn bundle_contributes_module_for_sourcing_curation() {
+    async fn bundle_contributes_module_for_sourcing_curation() {
         let manifest = bundle().manifest;
         assert_eq!(manifest.extension_id, EXTENSION_ID);
         assert_eq!(manifest.extends, "sourcing");

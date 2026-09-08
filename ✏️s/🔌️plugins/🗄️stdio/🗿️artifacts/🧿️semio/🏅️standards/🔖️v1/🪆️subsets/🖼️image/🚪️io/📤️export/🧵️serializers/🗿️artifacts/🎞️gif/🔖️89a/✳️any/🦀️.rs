@@ -15,6 +15,9 @@
 //!   have no home on `GifSnapshot` and are dropped; per-frame region/disposal are not
 //!   reconstructed (every frame covers the full canvas, matching the import leaf's own
 //!   normalization).
+/// 🎞️ Shared palette, indexed frames, and optional transparency index.
+pub type QuantizedFrames = (GifColorTable, Vec<Vec<u8>>, Option<u8>);
+
 
 use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifColorTable, GifFrame, GifRgb, GifSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
@@ -29,13 +32,13 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: 
 /// one palette entry, in first-seen order. Errors — never silently drops colors — once a 257th
 /// distinct entry would be needed (GIF's real `2..=256` palette-size ceiling).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn quantize(frames: &[&[u8]]) -> Result<(GifColorTable, Vec<Vec<u8>>, Option<u8>), store::PackError> {
+fn quantize(frames: &[&[u8]]) -> Result<QuantizedFrames, store::PackError> {
     let mut colors: Vec<(u8, u8, u8)> = Vec::new();
     let mut transparent_index: Option<u8> = None;
     let mut indexed_frames = Vec::with_capacity(frames.len());
     for rgba in frames {
         let mut indices = Vec::with_capacity(rgba.len() / 4);
-        for px in rgba.chunks_exact(4) {
+        for px in rgba.as_chunks::<4>().0 {
             let is_transparent = px[3] == 0;
             let rgb = if is_transparent { (0u8, 0u8, 0u8) } else { (px[0], px[1], px[2]) };
             let idx = match colors.iter().position(|&c| c == rgb) {

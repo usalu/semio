@@ -539,6 +539,14 @@ impl BezPath {
     pub fn is_empty(&self) -> bool {
         self.elements.is_empty()
     }
+    /// 🧹️ Retires at most one owned path element and witnesses when only vector backing remains.
+    pub fn retirement_step(&mut self) -> bool {
+        self.elements.pop().is_none()
+    }
+    /// 📏️ Exact element-vector backing retained after all path elements are retired.
+    pub fn retirement_backing_bytes(&self) -> usize {
+        self.elements.capacity().saturating_mul(size_of::<PathEl>())
+    }
     /// ✏️ Line/quad/cubic segments in path order — a `ClosePath` element becomes an implicit
     /// `Line` back to the most recent `MoveTo` (skipped when the current point is already there),
     /// same semantics as `kurbo::BezPath::path_segments` for the element kinds [`PathEl`] can hold.

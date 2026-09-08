@@ -140,14 +140,34 @@
     "approvalReceipt": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "jobId", "mutationId", "commandHash", "proposalHash", "applied"],
+      "required": ["schema", "jobId", "mutationId", "commandHash", "proposalHash", "applied", "undo"],
       "properties": {
         "schema": { "type": "string", "minLength": 1 },
         "jobId": { "$ref": "#/$defs/hex32" },
-        "mutationId": { "$ref": "#/$defs/hex64" },
+        "mutationId": { "$ref": "#/$defs/hex32" },
         "commandHash": { "$ref": "#/$defs/hex64" },
         "proposalHash": { "$ref": "#/$defs/hex64" },
-        "applied": { "type": "boolean" }
+        "applied": { "type": "boolean" },
+        "undo": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["targetId", "expectedCurrent"],
+          "properties": {
+            "targetId": { "$ref": "#/$defs/hex32" },
+            "expectedCurrent": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["documentId", "headEditOrdinal", "headEditId", "lastCommitSeq", "chainSha256"],
+              "properties": {
+                "documentId": { "type": "string", "minLength": 1 },
+                "headEditOrdinal": { "type": "integer", "minimum": 1 },
+                "headEditId": { "type": "string", "minLength": 1 },
+                "lastCommitSeq": { "type": "integer", "minimum": 1 },
+                "chainSha256": { "$ref": "#/$defs/hex64" }
+              }
+            }
+          }
+        }
       }
     },
     "event": {

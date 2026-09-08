@@ -1,0 +1,30 @@
+{
+  "cases": [
+    {
+      "name": "artifact publication",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts",
+      "exports": [
+        "stageArtifacts"
+      ],
+      "maximumInputs": 1
+    },
+    {
+      "name": "native Cargo producer",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts",
+      "exports": [
+        "buildCargoArtifacts"
+      ],
+      "maximumInputs": 5
+    },
+    {
+      "name": "command router",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts",
+      "exports": [
+        "Script",
+        "BundleScript",
+        "ScriptRouter"
+      ],
+      "maximumInputs": 2
+    }
+  ]
+}

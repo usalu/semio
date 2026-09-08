@@ -1,37 +1,10 @@
 //! ⚖️ Pattern weight storage: precomputed `w`, `ln w`, `w·ln w` per pattern (the three terms the
 //! incremental Shannon-entropy heuristic needs at O(1) per update), plus an optional exact-integer
-//! parallel table for [`WeightMode::StrictInteger`] determinism.
+//! parallel table for deterministic integer sampling.
 
 #[cfg(test)]
 use crate::wfc_engine::error::ModelError;
 use crate::wfc_engine::ids::PatternId;
-
-// #region 🔖️Mode
-/// ⚖️ Whether heuristics/sampling read `f64` weights (fast, platform-stable but not
-/// refactor-proof) or exact `u64` weights (slower, bit-for-bit reproducible everywhere — used by
-/// every differential/golden-replay test in this crate).
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
-#[cfg(test)]
-pub enum WeightMode {
-    #[default]
-    Real,
-    StrictInteger,
-}
-
-/// ⚖️ What a weight of exactly zero means for sampling and pruning.
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
-#[cfg(test)]
-pub enum ZeroWeightPolicy {
-    /// ⚖️ Zero weight is a validation error at compile time.
-    Reject,
-    /// ⚖️ Zero-weight patterns stay in the domain (may be forced) but are never sampled unless
-    /// they are the only remaining candidate.
-    #[default]
-    SampleNeverUnlessForced,
-    /// ⚖️ Zero weight is treated exactly like an explicit deny — the pattern is compiled out.
-    Forbidden,
-}
-// #endregion 🔖️Mode
 
 // #region 🔖️Weights
 /// ⚖️ Per-pattern weight table with precomputed entropy terms.
@@ -97,12 +70,6 @@ impl WeightTable {
     #[inline]
     pub fn len(&self) -> usize {
         self.w.len()
-    }
-
-    #[inline]
-    #[cfg(test)]
-    pub fn is_empty(&self) -> bool {
-        self.w.is_empty()
     }
 
     #[inline]

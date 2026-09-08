@@ -47,14 +47,6 @@ impl Domain {
         Self { bits, cardinality: w.len() as u32, sum_w, sum_w_ln_w, sum_w_int, revision: 0 }
     }
 
-    /// 📦️ An explicitly-restricted starting domain (e.g. a per-node initial mask); caches are
-    /// computed exactly from `allowed` and `w` (no assumption `allowed` came from a full domain).
-    pub fn new_restricted(allowed: &PatternSet, w: &WeightTable) -> Self {
-        let (sum_w, sum_w_ln_w) = w.sum_over(allowed);
-        let sum_w_int = w.has_integer_weights().then(|| w.sum_int_over(allowed).unwrap_or(0));
-        Self { bits: allowed.clone(), cardinality: allowed.count_ones(), sum_w, sum_w_ln_w, sum_w_int, revision: 0 }
-    }
-
     #[inline]
     pub fn bits(&self) -> &PatternSet {
         &self.bits
@@ -63,11 +55,6 @@ impl Domain {
     #[inline]
     pub fn cardinality(&self) -> u32 {
         self.cardinality
-    }
-
-    #[inline]
-    pub fn revision(&self) -> u64 {
-        self.revision
     }
 
     #[inline]
@@ -241,11 +228,6 @@ impl DomainStore {
     }
 
     #[inline]
-    pub fn is_empty(&self) -> bool {
-        self.domains.is_empty()
-    }
-
-    #[inline]
     pub fn get(&self, n: crate::wfc_engine::ids::NodeId) -> &Domain {
         &self.domains[n.index()]
     }
@@ -267,11 +249,6 @@ impl DomainStore {
         self.domains.iter().any(|d| d.is_wiped())
     }
 
-    pub fn debug_assert_consistent(&self, w: &WeightTable) {
-        for d in &self.domains {
-            d.debug_assert_consistent(w);
-        }
-    }
 }
 // #endregion 🔖️Store
 

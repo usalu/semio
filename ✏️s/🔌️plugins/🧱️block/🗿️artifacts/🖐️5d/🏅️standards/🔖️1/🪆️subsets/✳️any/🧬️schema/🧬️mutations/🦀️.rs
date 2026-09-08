@@ -186,7 +186,7 @@ mod tests {
     use crate::artifacts::block5d::schema::empty_block5d_snapshot;
     use crate::artifacts::block5d::{Block5dGripKind, Block5dGripTemplate};
     use crate::{BlockAttribute, BlockAuthor, BlockCompatibilityRule, BlockRepresentation};
-    use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use semio_framework_os_kernel::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::MutationDiff;
     use protocol::SemanticMutation;
 
@@ -336,47 +336,47 @@ mod tests {
     async fn every_mutation_kind_satisfies_the_inverse_law() {
         let base = seeded_snapshot();
 
-        assert_mutation_inverse_law(&base, &rename_part_kind("x".into()));
-        assert_mutation_inverse_law(&base, &change_part_kind_label("x".into()));
-        assert_mutation_inverse_law(&base, &change_part_kind_variant(Some("v2".into())));
-        assert_mutation_inverse_law(&base, &change_part_kind_description("d".into()));
-        assert_mutation_inverse_law(&base, &change_part_kind_icon(Some("i".into())));
-        assert_mutation_inverse_law(&base, &change_part_kind_unit(Some("m".into())));
-        assert_mutation_inverse_law(&base, &update_part_2d(Some("s".into()), Some(1.0), None, None, None, None));
-        assert_mutation_inverse_law(&base, &update_part_3d(Some([0.0, 0.0, 0.0, 1.0]), Some([1.0, 1.0, 1.0])));
-        assert_mutation_inverse_law(&base, &create_representation(BlockRepresentation { id: "r1".into(), name: "r1".into(), mesh_url: None, tags: Vec::new(), lod: None, description: String::new(), attributes: Vec::new() }));
-        assert_mutation_inverse_law(&base, &delete_representation("r0".into()));
-        assert_mutation_inverse_law(&base, &rename_representation("r0".into(), "renamed".into()));
-        assert_mutation_inverse_law(&base, &change_representation_mesh_url("r0".into(), Some("https://example/x".into())));
-        assert_mutation_inverse_law(&base, &change_representation_lod("r0".into(), Some("lod1".into())));
-        assert_mutation_inverse_law(&base, &change_representation_description("r0".into(), "d".into()));
-        assert_mutation_inverse_law(&base, &add_representation_tag("r0".into(), "lod2".into()));
-        assert_mutation_inverse_law(&base, &remove_representation_tag("r0".into(), "lod0".into()));
-        assert_mutation_inverse_law(&base, &add_representation_attribute("r0".into(), BlockAttribute { key: "color".into(), value: "red".into(), definition: None }));
-        assert_mutation_inverse_law(&base, &remove_representation_attribute("r0".into(), "finish".into()));
-        assert_mutation_inverse_law(&base, &create_grip_kind(Block5dGripKind { id: "gk1".into(), name: "gk1".into(), label: "GK1".into(), color: "#000".into(), default_rope_kind: "rope.link".into() }));
-        assert_mutation_inverse_law(&base, &delete_grip_kind("gk0".into()));
-        assert_mutation_inverse_law(&base, &rename_grip_kind("gk0".into(), "renamed".into()));
-        assert_mutation_inverse_law(&base, &change_grip_kind_label("gk0".into(), "Renamed".into()));
-        assert_mutation_inverse_law(&base, &change_grip_kind_color("gk0".into(), "#fff".into()));
-        assert_mutation_inverse_law(&base, &change_grip_kind_default_rope_kind("gk0".into(), "rope.heavy".into()));
-        assert_mutation_inverse_law(&base, &create_grip(Block5dGripTemplate { id: "g1".into(), grip_kind: "gk0".into(), angle: 0.0, radius_2d: 0.2, position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius_3d: 0.2 }));
-        assert_mutation_inverse_law(&base, &delete_grip("g0".into()));
-        assert_mutation_inverse_law(&base, &move_grip_2d("g0".into(), 1.5, 0.9));
-        assert_mutation_inverse_law(&base, &move_grip_3d("g0".into(), [1.0, 1.0, 1.0], [0.0, 1.0, 0.0]));
-        assert_mutation_inverse_law(&base, &resize_grip_3d("g0".into(), 0.9));
-        assert_mutation_inverse_law(&base, &change_grip_grip_kind("g0".into(), "gk0".into()));
-        assert_mutation_inverse_law(&base, &add_compatibility_rule(BlockCompatibilityRule { id: "c1".into(), source: "a".into(), target: "c".into(), bidirectional: false }));
-        assert_mutation_inverse_law(&base, &remove_compatibility_rule("c0".into()));
-        assert_mutation_inverse_law(&base, &add_attribute(BlockAttribute { key: "weight".into(), value: "10".into(), definition: None }));
-        assert_mutation_inverse_law(&base, &remove_attribute("material".into()));
-        assert_mutation_inverse_law(&base, &add_author(BlockAuthor { id: "a1".into(), name: "Bo".into(), email: None }));
-        assert_mutation_inverse_law(&base, &remove_author("a0".into()));
-        assert_mutation_inverse_law(&base, &move_camera2d(3.0, 4.0));
-        assert_mutation_inverse_law(&base, &scale_camera2d(1.5));
-        assert_mutation_inverse_law(&base, &move_camera3d([3.0, 4.0, 5.0], [0.0, 0.0, 0.0]));
-        assert_mutation_inverse_law(&base, &scale_camera3d(1.5));
-        assert_mutation_inverse_law(&base, &change_meta_description("notes".into()));
+        assert_mutation_inverse_law(&base, &rename_part_kind("x".into())).await;
+        assert_mutation_inverse_law(&base, &change_part_kind_label("x".into())).await;
+        assert_mutation_inverse_law(&base, &change_part_kind_variant(Some("v2".into()))).await;
+        assert_mutation_inverse_law(&base, &change_part_kind_description("d".into())).await;
+        assert_mutation_inverse_law(&base, &change_part_kind_icon(Some("i".into()))).await;
+        assert_mutation_inverse_law(&base, &change_part_kind_unit(Some("m".into()))).await;
+        assert_mutation_inverse_law(&base, &update_part_2d(Some("s".into()), Some(1.0), None, None, None, None)).await;
+        assert_mutation_inverse_law(&base, &update_part_3d(Some([0.0, 0.0, 0.0, 1.0]), Some([1.0, 1.0, 1.0]))).await;
+        assert_mutation_inverse_law(&base, &create_representation(BlockRepresentation { id: "r1".into(), name: "r1".into(), mesh_url: None, tags: Vec::new(), lod: None, description: String::new(), attributes: Vec::new() })).await;
+        assert_mutation_inverse_law(&base, &delete_representation("r0".into())).await;
+        assert_mutation_inverse_law(&base, &rename_representation("r0".into(), "renamed".into())).await;
+        assert_mutation_inverse_law(&base, &change_representation_mesh_url("r0".into(), Some("https://example/x".into()))).await;
+        assert_mutation_inverse_law(&base, &change_representation_lod("r0".into(), Some("lod1".into()))).await;
+        assert_mutation_inverse_law(&base, &change_representation_description("r0".into(), "d".into())).await;
+        assert_mutation_inverse_law(&base, &add_representation_tag("r0".into(), "lod2".into())).await;
+        assert_mutation_inverse_law(&base, &remove_representation_tag("r0".into(), "lod0".into())).await;
+        assert_mutation_inverse_law(&base, &add_representation_attribute("r0".into(), BlockAttribute { key: "color".into(), value: "red".into(), definition: None })).await;
+        assert_mutation_inverse_law(&base, &remove_representation_attribute("r0".into(), "finish".into())).await;
+        assert_mutation_inverse_law(&base, &create_grip_kind(Block5dGripKind { id: "gk1".into(), name: "gk1".into(), label: "GK1".into(), color: "#000".into(), default_rope_kind: "rope.link".into() })).await;
+        assert_mutation_inverse_law(&base, &delete_grip_kind("gk0".into())).await;
+        assert_mutation_inverse_law(&base, &rename_grip_kind("gk0".into(), "renamed".into())).await;
+        assert_mutation_inverse_law(&base, &change_grip_kind_label("gk0".into(), "Renamed".into())).await;
+        assert_mutation_inverse_law(&base, &change_grip_kind_color("gk0".into(), "#fff".into())).await;
+        assert_mutation_inverse_law(&base, &change_grip_kind_default_rope_kind("gk0".into(), "rope.heavy".into())).await;
+        assert_mutation_inverse_law(&base, &create_grip(Block5dGripTemplate { id: "g1".into(), grip_kind: "gk0".into(), angle: 0.0, radius_2d: 0.2, position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius_3d: 0.2 })).await;
+        assert_mutation_inverse_law(&base, &delete_grip("g0".into())).await;
+        assert_mutation_inverse_law(&base, &move_grip_2d("g0".into(), 1.5, 0.9)).await;
+        assert_mutation_inverse_law(&base, &move_grip_3d("g0".into(), [1.0, 1.0, 1.0], [0.0, 1.0, 0.0])).await;
+        assert_mutation_inverse_law(&base, &resize_grip_3d("g0".into(), 0.9)).await;
+        assert_mutation_inverse_law(&base, &change_grip_grip_kind("g0".into(), "gk0".into())).await;
+        assert_mutation_inverse_law(&base, &add_compatibility_rule(BlockCompatibilityRule { id: "c1".into(), source: "a".into(), target: "c".into(), bidirectional: false })).await;
+        assert_mutation_inverse_law(&base, &remove_compatibility_rule("c0".into())).await;
+        assert_mutation_inverse_law(&base, &add_attribute(BlockAttribute { key: "weight".into(), value: "10".into(), definition: None })).await;
+        assert_mutation_inverse_law(&base, &remove_attribute("material".into())).await;
+        assert_mutation_inverse_law(&base, &add_author(BlockAuthor { id: "a1".into(), name: "Bo".into(), email: None })).await;
+        assert_mutation_inverse_law(&base, &remove_author("a0".into())).await;
+        assert_mutation_inverse_law(&base, &move_camera2d(3.0, 4.0)).await;
+        assert_mutation_inverse_law(&base, &scale_camera2d(1.5)).await;
+        assert_mutation_inverse_law(&base, &move_camera3d([3.0, 4.0, 5.0], [0.0, 0.0, 0.0])).await;
+        assert_mutation_inverse_law(&base, &scale_camera3d(1.5)).await;
+        assert_mutation_inverse_law(&base, &change_meta_description("notes".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -385,7 +385,7 @@ mod tests {
         let d1 = change_part_kind_label("first".into()).diff(&base).into_parts().0;
         let mid = d1.apply(&base).expect("valid mutation diff");
         let d2 = change_part_kind_label("second".into()).diff(&mid).into_parts().0;
-        assert_mutation_diff_absorb_law(&base, d1, d2);
+        assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -394,7 +394,7 @@ mod tests {
         let d1 = move_grip_2d("g0".into(), 0.5, 0.3).diff(&base).into_parts().0;
         let mid = d1.apply(&base).expect("valid mutation diff");
         let d2 = move_grip_2d("g0".into(), 1.1, 0.6).diff(&mid).into_parts().0;
-        assert_mutation_diff_absorb_law(&base, d1, d2);
+        assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -410,15 +410,15 @@ mod tests {
     //#region 🔖️OutcomeLaws
     // 🎫️ 26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS — see
     // `📓️w3-f-block-puzzle-report.md` for the `assert_outcome_policy_matrix` pending-helper note.
-    use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
+    use semio_framework_os_kernel::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
 
     #[semio_framework_async_macros::async_test]
     async fn missing_target_is_error_per_verb_family() {
         let base = empty_block5d_snapshot();
-        assert_missing_target_is_error(&base, &delete_grip_kind("missing".into())); // delete
-        assert_missing_target_is_error(&base, &remove_author("missing".into())); // remove
-        assert_missing_target_is_error(&base, &change_grip_kind_color("missing".into(), "#fff".into())); // change/set/update
-        assert_missing_target_is_error(&base, &move_grip_2d("missing".into(), 1.0, 1.0));
+        assert_missing_target_is_error(&base, &delete_grip_kind("missing".into())).await; // delete
+        assert_missing_target_is_error(&base, &remove_author("missing".into())).await; // remove
+        assert_missing_target_is_error(&base, &change_grip_kind_color("missing".into(), "#fff".into())).await; // change/set/update
+        assert_missing_target_is_error(&base, &move_grip_2d("missing".into(), 1.0, 1.0)).await;
         // move/drag/rotate/scale/resize
     }
 
@@ -428,7 +428,7 @@ mod tests {
         let grip_kind = Block5dGripKind { id: "gk0".into(), name: "gk0".into(), label: "GK0".into(), color: "#888".into(), default_rope_kind: "rope.standard".into() };
         base.grip_kinds.push(grip_kind.clone());
         let outcome = create_grip_kind(grip_kind).diff(&base);
-        assert_fatal_never_applies(&outcome);
+        assert_fatal_never_applies(&outcome).await;
         assert_eq!(outcome.worst_level(), Some(dsl::Severity::Fatal));
         assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.duplicate-id"));
     }
@@ -441,7 +441,7 @@ mod tests {
     /// declared vocabulary and the measured one from drifting apart.
     #[test]
     fn kinds_match_the_enum_and_the_catalog() {
-        let descriptors = <Block5dMutation as protocol::SemanticMutation<Block5dSnapshot>>::kinds();
+        let descriptors = <Block5dMutation as SemanticMutation<Block5dSnapshot>>::kinds();
         assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared Block5dMutation variant");
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");

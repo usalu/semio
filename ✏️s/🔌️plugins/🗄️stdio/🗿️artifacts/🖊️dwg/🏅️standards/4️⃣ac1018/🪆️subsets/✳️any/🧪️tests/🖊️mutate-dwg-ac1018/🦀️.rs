@@ -196,9 +196,9 @@ mod subject {
         let maintenance_version = number("maintenanceVersion", f64::from(base.maintenance_version)) as u8;
         let codepage = number("codepage", f64::from(base.codepage)) as u16;
         Ok(match spec.str("kind").as_str() {
-            "no-mutation" => DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
+            "no-mutation" => DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(base.clone()) }),
             "set-version-info" => DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version, maintenance_version, codepage }),
-            "set-snapshot" => DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: DwgSnapshot { version, maintenance_version, codepage, ..DwgSnapshot::default() } }),
+            "set-snapshot" => DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(DwgSnapshot { version, maintenance_version, codepage, ..DwgSnapshot::default() }) }),
             other => return Err(format!("unrecognised mutation kind {other:?}")),
         })
     }

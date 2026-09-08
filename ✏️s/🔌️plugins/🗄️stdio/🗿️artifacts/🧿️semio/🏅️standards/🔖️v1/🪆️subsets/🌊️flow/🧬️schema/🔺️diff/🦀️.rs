@@ -191,7 +191,7 @@ where
 /// `d2`-modify of a `d1`-added key patches into the carried payload; everything else composes
 /// directly on the shared key space.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
+fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -321,7 +321,7 @@ fn absorb_node_diff(mut a: FlowNodeDiff, b: FlowNodeDiff) -> FlowNodeDiff {
     a.params = match (a.params.take(), b.params) {
         (None, x) => x,
         (x, None) => x,
-        (Some(pa), Some(pb)) => Some(absorb_named(pa, pb, |p| p.key.clone(), absorb_param_diff, apply_param)),
+        (Some(pa), Some(pb)) => Some(absorb_named(pa, &pb, |p| p.key.clone(), absorb_param_diff, apply_param)),
     };
     a
 }
@@ -405,12 +405,12 @@ impl MutationDiff<SemioFlowSnapshot> for SemioFlowDiff {
         self.nodes = match (self.nodes.take(), other.nodes) {
             (None, x) => x,
             (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |n| n.id.clone(), absorb_node_diff, apply_node)),
+            (Some(a), Some(b)) => Some(absorb_named(a, &b, |n| n.id.clone(), absorb_node_diff, apply_node)),
         };
         self.edges = match (self.edges.take(), other.edges) {
             (None, x) => x,
             (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |e| e.id.clone(), absorb_edge_diff, apply_edge)),
+            (Some(a), Some(b)) => Some(absorb_named(a, &b, |e| e.id.clone(), absorb_edge_diff, apply_edge)),
         };
     }
 }
@@ -515,7 +515,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -614,7 +614,7 @@ pub(crate) fn dec_param(s: &str) -> Result<FlowParam, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_node(n: &FlowNode) -> String {
-    format!("[{},{},{},{},{}]", enc_str(&n.id), enc_str(&n.kind), enc_str(&n.label), format!("[{}]", n.params.iter().map(enc_param).collect::<Vec<_>>().join(",")), enc_point2(&n.position))
+    format!("[{},{},{},{},{}]", enc_str(&n.id), enc_str(&n.kind), enc_str(&n.label), format_args!("[{}]", n.params.iter().map(enc_param).collect::<Vec<_>>().join(",")), enc_point2(&n.position))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_node(s: &str) -> Result<FlowNode, String> {
@@ -658,7 +658,7 @@ fn dec_params_diff(s: &str) -> Result<FlowParamsDiff, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_node_diff(d: &FlowNodeDiff) -> String {
-    format!("[{},{},{},{}]", encode_option(&d.kind, |v| enc_str(v)), encode_option(&d.label, |v| enc_str(v)), encode_option(&d.params, enc_params_diff), encode_option(&d.position, |v| enc_point2(v)))
+    format!("[{},{},{},{}]", encode_option(&d.kind, |v| enc_str(v)), encode_option(&d.label, |v| enc_str(v)), encode_option(&d.params, enc_params_diff), encode_option(&d.position, enc_point2))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_node_diff(s: &str) -> Result<FlowNodeDiff, String> {
@@ -678,7 +678,7 @@ fn dec_nodes_diff(s: &str) -> Result<FlowNodesDiff, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_edge_diff(d: &FlowEdgeDiff) -> String {
-    format!("[{},{},{}]", encode_option(&d.from, |v| enc_port_ref(v)), encode_option(&d.to, |v| enc_port_ref(v)), encode_option(&d.kind, |v| enc_str(v)))
+    format!("[{},{},{}]", encode_option(&d.from, enc_port_ref), encode_option(&d.to, enc_port_ref), encode_option(&d.kind, |v| enc_str(v)))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_edge_diff(s: &str) -> Result<FlowEdgeDiff, String> {

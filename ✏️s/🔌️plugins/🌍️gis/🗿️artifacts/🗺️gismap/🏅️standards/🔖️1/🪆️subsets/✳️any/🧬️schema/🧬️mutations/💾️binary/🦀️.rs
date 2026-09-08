@@ -1244,8 +1244,8 @@ mod tests {
         dsl::DslValue::from(value)
     }
 
-    fn sample_feature(id: &str) -> crate::artifacts::gismap::MapFeature {
-        crate::artifacts::gismap::MapFeature { id: id.into(), data: dsl_of(&json!({ "id": id, "lon": 1.0, "lat": 2.0 })) }
+    fn sample_feature(id: &str) -> MapFeature {
+        MapFeature { id: id.into(), data: dsl_of(&json!({ "id": id, "lon": 1.0, "lat": 2.0 })) }
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1280,10 +1280,10 @@ mod tests {
     async fn gis_map_document_text_round_trips_through_store() {
         let initial = empty_gis_map_snapshot();
         let envelope = store::create_document_envelope(GIS_MAP_SCHEMA, "gis2d-demo", initial, None);
-        let mut store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: sample_feature("p1") })], description: None }).expect("apply");
-        store::os_store::test_support::assert_document_text_round_trip(&store);
-        store::os_store::test_support::assert_document_pack_round_trip(&store);
+        let mut store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: sample_feature("p1") })], description: None }).await.expect("apply");
+        store::os_store::test_support::assert_document_text_round_trip(&store).await;
+        store::os_store::test_support::assert_document_pack_round_trip(&store).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1319,7 +1319,7 @@ mod tests {
                     assert!(released_items <= 1);
                     assert!(released_bytes <= GIS_MAP_OWNED_FIELD_BYTES);
                 }
-                semio_framework_plugin::PluginCloseStep::Blocked { reason } => panic!("fresh GIS candidate close unexpectedly blocked: {reason}"),
+                semio_framework_plugin::PluginCloseStep::AwaitingInput { reason } | semio_framework_plugin::PluginCloseStep::Blocked { reason } => panic!("fresh GIS candidate close unexpectedly blocked: {reason}"),
                 semio_framework_plugin::PluginCloseStep::Complete => {
                     assert!(disposer.terminal_is_empty(&candidate));
                     drop(disposer);

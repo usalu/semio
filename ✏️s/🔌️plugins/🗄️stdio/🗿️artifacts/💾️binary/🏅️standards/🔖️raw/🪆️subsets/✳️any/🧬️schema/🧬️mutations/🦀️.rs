@@ -109,7 +109,7 @@ pub(crate) fn agg_inverse(this: &BinaryMutation, base: &BinarySnapshot) -> Vec<B
                 // pilot uses for its own dropped-`NoMutation` fallback arms (`RemoveTileTags`'s
                 // "was already absent" case, `../../🖼️tiff/…/🧱️baseline/🧬️schema/🧬️mutations/
                 // 🦀️.rs`), rather than reinstating a unit `NoMutation` variant the derive forbids.
-                return Vec::new();
+                Vec::new()
             } else {
                 vec![BinaryMutation::ReplaceByteRange(replace_byte_range::ReplaceByteRange { offset: *offset, remove_len: 0, insert: base.bytes[*offset..].to_vec() })]
             }
@@ -284,7 +284,7 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📸️set-snapshot/🧪️tests/🪡️rewrites-the-two-middle-bytes/🦀️.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/🪡️rewrites-the-two-46c073/🦀️.rs"]
     mod tests_set_snapshot_rewrites_the_two_middle_bytes;
 }
 //#endregion 🧪️FixtureTests

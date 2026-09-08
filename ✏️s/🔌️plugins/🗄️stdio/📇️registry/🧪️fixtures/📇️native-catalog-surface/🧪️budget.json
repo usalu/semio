@@ -1,0 +1,19 @@
+{
+  "schema": "semio.stdio.catalog-projection-budget-cases/v1",
+  "projectionLimitBytes": 2097152,
+  "descriptorLimitBytes": 16777216,
+  "cases": [
+    { "id": "ascii", "text": "catalog", "encodedBytes": 9 },
+    { "id": "quotes", "text": "\"\\", "encodedBytes": 6 },
+    { "id": "short-escapes", "text": "\b\f\n\r\t", "encodedBytes": 12 },
+    { "id": "long-escapes", "text": "\u0000\u001f", "encodedBytes": 14 },
+    { "id": "utf8", "text": "🗽️ä", "encodedBytes": 11 },
+    { "id": "line-separators", "text": "  ", "encodedBytes": 8 }
+  ],
+  "aggregateCases": [
+    { "id": "projection-exact", "projectionCharges": [2097151, 1], "descriptorCharges": [], "accepted": true },
+    { "id": "projection-over", "projectionCharges": [2097152, 1], "descriptorCharges": [], "accepted": false },
+    { "id": "descriptor-exact", "projectionCharges": [], "descriptorCharges": [8388608, 8388608], "accepted": true },
+    { "id": "descriptor-over", "projectionCharges": [], "descriptorCharges": [16777216, 1], "accepted": false }
+  ]
+}

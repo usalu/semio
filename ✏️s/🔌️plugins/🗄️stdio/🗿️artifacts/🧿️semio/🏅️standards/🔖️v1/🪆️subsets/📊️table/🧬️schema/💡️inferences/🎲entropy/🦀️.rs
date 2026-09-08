@@ -107,7 +107,7 @@ impl store::InferredField<SemioTableSnapshot> for ColumnEntropy {
         let counts = column_symbol_counts(snapshot, key);
         let count = counts.iter().sum::<u64>() as u32;
         let distinct = counts.len() as u32;
-        let bits = entropy_discrete(&counts, DiscreteMethod::Plugin, LogBase::Bits).map(|est| est.value).unwrap_or(0.0);
+        let bits = entropy_discrete(&counts, DiscreteMethod::Plugin, LogBase::Bits).map_or(0.0, |est| est.value);
         SemioColumnEntropy { count, distinct, bits }
     }
 }

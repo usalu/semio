@@ -126,7 +126,7 @@ pub fn semio_presentation_mutation_inverse(mutation: &SemioPresentationMutation,
 
 //#region 🔖️Helpers
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn shape_at<'a>(base: &'a SemioPresentationSnapshot, slide_index: usize, shape_index: usize) -> Option<&'a SlideShape> {
+fn shape_at(base: &SemioPresentationSnapshot, slide_index: usize, shape_index: usize) -> Option<&SlideShape> {
     base.slides.get(slide_index)?.shapes.get(shape_index)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -147,11 +147,11 @@ pub(crate) fn agg_diff(this: &SemioPresentationMutation, base: &SemioPresentatio
         SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index, slide }) => diff_insert_slide(*index, slide.clone()),
         SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index }) => diff_remove_slide(*index),
         SemioPresentationMutation::SetSlideLayout(set_slide_layout::SetSlideLayout { index, layout_id }) => diff_set_slide_layout(base, *index, layout_id.clone()),
-        SemioPresentationMutation::SetSlideNotes(set_slide_notes::SetSlideNotes { index, notes }) => diff_set_slide_notes(base, *index, notes.clone()),
+        SemioPresentationMutation::SetSlideNotes(set_slide_notes::SetSlideNotes { index, notes }) => diff_set_slide_notes(base, *index, notes),
         SemioPresentationMutation::InsertShape(insert_shape::InsertShape { slide_index, shape_index, shape }) => diff_insert_shape(*slide_index, *shape_index, shape.clone()),
         SemioPresentationMutation::RemoveShape(remove_shape::RemoveShape { slide_index, shape_index }) => diff_remove_shape(*slide_index, *shape_index),
         SemioPresentationMutation::SetShapeFrame(set_shape_frame::SetShapeFrame { slide_index, shape_index, frame }) => diff_set_shape_frame(base, *slide_index, *shape_index, *frame),
-        SemioPresentationMutation::SetTextBoxBlocks(set_textbox_blocks::SetTextBoxBlocks { slide_index, shape_index, blocks }) => diff_set_textbox_blocks(base, *slide_index, *shape_index, blocks.clone()),
+        SemioPresentationMutation::SetTextBoxBlocks(set_textbox_blocks::SetTextBoxBlocks { slide_index, shape_index, blocks }) => diff_set_textbox_blocks(base, *slide_index, *shape_index, blocks),
         SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master }) => diff_insert_master(master.clone()),
         SemioPresentationMutation::RemoveMaster(remove_master::RemoveMaster { id }) => diff_remove_master(id),
         SemioPresentationMutation::InsertLayout(insert_layout::InsertLayout { layout }) => diff_insert_layout(layout.clone()),
@@ -806,6 +806,6 @@ mod tests {
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🔤️rewrites-the-second-slides-textbox-and-adds-a-speaker-note/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/t074/🦀️.rs"]
 mod set_snapshot_rewrites_the_second_slides_textbox_and_adds_a_speaker_note;
 //#endregion 🧪️FixtureCases

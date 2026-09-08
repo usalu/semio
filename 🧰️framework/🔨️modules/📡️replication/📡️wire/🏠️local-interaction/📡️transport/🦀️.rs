@@ -235,7 +235,7 @@ pub fn encode_local_interaction_query_reply(reply: &LocalInteractionQueryReply) 
 
 /// 📏️ Exact fixed-token and admitted-page byte extent, without allocation or payload traversal.
 pub fn local_interaction_query_reply_encoded_len(reply: &LocalInteractionQueryReply) -> Result<usize, &'static str> {
-    fn width(value: u64) -> usize { ((64 - value.leading_zeros()).max(1) as usize + 6) / 7 }
+    fn width(value: u64) -> usize { ((64 - value.leading_zeros()).max(1) as usize).div_ceil(7) }
     fn token_len(value: &LocalInteractionQueryToken) -> usize { 96 + width(value.request_id) + width(value.query_generation) + width(value.identity.app_instance_id as u64) + width(value.identity.generation) + width(value.ordinal) }
     Ok(match reply {
         LocalInteractionQueryReply::Started { token } => 1 + token_len(token),

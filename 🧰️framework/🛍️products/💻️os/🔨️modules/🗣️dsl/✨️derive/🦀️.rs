@@ -36,6 +36,8 @@ struct MutationSourceAuthority {
     taxonomy_path: PathBuf,
 }
 
+type MutationDomainOperations = Vec<(String, String)>;
+
 #[derive(Debug)]
 struct MutationAuthorityCommon {
     workspace_root: PathBuf,
@@ -45,7 +47,7 @@ struct MutationAuthorityCommon {
     mutation_payload_facet: String,
     source_filename: String,
     descriptor_filename: String,
-    domain_owners: BTreeMap<String, Vec<(String, String)>>,
+    domain_owners: BTreeMap<String, MutationDomainOperations>,
     aggregate_sources: BTreeMap<String, Vec<String>>,
 }
 
@@ -59,8 +61,8 @@ struct MutationAggregateSourceAuthority {
     mutation_payload_facet: String,
     source_filename: String,
     descriptor_filename: String,
-    domain_operations: Option<Vec<(String, String)>>,
-    component_roots: Vec<(String, Option<Vec<(String, String)>>)>,
+    domain_operations: Option<MutationDomainOperations>,
+    component_roots: Vec<(String, Option<MutationDomainOperations>)>,
 }
 
 fn mutation_authority_common(source: &Path, compiler_cwd: &Path) -> Result<MutationAuthorityCommon, String> {
@@ -164,7 +166,7 @@ fn mutation_authority_aggregate_sources(taxonomy: &serde_json::Value, collection
     Ok(result)
 }
 
-fn mutation_authority_domain_owners(taxonomy: &serde_json::Value, collection: &str) -> Result<BTreeMap<String, Vec<(String, String)>>, String> {
+fn mutation_authority_domain_owners(taxonomy: &serde_json::Value, collection: &str) -> Result<BTreeMap<String, MutationDomainOperations>, String> {
     let mut result = BTreeMap::new();
     let Some(registry) = taxonomy.get("mutationDomainOwners") else { return Ok(result); };
     let roots = registry.as_object().ok_or_else(|| "mutationDomainOwners must be an exact-root object".to_string())?;
@@ -200,7 +202,7 @@ fn mutation_authority_normalize(source: &Path, compiler_cwd: &Path) -> Result<Pa
     let mut normalized = PathBuf::new();
     for component in input.components() {
         if let Component::Normal(segment) = component {
-            if segment.to_str().map(|value| value.eq_ignore_ascii_case("compose")).unwrap_or(false) { return Err("opaque compose path rejected before I/O".to_string()); }
+            if segment.to_str().is_some_and(|value| value.eq_ignore_ascii_case("compose")) { return Err("opaque compose path rejected before I/O".to_string()); }
         }
         match component {
             Component::Prefix(prefix) => normalized.push(prefix.as_os_str()),
@@ -285,7 +287,7 @@ fn mutation_authority_no_follow(root: &Path, target: &Path, directory: bool) -> 
     if root_metadata.file_type().is_symlink() || !root_metadata.file_type().is_dir() { return Err("workspace root is not a regular directory".to_string()); }
     for component in relative.components() {
         let Component::Normal(segment) = component else { return Err("path is not lexically normalized".to_string()); };
-        if segment.to_str().map(|value| value.eq_ignore_ascii_case("compose")).unwrap_or(false) { return Err("opaque compose path rejected before I/O".to_string()); }
+        if segment.to_str().is_some_and(|value| value.eq_ignore_ascii_case("compose")) { return Err("opaque compose path rejected before I/O".to_string()); }
         current.push(segment);
         let metadata = fs::symlink_metadata(&current).map_err(|error| error.to_string())?;
         if metadata.file_type().is_symlink() { return Err("symlink path component rejected".to_string()); }
@@ -737,13 +739,14 @@ fn mutation_leaf_reject_duplicate_keys(raw: &[u8]) -> Result<(), String> {
 fn mutation_leaf_skip_ws(raw: &[u8], mut index: usize) -> usize { while raw.get(index).is_some_and(|byte| byte.is_ascii_whitespace()) { index += 1; } index }
 fn mutation_leaf_string_end(raw: &[u8], mut index: usize) -> Option<usize> { if raw.get(index) != Some(&b'\"') { return None; } index += 1; while let Some(byte) = raw.get(index) { match byte { b'\"' => return Some(index + 1), b'\\' => index += 2, 0..=0x1f => return None, _ => index += 1 } } None }
 fn mutation_leaf_json_value_end(raw: &[u8], index: usize) -> Option<usize> {
-    match raw.get(index)? { b'\"' => mutation_leaf_string_end(raw, index), b'{' => mutation_leaf_balanced_end(raw, index, b'{', b'}'), b'[' => mutation_leaf_balanced_end(raw, index, b'[', b']'), _ => { let end = raw[index..].iter().position(|byte| matches!(*byte, b',' | b'}' | b']') || byte.is_ascii_whitespace()).map(|offset| index + offset).unwrap_or(raw.len()); (end > index).then_some(end) } }
+    match raw.get(index)? { b'\"' => mutation_leaf_string_end(raw, index), b'{' => mutation_leaf_balanced_end(raw, index, b'{', b'}'), b'[' => mutation_leaf_balanced_end(raw, index, b'[', b']'), _ => { let end = raw[index..].iter().position(|byte| matches!(*byte, b',' | b'}' | b']') || byte.is_ascii_whitespace()).map_or(raw.len(), |offset| index + offset); (end > index).then_some(end) } }
 }
-fn mutation_leaf_balanced_end(raw: &[u8], mut index: usize, open: u8, close: u8) -> Option<usize> { let mut depth = 0usize; while let Some(byte) = raw.get(index) { if *byte == b'\"' { index = mutation_leaf_string_end(raw, index)?; continue; } if *byte == open { depth += 1; } else if *byte == close { depth -= 1; if depth == 0 { return Some(index + 1); } } index += 1; } None }
+fn mutation_leaf_balanced_end(raw: &[u8], mut index: usize, open: u8, close: u8) -> Option<usize> { let mut depth = 0usize; while let Some(byte) = raw.get(index) { if *byte == b'\"' { index = mutation_leaf_string_end(raw, index)?; continue; }
+        if *byte == open { depth += 1; } else if *byte == close { depth -= 1; if depth == 0 { return Some(index + 1); } } index += 1; } None }
 
 fn emit_mutation_leaf_descriptor(contract: &syn::Path, descriptor: &MutationLeafJson) -> proc_macro2::TokenStream {
     let schema_version = descriptor.schema_version; let owner = &descriptor.owner; let semantic_kind = &descriptor.semantic_kind; let display_name = &descriptor.display_name; let emoji = &descriptor.emoji; let aggregate_variant = &descriptor.aggregate_variant; let payload_schema = &descriptor.payload_schema;
-    let text_opcode = descriptor.text_opcode.as_ref().map(|value| quote!(::core::option::Option::Some(#value))).unwrap_or_else(|| quote!(::core::option::Option::None)); let binary_tag = descriptor.binary_tag.map(|value| quote!(::core::option::Option::Some(#value))).unwrap_or_else(|| quote!(::core::option::Option::None));
+    let text_opcode = descriptor.text_opcode.as_ref().map_or_else(|| quote!(::core::option::Option::None), |value| quote!(::core::option::Option::Some(#value))); let binary_tag = descriptor.binary_tag.map_or_else(|| quote!(::core::option::Option::None), |value| quote!(::core::option::Option::Some(#value)));
     let invertibility = match &descriptor.invertibility { MutationLeafInvertibility::SelfInvertible => quote!(#contract::MutationInvertibility::SelfInvertible), MutationLeafInvertibility::ExplicitMutation => quote!(#contract::MutationInvertibility::ExplicitMutation), MutationLeafInvertibility::Plan => quote!(#contract::MutationInvertibility::Plan), MutationLeafInvertibility::NonInvertible => quote!(#contract::MutationInvertibility::NonInvertible) };
     let diff_participation = match &descriptor.diff_participation { MutationLeafDiffParticipation::Detect => quote!(#contract::MutationDiffParticipation::Detect), MutationLeafDiffParticipation::ApplyOnly => quote!(#contract::MutationDiffParticipation::ApplyOnly), MutationLeafDiffParticipation::Plan => quote!(#contract::MutationDiffParticipation::Plan), MutationLeafDiffParticipation::None => quote!(#contract::MutationDiffParticipation::None) };
     let outcome_classes = descriptor.outcome_classes.iter().map(|value| match value { MutationLeafOutcomeClass::Applied => quote!(#contract::MutationOutcomeClass::Applied), MutationLeafOutcomeClass::Info => quote!(#contract::MutationOutcomeClass::Info), MutationLeafOutcomeClass::Warning => quote!(#contract::MutationOutcomeClass::Warning), MutationLeafOutcomeClass::Error => quote!(#contract::MutationOutcomeClass::Error), MutationLeafOutcomeClass::Fatal => quote!(#contract::MutationOutcomeClass::Fatal) });

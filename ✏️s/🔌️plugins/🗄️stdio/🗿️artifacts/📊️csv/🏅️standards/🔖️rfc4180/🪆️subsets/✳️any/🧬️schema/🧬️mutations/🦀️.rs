@@ -237,7 +237,7 @@ fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<CsvSnapshot, dsl::Pa
     Ok(CsvSnapshot { schema, has_header, records })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn op_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
+fn op_pack_err(e: &dsl::PackError) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "csv op binary", offset: 0, detail: e.to_string() }
 }
 
@@ -274,21 +274,21 @@ impl OpBinary for CsvMutation {
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut r = dsl::ByteReader::new(bytes);
-        let ordinal = r.read_u8().map_err(op_pack_err)?;
+        let ordinal = r.read_u8().map_err(|error| op_pack_err(&error))?;
         let mutation = match ordinal {
-            1 => CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: read_bin_snapshot(&mut r).map_err(op_pack_err)? }),
-            2 => CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: r.read_u8().map_err(op_pack_err)? != 0 }),
+            1 => CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: read_bin_snapshot(&mut r).map_err(|error| op_pack_err(&error))? }),
+            2 => CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: r.read_u8().map_err(|error| op_pack_err(&error))? != 0 }),
             3 => {
-                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
-                let record = read_bin_record(&mut r).map_err(op_pack_err)?;
+                let index = r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize;
+                let record = read_bin_record(&mut r).map_err(|error| op_pack_err(&error))?;
                 CsvMutation::InsertRecord(insert_record::InsertRecord { index, record })
             }
-            4 => CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: r.read_varint_u64().map_err(op_pack_err)? as usize }),
+            4 => CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize }),
             5 => {
-                let record_index = r.read_varint_u64().map_err(op_pack_err)? as usize;
-                let field_index = r.read_varint_u64().map_err(op_pack_err)? as usize;
-                let quoted = r.read_u8().map_err(op_pack_err)? != 0;
-                let value = read_bin_str(&mut r).map_err(op_pack_err)?;
+                let record_index = r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize;
+                let field_index = r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize;
+                let quoted = r.read_u8().map_err(|error| op_pack_err(&error))? != 0;
+                let value = read_bin_str(&mut r).map_err(|error| op_pack_err(&error))?;
                 CsvMutation::SetField(set_field::SetField { record_index, field_index, value, quoted })
             }
             other => {
@@ -609,7 +609,7 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📸️set-snapshot/🧪️tests/✏️corrects-the-area-cell-and-quotes-it/🦀️.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/✏️corrects-the-area-62d48d/🦀️.rs"]
     mod tests_set_snapshot_corrects_the_area_cell_and_quotes_it;
 }
 //#endregion 🧪️FixtureTests

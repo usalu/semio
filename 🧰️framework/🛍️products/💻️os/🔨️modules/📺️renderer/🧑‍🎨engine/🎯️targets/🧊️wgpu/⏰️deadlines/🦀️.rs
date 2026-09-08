@@ -57,6 +57,7 @@ impl CaretBlink {
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    #[cfg(test)]
     pub fn is_visible(&self) -> bool {
         self.visible
     }
@@ -83,6 +84,7 @@ impl CaretBlink {
     /// having just confirmed it) — calling it on a frame with no caret would re-arm a timer `sync`
     /// itself would immediately disarm again next call, so callers order `sync` before `fire`.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    #[cfg(test)]
     pub fn fire(&mut self, scheduler: &mut FrameScheduler, now_seconds: f64) {
         self.visible = !self.visible;
         scheduler.request_deadline(now_seconds + CARET_BLINK_SECONDS, InvalidationReason::PAINT);
@@ -99,27 +101,11 @@ impl Default for CaretBlink {
 
 //#region 🎬️TutorialKeyframes
 
-/// 🎬️ Tutorial playback's per-keyframe wake — the tutorial track already knows its own next keyframe
-/// timestamp (`ShellState::tutorial_tick`'s playhead), so this is a thin one-line adapter rather than
-/// a new scheduling concept: whoever owns the playhead calls this with that timestamp converted to
-/// `now_seconds`-relative seconds.
-// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn arm_next_keyframe(scheduler: &mut FrameScheduler, due_seconds: f64) {
-    scheduler.request_deadline(due_seconds, InvalidationReason::ANIMATION);
-}
 
 //#endregion 🎬️TutorialKeyframes
 
 //#region 📦️AssetFetch
 
-/// 📦️ Asset fetches (glb/map-tile/ui-image) have no deadline of their own — they invalidate the
-/// instant they land, not on a timer — so this is `FrameScheduler::invalidate`, not
-/// `request_deadline`; kept here rather than inlined at each call site so every invalidation reason
-/// this crate uses has exactly one named entry point, matching the other sources in this file.
-// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn on_asset_ready(scheduler: &mut FrameScheduler) {
-    scheduler.invalidate(InvalidationReason::RESOURCE_READY);
-}
 
 //#endregion 📦️AssetFetch
 

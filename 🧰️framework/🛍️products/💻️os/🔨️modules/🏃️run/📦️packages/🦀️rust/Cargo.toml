@@ -2,7 +2,7 @@
 name = "semio-framework-os-run"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Headless runner: computes an OS studio's workflow without a UI"
 
 [package.metadata.semio]

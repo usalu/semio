@@ -441,16 +441,8 @@ impl ArtifactEditor for Generation2dPlayApp {
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
         };
-        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            request.context,
-            operation_context,
-            request.completion,
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
             Generation2dCommand::command_id,
             GENERATION2D_RETAINED_RAW_BYTES,
             1,
@@ -764,7 +756,7 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
                 ActionArgOption::new("neuron", LocalizedLabel::native("Component", "Komponente")),
                 ActionArgOption::new("outputPreview", LocalizedLabel::native("Preview", "Vorschau")),
                 ActionArgOption::new("outputExport", LocalizedLabel::native("Export", "Export")),
-            ]).default_value("inputSlider"),
+            ]).default_value(&"inputSlider"),
         ])
         // 🕹️ First-class hover/selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
         // one domain over the flow-graph widget DAG, node/edge/handle granularities,
@@ -829,7 +821,7 @@ pub(crate) mod testkit {
     }
 
     pub async fn render(app: &mut Generation2dApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
     }
 
     /// ✏️ Adapts `create_generation2d_app`'s `AppDefinition` (contract §2.4) into the `App {
@@ -846,7 +838,7 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::generation2d::testkit::{app, app_with_registry, dispatch};
+    use crate::editor::generation2d::testkit::{app, app_with_registry};
     use flow::Widget;
     use semio_framework_plugin::testkit::assert_undo_redo_round_trip;
     use semio_framework_plugin::PluginApp;
@@ -855,14 +847,14 @@ mod tests {
         let mut snapshot = Generation2dSnapshot::default();
         snapshot.fixture.schema = label.into();
         for (id, text) in [("replace-target", "before replacement"), ("delete-target", "delete me"), ("move-target", "move me"), ("clear-target", "clear me")] {
-            snapshot.fixture.widgets.push(flow::Widget::InputNote { id: id.into(), text: text.into() });
+            snapshot.fixture.widgets.push(Widget::InputNote { id: id.into(), text: text.into() });
         }
         snapshot.fixture.synapses.push(flow::SynapseSpec { id: "replace-synapse".into(), from: "replace-target".into(), to: "move-target".into(), from_port: "old".into(), to_port: "old".into() });
         snapshot.fixture.synapses.push(flow::SynapseSpec { id: "disconnect-synapse".into(), from: "move-target".into(), to: "clear-target".into(), from_port: String::new(), to_port: String::new() });
         snapshot.fixture.layout.insert("move-target".into(), flow::WidgetLayout { x: 1.0, y: 2.0 });
         snapshot.fixture.layout.insert("clear-target".into(), flow::WidgetLayout { x: 3.0, y: 4.0 });
         for (id, name) in [("delete-generation", "Delete"), ("rename-generation", "Before Rename"), ("change-generation", "Change Value")] {
-            snapshot.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(flow::playbook::FormGeneration { id: id.into(), name: name.into(), values: serde_json::Map::new() });
+            snapshot.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(flow::playbook::FormGeneration { id: id.into(), name: name.into(), values: Default::default() });
         }
         snapshot.generation.cold_builder_mut().expect("unique cold generation owner").selected_generation_id = Some("rename-generation".into());
         snapshot
@@ -874,8 +866,8 @@ mod tests {
             .insert("integer", flow::neural::Value::Atom(flow::neural::Atom::Integer(7)))
             .insert("nested", flow::neural::Value::Dictionary(flow::neural::Dictionary::new().insert("text", flow::neural::Value::Atom(flow::neural::Atom::String("production".into())))));
         vec![
-            create_widget(0, flow::Widget::Neuron { id: "created-widget".into(), neuron_kind: "law".into(), params, input_ports: vec!["in".into()], output_ports: vec!["out".into()], preview: true }),
-            replace_widget(flow::Widget::Cluster { id: "replace-target".into(), name: "After Replacement".into(), tree: Default::default(), flow: Default::default() }),
+            create_widget(0, Widget::Neuron { id: "created-widget".into(), neuron_kind: "law".into(), params, input_ports: vec!["in".into()], output_ports: vec!["out".into()], preview: true }),
+            replace_widget(Widget::Cluster { id: "replace-target".into(), name: "After Replacement".into(), tree: Default::default(), flow: Default::default() }),
             delete_widget("delete-target".into()),
             connect_synapse(0, flow::SynapseSpec { id: "created-synapse".into(), from: "created-widget".into(), to: "replace-target".into(), from_port: "out".into(), to_port: "in".into() }),
             replace_synapse(flow::SynapseSpec { id: "replace-synapse".into(), from: "replace-target".into(), to: "move-target".into(), from_port: "new-out".into(), to_port: "new-in".into() }),
@@ -884,10 +876,10 @@ mod tests {
             clear_widget_layout("clear-target".into()),
             update_camera(flow::CameraJson { x: 9.0, y: 8.0, zoom: 1.75 }),
             change_schema("flow.fixture.production-retained".into()),
-            create_generation(flow::playbook::FormGeneration { id: "created-generation".into(), name: "Created".into(), values: serde_json::Map::new() }),
+            create_generation(flow::playbook::FormGeneration { id: "created-generation".into(), name: "Created".into(), values: Default::default() }),
             delete_generation("delete-generation".into()),
             rename_generation("rename-generation".into(), "After Rename".into()),
-            change_generation_value("change-generation".into(), "deep-answer".into(), serde_json::json!({"object": {"array": [1.0, false, "retained"]}})),
+            change_generation_value("change-generation".into(), "deep-answer".into(), serde_json::json!({"object": {"array": [1.0, false, "retained"]}}).into()),
         ]
     }
 
@@ -921,7 +913,7 @@ mod tests {
         crate::artifacts::generation2d::spr::generation2d_apply_retained_mutations_for_test(&mut expected, &mutations);
         let expected_digest = production_semantic_digest(&expected);
         let wire = serde_json::to_vec(&serde_json::json!({
-            "schema": crate::artifacts::generation2d::GENERATION_2D_SCHEMA,
+            "schema": GENERATION_2D_SCHEMA,
             "id": "generation2d-production-mounted-law",
             "vcs": {
                 "initialSnapshot": production_hex(&crate::artifacts::generation2d::snapshot::binary::encode(&snapshot)),
@@ -944,7 +936,7 @@ mod tests {
         (wire, expected, expected_digest)
     }
 
-    fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<Generation2dPlayApp>>, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
+    fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation2dPlayApp>>, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
         let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
         let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("P2 production ingress credits");
         crate::artifacts::generation2d::spr::generation2d_admit_publication_authority(
@@ -962,14 +954,14 @@ mod tests {
             let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
             bytes[..chunk.len()].copy_from_slice(chunk);
             let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded P2 production envelope page");
-            app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("P2 production envelope page admission failed: {fault}"));
+            app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("P2 production envelope page admission failed: {fault:?}"));
         }
         assert!(app.seal_artifact_envelope_ingress(handle).expect("P2 production envelope seal"));
         handle
     }
 
     fn drive_production_envelope(
-        app: &mut semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<Generation2dPlayApp>>,
+        app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation2dPlayApp>>,
         handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle,
     ) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
         for _ in 0..300_000 {
@@ -988,14 +980,14 @@ mod tests {
     /// and accepted, stale, ABA, and displaced stores remain owned until explicit terminal ACK/close.
     #[semio_framework_async_macros::async_test]
     async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_and_fail_closed() {
-        let mut accepted = semio_framework_plugin::VcsArtifactApp::<semio_framework_plugin::EditorApp<Generation2dPlayApp>>::new(semio_framework_plugin::EditorApp::default()).await;
+        let mut accepted = semio_framework_plugin::VcsArtifactApp::<EditorApp<Generation2dPlayApp>>::new(EditorApp::default()).await;
         let base_generation = accepted.artifact_generation_now();
         let (wire, expected, expected_digest) = production_envelope_wire("accepted-production-swap");
         let handle = admit_production_envelope(&mut accepted, &wire);
         assert_eq!(drive_production_envelope(&mut accepted, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
         assert_eq!(accepted.artifact_generation_now().0, base_generation.0 + 1);
-        let snapshot = accepted.snapshot().await.expect("accepted P2 production snapshot");
-        assert_eq!(&*snapshot, &expected, "real maintenance must publish all P2 snapshot and all-14 replay fields");
+        let snapshot = accepted.snapshot().expect("accepted P2 production snapshot");
+        assert_eq!(&snapshot, &expected, "real maintenance must publish all P2 snapshot and all-14 replay fields");
         assert_eq!(production_semantic_digest(&snapshot), expected_digest);
         assert!(snapshot.fixture.layout.contains_key("move-target"));
         assert!(!snapshot.fixture.layout.contains_key("clear-target"), "2D-only clear-widget-layout must survive retained replay");
@@ -1010,8 +1002,8 @@ mod tests {
             (WrongBase, "generation2d-publication.wrong-base"),
             (WrongParent, "generation2d-publication.wrong-parent"),
         ] {
-            let mut app = semio_framework_plugin::VcsArtifactApp::<semio_framework_plugin::EditorApp<Generation2dPlayApp>>::new(semio_framework_plugin::EditorApp::default()).await;
-            let last_valid = app.snapshot().await.expect("last-valid P2 snapshot");
+            let mut app = semio_framework_plugin::VcsArtifactApp::<EditorApp<Generation2dPlayApp>>::new(EditorApp::default()).await;
+            let last_valid = app.snapshot().expect("last-valid P2 snapshot");
             let last_valid_digest = production_semantic_digest(&last_valid);
             let base_generation = app.artifact_generation_now();
             let (wire, _, _) = production_envelope_wire("rejected-production-candidate");
@@ -1020,7 +1012,7 @@ mod tests {
             assert_eq!(drive_production_envelope(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
             assert_eq!(crate::artifacts::generation2d::spr::generation2d_take_publication_hostile_observed(handle.operation), Some(expected_code));
             assert_eq!(app.artifact_generation_now(), base_generation);
-            let retained = app.snapshot().await.expect("last-valid P2 snapshot after rejected candidate");
+            let retained = app.snapshot().expect("last-valid P2 snapshot after rejected candidate");
             assert_eq!(production_semantic_digest(&retained), last_valid_digest);
             assert_eq!(retained, last_valid);
             assert!(app.acknowledge_artifact_store_replacement(handle).expect("rejected P2 terminal ACK after candidate retirement"));
@@ -1153,7 +1145,7 @@ mod tests {
     //#region 🔖️CrossCutting
     #[semio_framework_async_macros::async_test]
     async fn declared_actions_bridge_to_commands() {
-        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<Generation2dPlayApp>>(crate::editor::generation2d::testkit::generation2d_manifest_for_testkit).await;
+        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Generation2dPlayApp>>(testkit::generation2d_manifest_for_testkit).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1176,7 +1168,7 @@ mod tests {
         let widgets: Vec<String> = app().await.snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| crate::artifacts::generation2d::widget_id(widget).to_string()).collect();
         assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
         let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
-        semio_framework_plugin::testkit::assert_two_instances_converge::<semio_framework_plugin::EditorApp<Generation2dPlayApp>, (Option<f64>, Option<f64>)>(
+        semio_framework_plugin::testkit::assert_two_instances_converge::<EditorApp<Generation2dPlayApp>, (Option<f64>, Option<f64>)>(
             "mem://generation2d-convergence",
             Generation2dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: w0.clone(), x: 111.0, y: 5.0 }),
             Generation2dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: w1.clone(), x: 222.0, y: 6.0 }),
@@ -1248,7 +1240,7 @@ mod tests {
             media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
             payload: semio_framework_plugin::MediaPayload::Structured { schema: "params".into(), json: serde_json::json!({ slider_id.clone(): 42.0 }).to_string() },
         };
-        app.import_media("params:in", &media, &semio_framework_plugin::testkit::meta("local")).await.expect("import params");
+        app.import_media("params:in", media, &semio_framework_plugin::testkit::meta("local")).await.expect("import params");
         let value = app.snapshot().expect("snapshot").fixture.widgets.iter().find_map(|widget| match widget {
             Widget::InputSlider { id, value, .. } if id == &slider_id => Some(*value),
             _ => None,
@@ -1256,9 +1248,9 @@ mod tests {
         assert_eq!(value, Some(42.0));
     }
 
-    #[test]
-    fn media_ports_declare_params_in_and_drawing_out() {
-        let ports = <Generation2dPlayApp as ArtifactEditor>::media_ports();
+    #[semio_framework_async_macros::async_test]
+    async fn media_ports_declare_params_in_and_drawing_out() {
+        let ports = <Generation2dPlayApp as ArtifactEditor>::media_ports().await;
         assert!(ports.iter().any(|port| port.id == "document:in"));
         assert!(ports.iter().any(|port| port.id == "document:out"));
         let params_in = ports.iter().find(|port| port.id == "params:in").expect("params:in declared");

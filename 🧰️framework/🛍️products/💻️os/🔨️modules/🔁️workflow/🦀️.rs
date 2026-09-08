@@ -7,6 +7,9 @@
 //! its own in-file `OsWorkflow`/`OsAppInstance` pair (future work, not this ticket).
 // #endregion 🔖️InstanceIdentity
 
+#[path = "♻️retirement/🦀️.rs"]
+mod retirement;
+
 use semio_framework::{AppDefinition, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MediaWireFormat, PortMultiplicity};
 use semio_framework::{Locale, Terminology};
 use std::collections::{HashMap, HashSet};
@@ -316,7 +319,7 @@ impl ::semio_framework_os_kernel::FromValue for MediaContract {
                             ))
                         }
                         other => return Err(::semio_framework_os_kernel::ValueError::new(format!("expected array or null for MediaContract.conversion, found {other:?}"))),
-                    })
+                    });
                 }
                 _ => {}
             }

@@ -1,7 +1,10 @@
 {
   "schema": "semio.hub.generation-stage.v1",
   "componentHex": "616263",
-  "descriptorHex": "0001011110010711657865637574696f6e50726f746f636f6c100107116170704368616e6e656c56657273696f6e050000000000002c40",
+  "descriptors": {
+    "gis": { "packageId": "semio:gis", "manifest": { "pluginId": "gis", "version": "0.1.0", "dependencies": [{ "pluginId": "stdio", "version": "=0.1.0" }] }, "executionProtocol": { "appChannelVersion": 14 } },
+    "stdio": { "packageId": "semio:stdio", "manifest": { "pluginId": "stdio", "version": "0.1.0", "dependencies": [] }, "executionProtocol": { "appChannelVersion": 14 } }
+  },
   "executionProtocol": { "appChannelVersion": 14 },
   "cases": [
     { "change": "none", "accepted": true },
@@ -25,6 +28,12 @@
     { "change": "actor-symlink", "accepted": false },
     { "change": "missing-protocol", "accepted": false },
     { "change": "unsupported-protocol", "accepted": false },
-    { "change": "receipt-protocol", "accepted": false }
+    { "change": "receipt-protocol", "accepted": false },
+    { "change": "missing-dependency", "accepted": false },
+    { "change": "receipt-dependency", "accepted": false },
+    { "change": "bundle-dependency", "accepted": false },
+    { "change": "wrong-package", "accepted": false },
+    { "change": "nonexact-dependency", "accepted": false },
+    { "change": "duplicate-dependency", "accepted": false }
   ]
 }

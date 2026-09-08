@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "documents": [
+    { "id": "zwischenbericht", "texPath": "📋️zwischenbericht/📋️zwischenbericht.tex", "sources": ["📋️zwischenbericht", "📎️anhang"], "actorNetwork": true },
+    { "id": "forschungsbericht", "texPath": "📑️forschungsbericht/📑️forschungsbericht.tex", "sources": ["📑️forschungsbericht", "📎️anhang"], "actorNetwork": true },
+    { "id": "kompaktbericht", "texPath": "📝️kompaktbericht/📝️kompaktbericht.tex", "sources": ["📝️kompaktbericht"], "actorNetwork": false }
+  ]
+}

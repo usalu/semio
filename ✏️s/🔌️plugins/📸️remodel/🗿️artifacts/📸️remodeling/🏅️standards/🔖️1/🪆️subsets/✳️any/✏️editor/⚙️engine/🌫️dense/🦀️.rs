@@ -1943,9 +1943,9 @@ mod tests {
     fn maximum_patchmatch_allocation_and_one_pixel_step_stay_below_hard_ceiling_in_each_build_profile() {
         let (width, height) = (512u32, 512u32);
         let pixels = width as usize * height as usize;
-        let mut data = vec![0; pixels];
+        let mut data = vec![0.0; pixels];
         for (index, value) in data.iter_mut().enumerate() {
-            *value = ((index * 131) ^ (index / width as usize * 197)) as u8;
+            *value = f32::from(((index * 131) ^ (index / width as usize * 197)) as u8) / 255.0;
         }
         let reference = remodeling_image::ImageGray { width, height, data };
         let intrinsics = intrinsics_for(width, height);

@@ -190,11 +190,8 @@ pub enum SpaceMutation {
     },
 }
 
-/// 🧬️ Sparse whole-field diff — mirrors `writer_op::WriterDiff`'s "one `Option<T>` per possible
-/// mutation" shape, the pattern every `#[derive(dsl::DslDiff)]` struct uses (the derive only supports
-/// structs, never tagged enums — see `dsl_derive::derive_dsl_diff`'s doc comment).
-
 //#region 🔖️HandcraftedOpCodecs
+/// 🧬️ Encodes and parses space mutations as operation text.
 impl protocol::OpText for SpaceMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
@@ -1555,7 +1552,7 @@ pub fn reconcile_space_atelier_invariant(mut snapshot: SpaceSnapshot) -> (SpaceS
                     user.role = SpaceRole::Spectator;
                 }
             }
-            messages.push(protocol::MutationMessage::warn("mutation.clamped", format!("atelier space retains a single author ({keep}); demoted the rest to spectator")).at(vec!["space/atelier-multi-author".to_string(), keep.clone()]));
+            messages.push(protocol::MutationMessage::warn("mutation.clamped", format!("atelier space retains a single author ({keep}); demoted the rest to spectator")).at(vec!["space/atelier-multi-author".to_string(), keep]));
         }
     }
     (snapshot, messages)
@@ -1952,14 +1949,14 @@ impl DraftCatalog {
     /// (identical to `demote_operation`'s output — this is the byte-touching sibling of that pure
     /// helper, needed whenever a demotion must actually relocate bytes rather than just undo an
     /// in-hand `CreateEntry`).
-    pub fn demote_asset(&self, port: &Arc<store::BackbonePorts>, space_id: &str, entry: &CollectionEntry, kind_id: &str, schema: &str, now_ms: u64, ttl_ms: Option<u64>) -> Result<CollectionMutation, SpaceError> {
+    pub fn demote_asset(&self, port: &Arc<store::BackbonePorts>, space_id: &str, entry: &CollectionEntry, schema: &str, now_ms: u64, ttl_ms: Option<u64>) -> Result<CollectionMutation, SpaceError> {
         let source_uri = artifact_backbone_uri(space_id, &entry.id);
         let target_uri = draft_uri(&entry.id);
         let envelope_bytes = port.read(&source_uri).map_err(|error| SpaceError::Backbone(error.to_string()))?;
         port.write(&target_uri, &envelope_bytes).map_err(|error| SpaceError::Backbone(error.to_string()))?;
         port.write(&source_uri, &[]).map_err(|error| SpaceError::Backbone(error.to_string()))?;
 
-        let draft = DraftEntry { artifact_id: entry.id.clone(), kind_id: kind_id.into(), schema: schema.into(), name: entry.name.clone(), created_at_ms: now_ms, expires_at_ms: ttl_ms.map(|ttl| now_ms + ttl) };
+        let draft = DraftEntry { artifact_id: entry.id.clone(), kind_id: entry.kind_id.clone(), schema: schema.into(), name: entry.name.clone(), created_at_ms: now_ms, expires_at_ms: ttl_ms.map(|ttl| now_ms + ttl) };
         self.drafts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(draft.artifact_id.clone(), draft);
         Ok(Self::demote_operation(&entry.id))
     }
@@ -2703,7 +2700,7 @@ mod tests {
         let (_, operation) = catalog.promote_draft(&port, "space-1", &draft.artifact_id, None).expect("promote");
         let CollectionMutation::CreateEntry { entry, .. } = operation else { panic!("expected CreateEntry") };
 
-        let demote_operation = catalog.demote_asset(&port, "space-1", &entry, "puzzle.2d", "test.puzzle2d", 2_000, Some(1_000)).expect("demote");
+        let demote_operation = catalog.demote_asset(&port, "space-1", &entry, "test.puzzle2d", 2_000, Some(1_000)).expect("demote");
         assert_eq!(demote_operation, CollectionMutation::DeleteEntry { entry_id: entry.id.clone() });
 
         let restored_bytes = port.read(&draft_uri(&entry.id)).expect("read demoted draft bytes");

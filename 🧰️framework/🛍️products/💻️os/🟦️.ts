@@ -18,8 +18,8 @@ import { conflictResolutionAsU8, createTurnOutcomeBroadcast, dialectCoordinate, 
  * {@link BackboneWorkerRequest}/{@link BackboneWorkerResponse}'s `directory-*` variants and this
  * file's `🔖️HubBinding` region; never redeclared (lane 0-A owns the type source). */
 import type { DirectoryCommand, DirectoryEvent, DirectoryStreamMessage } from "./🔨️modules/📇️directory/🟦️.ts";
-import type { DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEventPageV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1, GisMapInferencePortStatusV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-import { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, directoryCommandErrorFromStatus, directoryCommandRequestJson, parseDirectoryCommandReceiptV1, parseDirectoryEventPageV1, parseGisMapInferencePortStatusV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import type { DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEventPageV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1, GisMapInferencePortCodeV1, GisMapInferencePortStatusV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1, directoryCommandErrorFromStatus, directoryCommandRequestJson, parseDirectoryCommandReceiptV1, parseDirectoryEventPageV1, parseGisMapInferencePortStatusV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 /** 📡️ The replication wire contract lives in `🧰️framework/🔨️modules/📡️replication` — os speaks it,
  * it is not os-owned. Frames/envelopes/presence peers all come from there. */
 import type { ArtifactPresencePeer, ClientFrame, LocalInteractionIdentity, LocalInteractionPage, LocalInteractionQueryCommand, LocalInteractionQueryReply, LocalInteractionQueryToken, MutationEnvelope, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireMutationEnvelope } from "@semio-tech/framework-replication";
@@ -568,6 +568,9 @@ export { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGE
 /** 💡️ The host-owned ephemeral GIS Map inference port: its closed wire DTOs, its nine-phase state
  * machine, and its explicit EN/DE vocabulary. Nothing here is ever persisted into a document. */
 export type {
+  GisMapApprovalUndoHandleV1,
+  GisMapApprovalUndoReceiptV1,
+  GisMapApprovalUndoRequestV1,
   GisMapInferenceApprovalReceiptV1,
   GisMapInferenceApprovalRequestV1,
   GisMapInferenceEventPageV1,
@@ -598,11 +601,14 @@ export {
   gisMapInferencePortTerminalV1,
   idleGisMapInferencePortStatusV1,
   parseGisMapInferenceApprovalReceiptV1,
+  parseGisMapApprovalUndoReceiptV1,
+  parseGisMapApprovalUndoRequestV1,
   parseGisMapInferenceEventPageV1,
   parseGisMapInferenceJobReceiptV1,
   parseGisMapInferencePreviewV1,
   parseGisMapInferencePortStatusV1,
   reduceGisMapInferencePortV1,
+  sealGisMapApprovalUndoRequestV1,
   sealGisMapInferenceApprovalRequestV1,
   sealGisMapInferenceJobRequestV1,
 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
@@ -718,6 +724,16 @@ export function encodeBackboneWorkerRequest(request: BackboneWorkerRequest): Uin
 /** @emoji 🧵️ Decodes a {@link BackboneWorkerRequest} from the wasm actor or structured-clone twin. */
 export function decodeBackboneWorkerRequest(wire: Uint8Array): BackboneWorkerRequest {
   const parsed = parseBackboneWorkerWire(wire, (value) => value as Record<string, unknown>);
+  if (parsed.kind === "space-artifact-create" || parsed.kind === "space-artifact-create-cancel") {
+    return parseSpaceArtifactCreationWorkerRequestV1(parsed);
+  }
+  if (parsed.kind === "space-artifact-creation-catalog-open") {
+    if (Object.keys(parsed).sort().join(",") !== "clientInstanceId,kind,spaceId") throw new Error("backbone worker request: invalid creation catalog fields");
+    const spaceId = workerWireCreationIdentityV1(parsed.spaceId),
+      clientInstanceId = workerWireClientInstanceIdV1(parsed.clientInstanceId);
+    if (spaceId === null || clientInstanceId === null) throw new Error("backbone worker request: invalid creation catalog scope");
+    return { kind: "space-artifact-creation-catalog-open", clientInstanceId, spaceId };
+  }
   if (parsed.kind === "browser-actor-ui-patch-result") {
     const clientInstanceId = workerWireClientInstanceIdV1(parsed.clientInstanceId);
     if (clientInstanceId === null) throw new Error("backbone worker request: invalid client instance id");
@@ -739,6 +755,15 @@ export function decodeBackboneWorkerRequest(wire: Uint8Array): BackboneWorkerReq
     const clientInstanceId = parsed.clientInstanceId === undefined ? undefined : workerWireClientInstanceIdV1(parsed.clientInstanceId);
     if (parsed.clientInstanceId !== undefined && clientInstanceId === null) throw new Error("backbone worker request: invalid client instance id");
   }
+  if (parsed.kind === "inference-history-undo") {
+    const clientInstanceId = workerWireClientInstanceIdV1(parsed.clientInstanceId);
+    if (clientInstanceId === null || !Number.isSafeInteger(parsed.historyEpoch) || (parsed.historyEpoch as number) < 1) throw new Error("backbone worker request: invalid inference history owner");
+    if (typeof parsed.scope !== "object" || parsed.scope === null || Array.isArray(parsed.scope)) throw new Error("backbone worker request: invalid inference history scope");
+    const documentId = workerWireIdV1((parsed.scope as Record<string, unknown>).documentId);
+    const scope = documentId === null ? null : workerWireScopeV1(parsed.scope, documentId);
+    if (scope === null) throw new Error("backbone worker request: invalid inference history scope");
+    return { kind: "inference-history-undo", historyEpoch: parsed.historyEpoch as number, clientInstanceId, scope };
+  }
   return parsed as BackboneWorkerRequest;
 }
 
@@ -753,11 +778,31 @@ export function encodeBackboneWorkerResponse(response: BackboneWorkerResponse): 
 /** @emoji 🧵️ Decodes a worker response/event wire payload from the wasm actor. */
 export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerResponse {
   const parsed = parseBackboneWorkerWire(wire, (value) => value as Record<string, unknown>);
+  if (parsed.kind === "space-artifact-creation-status") return parseSpaceArtifactCreationStatusV1(parsed);
+  if (parsed.kind === "space-artifact-creation-catalog") return parseSpaceArtifactCreationCatalogV1(parsed);
+  if (parsed.kind === "space-artifact-creation-catalog-status") return parseSpaceArtifactCreationCatalogStatusV1(parsed);
   if (parsed.kind === "browser-actor-ui-patch") {
     const clientInstanceId = workerWireClientInstanceIdV1(parsed.clientInstanceId);
     if (clientInstanceId === null) throw new Error("backbone worker response: invalid client instance id");
     const { clientInstanceId: _clientInstanceId, ...offer } = parsed;
     return { ...parseBrowserActorUiPatchOfferV1(offer), clientInstanceId };
+  }
+  if (parsed.kind === "browser-actor-ui-mounted") {
+    const fields = ["activationGeneration", "browserActorSha256", "catalogGenerationId", "clientInstanceId", "componentSha256", "descriptorSha256", "instanceId", "kind", "scope", "uiRevision", "verifiedSurfaceId"];
+    if (Object.keys(parsed).sort().join(",") !== fields.sort().join(",")) throw new Error("backbone worker response: invalid mounted UI fields");
+    const scopeRow = parsed.scope as Record<string, unknown> | undefined;
+    const documentId = scopeRow === undefined ? null : workerWireIdV1(scopeRow.documentId);
+    const scope = documentId === null ? null : workerWireScopeV1(parsed.scope, documentId);
+    const clientInstanceId = workerWireClientInstanceIdV1(parsed.clientInstanceId);
+    const verifiedSurfaceId = workerWireIdV1(parsed.verifiedSurfaceId);
+    const activationGeneration = typeof parsed.activationGeneration === "string" && /^[1-9][0-9]{0,19}$/u.test(parsed.activationGeneration) && BigInt(parsed.activationGeneration) <= 0xffffffffffffffffn ? parsed.activationGeneration : null;
+    if (scope === null || clientInstanceId === null || verifiedSurfaceId === null || activationGeneration === null || !Number.isSafeInteger(parsed.instanceId) || (parsed.instanceId as number) < 0 || !Number.isSafeInteger(parsed.uiRevision) || (parsed.uiRevision as number) < 1) throw new Error("backbone worker response: invalid mounted UI owner");
+    const catalogGenerationId = workerWireSha256V1(parsed.catalogGenerationId),
+      componentSha256 = workerWireSha256V1(parsed.componentSha256),
+      descriptorSha256 = workerWireSha256V1(parsed.descriptorSha256),
+      browserActorSha256 = workerWireSha256V1(parsed.browserActorSha256);
+    if (catalogGenerationId === null || componentSha256 === null || descriptorSha256 === null || browserActorSha256 === null) throw new Error("backbone worker response: invalid mounted UI identity");
+    return { kind: "browser-actor-ui-mounted", scope, clientInstanceId, activationGeneration, instanceId: parsed.instanceId as number, verifiedSurfaceId, catalogGenerationId, componentSha256, descriptorSha256, browserActorSha256, uiRevision: parsed.uiRevision as number };
   }
   if (parsed.kind === "event" && typeof parsed.event === "object" && parsed.event !== null) {
     const documentId = workerWireIdV1(parsed.documentId);
@@ -797,6 +842,15 @@ export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerRe
     if (scope === null) throw new Error("backbone worker response: invalid inference scope");
     return { kind: "inference-port-status", operationEpoch: parsed.operationEpoch as number, scope, status: parseGisMapInferencePortStatusV1(parsed.status) };
   }
+  if (parsed.kind === "inference-history-status") {
+    const clientInstanceId = workerWireClientInstanceIdV1(parsed.clientInstanceId);
+    if (clientInstanceId === null || !Number.isSafeInteger(parsed.historyEpoch) || (parsed.historyEpoch as number) < 1) throw new Error("backbone worker response: invalid inference history owner");
+    if (typeof parsed.scope !== "object" || parsed.scope === null || Array.isArray(parsed.scope)) throw new Error("backbone worker response: invalid inference history scope");
+    const documentId = workerWireIdV1((parsed.scope as Record<string, unknown>).documentId);
+    const scope = documentId === null ? null : workerWireScopeV1(parsed.scope, documentId);
+    if (scope === null) throw new Error("backbone worker response: invalid inference history scope");
+    return { kind: "inference-history-status", historyEpoch: parsed.historyEpoch as number, clientInstanceId, scope, status: parseGisMapApprovalHistoryStatusV1(parsed.status) };
+  }
   return parsed as BackboneWorkerResponse;
 }
 
@@ -805,9 +859,110 @@ function workerWireIdV1(value: unknown): string | null {
   return value;
 }
 
+function workerWireTextV1(value: unknown): string | null {
+  return typeof value === "string" && !value.startsWith(" ") && !value.endsWith(" ") && [...value].length <= 128 && value.length > 0 && !/[\u0000-\u001f\u007f-\u009f]/u.test(value) ? value : null;
+}
+
+function workerWireCreationIdentityV1(value: unknown): string | null {
+  return typeof value === "string" && value.length <= 256 && /^[A-Za-z0-9][A-Za-z0-9._:/-]*$/u.test(value) ? value : null;
+}
+
+function workerWireCreationRequestIdV1(value: unknown): string | null {
+  return typeof value === "string" && /^(?!0{32}$)[0-9a-f]{32}$/u.test(value) ? value : null;
+}
+
+function parseSpaceArtifactCreationWorkerRequestV1(parsed: Readonly<Record<string, unknown>>): Extract<BackboneWorkerRequest, { readonly kind: "space-artifact-create" | "space-artifact-create-cancel" }> {
+  const create = parsed.kind === "space-artifact-create";
+  const expected = create ? "kind,kindId,name,requestId,spaceId" : "kind,requestId,spaceId";
+  if (Object.keys(parsed).sort().join(",") !== expected) throw new Error("backbone worker request: invalid space artifact creation fields");
+  const requestId = workerWireCreationRequestIdV1(parsed.requestId),
+    spaceId = workerWireCreationIdentityV1(parsed.spaceId);
+  if (requestId === null || spaceId === null) throw new Error("backbone worker request: invalid space artifact creation owner");
+  if (!create) return { kind: "space-artifact-create-cancel", requestId, spaceId };
+  const kindId = workerWireCreationIdentityV1(parsed.kindId),
+    name = workerWireTextV1(parsed.name);
+  if (kindId === null || name === null) throw new Error("backbone worker request: invalid space artifact creation intent");
+  return { kind: "space-artifact-create", requestId, spaceId, kindId, name };
+}
+
+/** 🛡️ Validates the exact worker-visible projection of the Hub's durable creation status. */
+export function parseSpaceArtifactCreationStatusV1(value: unknown): SpaceArtifactCreationStatusV1 {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error("space artifact creation status: invalid record");
+  const row = value as Readonly<Record<string, unknown>>;
+  const phases: readonly SpaceArtifactCreationPhaseV1[] = ["accepted", "preparing", "ready", "indeterminate", "failed", "cancelled"];
+  const phase = phases.includes(row.phase as SpaceArtifactCreationPhaseV1) ? (row.phase as SpaceArtifactCreationPhaseV1) : null;
+  const requestId = workerWireCreationRequestIdV1(row.requestId),
+    spaceId = workerWireCreationIdentityV1(row.spaceId);
+  if (row.kind !== "space-artifact-creation-status" || phase === null || requestId === null || spaceId === null) throw new Error("space artifact creation status: invalid owner");
+  const expected = phase === "ready" ? "kind,phase,ready,requestId,spaceId" : "kind,phase,requestId,spaceId";
+  if (Object.keys(row).sort().join(",") !== expected) throw new Error("space artifact creation status: invalid fields");
+  if (phase !== "ready") return { kind: "space-artifact-creation-status", requestId, spaceId, phase };
+  if (typeof row.ready !== "object" || row.ready === null || Array.isArray(row.ready)) throw new Error("space artifact creation status: invalid ready record");
+  const ready = row.ready as Readonly<Record<string, unknown>>;
+  if (Object.keys(ready).sort().join(",") !== "artifactSchema,documentId,kindId,parentDialect") throw new Error("space artifact creation status: invalid ready fields");
+  if (typeof ready.parentDialect !== "object" || ready.parentDialect === null || Array.isArray(ready.parentDialect)) throw new Error("space artifact creation status: invalid parent dialect");
+  const parentDialect = ready.parentDialect as Readonly<Record<string, unknown>>;
+  if (Object.keys(parentDialect).sort().join(",") !== "artifactKind,standard,subset") throw new Error("space artifact creation status: invalid parent dialect fields");
+  const documentId = typeof ready.documentId === "string" && /^artifact-(?!0{32}$)[0-9a-f]{32}$/u.test(ready.documentId) ? ready.documentId : null,
+    kindId = workerWireCreationIdentityV1(ready.kindId),
+    artifactSchema = workerWireCreationIdentityV1(ready.artifactSchema),
+    artifactKind = workerWireCreationIdentityV1(parentDialect.artifactKind),
+    standard = workerWireCreationIdentityV1(parentDialect.standard),
+    subset = workerWireCreationIdentityV1(parentDialect.subset);
+  if (documentId === null || kindId === null || artifactSchema === null || artifactKind === null || standard === null || subset === null || artifactKind !== kindId) throw new Error("space artifact creation status: invalid ready identity");
+  return { kind: "space-artifact-creation-status", requestId, spaceId, phase, ready: { documentId, kindId, artifactSchema, parentDialect: { artifactKind, standard, subset } } };
+}
+
+/** 🗂️ Validates the presentation-only selected-current creation catalog from the worker. */
+export function parseSpaceArtifactCreationCatalogV1(value: unknown): SpaceArtifactCreationCatalogV1 {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error("space artifact creation catalog: invalid record");
+  const row = value as Readonly<Record<string, unknown>>;
+  if (Object.keys(row).sort().join(",") !== "catalogGenerationId,clientInstanceId,kind,kinds,spaceId") throw new Error("space artifact creation catalog: invalid fields");
+  const spaceId = workerWireCreationIdentityV1(row.spaceId),
+    clientInstanceId = workerWireClientInstanceIdV1(row.clientInstanceId);
+  if (row.kind !== "space-artifact-creation-catalog" || spaceId === null || clientInstanceId === null || typeof row.catalogGenerationId !== "string" || !/^(?!0{64}$)[0-9a-f]{64}$/u.test(row.catalogGenerationId) || !Array.isArray(row.kinds) || row.kinds.length === 0 || row.kinds.length > 64)
+    throw new Error("space artifact creation catalog: invalid owner");
+  const kinds = row.kinds.map((value) => {
+    if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error("space artifact creation catalog: invalid kind");
+    const kind = value as Readonly<Record<string, unknown>>;
+    if (Object.keys(kind).sort().join(",") !== "dialect,kindId,label,schema" || typeof kind.dialect !== "object" || kind.dialect === null || Array.isArray(kind.dialect) || typeof kind.label !== "object" || kind.label === null || Array.isArray(kind.label))
+      throw new Error("space artifact creation catalog: invalid kind fields");
+    const dialect = kind.dialect as Readonly<Record<string, unknown>>,
+      label = kind.label as Readonly<Record<string, unknown>>;
+    if (Object.keys(dialect).sort().join(",") !== "artifactKind,standard,subset" || Object.keys(label).sort().join(",") !== "de,en") throw new Error("space artifact creation catalog: invalid nested fields");
+    const kindId = workerWireCreationIdentityV1(kind.kindId),
+      schema = workerWireCreationIdentityV1(kind.schema),
+      artifactKind = workerWireCreationIdentityV1(dialect.artifactKind),
+      standard = workerWireCreationIdentityV1(dialect.standard),
+      subset = workerWireCreationIdentityV1(dialect.subset),
+      en = workerWireTextV1(label.en),
+      de = workerWireTextV1(label.de);
+    if (kindId === null || schema === null || artifactKind !== kindId || standard === null || subset === null || en === null || de === null) throw new Error("space artifact creation catalog: invalid kind identity");
+    return { kindId, schema, dialect: { artifactKind, standard, subset }, label: { en, de } };
+  });
+  if (kinds.some((entry, index) => index > 0 && kinds[index - 1]!.kindId >= entry.kindId)) throw new Error("space artifact creation catalog: invalid order");
+  return { kind: "space-artifact-creation-catalog", clientInstanceId, spaceId, catalogGenerationId: row.catalogGenerationId, kinds };
+}
+
+/** 🗂️ Validates a catalog presentation update without granting any catalog contents. */
+export function parseSpaceArtifactCreationCatalogStatusV1(value: unknown): SpaceArtifactCreationCatalogStatusV1 {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error("space artifact creation catalog status: invalid record");
+  const row = value as Readonly<Record<string, unknown>>;
+  if (Object.keys(row).sort().join(",") !== "clientInstanceId,kind,phase,spaceId") throw new Error("space artifact creation catalog status: invalid fields");
+  const clientInstanceId = workerWireClientInstanceIdV1(row.clientInstanceId),
+    spaceId = workerWireCreationIdentityV1(row.spaceId),
+    phase = row.phase === "loading" || row.phase === "ready" || row.phase === "unavailable" ? row.phase : null;
+  if (row.kind !== "space-artifact-creation-catalog-status" || clientInstanceId === null || spaceId === null || phase === null) throw new Error("space artifact creation catalog status: invalid owner");
+  return { kind: "space-artifact-creation-catalog-status", clientInstanceId, spaceId, phase };
+}
+
 function workerWireClientInstanceIdV1(value: unknown): string | null {
   const id = workerWireIdV1(value);
   return id !== null && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u.test(id) ? id : null;
+}
+
+function workerWireSha256V1(value: unknown): string | null {
+  return typeof value === "string" && /^[0-9a-f]{64}$/u.test(value) ? value : null;
 }
 
 function workerWireScopeV1(value: unknown, documentId: string): DocumentScope | null {
@@ -839,6 +994,55 @@ export type DirectoryAdministrationSectionV1 = "members" | "invites" | "document
 /** 📋️ Renderer-visible state of the worker-retained invite capability. */
 export type DirectoryAdministrationInviteCapabilityStatusV1 = "available" | "copying" | "failed";
 
+/** 🌱️ One server-owned artifact creation's durable, non-CRUD lifecycle. Only `ready` may
+ * disclose the server-minted document tuple that the Shell can pass to its ordinary open path. */
+export type SpaceArtifactCreationPhaseV1 = "accepted" | "preparing" | "ready" | "indeterminate" | "failed" | "cancelled";
+
+/** 🔐️ The exact public artifact identity produced by a ready creation saga. Catalog authority,
+ * descriptors, grants and filesystem details remain server-private and are re-resolved by open-plan. */
+export type SpaceArtifactCreationReadyV1 = Readonly<{
+  documentId: string;
+  kindId: string;
+  artifactSchema: string;
+  parentDialect: ArtifactDialect;
+}>;
+
+/** 📡️ Renderer-visible status for one exact request id and Space. */
+export type SpaceArtifactCreationStatusV1 = Readonly<{
+  kind: "space-artifact-creation-status";
+  requestId: string;
+  spaceId: string;
+  phase: SpaceArtifactCreationPhaseV1;
+  ready?: SpaceArtifactCreationReadyV1;
+}>;
+
+/** 🗣️ One selected descriptor's exact bilingual creation presentation. */
+export type SpaceArtifactCreationKindV1 = Readonly<{
+  kindId: string;
+  schema: string;
+  dialect: ArtifactDialect;
+  label: Readonly<{ en: string; de: string }>;
+}>;
+
+/** 🗂️ Current trusted creation choices for one authenticated Space. */
+export type SpaceArtifactCreationCatalogV1 = Readonly<{
+  kind: "space-artifact-creation-catalog";
+  clientInstanceId: string;
+  spaceId: string;
+  catalogGenerationId: string;
+  kinds: readonly SpaceArtifactCreationKindV1[];
+}>;
+
+export type SpaceArtifactCreationCatalogPhaseV1 = "loading" | "ready" | "unavailable";
+
+/** 🗂️ Exact mounted-Space presentation state for the selected creation catalog. */
+export type SpaceArtifactCreationCatalogStatusV1 = Readonly<{
+  kind: "space-artifact-creation-catalog-status";
+  clientInstanceId: string;
+  spaceId: string;
+  phase: SpaceArtifactCreationCatalogPhaseV1;
+}>;
+
 /** 📤️ Main thread → `🧵️backbone-worker.ts` messages (structured clone or {@link BackboneWorkerWireMessage}).
  * The `directory-*` kinds (contract-freeze §C6) are the shell's ONLY way to reach the directory hub
  * — plugin surfaces never talk to the network, and the shell never opens a directory socket on the
@@ -856,6 +1060,9 @@ export type BackboneWorkerRequest =
   | { readonly kind: "directory-scope-close"; readonly scope: DocumentScope }
   | { readonly kind: "directory-command"; readonly requestId: string; readonly command: DirectoryCommand }
   | { readonly kind: "directory-command-cancel"; readonly requestId: string }
+  | { readonly kind: "space-artifact-creation-catalog-open"; readonly clientInstanceId: string; readonly spaceId: string }
+  | { readonly kind: "space-artifact-create"; readonly requestId: string; readonly spaceId: string; readonly kindId: string; readonly name: string }
+  | { readonly kind: "space-artifact-create-cancel"; readonly requestId: string; readonly spaceId: string }
   | { readonly kind: "directory-administration-open"; readonly operationEpoch: number; readonly spaceId: string }
   | { readonly kind: "directory-administration-refresh"; readonly operationEpoch: number; readonly cursor?: string }
   | { readonly kind: "directory-administration-submit"; readonly operationEpoch: number; readonly requestId: string; readonly command: DirectoryCommand }
@@ -873,6 +1080,9 @@ export type BackboneWorkerRequest =
   | { readonly kind: "inference-cancel"; readonly operationEpoch: number }
   | { readonly kind: "inference-approve"; readonly operationEpoch: number }
   | { readonly kind: "inference-close"; readonly operationEpoch: number }
+  /** ↩️ Ordinary Shell history undo names only its current mounted owner. The Hub-minted target,
+   * frontier and stable idempotency key remain worker-private. */
+  | { readonly kind: "inference-history-undo"; readonly historyEpoch: number; readonly clientInstanceId: string; readonly scope: DocumentScope }
   | (BrowserActorUiPatchResultV1 & { readonly clientInstanceId: string });
 
 /** 🛰️ Worker-local P2-C recovery lifecycle. These are not persisted artifact events: they describe
@@ -919,6 +1129,9 @@ export type BackboneWorkerResponse =
   | { readonly kind: "directory-scope-revoked"; readonly scope: DocumentScope }
   | { readonly kind: "directory-command-receipt"; readonly requestId: string; readonly receipt: DirectoryCommandReceiptV1 }
   | { readonly kind: "directory-command-failed"; readonly requestId: string; readonly code: DirectoryCommandErrorCodeV1 }
+  | SpaceArtifactCreationCatalogV1
+  | SpaceArtifactCreationCatalogStatusV1
+  | SpaceArtifactCreationStatusV1
   | { readonly kind: "socket-actor"; readonly documentId: string; readonly clientInstanceId: string; readonly scope?: DocumentScope; readonly actorId: string }
   | { readonly kind: "socket-actor-failed"; readonly documentId: string; readonly clientInstanceId: string; readonly scope?: DocumentScope; readonly code: "installed-target-unavailable" | "session-mismatch" }
   /** 🪪️ Bounded execution-target install status for the React host's localized live region. It
@@ -949,8 +1162,44 @@ export type BackboneWorkerResponse =
    * phase, the server's own job id, the bounded progress cursor and the hash the server published —
    * never a receipt, bearer, origin, path, base pack, proposal body or user identity. */
   | { readonly kind: "inference-port-status"; readonly operationEpoch: number; readonly scope: DocumentScope; readonly status: GisMapInferencePortStatusV1 }
+  | { readonly kind: "inference-history-status"; readonly historyEpoch: number; readonly clientInstanceId: string; readonly scope: DocumentScope; readonly status: GisMapApprovalHistoryStatusV1 }
+  /** 🔬️ Public-digest identity for one exact actor UI revision, emitted only after the Shell's
+   * transactional patch acknowledgement. It carries no plan, grant, credential, receipt or action. */
+  | BrowserActorUiMountedV1
   | (BrowserActorUiPatchOfferV1 & { readonly clientInstanceId: string })
   | { readonly kind: "directory-status"; readonly pendingCommands: number };
+
+export type BrowserActorUiMountedV1 = Readonly<{
+  kind: "browser-actor-ui-mounted";
+  scope: DocumentScope;
+  clientInstanceId: string;
+  activationGeneration: string;
+  instanceId: number;
+  verifiedSurfaceId: string;
+  catalogGenerationId: string;
+  componentSha256: string;
+  descriptorSha256: string;
+  browserActorSha256: string;
+  uiRevision: number;
+}>;
+
+/** ↩️ Renderer-visible projection of the private durable approval-undo owner. It intentionally
+ * carries no job, mutation, command, proposal, target, frontier, bearer or idempotency value. */
+export type GisMapApprovalHistoryPhaseV1 = "unavailable" | "available" | "submitting" | "applied" | "failed";
+export type GisMapApprovalHistoryStatusV1 = Readonly<{ phase: GisMapApprovalHistoryPhaseV1; canUndo: boolean; code: GisMapInferencePortCodeV1 | null }>;
+
+function parseGisMapApprovalHistoryStatusV1(value: unknown): GisMapApprovalHistoryStatusV1 {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error("backbone worker: invalid inference history status");
+  const row = value as Record<string, unknown>;
+  if (Object.keys(row).sort().join(",") !== "canUndo,code,phase") throw new Error("backbone worker: invalid inference history fields");
+  const phase = row.phase;
+  if (phase !== "unavailable" && phase !== "available" && phase !== "submitting" && phase !== "applied" && phase !== "failed") throw new Error("backbone worker: invalid inference history phase");
+  if (typeof row.canUndo !== "boolean" || (phase !== "available" && phase !== "failed" && row.canUndo)) throw new Error("backbone worker: invalid inference history availability");
+  if (phase === "available" && !row.canUndo) throw new Error("backbone worker: invalid inference history availability");
+  if (row.code !== null && (typeof row.code !== "string" || !(row.code in GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1))) throw new Error("backbone worker: invalid inference history code");
+  if ((phase === "failed") !== (row.code !== null)) throw new Error("backbone worker: invalid inference history failure");
+  return { phase, canUndo: row.canUndo, code: row.code as GisMapInferencePortCodeV1 | null };
+}
 
 function wireArtifactActorMsg(message: ArtifactActorMsg): unknown {
   if (message.kind === "localMutations") {
@@ -5409,11 +5658,67 @@ if (import.meta.vitest) {
       expect(decodeBackboneWorkerRequest(encodeBackboneWorkerRequest({ ...result, clientInstanceId }))).toEqual({ ...result, clientInstanceId });
       expect(Object.hasOwn(parseBrowserActorUiPatchOfferV1(fixture.offer), "clientInstanceId")).toBe(false);
       expect(Object.hasOwn(parseBrowserActorUiPatchResultV1(fixture.acknowledged), "clientInstanceId")).toBe(false);
+      const mounted: BrowserActorUiMountedV1 = {
+        kind: "browser-actor-ui-mounted",
+        scope: { spaceId: "space-a", documentId: "same-document" },
+        clientInstanceId,
+        activationGeneration: "41",
+        instanceId: 0,
+        verifiedSurfaceId: "s.gis.gismap@1/viewer",
+        catalogGenerationId: "1".repeat(64),
+        componentSha256: "2".repeat(64),
+        descriptorSha256: "3".repeat(64),
+        browserActorSha256: "4".repeat(64),
+        uiRevision: 7,
+      };
+      expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(mounted))).toEqual(mounted);
+      const mountedUnknown = encodePackValue({ ...mounted, grant: "forbidden" });
+      expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...mountedUnknown]))).toThrow("invalid mounted UI fields");
 
       const missing = new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...encodePackValue({ kind: "event", documentId: "same-document", event: event.event })]);
       expect(() => decodeBackboneWorkerResponse(missing)).toThrow("invalid client instance id");
       const malformed = new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...encodePackValue({ kind: "close", documentId: "same-document", clientInstanceId: "not-an-owner" })]);
       expect(() => decodeBackboneWorkerRequest(malformed)).toThrow("invalid client instance id");
+    });
+
+    it("withholds creation authority and document coordinates until an exact ready status", () => {
+      const requestId = "1".repeat(32);
+      const clientInstanceId = "12345678-1234-4123-8123-123456789abc";
+      const catalogRequest: BackboneWorkerRequest = { kind: "space-artifact-creation-catalog-open", clientInstanceId, spaceId: "space-a" };
+      const catalog: BackboneWorkerResponse = {
+        kind: "space-artifact-creation-catalog",
+        clientInstanceId,
+        spaceId: "space-a",
+        catalogGenerationId: "3".repeat(64),
+        kinds: [{ kindId: "s.gis.gismap", schema: "s.gis.gismap", dialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "any" }, label: { en: "GIS Map", de: "GIS-Karte" } }],
+      };
+      const request: BackboneWorkerRequest = { kind: "space-artifact-create", requestId, spaceId: "space-a", kindId: "s.gis.gismap", name: "Shared Map" };
+      const ready: BackboneWorkerResponse = {
+        kind: "space-artifact-creation-status",
+        requestId,
+        spaceId: "space-a",
+        phase: "ready",
+        ready: { documentId: `artifact-${"2".repeat(32)}`, kindId: "s.gis.gismap", artifactSchema: "s.gis.gismap", parentDialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "any" } },
+      };
+      expect(decodeBackboneWorkerRequest(encodeBackboneWorkerRequest(catalogRequest))).toEqual(catalogRequest);
+      for (const phase of ["loading", "ready", "unavailable"] as const) {
+        const status: BackboneWorkerResponse = { kind: "space-artifact-creation-catalog-status", clientInstanceId, spaceId: "space-a", phase };
+        expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(status))).toEqual(status);
+      }
+      expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(catalog))).toEqual(catalog);
+      expect(decodeBackboneWorkerRequest(encodeBackboneWorkerRequest(request))).toEqual(request);
+      expect(decodeBackboneWorkerRequest(encodeBackboneWorkerRequest({ kind: "space-artifact-create-cancel", requestId, spaceId: "space-a" }))).toEqual({ kind: "space-artifact-create-cancel", requestId, spaceId: "space-a" });
+      expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(ready))).toEqual(ready);
+      const leaked = encodePackValue({ ...ready, phase: "preparing" });
+      expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...leaked]))).toThrow("invalid fields");
+      const forgedCatalog = encodePackValue({ ...catalog, kinds: [{ ...catalog.kinds[0], descriptor: "forbidden" }] });
+      expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...forgedCatalog]))).toThrow("invalid kind fields");
+      const forgedCatalogStatus = encodePackValue({ kind: "space-artifact-creation-catalog-status", clientInstanceId, spaceId: "space-a", phase: "empty" });
+      expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...forgedCatalogStatus]))).toThrow("invalid owner");
+      const mismatched = encodePackValue({ ...ready, ready: { ...ready.ready!, parentDialect: { ...ready.ready!.parentDialect, artifactKind: "s.note" } } });
+      expect(() => decodeBackboneWorkerResponse(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...mismatched]))).toThrow("invalid ready identity");
+      const overposted = encodePackValue({ ...request, descriptor: "forbidden" });
+      expect(() => decodeBackboneWorkerRequest(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...overposted]))).toThrow("invalid space artifact creation fields");
     });
 
     it("keeps inference status scope and validated preview exact across the private worker wire", () => {

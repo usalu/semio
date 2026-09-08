@@ -43,7 +43,18 @@ impl NativeCodecProviderSetV1 {
 }
 
 impl NativeCodecProviderSourceV1 for NativeCodecProviderSetV1 {
-    fn preview(&self, package: NativeCodecProviderPackageV1<'_>, _descriptor: &semio_framework::PackageDescriptor, context: &OperationContext<'_>) -> Result<Vec<NativeCodecBinding>, AuthorityError> {
+    fn preview(&self, package: NativeCodecProviderPackageV1<'_>, descriptor: &semio_framework::PackageDescriptor, context: &OperationContext<'_>) -> Result<Vec<NativeCodecBinding>, AuthorityError> {
+        context.checkpoint()?;
+        if descriptor.package_id != package.package_id || descriptor.manifest.plugin_id != package.plugin_id || descriptor.manifest.version != package.version {
+            return Err(provider_error("decoded descriptor has a different native package identity"));
+        }
+        if package.plugin_id == "stdio" {
+            semio_s_plugin_stdio::registry::validate_native_codec_artifact_kinds(&descriptor.manifest.artifact_kinds).map_err(provider_error)?;
+            semio_s_plugin_stdio::registry::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).map_err(provider_error)?;
+        } else if matches!(package.plugin_id, "gis" | "vcs") {
+            semio_s_plugin_stdio::registry::validate_native_artifact_catalog_dependency(&descriptor.manifest.dependencies).map_err(provider_error)?;
+            semio_s_plugin_stdio::registry::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).map_err(provider_error)?;
+        }
         self.preview(package.plugin_id, package.package_id, package.version, context)
     }
 }
@@ -71,12 +82,12 @@ fn preview_gis_bindings(version: &str, context: &OperationContext<'_>) -> Result
         {
             return Err(rejected());
         }
-        let codec = receipt.into_codec().map_err(|_| rejected())?;
+        let (codec, genesis) = receipt.into_codec_and_genesis().map_err(|_| rejected())?;
         if codec.schema != identity.schema || codec.extension != identity.extension || codec.pack_schema_hash != identity.pack_schema_hash {
             return Err(rejected());
         }
         context.checkpoint()?;
-        bindings.push(NativeCodecBinding::new(identity.plugin_id, identity.package_id, identity.artifact_kind, codec));
+        bindings.push(NativeCodecBinding::with_genesis(identity.plugin_id, identity.package_id, identity.artifact_kind, codec, genesis));
     }
     Ok(bindings)
 }
@@ -99,12 +110,12 @@ fn preview_vcs_bindings(version: &str, context: &OperationContext<'_>) -> Result
             || identity.pack_schema_hash == [0; 32] || !factories.insert(identity.factory_id) || !artifacts.insert((identity.artifact_kind, identity.schema)) {
             return Err(rejected());
         }
-        let codec = receipt.into_codec().map_err(|_| rejected())?;
+        let (codec, genesis) = receipt.into_codec_and_genesis().map_err(|_| rejected())?;
         if codec.schema != identity.schema || codec.extension != identity.extension || codec.pack_schema_hash != identity.pack_schema_hash {
             return Err(rejected());
         }
         context.checkpoint()?;
-        bindings.push(NativeCodecBinding::new(identity.plugin_id, identity.package_id, identity.artifact_kind, codec));
+        bindings.push(NativeCodecBinding::with_genesis(identity.plugin_id, identity.package_id, identity.artifact_kind, codec, genesis));
     }
     if factories.len() != NATIVE_VCS_PROVIDER_RECEIPTS || artifacts.len() != NATIVE_VCS_PROVIDER_RECEIPTS {
         return Err(rejected());
@@ -175,7 +186,9 @@ mod tests {
     #[test]
     fn native_openable_provider_consumes_exact_complete_stdio_factory_closure() {
         let provider = NativeOpenableCatalogProviderV1::from_receipts(env!("CARGO_PKG_VERSION"), receipts()).expect("complete provider");
-        assert_eq!(provider.into_bindings().len(), NATIVE_STDIO_PROVIDER_RECEIPTS);
+        let bindings = provider.into_bindings();
+        assert_eq!(bindings.len(), NATIVE_STDIO_PROVIDER_RECEIPTS);
+        assert!(bindings.iter().all(|binding| !binding.has_genesis()), "headless Stdio codecs must not imply an editor genesis capability");
     }
 
     #[test]
@@ -259,8 +272,11 @@ mod tests {
                     assert_eq!(binding.artifact_kind(), row["kind"]);
                     assert_eq!(binding.codec().schema, row["schema"]);
                     assert_eq!(binding.codec().extension, row["extension"]);
-                    assert_eq!(hexadecimal(&binding.codec().pack_schema_hash), row["protocolSha256"]);
+                    let receipt = semio_s_plugin_vcs::native_codecs::native_codec_factory_receipts().unwrap().into_iter().find(|receipt| receipt.identity().schema == binding.codec().schema).unwrap();
+                    assert_eq!(hexadecimal(&receipt.identity().protocol_sha256), row["protocolSha256"]);
+                    assert_eq!(binding.codec().pack_schema_hash, receipt.into_codec().unwrap().pack_schema_hash);
                     assert_ne!(binding.codec().pack_schema_hash, [0; 32]);
+                    assert!(binding.has_genesis(), "the exact VCS editor receipt must carry its package-owned genesis factory");
                 }
             }
         }
@@ -287,6 +303,7 @@ mod tests {
                 let bindings = providers.preview(plugin_id, package_id, env!("CARGO_PKG_VERSION"), &context).expect("selected compiled provider");
                 assert_eq!(bindings.len(), count, "{}", profile["name"]);
                 assert!(bindings.iter().all(|binding| binding.package_id() == package_id));
+                assert!(bindings.iter().all(|binding| binding.has_genesis() == (plugin_id != "stdio")), "only exact package editor receipts carry genesis authority");
                 requested.push(package_id);
                 receipts += count;
             }
@@ -295,5 +312,74 @@ mod tests {
         }
         assert_eq!(counts.iter().map(|(_, _, count)| count).sum::<usize>(), NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS);
         assert!(providers.preview("note", "semio:note", env!("CARGO_PKG_VERSION"), &context).is_err());
+    }
+
+    #[tokio::test]
+    async fn linked_consumer_descriptors_bind_their_actual_compiled_stdio_dependency_and_catalog() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🔏️trusted-catalog/🧪️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
+        let kind_json: serde_json::Value = serde_json::from_str(include_str!("../../../🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🗄️artifact-kind-formats.json")).unwrap();
+        let kind: semio_framework::ArtifactKindSpec = semio_framework::from_dsl_value(kind_json.clone().into()).unwrap();
+        assert_eq!(serde_json::to_value(&kind).unwrap(), kind_json);
+        let independent: semio_framework::ArtifactKindSpec = serde_json::from_value(kind_json.clone()).unwrap();
+        assert_eq!(kind, independent);
+        let projected = semio_framework::to_dsl_value(&kind).unwrap();
+        assert_eq!(directory::os_store::pack_rt::encode_wire_value(&projected), directory::os_store::pack_rt::encode_wire_value(&kind_json.clone().into()));
+        for field in ["exportStdioKinds", "importStdioKinds"] {
+            for invalid in [serde_json::json!([1]), serde_json::json!("stdio.svg")] {
+                let mut candidate = kind_json.clone();
+                candidate[field] = invalid;
+                assert!(semio_framework::from_dsl_value::<semio_framework::ArtifactKindSpec>(candidate.clone().into()).is_err());
+                assert!(serde_json::from_value::<semio_framework::ArtifactKindSpec>(candidate).is_err());
+            }
+        }
+        let control = SelectionControl { cancelled: false, now_ms: 0 };
+        let context = OperationContext::new(u64::MAX, super::super::AuthorityLimits::maximum(), &control);
+        let providers = NativeCodecProviderSetV1::linked();
+        for (plugin_id, package_id, schema, count) in [("gis", "semio:gis", "gis.map", 2), ("vcs", "semio:vcs", "vcs.vcs", 1)] {
+            let emitted = if plugin_id == "gis" {
+                let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new();
+                semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_s_plugin_gis::plugin().unwrap());
+                let _foreign = semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("foreign").label("Foreign").version("99.0.0").package_id("semio:foreign").try_build().unwrap();
+                semio_framework_plugin::describe::describe_plugin(&runtime).await
+            } else {
+                let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new();
+                semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_s_plugin_vcs::plugin().unwrap());
+                let _foreign = semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("foreign").label("Foreign").version("99.0.0").package_id("semio:foreign").try_build().unwrap();
+                semio_framework_plugin::describe::describe_plugin(&runtime).await
+            };
+            let descriptor: semio_framework::PackageDescriptor = semio_framework::from_dsl_value(directory::os_store::pack_rt::decode_wire_value(&emitted).unwrap()).unwrap();
+            assert_eq!(descriptor.package_id, package_id);
+            assert_eq!(descriptor.manifest.plugin_id, plugin_id);
+            assert_eq!(directory::os_store::pack_rt::encode_wire_value(&semio_framework::to_dsl_value(&descriptor).unwrap()), emitted);
+            let selected = NativeCodecProviderPackageV1 { plugin_id, package_id, version: &descriptor.manifest.version };
+            let before = directory::os_store::document_codec(schema).await.unwrap().map(|codec| (codec.schema, codec.extension, codec.pack_schema_hash));
+            for row in fixture["nativeCases"].as_array().unwrap() {
+                let mut candidate = descriptor.clone();
+                candidate.manifest.dependencies = serde_json::from_value(row["dependencies"].clone()).unwrap();
+                let result = NativeCodecProviderSourceV1::preview(&providers, selected, &candidate, &context);
+                assert_eq!(result.is_ok(), row["accepted"].as_bool().unwrap(), "{plugin_id}: {}: {:?}", row["id"], result.as_ref().err());
+                if let Ok(bindings) = result { assert_eq!(bindings.len(), count); }
+                assert_eq!(directory::os_store::document_codec(schema).await.unwrap().map(|codec| (codec.schema, codec.extension, codec.pack_schema_hash)), before);
+            }
+            for row in fixture["consumerCatalogCases"].as_array().unwrap() {
+                let mut candidate = descriptor.clone();
+                let topic = candidate.manifest.topic_contributions.iter().position(|entry| entry.topic == "stdio.artifact-catalog.v1").expect("exact compiled catalog topic");
+                match row["change"].as_str().unwrap() {
+                    "exact" => {},
+                    "missing" => { candidate.manifest.topic_contributions.remove(topic); },
+                    "duplicate" => candidate.manifest.topic_contributions.push(candidate.manifest.topic_contributions[topic].clone()),
+                    "foreign-topic-version" => candidate.manifest.topic_contributions[topic].topic = "stdio.artifact-catalog.v2".into(),
+                    "wrong-version" => {
+                        let semio_framework::DslValue::Object(fields) = &mut candidate.manifest.topic_contributions[topic].payload else { panic!("catalog object") };
+                        fields.iter_mut().find(|(key, _)| key == "packageVersion").unwrap().1 = semio_framework::DslValue::String("99.0.0".into());
+                    },
+                    change => panic!("unknown catalog case {change}"),
+                }
+                let result = NativeCodecProviderSourceV1::preview(&providers, selected, &candidate, &context);
+                assert_eq!(result.is_ok(), row["accepted"].as_bool().unwrap(), "{plugin_id}: {}: {:?}", row["change"], result.as_ref().err());
+                assert_eq!(directory::os_store::document_codec(schema).await.unwrap().map(|codec| (codec.schema, codec.extension, codec.pack_schema_hash)), before);
+            }
+            assert!(NativeCodecProviderSourceV1::preview(&providers, NativeCodecProviderPackageV1 { plugin_id, package_id: "semio:foreign", version: selected.version }, &descriptor, &context).is_err());
+        }
     }
 }

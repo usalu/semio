@@ -31,7 +31,7 @@ impl GltfClearanceInference {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub(crate) fn infer_assembly(indicators: &mut GltfClearanceIndicators, distances: &[f64], overlap_volume: f64, overlap_complete: bool, pair_count: usize, policy: &GltfAnalysisPolicy, sample_count: usize, topology: Topology) {
+    pub(crate) fn infer_assembly(indicators: &mut GltfClearanceIndicators, distances: &[f64], (overlap_volume, overlap_complete): (f64, bool), pair_count: usize, policy: &GltfAnalysisPolicy, sample_count: usize, topology: Topology) {
         if let Some(measure) = minimum_distance_to_neighbors::from_assembly(distances, sample_count, topology) {
             indicators.minimum_distance_to_neighbors = measure;
         }

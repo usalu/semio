@@ -7254,7 +7254,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .view_action("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"))
             // 📝️ Staged argument forms for the panel-visible create/query actions (P1).
             .action_args("addObjectKind", vec![
-                ActionArgDef::select("objectKind", puzzle3d_localized(|l| l.kind), vec![ActionArgOption::new("Object", puzzle3d_localized(|l| l.object))]).default_value("Object"),
+                ActionArgDef::select("objectKind", puzzle3d_localized(|l| l.kind), vec![ActionArgOption::new("Object", puzzle3d_localized(|l| l.object))]).default_value(&"Object"),
             ])
             // 🧰️ Flat per-window set of utilities; no utility is active until the host presses one — the
             // transform gumball exposes translate and rotate together via Move/Rotate flags.
@@ -7347,7 +7347,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
                         |_w| "Wählen Sie die Art zum Hinzufügen.".to_string(),
                     ))
                     .args(vec![
-                        ActionArgDef::select("objectKind", puzzle3d_localized(|l| l.kind), vec![ActionArgOption::new("Object", puzzle3d_localized(|l| l.object))]).default_value("Object").required(),
+                        ActionArgDef::select("objectKind", puzzle3d_localized(|l| l.kind), vec![ActionArgOption::new("Object", puzzle3d_localized(|l| l.object))]).default_value(&"Object").required(),
                     ])
                     .submit_label(LocalizedLabel::native("Add", "Hinzufügen")),
             )
@@ -7484,7 +7484,8 @@ pub(crate) mod testkit {
                 | "setSelectionMode"
                 | "setInteractionGranularity"
         ) {
-            return semio_framework::io::resolve_ready(app.handle_action(action, args, &meta("local")));
+            let dsl_args = args.map(json::to_dsl_value);
+            return semio_framework::io::resolve_ready(app.handle_action(action, dsl_args.as_ref(), &meta("local")));
         }
         semio_framework::io::resolve_ready(app.dispatch_typed(Puzzle3dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)).unwrap_or_else(|| panic!("unknown puzzle3d action id in test: {action}")), &meta("local")))
     }
@@ -7511,28 +7512,22 @@ pub(crate) mod testkit {
     pub fn render_body(app: &mut Puzzle3dApp, body_key: &str) -> Value {
         let tree = semio_framework::io::resolve_ready(app.render(body_key, None, &ViewModel::default())).expect("render");
         let mut stack = vec![&tree.root];
-        let mut fallback_scene = None;
+        let mut rendered_scene = None;
         while let Some(node) = stack.pop() {
             if let semio_framework_ui_contract::Component::Surface(surface) = &node.component {
                 if surface.doc_schema.as_str() == <semio_framework_ui_scene::World3dScene as semio_framework_ui_scene::SceneDoc>::SCHEMA {
                     let scene: semio_framework_ui_scene::World3dScene = semio_framework_ui_scene::decode(surface).expect("decode world scene");
-                    // 🌉️ `World3dScene` (semio_framework_ui_scene) is still `serde::Serialize`-only
-                    // (unmigrated, out of this ticket's file scope), so it cannot embed directly into
-                    // `World3dScene` has a hand-written `protocol::value::ToValue` (🎬️scene/…/🦀️scenes.rs:305),
-                    // so it converts straight to `DslValue` with no serde_json round-trip.
                     let world3d = json::from_dsl_value(&dsl::ToValue::to_value(&scene));
+                    rendered_scene = Some(object([("schema".to_string(), Value::from(surface.doc_schema.as_str())), ("world3d".to_string(), world3d)]));
                     if scene.interaction_json.is_some() {
-                        return object([("schema".to_string(), Value::from(surface.doc_schema.as_str())), ("world3d".to_string(), world3d)]);
+                        break;
                     }
-                    fallback_scene = Some(object([("schema".to_string(), Value::from(surface.doc_schema.as_str())), ("world3d".to_string(), world3d)]));
                 }
             }
             stack.extend(node.children.iter());
         }
-        if let Some(scene) = fallback_scene {
-            return scene;
-        }
-        json::from_dsl_value(&dsl::ToValue::to_value(&tree.root))
+        let projected = testkit::project_and_retire_fixture_tree(tree).expect("render projection");
+        rendered_scene.unwrap_or_else(|| parse(&projected.to_string()).expect("rendered node JSON"))
     }
 
     /// 🪟️ The world composite body for one window INSTANCE — the `<body>:<windowInstanceId>` form is
@@ -7546,7 +7541,7 @@ pub(crate) mod testkit {
     }
 
     pub fn projection_of(app: &Puzzle3dApp) -> Value {
-        app.snapshot().expect("projection").value().clone()
+        parse(&app.snapshot().expect("projection").value().to_string()).expect("snapshot JSON")
     }
 
     pub fn object_count(app: &Puzzle3dApp) -> usize {
@@ -7707,13 +7702,6 @@ pub(crate) mod testkit {
     }
     //#endregion 🔖️MeasureProbes
 
-    /// 🖱️ `context_menu()` through the `VcsArtifactApp` funnel (already-organized rows).
-    pub fn context_menu_direct(app: &mut Puzzle3dApp) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-        use semio_framework_plugin::{ContextMenuRequest, UiMenuRef};
-        let request = ContextMenuRequest { menu: UiMenuRef { id: "world3d".into(), args: None }, surface: None, window_instance_id: None, point: None };
-        semio_framework::io::resolve_ready(app.context_menu(&request))
-    }
-
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `context_menu` reads the
     /// CLIENT-supplied `request.surface.selection` now (selection is framework-owned, no live config
     /// field to derive it from) — the test-side replacement for the deleted `contextMenuAt` command's
@@ -7788,7 +7776,7 @@ mod tests {
         assert_eq!(fixture.get("toolIds"), Some(&Value::Array(PUZZLE3D_RETAINED_TOOL_IDS.iter().map(|id| Value::from(*id)).collect())));
         let manifest = create_puzzle3d_app();
         for tool_id in PUZZLE3D_RETAINED_TOOL_IDS {
-            let actions = manifest.actions.iter().filter(|action| action.id == *tool_id).collect::<Vec<_>>();
+            let actions = manifest.window_kinds.iter().flat_map(|window| &window.actions).filter(|action| action.id == *tool_id).collect::<Vec<_>>();
             assert_eq!(actions.len(), 1, "{tool_id} requires exactly one manifest declaration");
             assert_eq!(actions[0].semantics.execution.interactive_job, semio_framework_plugin::InteractiveJobClassification::Migrated, "{tool_id}");
         }
@@ -8746,7 +8734,7 @@ mod tests {
     }
     use crate::editor::puzzle3d::config::Puzzle3dCamera;
     use protocol::MutationDiff;
-    use semio_framework_plugin::{testkit as framework_testkit, EditorApp, PluginApp};
+    use semio_framework_plugin::{EditorApp, PluginApp};
 
     #[test]
     fn two_documents_carry_independent_serialized_checkpoints() {
@@ -10323,7 +10311,6 @@ mod tests {
     /// `meta.kind_catalogs.objects` (and the vortex kind inside `.vortices`).
     #[semio_framework_async_macros::async_test]
     async fn kit_in_import_media_upserts_object_and_vortex_kinds_into_meta_kind_catalogs() {
-        let app = Puzzle3dPlayApp::default();
         let projection = Puzzle3dPlayApp::initial_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&projection, &history);
@@ -10349,9 +10336,10 @@ mod tests {
 
         let mut next_projection = projection.value().clone();
         for operation in &emit.artifact_mutations {
-            next_projection = protocol::Mutation::<Value>::diff(operation, &next_projection).diff().apply(&next_projection).expect("valid mutation diff");
+            next_projection = protocol::Mutation::<serde_json::Value>::diff(operation, &next_projection).diff().apply(&next_projection).expect("valid mutation diff");
         }
 
+        let next_projection = parse(&next_projection.to_string()).expect("mutated snapshot JSON");
         let objects = next_projection.pointer("/meta/kindCatalogs/objects").and_then(Value::as_array).expect("objects catalog present");
         assert!(objects.iter().any(|entry| entry.get("id").and_then(Value::as_str) == Some("capsule")), "the imported object kind must appear in meta.kind_catalogs.objects");
         let capsule = objects.iter().find(|entry| entry.get("id").and_then(Value::as_str) == Some("capsule")).unwrap();
@@ -10369,7 +10357,6 @@ mod tests {
     /// `multiplicity: Many` port) must upsert idempotently — no duplicate rows.
     #[semio_framework_async_macros::async_test]
     async fn kit_in_import_media_is_idempotent_on_repeated_delivery() {
-        let app = Puzzle3dPlayApp::default();
         let projection = Puzzle3dPlayApp::initial_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let mut current = projection.value().clone();
@@ -10388,17 +10375,17 @@ mod tests {
             let doc = ArtifactView::new(&doc_projection, &history);
             let emit = Puzzle3dPlayApp::import_media("kit:in", &media, &doc).expect("kit:in import_media succeeds");
             for operation in &emit.artifact_mutations {
-                current = protocol::Mutation::<Value>::diff(operation, &current).diff().apply(&current).expect("valid mutation diff");
+                current = protocol::Mutation::<serde_json::Value>::diff(operation, &current).diff().apply(&current).expect("valid mutation diff");
             }
         }
 
+        let current = parse(&current.to_string()).expect("mutated snapshot JSON");
         let objects = current.pointer("/meta/kindCatalogs/objects").and_then(Value::as_array).expect("objects catalog present");
         assert_eq!(objects.iter().filter(|entry| entry.get("id").and_then(Value::as_str) == Some("capsule")).count(), 1, "repeated delivery of the same fragment must upsert, never duplicate");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn kit_in_port_is_declared_on_the_app_io() {
-        let app = Puzzle3dPlayApp::default();
         let io = Puzzle3dPlayApp::io().expect("puzzle3d declares an AppIo");
         let port = io.ports.iter().find(|port| port.id == "kit:in").expect("kit:in port declared");
         assert_eq!(port.kind_id.as_deref(), Some("kit.catalog"));

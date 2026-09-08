@@ -186,7 +186,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn update_manufacturer_file_round_trips() {
+    async fn update_manufacturer_file_round_trips() {
         let base = Vdi3805Snapshot::default();
         let mut new_file = base.manufacturer_file.clone();
         new_file.manufacturer = "ACME".into();
@@ -196,7 +196,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_correction_as_of_and_strict_mode_round_trip() {
+    async fn change_correction_as_of_and_strict_mode_round_trip() {
         let base = Vdi3805Snapshot::default();
         let correction = Vdi3805Mutation::ChangeCorrectionAsOf(change_correction_as_of::ChangeCorrectionAsOf { new_correction_as_of: crate::artifacts::vdi3805::EditionId::new(2025, 3) });
         let after = round_trip(&base, &correction);
@@ -208,7 +208,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn update_limits_round_trips() {
+    async fn update_limits_round_trips() {
         let base = Vdi3805Snapshot::default();
         let new_limits = crate::artifacts::vdi3805::SecurityLimits { max_file_bytes: 1, max_records: 2, max_field_length: 3, max_nesting_depth: 4 };
         let mutation = Vdi3805Mutation::UpdateLimits(update_limits::UpdateLimits { new_limits });
@@ -217,7 +217,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_and_remove_edition_profile_round_trip() {
+    async fn change_and_remove_edition_profile_round_trip() {
         let base = Vdi3805Snapshot::default();
         let change = Vdi3805Mutation::ChangeEditionProfile(change_edition_profile::ChangeEditionProfile { sheet: "8".into(), new_choice: crate::artifacts::vdi3805::EditionProfileChoice::Legacy });
         let after_change = round_trip(&base, &change);
@@ -229,7 +229,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_edition_profile_undo_of_a_fresh_sheet_is_remove() {
+    async fn change_edition_profile_undo_of_a_fresh_sheet_is_remove() {
         let base = Vdi3805Snapshot::default();
         let change = Vdi3805Mutation::ChangeEditionProfile(change_edition_profile::ChangeEditionProfile { sheet: "fresh".into(), new_choice: crate::artifacts::vdi3805::EditionProfileChoice::Current });
         let undo = change.inverse(&base);
@@ -237,7 +237,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn create_rename_replace_configuration_delete_product_round_trip() {
+    async fn create_rename_replace_configuration_delete_product_round_trip() {
         let base = Vdi3805Snapshot::default();
         let product = CatalogueProduct {
             identity: crate::artifacts::vdi3805::ProductIdentity { manufacturer_code: "DEMO".into(), product_group: "HV".into(), article_number: "VLV-NEW".into() },
@@ -278,14 +278,14 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn delete_product_of_a_missing_id_has_an_empty_inverse() {
+    async fn delete_product_of_a_missing_id_has_an_empty_inverse() {
         let base = Vdi3805Snapshot::default();
         let delete = Vdi3805Mutation::DeleteProduct(delete_product::DeleteProduct { id: "nope".into() });
         assert!(delete.inverse(&base).is_empty(), "deleting an absent id has nothing to undo");
     }
 
     #[semio_framework_async_macros::async_test]
-    fn geometry_lifecycle_round_trips() {
+    async fn geometry_lifecycle_round_trips() {
         let base = Vdi3805Snapshot::default();
         let geometry = crate::artifacts::vdi3805::ParametricGeometry { id: "geom.new".into(), bbox: crate::artifacts::vdi3805::BoundingBox::from_size(1.0, 1.0, 1.0), connections: Vec::new(), parameters: BTreeMap::new() };
         let create = Vdi3805Mutation::CreateGeometry(create_geometry::CreateGeometry { geometry: geometry.clone() });
@@ -319,7 +319,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn curve_lifecycle_round_trips() {
+    async fn curve_lifecycle_round_trips() {
         let base = Vdi3805Snapshot::default();
         let curve = crate::artifacts::vdi3805::CharacteristicCurve {
             id: "curve.new".into(),
@@ -342,7 +342,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn semantic_kinds_cover_every_variant() {
+    async fn semantic_kinds_cover_every_variant() {
         assert_eq!(Vdi3805Mutation::kinds().len(), 19);
         let mutation = Vdi3805Mutation::ChangeStrictMode(change_strict_mode::ChangeStrictMode { new_strict_mode: true });
         assert_eq!(mutation.semantics().kind, "change-strict-mode");
@@ -369,43 +369,43 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "🔌️add-geometry-connection/🧪️tests/🚰️attaches-the-drain-connection-to-geom-valve-50/🦀️.rs"]
+    #[path = "🔌️add-geometry-connection/🧪️tests/🚰️attaches-the-bb4870/🦀️.rs"]
     mod tests_add_geometry_connection_attaches_the_drain_connection_to_geom_valve_50;
-    #[path = "📅️change-correction-as-of/🧪️tests/📅️advances-the-correction-cut-off-to-2025-03/🦀️.rs"]
+    #[path = "📅️change-correction-as-of/🧪️tests/📅️advances-the-47a47b/🦀️.rs"]
     mod tests_change_correction_as_of_advances_the_correction_cut_off_to_2025_03;
-    #[path = "🔖️change-edition-profile/🧪️tests/🆕️switches-sheet-8-from-legacy-to-current/🦀️.rs"]
+    #[path = "🔖️change-edition-profile/🧪️tests/🆕️switches-sheet-8-ad32e9/🦀️.rs"]
     mod tests_change_edition_profile_switches_sheet_8_from_legacy_to_current;
     #[path = "🔒️change-strict-mode/🧪️tests/🔒️turns-strict-mode-on/🦀️.rs"]
     mod tests_change_strict_mode_turns_strict_mode_on;
-    #[path = "📈️create-curve/🧪️tests/📈️adds-the-curve-dp-pressure-drop-curve/🦀️.rs"]
+    #[path = "📈️create-curve/🧪️tests/📈️adds-the-curve-dp-40d630/🦀️.rs"]
     mod tests_create_curve_adds_the_curve_dp_pressure_drop_curve;
-    #[path = "🧊️create-geometry/🧪️tests/🧊️adds-the-geom-valve-80-definition/🦀️.rs"]
+    #[path = "🧊️create-geometry/🧪️tests/🧊️adds-the-geom-23496e/🦀️.rs"]
     mod tests_create_geometry_adds_the_geom_valve_80_definition;
-    #[path = "📦️create-product/🧪️tests/📦️appends-vlv-80-002-and-its-index-entry/🦀️.rs"]
+    #[path = "📦️create-product/🧪️tests/📦️appends-vlv-80-053f37/🦀️.rs"]
     mod tests_create_product_appends_vlv_80_002_and_its_index_entry;
-    #[path = "📉️delete-curve/🧪️tests/🚫️removes-the-curve-kvs-flow-curve/🦀️.rs"]
+    #[path = "📉️delete-curve/🧪️tests/🚫️removes-the-curve-54547f/🦀️.rs"]
     mod tests_delete_curve_removes_the_curve_kvs_flow_curve;
-    #[path = "🚮️delete-geometry/🧪️tests/🚫️removes-the-geom-valve-50-definition/🦀️.rs"]
+    #[path = "🚮️delete-geometry/🧪️tests/🚫️removes-the-geom-594b4a/🦀️.rs"]
     mod tests_delete_geometry_removes_the_geom_valve_50_definition;
-    #[path = "🗑️delete-product/🧪️tests/🚫️removes-vlv-50-001-and-its-index-entry/🦀️.rs"]
+    #[path = "🗑️delete-product/🧪️tests/🚫️removes-vlv-50-0ad17f/🦀️.rs"]
     mod tests_delete_product_removes_vlv_50_001_and_its_index_entry;
-    #[path = "🧹️remove-edition-profile/🧪️tests/🧹️clears-the-sheet-8-legacy-override/🦀️.rs"]
+    #[path = "🧹️remove-edition-profile/🧪️tests/🧹️clears-the-sheet-3e3b2a/🦀️.rs"]
     mod tests_remove_edition_profile_clears_the_sheet_8_legacy_override;
-    #[path = "✂️remove-geometry-connection/🧪️tests/🔌️detaches-the-out-connection-from-geom-valve-50/🦀️.rs"]
+    #[path = "✂️remove-geometry-connection/🧪️tests/🔌️detaches-the-out-74f630/🦀️.rs"]
     mod tests_remove_geometry_connection_detaches_the_out_connection_from_geom_valve_50;
-    #[path = "🏷️rename-product/🧪️tests/🏷️retitles-vlv-50-001-and-resyncs-its-index-tags/🦀️.rs"]
+    #[path = "🏷️rename-product/🧪️tests/🏷️retitles-vlv-50-e20c6a/🦀️.rs"]
     mod tests_rename_product_retitles_vlv_50_001_and_resyncs_its_index_tags;
-    #[path = "📍️replace-curve-points/🧪️tests/📍️resamples-curve-kvs-onto-three-points/🦀️.rs"]
+    #[path = "📍️replace-curve-points/🧪️tests/📍️resamples-curve-73cae4/🦀️.rs"]
     mod tests_replace_curve_points_resamples_curve_kvs_onto_three_points;
-    #[path = "🧮️replace-geometry-parameters/🧪️tests/➗️rescales-geom-valve-50-to-half-and-adds-clearance/🦀️.rs"]
+    #[path = "🧮️replace-geometry-parameters/🧪️tests/t027/🦀️.rs"]
     mod tests_replace_geometry_parameters_rescales_geom_valve_50_to_half_and_adds_clearance;
-    #[path = "🎛️replace-product-configuration/🧪️tests/📏️reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn/🦀️.rs"]
+    #[path = "🎛️replace-product-configuration/🧪️tests/t026/🦀️.rs"]
     mod tests_replace_product_configuration_reparameterises_vlv_50_001_to_dn_80_and_resyncs_index_dn;
-    #[path = "📐️resize-geometry/🧪️tests/📐️doubles-the-geom-valve-50-bounding-box/🦀️.rs"]
+    #[path = "📐️resize-geometry/🧪️tests/📐️doubles-the-geom-06c621/🦀️.rs"]
     mod tests_resize_geometry_doubles_the_geom_valve_50_bounding_box;
-    #[path = "🚧️update-limits/🧪️tests/🛡️tightens-every-untrusted-input-limit/🦀️.rs"]
+    #[path = "🚧️update-limits/🧪️tests/🛡️tightens-every-2ec3c7/🦀️.rs"]
     mod tests_update_limits_tightens_every_untrusted_input_limit;
-    #[path = "🏭️update-manufacturer-file/🧪️tests/✏️renames-the-header-manufacturer-to-acme/🦀️.rs"]
+    #[path = "🏭️update-manufacturer-file/🧪️tests/✏️renames-the-c4864d/🦀️.rs"]
     mod tests_update_manufacturer_file_renames_the_header_manufacturer_to_acme;
 }
 //#endregion 🧪️FixtureTests

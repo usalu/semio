@@ -84,7 +84,7 @@ mod tests {
     use crate::artifacts::rewriting::LayoutPoint;
     use ::store::os_store::test_support::{assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
     use protocol::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_policy_matrix};
-    use protocol::SemanticMutation;
+    
 
     use std::collections::BTreeMap;
 

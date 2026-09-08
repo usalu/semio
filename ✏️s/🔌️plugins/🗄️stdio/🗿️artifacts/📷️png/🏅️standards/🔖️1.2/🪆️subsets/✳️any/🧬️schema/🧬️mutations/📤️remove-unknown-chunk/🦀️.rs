@@ -66,7 +66,7 @@ pub fn chunk_order_remove_unknown_diff(order: &[PngChunkMarker], at: usize) -> P
 
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
-    serde_json::from_str(include_str!("🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed remove-unknown-chunk payload")
+    dsl::json::from_json_str(include_str!("🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed remove-unknown-chunk payload")
 }
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]

@@ -8,7 +8,7 @@ pub fn register() {}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &BinarySnapshot) -> Result<DwgSnapshot, store::PackError> {
-    crate::artifacts::dwg::schema::snapshot::decode_dwg(&from.bytes).map_err(|e| store::PackError::Schema(e))
+    crate::artifacts::dwg::schema::snapshot::decode_dwg(&from.bytes).map_err(store::PackError::Schema)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

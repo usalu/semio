@@ -38,6 +38,7 @@ import type {
   DirectoryEventPageAckV1,
   DirectoryStreamMessage,
   DocumentScope,
+  GisMapApprovalHistoryStatusV1,
   PersistenceBinding,
   RemoteState,
   SocketGrantReceiptV1,
@@ -68,6 +69,7 @@ import {
   socketGrantProtocolsV1,
 } from "./🟦️";
 import type { PackValue } from "./🟦️";
+import { SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES, SPACE_ARTIFACT_CREATION_MAX_BYTES, parseSpaceArtifactCreationCatalogJsonV1, parseSpaceArtifactCreationStatusJsonV1, sealSpaceArtifactCreateV1, type SpaceArtifactCreationCatalogV1 as HubSpaceArtifactCreationCatalogV1, type SpaceArtifactCreationStatusV1 as HubSpaceArtifactCreationStatusV1 } from "./🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 import { browserActorChildCapacity, reserveBrowserActorChild, type BrowserActorChildValue } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/🟦️.ts";
 import { assertBrowserActorDescribeCapacityV1, verifyBrowserActorDescribeV1 } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🟦️.ts";
 import { BROWSER_ACTOR_CHILD_LIMITS, measureChildValue } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
@@ -86,6 +88,9 @@ import type {
   DocumentExecutionTargetStatusCodeV1,
   DocumentOpenIntentV1,
   DocumentOpenPlanV1,
+  GisMapApprovalUndoHandleV1,
+  GisMapApprovalUndoReceiptV1,
+  GisMapInferenceApprovalReceiptV1,
   GisMapInferencePortCodeV1,
   GisMapInferencePortEventV1,
   GisMapInferencePortStatusV1,
@@ -99,9 +104,11 @@ import {
   gisMapInferencePortTerminalV1,
   idleGisMapInferencePortStatusV1,
   parseGisMapInferenceApprovalReceiptV1,
+  parseGisMapApprovalUndoReceiptV1,
   parseGisMapInferenceEventPageV1,
   parseGisMapInferenceJobReceiptV1,
   reduceGisMapInferencePortV1,
+  sealGisMapApprovalUndoRequestV1,
   sealGisMapInferenceApprovalRequestV1,
   sealGisMapInferenceJobRequestV1,
 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
@@ -1268,6 +1275,11 @@ class DocumentBrowserActorReservation {
   private pendingUiPatch: { readonly offer: BrowserActorUiPatchOfferV1; readonly resolve: (result: BrowserActorUiPatchResultV1) => void; readonly reject: (error: Error) => void; readonly timer: ReturnType<typeof setTimeout> } | null = null;
   private renderedUiPatch = false;
   private closed = false;
+
+  bindApprovalUndoIfMounted(): void {
+    const owner = this.coldApplied;
+    if (owner !== null && this.renderedUiPatch) bindInferenceApprovalUndoToMountedPair(this.state, this, owner);
+  }
   private readonly timer: ReturnType<typeof setTimeout>;
   private readonly retire = () => this.close();
 
@@ -1436,6 +1448,7 @@ class DocumentBrowserActorReservation {
       }
       assertCurrent();
       this.coldApplied = owner;
+      this.bindApprovalUndoIfMounted();
       if (!this.renderedUiPatch) emitExecutionTargetStatus(this.state, binding, "renderer-unavailable");
     })().finally(() => {
       if (this.coldOwner === owner) this.coldOwner = null;
@@ -1519,7 +1532,24 @@ class DocumentBrowserActorReservation {
         const result = await this.awaitUiPatchResult(offer);
         assertCurrent();
         if (result.outcome === "acknowledged" && result.revision !== captured.patch.revision) throw new Error("document browser actor: acknowledged revision mismatch");
-        if (result.outcome === "acknowledged") this.renderedUiPatch = true;
+        if (result.outcome === "acknowledged") {
+          this.renderedUiPatch = true;
+          const identity = this.lease.fields();
+          if (identity.browserActor.kind !== "closed-browser-actor") throw new Error("document browser actor: mounted identity mismatch");
+          post({
+            kind: "browser-actor-ui-mounted",
+            scope: { ...identity.scope },
+            clientInstanceId: this.state.openClientInstanceId,
+            activationGeneration: this.generation.toString(),
+            instanceId: captured.instanceId,
+            verifiedSurfaceId: identity.surface.surfaceId,
+            catalogGenerationId: identity.catalog.generationId,
+            componentSha256: identity.package.componentSha256,
+            descriptorSha256: identity.package.descriptorByteSha256,
+            browserActorSha256: identity.browserActor.sha256,
+            uiRevision: result.revision,
+          });
+        }
         const feedback = {
           tag: result.outcome === "acknowledged" ? "patch-ack" : "patch-rejected",
           val: {
@@ -2612,6 +2642,8 @@ function rejectArtifactBootstrap(state: ArtifactState, error: unknown, owner = s
 }
 
 async function requireArtifactRebootstrap(state: ArtifactState): Promise<void> {
+  reissueInferenceApprovalUndoForRebootstrap(state);
+  if (inferencePort !== null && documentRuntimeKeyV1({ kind: "hub", ...inferencePort.scope }) === state.runtimeKey && inferencePort.status.phase !== "approving") closeInferencePort(inferencePort.operationEpoch);
   await retireCurrentFolderCanonicalBootstrapMirror(state);
   abortArtifactBootstrap(state);
   dropVerifiedColdDocumentPair(state);
@@ -2962,6 +2994,206 @@ let directoryWorkerEpoch = 0;
 const directoryCommandOperations = new Map<string, DirectoryCommandTransportOperationV1>();
 const directoryCommandQueue: DirectoryCommandTransportOperationV1[] = [];
 
+const SPACE_ARTIFACT_CREATION_CAPACITY = 8;
+const SPACE_ARTIFACT_CREATION_CATALOG_CAPACITY = 8;
+const SPACE_ARTIFACT_CREATION_POLL_MS = 100;
+const SPACE_ARTIFACT_CREATION_DEADLINE_MS = 120_000;
+const SPACE_ARTIFACT_CREATION_CATALOG_DEADLINE_MS = 10_000;
+
+type SpaceArtifactCreationOperationV1 = {
+  readonly request: Extract<BackboneWorkerRequest, { readonly kind: "space-artifact-create" }>;
+  readonly abort: AbortController;
+  readonly workerEpoch: number;
+  readonly deadlineAtMs: number;
+  cancelRequested: boolean;
+  cancelSent: boolean;
+  latest: Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }>;
+};
+
+const spaceArtifactCreationOperations = new Map<string, SpaceArtifactCreationOperationV1>();
+const spaceArtifactCreationCatalogOperations = new Map<string, Readonly<{ abort: AbortController; clientInstanceId: string; workerEpoch: number }>>();
+let spaceArtifactCreationTestFetch: ((path: string, init: RequestInit, signal: AbortSignal) => Promise<FetchTimeoutResponse>) | null = null;
+
+function spaceArtifactCreationCatalogPresentation(
+  spaceId: string,
+  clientInstanceId: string,
+  phase: "loading" | "ready" | "unavailable",
+): Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-catalog-status" }> {
+  return { kind: "space-artifact-creation-catalog-status", clientInstanceId, spaceId, phase };
+}
+
+function spaceArtifactCreationCatalogStatus(spaceId: string, clientInstanceId: string, catalog: HubSpaceArtifactCreationCatalogV1): Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-catalog" }> {
+  if (catalog.spaceId !== spaceId) throw new Error("space artifact creation catalog: scope mismatch");
+  return { kind: "space-artifact-creation-catalog", clientInstanceId, spaceId, catalogGenerationId: catalog.catalogGenerationId, kinds: catalog.kinds };
+}
+
+async function openSpaceArtifactCreationCatalog(spaceId: string, clientInstanceId: string): Promise<void> {
+  const prior = spaceArtifactCreationCatalogOperations.get(spaceId);
+  prior?.abort.abort(new Error("space artifact creation catalog: superseded"));
+  spaceArtifactCreationCatalogOperations.delete(spaceId);
+  if (spaceArtifactCreationCatalogOperations.size >= SPACE_ARTIFACT_CREATION_CATALOG_CAPACITY) {
+    post(spaceArtifactCreationCatalogPresentation(spaceId, clientInstanceId, "unavailable"));
+    return;
+  }
+  const operation = { abort: new AbortController(), clientInstanceId, workerEpoch: directoryWorkerEpoch };
+  spaceArtifactCreationCatalogOperations.set(spaceId, operation);
+  post(spaceArtifactCreationCatalogPresentation(spaceId, clientInstanceId, "loading"));
+  const current = (): boolean => spaceArtifactCreationCatalogOperations.get(spaceId) === operation && operation.workerEpoch === directoryWorkerEpoch && !operation.abort.signal.aborted;
+  try {
+    const encodedSpaceId = encodeURIComponent(spaceId);
+    if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$/u.test(spaceId) || encodedSpaceId !== spaceId) throw new Error("space artifact creation catalog: invalid scope");
+    const path = `/spaces/${encodedSpaceId}/artifact-creations`;
+    const response = spaceArtifactCreationTestFetch === null
+      ? await browserBrokerFetch(`/_semio/hub${path}`, { method: "GET" }, { timeoutMs: SPACE_ARTIFACT_CREATION_CATALOG_DEADLINE_MS, signal: operation.abort.signal })
+      : await spaceArtifactCreationTestFetch(path, { method: "GET" }, operation.abort.signal);
+    if (!response.ok || !current()) throw new Error("space artifact creation catalog: unavailable");
+    const control: ExecutionTargetReadControl = { signal: operation.abort.signal, deadlineAtMs: Date.now() + SPACE_ARTIFACT_CREATION_CATALOG_DEADLINE_MS, assertCurrent: () => {
+      if (!current()) throw new Error("space artifact creation catalog: stale owner");
+    } };
+    const bytes = await readBoundedExecutionTargetBody(response, null, SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES, control, () => {});
+    try {
+      const catalog = parseSpaceArtifactCreationCatalogJsonV1(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+      if (current()) {
+        post(spaceArtifactCreationCatalogStatus(spaceId, clientInstanceId, catalog));
+        post(spaceArtifactCreationCatalogPresentation(spaceId, clientInstanceId, "ready"));
+      }
+    } finally {
+      bytes.fill(0);
+    }
+  } catch {
+    if (current()) post(spaceArtifactCreationCatalogPresentation(spaceId, clientInstanceId, "unavailable"));
+  } finally {
+    if (spaceArtifactCreationCatalogOperations.get(spaceId) === operation) spaceArtifactCreationCatalogOperations.delete(spaceId);
+  }
+}
+
+function spaceArtifactCreationStatus(operation: SpaceArtifactCreationOperationV1, status: HubSpaceArtifactCreationStatusV1): Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }> {
+  if (status.requestId !== operation.request.requestId || status.spaceId !== operation.request.spaceId || (status.ready !== undefined && status.ready.kindId !== operation.request.kindId)) throw new Error("space artifact creation: owner mismatch");
+  return { kind: "space-artifact-creation-status", requestId: status.requestId, spaceId: status.spaceId, phase: status.phase, ...(status.ready === undefined ? {} : { ready: status.ready }) };
+}
+
+function spaceArtifactCreationCurrent(operation: SpaceArtifactCreationOperationV1): boolean {
+  return spaceArtifactCreationOperations.get(operation.request.requestId) === operation && operation.workerEpoch === directoryWorkerEpoch && !operation.abort.signal.aborted;
+}
+
+function spaceArtifactCreationTerminal(phase: HubSpaceArtifactCreationStatusV1["phase"]): boolean {
+  return phase === "ready" || phase === "indeterminate" || phase === "failed" || phase === "cancelled";
+}
+
+function spaceArtifactCreationPath(operation: SpaceArtifactCreationOperationV1, suffix = ""): string {
+  const path = `/spaces/${encodeURIComponent(operation.request.spaceId)}/artifact-creations${suffix}`;
+  if (!/^\/spaces\/[^/?#]+\/artifact-creations(?:\/[0-9a-f]{32}(?:\/cancel)?)?$/u.test(path)) throw new Error("space artifact creation: operation denied");
+  return path;
+}
+
+function spaceArtifactCreationFetch(operation: SpaceArtifactCreationOperationV1, suffix: string, init: RequestInit): Promise<FetchTimeoutResponse> {
+  const path = spaceArtifactCreationPath(operation, suffix);
+  if (!spaceArtifactCreationCurrent(operation)) return Promise.reject(new Error("space artifact creation: stale owner"));
+  if (spaceArtifactCreationTestFetch !== null) return spaceArtifactCreationTestFetch(path, init, operation.abort.signal);
+  return browserBrokerFetch(`/_semio/hub${path}`, init, { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal: operation.abort.signal });
+}
+
+async function readSpaceArtifactCreationStatus(operation: SpaceArtifactCreationOperationV1, response: FetchTimeoutResponse): Promise<HubSpaceArtifactCreationStatusV1> {
+  const control: ExecutionTargetReadControl = { signal: operation.abort.signal, deadlineAtMs: operation.deadlineAtMs, assertCurrent: () => {
+    if (!spaceArtifactCreationCurrent(operation)) throw new Error("space artifact creation: stale owner");
+  } };
+  const bytes = await readBoundedExecutionTargetBody(response, null, SPACE_ARTIFACT_CREATION_MAX_BYTES, control, () => {});
+  try {
+    return parseSpaceArtifactCreationStatusJsonV1(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+  } finally {
+    bytes.fill(0);
+  }
+}
+
+function waitForSpaceArtifactCreationPoll(operation: SpaceArtifactCreationOperationV1): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, SPACE_ARTIFACT_CREATION_POLL_MS);
+    operation.abort.signal.addEventListener("abort", () => {
+      clearTimeout(timer);
+      reject(new Error("space artifact creation: cancelled"));
+    }, { once: true });
+  });
+}
+
+function settleSpaceArtifactCreation(operation: SpaceArtifactCreationOperationV1, status?: Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }>): void {
+  if (!spaceArtifactCreationCurrent(operation)) return;
+  spaceArtifactCreationOperations.delete(operation.request.requestId);
+  operation.abort.abort(new Error("space artifact creation: settled"));
+  if (status !== undefined) post(status);
+}
+
+async function driveSpaceArtifactCreation(operation: SpaceArtifactCreationOperationV1): Promise<void> {
+  const requestBody = JSON.stringify(sealSpaceArtifactCreateV1(operation.request));
+  let first = true;
+  while (spaceArtifactCreationCurrent(operation)) {
+    if (Date.now() >= operation.deadlineAtMs) {
+      settleSpaceArtifactCreation(operation, { ...operation.latest, phase: "indeterminate" });
+      return;
+    }
+    try {
+      let response: FetchTimeoutResponse;
+      if (operation.cancelRequested && !operation.cancelSent) {
+        operation.cancelSent = true;
+        response = await spaceArtifactCreationFetch(operation, `/${operation.request.requestId}/cancel`, { method: "POST" });
+      } else if (first) {
+        first = false;
+        response = await spaceArtifactCreationFetch(operation, "", { method: "POST", headers: { "content-type": "application/json" }, body: requestBody });
+      } else {
+        response = await spaceArtifactCreationFetch(operation, `/${operation.request.requestId}`, { method: "GET" });
+      }
+      if (!response.ok) {
+        if (response.status >= 400 && response.status < 500) {
+          settleSpaceArtifactCreation(operation, { ...operation.latest, phase: "failed" });
+          return;
+        }
+        throw new Error("space artifact creation: unavailable");
+      }
+      const status = spaceArtifactCreationStatus(operation, await readSpaceArtifactCreationStatus(operation, response));
+      if (!spaceArtifactCreationCurrent(operation)) return;
+      operation.latest = status;
+      post(status);
+      if (spaceArtifactCreationTerminal(status.phase)) {
+        settleSpaceArtifactCreation(operation);
+        return;
+      }
+    } catch {
+      if (!spaceArtifactCreationCurrent(operation)) return;
+    }
+    await waitForSpaceArtifactCreationPoll(operation).catch(() => {});
+  }
+}
+
+function submitSpaceArtifactCreation(request: Extract<BackboneWorkerRequest, { readonly kind: "space-artifact-create" }>): void {
+  const existing = spaceArtifactCreationOperations.get(request.requestId);
+  if (existing !== undefined) {
+    if (existing.request.spaceId === request.spaceId && existing.request.kindId === request.kindId && existing.request.name === request.name) post(existing.latest);
+    else post({ kind: "space-artifact-creation-status", requestId: request.requestId, spaceId: request.spaceId, phase: "failed" });
+    return;
+  }
+  if (spaceArtifactCreationOperations.size >= SPACE_ARTIFACT_CREATION_CAPACITY) {
+    post({ kind: "space-artifact-creation-status", requestId: request.requestId, spaceId: request.spaceId, phase: "failed" });
+    return;
+  }
+  const operation: SpaceArtifactCreationOperationV1 = {
+    request,
+    abort: new AbortController(),
+    workerEpoch: directoryWorkerEpoch,
+    deadlineAtMs: Date.now() + SPACE_ARTIFACT_CREATION_DEADLINE_MS,
+    cancelRequested: false,
+    cancelSent: false,
+    latest: { kind: "space-artifact-creation-status", requestId: request.requestId, spaceId: request.spaceId, phase: "accepted" },
+  };
+  spaceArtifactCreationOperations.set(request.requestId, operation);
+  post(operation.latest);
+  void driveSpaceArtifactCreation(operation);
+}
+
+function cancelSpaceArtifactCreation(requestId: string, spaceId: string): void {
+  const operation = spaceArtifactCreationOperations.get(requestId);
+  if (operation === undefined || operation.request.spaceId !== spaceId) return;
+  operation.cancelRequested = true;
+}
+
 type DirectoryBootstrapTransition = { readonly kind: "fetch"; readonly after: number } | { readonly kind: "live"; readonly since: number };
 
 /** 🧭️ Sole browser-worker owner of the fetch → retained Home ACK → live cursor. */
@@ -3190,6 +3422,7 @@ function openScopedDirectory(baseUrl: string, scope: DocumentScope, since: numbe
       // read happens to answer 403/404 (packet §3: "unmount, identity/session generation change,
       // 401/403, or scoped 4401").
       revokeDirectoryAdministrationForScope(scope.spaceId);
+      closeArtifactRuntime(key);
       post({ kind: "directory-scope-revoked", scope });
     },
   );
@@ -3216,6 +3449,10 @@ function closeDirectory(): void {
   for (const stream of scopedDirectoryStreams.values()) stream.close();
   scopedDirectoryStreams.clear();
   directoryWorkerEpoch += 1;
+  for (const operation of spaceArtifactCreationCatalogOperations.values()) operation.abort.abort(new Error("space artifact creation catalog: directory closed"));
+  spaceArtifactCreationCatalogOperations.clear();
+  for (const operation of spaceArtifactCreationOperations.values()) operation.abort.abort(new Error("space artifact creation: directory closed"));
+  spaceArtifactCreationOperations.clear();
   if (directoryAdministration !== null) terminateDirectoryAdministration(directoryAdministration, "stale", "closed");
   const closing = [...directoryCommandOperations.keys()];
   directoryCommandQueue.length = 0;
@@ -3625,6 +3862,189 @@ type InferenceOperationV1 = {
 
 let inferencePort: InferenceOperationV1 | null = null;
 
+type InferenceApprovalUndoMountV1 = Readonly<{
+  activationGeneration: bigint;
+  catalogGenerationId: string;
+  componentSha256: string;
+  descriptorSha256: string;
+  browserActorSha256: string;
+  directoryRevision: number;
+  membershipGeneration: number;
+  sessionGeneration?: number;
+  shareGeneration?: number;
+}>;
+
+type InferenceApprovalUndoOwnerV1 = {
+  readonly historyEpoch: number;
+  readonly scope: DocumentScope;
+  readonly clientInstanceId: string;
+  readonly receipt: GisMapInferenceApprovalReceiptV1;
+  readonly idempotencyKey: string;
+  readonly sourceCatalogGenerationId: string;
+  readonly sourceComponentSha256: string;
+  readonly sourceDescriptorSha256: string;
+  readonly sourceBrowserActorSha256: string;
+  readonly sourceDirectoryRevision: number;
+  readonly sourceMembershipGeneration: number;
+  readonly sourceSessionGeneration?: number;
+  readonly sourceShareGeneration?: number;
+  readonly abort: AbortController;
+  mount: InferenceApprovalUndoMountV1 | null;
+  phase: "awaiting-mount" | "available" | "submitting" | "failed";
+  retryable: boolean;
+};
+
+let inferenceApprovalUndoEpoch = 0;
+let inferenceApprovalUndoOwner: InferenceApprovalUndoOwnerV1 | null = null;
+
+function mintInferenceApprovalUndoIdempotencyKeyV1(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[0] = (bytes[0] ?? 0) | 1;
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function approvalUndoStatus(owner: InferenceApprovalUndoOwnerV1, status: GisMapApprovalHistoryStatusV1): void {
+  post({ kind: "inference-history-status", historyEpoch: owner.historyEpoch, clientInstanceId: owner.clientInstanceId, scope: owner.scope, status });
+}
+
+function sameApprovalUndoFrontierV1(owner: InferenceApprovalUndoOwnerV1, pair: VerifiedColdDocumentPair): boolean {
+  const expected = owner.receipt.undo.expectedCurrent;
+  return pair.frontier.documentId === expected.documentId
+    && pair.frontier.headEditOrdinal === BigInt(expected.headEditOrdinal)
+    && pair.frontier.headEditId === expected.headEditId
+    && pair.frontier.lastCommitSeq === BigInt(expected.lastCommitSeq)
+    && bytesHex(pair.frontier.chainSha256) === expected.chainSha256;
+}
+
+function sameApprovalUndoMountV1(state: ArtifactState, owner: InferenceApprovalUndoOwnerV1): boolean {
+  const lease = state.executionTargetLease;
+  const reservation = state.browserActorReservation;
+  const pair = state.verifiedColdPair;
+  const mount = owner.mount;
+  if (!lease?.live || reservation === null || pair === null || mount === null || state.closed || state.docAbort.signal.aborted) return false;
+  const fields = lease.fields();
+  return state.openClientInstanceId === owner.clientInstanceId
+    && fields.scope.spaceId === owner.scope.spaceId
+    && fields.scope.documentId === owner.scope.documentId
+    && reservation.generation === mount.activationGeneration
+    && fields.catalog.generationId === mount.catalogGenerationId
+    && fields.package.componentSha256 === mount.componentSha256
+    && fields.package.descriptorByteSha256 === mount.descriptorSha256
+    && fields.browserActor.kind === "closed-browser-actor"
+    && fields.browserActor.sha256 === mount.browserActorSha256
+    && fields.revalidation.directoryRevision === mount.directoryRevision
+    && fields.revalidation.membershipGeneration === mount.membershipGeneration
+    && fields.revalidation.sessionGeneration === mount.sessionGeneration
+    && fields.revalidation.shareGeneration === mount.shareGeneration
+    && sameApprovalUndoFrontierV1(owner, pair);
+}
+
+function retireInferenceApprovalUndo(owner: InferenceApprovalUndoOwnerV1, notify = true): void {
+  if (inferenceApprovalUndoOwner !== owner) return;
+  inferenceApprovalUndoOwner = null;
+  owner.abort.abort(new Error("gis map approval undo owner retired"));
+  if (notify) approvalUndoStatus(owner, { phase: "unavailable", canUndo: false, code: null });
+}
+
+function reissueInferenceApprovalUndoForRebootstrap(state: ArtifactState): void {
+  const owner = inferenceApprovalUndoOwner;
+  if (owner === null || owner.scope.spaceId !== artifactScope(state)?.spaceId || owner.scope.documentId !== state.config.documentId || owner.clientInstanceId !== state.openClientInstanceId) return;
+  inferenceApprovalUndoOwner = null;
+  owner.abort.abort(new Error("gis map approval undo owner rebootstrap"));
+  approvalUndoStatus(owner, { phase: "unavailable", canUndo: false, code: null });
+  if (inferenceApprovalUndoEpoch >= Number.MAX_SAFE_INTEGER) return;
+  inferenceApprovalUndoOwner = {
+    historyEpoch: ++inferenceApprovalUndoEpoch,
+    scope: structuredClone(owner.scope),
+    clientInstanceId: owner.clientInstanceId,
+    receipt: structuredClone(owner.receipt),
+    idempotencyKey: owner.idempotencyKey,
+    sourceCatalogGenerationId: owner.sourceCatalogGenerationId,
+    sourceComponentSha256: owner.sourceComponentSha256,
+    sourceDescriptorSha256: owner.sourceDescriptorSha256,
+    sourceBrowserActorSha256: owner.sourceBrowserActorSha256,
+    sourceDirectoryRevision: owner.sourceDirectoryRevision,
+    sourceMembershipGeneration: owner.sourceMembershipGeneration,
+    ...(owner.sourceSessionGeneration === undefined ? {} : { sourceSessionGeneration: owner.sourceSessionGeneration }),
+    ...(owner.sourceShareGeneration === undefined ? {} : { sourceShareGeneration: owner.sourceShareGeneration }),
+    abort: new AbortController(),
+    mount: null,
+    phase: "awaiting-mount",
+    retryable: true,
+  };
+}
+
+function bindInferenceApprovalUndoToMountedPair(state: ArtifactState, reservation: DocumentBrowserActorReservation, pair: VerifiedColdDocumentPair): void {
+  const owner = inferenceApprovalUndoOwner;
+  const lease = state.executionTargetLease;
+  if (owner === null || owner.phase !== "awaiting-mount" || lease === null || state.browserActorReservation !== reservation || state.verifiedColdPair !== pair) return;
+  const scope = artifactScope(state);
+  if (!scope || scope.spaceId !== owner.scope.spaceId || scope.documentId !== owner.scope.documentId || state.openClientInstanceId !== owner.clientInstanceId) return;
+  if (!sameApprovalUndoFrontierV1(owner, pair)) {
+    retireInferenceApprovalUndo(owner);
+    return;
+  }
+  const fields = lease.fields();
+  if (
+    fields.catalog.generationId !== owner.sourceCatalogGenerationId
+    || fields.package.componentSha256 !== owner.sourceComponentSha256
+    || fields.package.descriptorByteSha256 !== owner.sourceDescriptorSha256
+    || fields.browserActor.kind !== "closed-browser-actor"
+    || fields.browserActor.sha256 !== owner.sourceBrowserActorSha256
+    || fields.revalidation.directoryRevision !== owner.sourceDirectoryRevision
+    || fields.revalidation.membershipGeneration !== owner.sourceMembershipGeneration
+    || fields.revalidation.sessionGeneration !== owner.sourceSessionGeneration
+    || fields.revalidation.shareGeneration !== owner.sourceShareGeneration
+  ) {
+    retireInferenceApprovalUndo(owner);
+    return;
+  }
+  owner.mount = Object.freeze({
+    activationGeneration: reservation.generation,
+    catalogGenerationId: fields.catalog.generationId,
+    componentSha256: fields.package.componentSha256,
+    descriptorSha256: fields.package.descriptorByteSha256,
+    browserActorSha256: fields.browserActor.sha256,
+    directoryRevision: fields.revalidation.directoryRevision,
+    membershipGeneration: fields.revalidation.membershipGeneration,
+    ...(fields.revalidation.sessionGeneration === undefined ? {} : { sessionGeneration: fields.revalidation.sessionGeneration }),
+    ...(fields.revalidation.shareGeneration === undefined ? {} : { shareGeneration: fields.revalidation.shareGeneration }),
+  });
+  owner.phase = "available";
+  owner.retryable = true;
+  approvalUndoStatus(owner, { phase: "available", canUndo: true, code: null });
+}
+
+function retainInferenceApprovalUndo(operation: InferenceOperationV1, receipt: GisMapInferenceApprovalReceiptV1): void {
+  const state = artifactState(operation.scope.documentId, operation.scope.spaceId);
+  const lease = state?.executionTargetLease;
+  const fields = lease?.live ? lease.fields() : null;
+  if (!receipt.applied || receipt.undo.expectedCurrent.documentId !== operation.scope.documentId || state === undefined || fields === null || state.openClientInstanceId.length === 0 || fields.browserActor.kind !== "closed-browser-actor") throw new Error("gis map approval undo: invalid source owner");
+  if (inferenceApprovalUndoOwner !== null) retireInferenceApprovalUndo(inferenceApprovalUndoOwner);
+  if (inferenceApprovalUndoEpoch >= Number.MAX_SAFE_INTEGER) throw new Error("gis map approval undo: epoch exhausted");
+  const owner: InferenceApprovalUndoOwnerV1 = {
+    historyEpoch: ++inferenceApprovalUndoEpoch,
+    scope: structuredClone(operation.scope),
+    clientInstanceId: state.openClientInstanceId,
+    receipt: structuredClone(receipt),
+    idempotencyKey: mintInferenceApprovalUndoIdempotencyKeyV1(),
+    sourceCatalogGenerationId: fields.catalog.generationId,
+    sourceComponentSha256: fields.package.componentSha256,
+    sourceDescriptorSha256: fields.package.descriptorByteSha256,
+    sourceBrowserActorSha256: fields.browserActor.sha256,
+    sourceDirectoryRevision: fields.revalidation.directoryRevision,
+    sourceMembershipGeneration: fields.revalidation.membershipGeneration,
+    ...(fields.revalidation.sessionGeneration === undefined ? {} : { sourceSessionGeneration: fields.revalidation.sessionGeneration }),
+    ...(fields.revalidation.shareGeneration === undefined ? {} : { sourceShareGeneration: fields.revalidation.shareGeneration }),
+    abort: new AbortController(),
+    mount: null,
+    phase: "awaiting-mount",
+    retryable: true,
+  };
+  inferenceApprovalUndoOwner = owner;
+  state.browserActorReservation?.bindApprovalUndoIfMounted();
+}
+
 /** 🔭️ Observation seam mirroring {@link executionTargetStatusObserver}: a harness without a worker
  * scope still sees the exact bounded payload the renderer would receive. */
 let inferencePortStatusObserver: ((status: Extract<BackboneWorkerResponse, { kind: "inference-port-status" }>) => void) | null = null;
@@ -3673,6 +4093,16 @@ async function inferenceBrokerFetch(operation: InferenceOperationV1, suffix: str
       ...(init.body === undefined ? {} : { headers: { "content-type": "application/json" }, body: init.body }),
     },
     { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal: operation.abort.signal },
+  );
+}
+
+async function inferenceApprovalUndoBrokerFetch(owner: InferenceApprovalUndoOwnerV1, body: string): Promise<FetchTimeoutResponse> {
+  const state = artifactState(owner.scope.documentId, owner.scope.spaceId);
+  if (state === undefined || state.closed || state.openClientInstanceId !== owner.clientInstanceId || state.docAbort.signal.aborted) throw new Error("gis map approval undo: document closed");
+  return browserBrokerFetch(
+    `/_semio/hub${inferenceJobPath(owner.scope, "/approval-undos")}`,
+    { method: "POST", headers: { "content-type": "application/json" }, body },
+    { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal: owner.abort.signal },
   );
 }
 
@@ -3867,6 +4297,7 @@ async function approveInferenceProposal(operationEpoch: number): Promise<void> {
     if (!response.ok) throw new DirectoryHttpError(response.status, "");
     const receipt = parseGisMapInferenceApprovalReceiptV1(await readInferenceJson(response));
     if (liveInferencePort(operationEpoch) !== operation) return;
+    retainInferenceApprovalUndo(operation, receipt);
     advanceInferencePort(operation, { kind: "approval", receipt });
     retireInferencePort(operation);
   } catch (error) {
@@ -3874,6 +4305,47 @@ async function approveInferenceProposal(operationEpoch: number): Promise<void> {
     terminateInferencePort(operation, inferenceCodeFromRejection(error, operation.abort.signal.aborted));
   } finally {
     operation.inFlight = false;
+  }
+}
+
+/** ↩️ Routes the ordinary Shell history action through the one exact mounted durable approval
+ * owner. The retry key and Hub handle stay stable and private across an indeterminate response. */
+async function undoInferenceApproval(historyEpoch: number, clientInstanceId: string, scope: DocumentScope): Promise<void> {
+  const owner = inferenceApprovalUndoOwner;
+  if (owner === null || owner.historyEpoch !== historyEpoch || owner.clientInstanceId !== clientInstanceId || owner.scope.spaceId !== scope.spaceId || owner.scope.documentId !== scope.documentId || (owner.phase !== "available" && !(owner.phase === "failed" && owner.retryable))) return;
+  const state = artifactState(scope.documentId, scope.spaceId);
+  if (state === undefined || !sameApprovalUndoMountV1(state, owner)) {
+    retireInferenceApprovalUndo(owner);
+    return;
+  }
+  owner.phase = "submitting";
+  approvalUndoStatus(owner, { phase: "submitting", canUndo: false, code: null });
+  try {
+    const request = sealGisMapApprovalUndoRequestV1(owner.receipt.undo, owner.idempotencyKey);
+    const response = await inferenceApprovalUndoBrokerFetch(owner, JSON.stringify(request));
+    if (!response.ok) throw new DirectoryHttpError(response.status, "");
+    const receipt: GisMapApprovalUndoReceiptV1 = parseGisMapApprovalUndoReceiptV1(await readInferenceJson(response));
+    if (inferenceApprovalUndoOwner !== owner) return;
+    const currentState = artifactState(owner.scope.documentId, owner.scope.spaceId);
+    if (currentState === undefined || !sameApprovalUndoMountV1(currentState, owner)) {
+      retireInferenceApprovalUndo(owner);
+      return;
+    }
+    if (!receipt.applied || receipt.targetId !== owner.receipt.undo.targetId || receipt.originalJobId !== owner.receipt.jobId || receipt.frontier.documentId !== owner.scope.documentId) throw new Error("gis map approval undo: receipt mismatch");
+    approvalUndoStatus(owner, { phase: "applied", canUndo: false, code: null });
+    inferenceApprovalUndoOwner = null;
+    owner.abort.abort(new Error("gis map approval undo applied"));
+  } catch (error) {
+    if (inferenceApprovalUndoOwner !== owner || owner.abort.signal.aborted) return;
+    const status = error instanceof DirectoryHttpError ? error.status : undefined;
+    const code = status === undefined ? "inference.transport" : gisMapInferenceCodeFromStatusV1(status);
+    owner.phase = "failed";
+    owner.retryable = status === undefined || status === 429 || status === 503;
+    approvalUndoStatus(owner, { phase: "failed", canUndo: owner.retryable, code });
+    if (!owner.retryable) {
+      inferenceApprovalUndoOwner = null;
+      owner.abort.abort(new Error("gis map approval undo rejected"));
+    }
   }
 }
 
@@ -4124,6 +4596,7 @@ function closeArtifactRuntime(runtimeKey: string): void {
   // 💡️ The inference port exists only while this document's lease does — a close retires it with a
   // localized terminal before the lease buffers are wiped.
   if (inferencePort !== null && documentRuntimeKeyV1({ kind: "hub", ...inferencePort.scope }) === runtimeKey) closeInferencePort(inferencePort.operationEpoch);
+  if (inferenceApprovalUndoOwner !== null && documentRuntimeKeyV1({ kind: "hub", ...inferenceApprovalUndoOwner.scope }) === runtimeKey) retireInferenceApprovalUndo(inferenceApprovalUndoOwner);
   dropDocumentExecutionTargetLease(state);
   state.socket?.close();
   if (state.sanityPollTimer != null) clearTimeout(state.sanityPollTimer);
@@ -4236,6 +4709,15 @@ function handleTsRequest(request: BackboneWorkerRequest): void {
     case "directory-command-cancel":
       cancelDirectoryCommand(request.requestId);
       break;
+    case "space-artifact-creation-catalog-open":
+      void openSpaceArtifactCreationCatalog(request.spaceId, request.clientInstanceId);
+      break;
+    case "space-artifact-create":
+      submitSpaceArtifactCreation(request);
+      break;
+    case "space-artifact-create-cancel":
+      cancelSpaceArtifactCreation(request.requestId, request.spaceId);
+      break;
     case "directory-administration-open":
       openDirectoryAdministration(request.operationEpoch, request.spaceId);
       break;
@@ -4275,6 +4757,9 @@ function handleTsRequest(request: BackboneWorkerRequest): void {
     case "inference-close":
       closeInferencePort(request.operationEpoch);
       break;
+    case "inference-history-undo":
+      void undoInferenceApproval(request.historyEpoch, request.clientInstanceId, request.scope);
+      break;
     case "browser-actor-ui-patch-result": {
       const state = artifactState(request.scope.documentId, request.scope.spaceId);
       if (state?.openClientInstanceId === request.clientInstanceId) state.browserActorReservation?.settleUiPatch(request);
@@ -4292,6 +4777,12 @@ if (import.meta.vitest) {
   const { beforeEach, describe, expect, it, vi } = import.meta.vitest;
 
   beforeEach(() => {
+    for (const operation of spaceArtifactCreationCatalogOperations.values()) operation.abort.abort();
+    spaceArtifactCreationCatalogOperations.clear();
+    for (const operation of spaceArtifactCreationOperations.values()) operation.abort.abort();
+    spaceArtifactCreationOperations.clear();
+    spaceArtifactCreationTestFetch = null;
+    workerPostTestSink = null;
     clearLocalBrowserBrokerProof();
     installLocalBrowserBrokerProof("4".repeat(64));
     socketGrantTestIssue = async () => ({
@@ -4300,6 +4791,108 @@ if (import.meta.vitest) {
       grant: `socket.v1.${"1".repeat(32)}.${"2".repeat(64)}`,
       actorId: `hub.v1.${"3".repeat(64)}`,
       expiresAtMs: Number.MAX_SAFE_INTEGER,
+    });
+  });
+
+  describe("space artifact creation owner", () => {
+    const requestId = "1".repeat(32);
+    const response = (phase: HubSpaceArtifactCreationStatusV1["phase"], ready?: HubSpaceArtifactCreationStatusV1["ready"]): FetchTimeoutResponse => {
+      const body = JSON.stringify({ schema: "semio.hub.space-artifact-creation-status/v1", requestId, spaceId: "space-a", phase, ...(ready === undefined ? {} : { ready }) });
+      return new Response(body, { status: 200, headers: { "content-length": String(new TextEncoder().encode(body).byteLength) } });
+    };
+
+    it("publishes only the canonical selected-current catalog for the exact Space", async () => {
+      const body = JSON.stringify({
+        schema: "semio.hub.space-artifact-creation-catalog/v1",
+        spaceId: "space-a",
+        catalogGenerationId: "3".repeat(64),
+        kinds: [{ kindId: "s.gis.gismap", schema: "s.gis.gismap", dialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "any" }, label: { en: "GIS Map", de: "GIS-Karte" } }],
+      });
+      const replies: BackboneWorkerResponse[] = [];
+      spaceArtifactCreationTestFetch = async (path, init) => {
+        expect([path, init.method]).toEqual(["/spaces/space-a/artifact-creations", "GET"]);
+        return new Response(body, { status: 200, headers: { "content-length": String(new TextEncoder().encode(body).byteLength) } });
+      };
+      workerPostTestSink = (message) => replies.push(message);
+      const clientInstanceId = "12345678-1234-4123-8123-123456789abc";
+      handleTsRequest({ kind: "space-artifact-creation-catalog-open", clientInstanceId, spaceId: "space-a" });
+      await vi.waitFor(() => expect(replies.at(-1)).toEqual({ kind: "space-artifact-creation-catalog-status", clientInstanceId, spaceId: "space-a", phase: "ready" }));
+      expect(replies).toEqual([
+        { kind: "space-artifact-creation-catalog-status", clientInstanceId, spaceId: "space-a", phase: "loading" },
+        { kind: "space-artifact-creation-catalog", clientInstanceId, spaceId: "space-a", catalogGenerationId: "3".repeat(64), kinds: JSON.parse(body).kinds },
+        { kind: "space-artifact-creation-catalog-status", clientInstanceId, spaceId: "space-a", phase: "ready" },
+      ]);
+      expect(spaceArtifactCreationCatalogOperations).toHaveLength(0);
+
+      spaceArtifactCreationTestFetch = async () => new Response(body.replace('"spaceId":"space-a"', '"spaceId":"space-b"'), { status: 200 });
+      handleTsRequest({ kind: "space-artifact-creation-catalog-open", clientInstanceId, spaceId: "space-a" });
+      await vi.waitFor(() => expect(spaceArtifactCreationCatalogOperations).toHaveLength(0));
+      expect(replies.slice(-2)).toEqual([
+        { kind: "space-artifact-creation-catalog-status", clientInstanceId, spaceId: "space-a", phase: "loading" },
+        { kind: "space-artifact-creation-catalog-status", clientInstanceId, spaceId: "space-a", phase: "unavailable" },
+      ]);
+    });
+
+    it("retains one exact request through preparing and discloses the server tuple only at ready", async () => {
+      const calls: Array<readonly [string, string]> = [];
+      const statuses: Array<Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }>> = [];
+      const replies: readonly FetchTimeoutResponse[] = [
+        response("accepted"),
+        response("preparing"),
+        response("ready", { documentId: `artifact-${"2".repeat(32)}`, kindId: "s.gis.gismap", artifactSchema: "s.gis.gismap", parentDialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "any" } }),
+      ];
+      spaceArtifactCreationTestFetch = async (path, init) => {
+        calls.push([path, init.method ?? "GET"]);
+        return replies[calls.length - 1]!;
+      };
+      workerPostTestSink = (message) => {
+        if (message.kind === "space-artifact-creation-status") statuses.push(message);
+      };
+      handleTsRequest({ kind: "space-artifact-create", requestId, spaceId: "space-a", kindId: "s.gis.gismap", name: "Shared Map" });
+      await vi.waitFor(() => expect(statuses.at(-1)?.phase).toBe("ready"), { timeout: 2_000 });
+      expect(calls).toEqual([
+        ["/spaces/space-a/artifact-creations", "POST"],
+        [`/spaces/space-a/artifact-creations/${requestId}`, "GET"],
+        [`/spaces/space-a/artifact-creations/${requestId}`, "GET"],
+      ]);
+      expect(statuses.filter((status) => status.ready !== undefined)).toHaveLength(1);
+      expect(spaceArtifactCreationOperations).toHaveLength(0);
+    });
+
+    it("routes cancellation through the exact retained owner without manufacturing a ready tuple", async () => {
+      const calls: Array<readonly [string, string]> = [];
+      const statuses: Array<Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }>> = [];
+      spaceArtifactCreationTestFetch = async (path, init) => {
+        calls.push([path, init.method ?? "GET"]);
+        return response(path.endsWith("/cancel") ? "cancelled" : "preparing");
+      };
+      workerPostTestSink = (message) => {
+        if (message.kind === "space-artifact-creation-status") statuses.push(message);
+      };
+      handleTsRequest({ kind: "space-artifact-create", requestId, spaceId: "space-a", kindId: "s.gis.gismap", name: "Shared Map" });
+      await vi.waitFor(() => expect(statuses.some((status) => status.phase === "preparing")).toBe(true));
+      handleTsRequest({ kind: "space-artifact-create-cancel", requestId, spaceId: "space-a" });
+      await vi.waitFor(() => expect(statuses.at(-1)?.phase).toBe("cancelled"), { timeout: 2_000 });
+      expect(calls.at(-1)).toEqual([`/spaces/space-a/artifact-creations/${requestId}/cancel`, "POST"]);
+      expect(statuses.every((status) => status.ready === undefined)).toBe(true);
+      expect(spaceArtifactCreationOperations).toHaveLength(0);
+    });
+
+    it("never fabricates cancelled from a rejected cancel request", async () => {
+      const statuses: Array<Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }>> = [];
+      spaceArtifactCreationTestFetch = async (path) => {
+        if (path.endsWith("/cancel")) return new Response(null, { status: 409 });
+        return response("preparing");
+      };
+      workerPostTestSink = (message) => {
+        if (message.kind === "space-artifact-creation-status") statuses.push(message);
+      };
+      handleTsRequest({ kind: "space-artifact-create", requestId, spaceId: "space-a", kindId: "s.gis.gismap", name: "Shared Map" });
+      await vi.waitFor(() => expect(statuses.some((status) => status.phase === "preparing")).toBe(true));
+      handleTsRequest({ kind: "space-artifact-create-cancel", requestId, spaceId: "space-a" });
+      await vi.waitFor(() => expect(statuses.at(-1)?.phase).toBe("failed"), { timeout: 2_000 });
+      expect(statuses.some((status) => status.phase === "cancelled")).toBe(false);
+      expect(spaceArtifactCreationOperations).toHaveLength(0);
     });
   });
 
@@ -4526,7 +5119,7 @@ if (import.meta.vitest) {
         scope: { spaceId: "studio-1", documentId: "doc-1" },
         descriptorDigestV1: "5".repeat(64),
         catalog: { generationId: "6".repeat(64) },
-        package: { pluginId: "s.test", packageId: "s.test.codec", version: "1", componentSha256: "1".repeat(64), componentBlake3: "2".repeat(64), descriptorByteSha256: "3".repeat(64) },
+        package: { pluginId: "s.test", packageId: "s.test.codec", version: "1", componentSha256: "1".repeat(64), componentBlake3: "2".repeat(64), descriptorByteSha256: "3".repeat(64), executionProtocol: { appChannelVersion: DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } },
         component: { sha256: "1".repeat(64), blake3: "2".repeat(64), byteLength: 1 },
         descriptor: { sha256: "3".repeat(64), byteLength: 1 },
         browserActor: { kind: "none" },
@@ -4534,6 +5127,10 @@ if (import.meta.vitest) {
         parentDialect: { artifactKind: "test", standard: "1", subset: "*" },
         surface: { surfaceId: "s.space.home@1/*#editor", appId: "app.test", windowKindId: "window.document", role: "editor" as const, rendererTarget: "react" as const },
         grant: { read: true, write: true, observe: true },
+        checkpoint: {
+          checkpointId: "7".repeat(64), descriptorDigestV1: "5".repeat(64), aggregateSha256: "8".repeat(64),
+          baselineFrontier: { documentId: "doc-1", headEditOrdinal: 0, headEditId: "", lastCommitSeq: 0, chainHash: Array(32).fill(0) },
+        },
         revalidation: { directoryRevision: 1, membershipGeneration: 1, sessionGeneration: 1 },
       });
       const hubConfig: ArtifactActorConfig = { documentId: "doc-1", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1", installedTarget }], actor: "actor-1" };
@@ -4653,7 +5250,19 @@ if (import.meta.vitest) {
           }
           if (row.name === "lease-aggregate") fields.checkpoint.aggregateSha256 = "f".repeat(64);
           if (row.name === "lease-baseline") fields.checkpoint.baselineFrontier.headEditId = "foreign-head";
-          if (row.name === "lease-missing-checkpoint") delete fields.checkpoint;
+          if (row.name === "lease-missing-checkpoint") {
+            delete fields.checkpoint;
+            try {
+              expect(() => parseDocumentExecutionTargetLeaseFieldsV1(fields)).toThrow("document-open.invalid-fields");
+              expect({ name: row.name, installed: state.currentPack?.length === bytesFromHex(fixture.payload.packHex).length && state.currentPack[0] !== 9 }).toEqual(row);
+              expect(state.executionTargetLease).toBeNull();
+              expect(state.currentPack).toEqual(new Uint8Array([9]));
+              expect(state.currentSpr).toEqual(new Uint8Array([8]));
+            } finally {
+              closeArtifactRuntime(state.runtimeKey);
+            }
+            continue;
+          }
           if (row.name === "lease-scope") fields.scope.spaceId = "foreign-space";
           if (row.name === "lease-kind") {
             fields.artifact.kind = "foreign-kind";
@@ -4725,7 +5334,7 @@ if (import.meta.vitest) {
           closeArtifactRuntime(state.runtimeKey);
         }
       }
-      console.log("artifact-bootstrap-owner: AJV=1 node-sha256=2 neutral=" + corpus.cases.length + " passed");
+      console.log("[DEBUG] artifact-bootstrap-owner: AJV=1 node-sha256=2 early-lease-rejection=1 neutral=" + corpus.cases.length + " passed");
     });
 
     it("installs the exact neutral inline and chunked pair and reaches Live only at the authenticated tail", async () => {
@@ -5689,6 +6298,8 @@ if (import.meta.vitest) {
         };
       };
       const scope = { spaceId: "space/a", documentId: "document b" };
+      const posted: BackboneWorkerResponse[] = [];
+      workerPostTestSink = (message) => posted.push(message);
       try {
         handleTsRequest({ kind: "directory-scope-open", baseUrl: "http://hub.test", scope, since: 7 });
         for (let turn = 0; turn < 16 && FakeDirectoryWebSocket.instances.length === 0; turn += 1) await Promise.resolve();
@@ -5696,14 +6307,52 @@ if (import.meta.vitest) {
         expect(paths).toEqual(["/directory/spaces/space%2Fa/documents/document%20b/socket-grants"]);
         expect(socket.url).toBe("ws://hub.test/directory/spaces/space%2Fa/documents/document%20b/socket/v1?since=7");
         socket.triggerOpen();
+        const issue = socketGrantTestIssue;
+        socketGrantTestIssue = null;
+        openArtifact({ documentId: scope.documentId, schema: "gis.map", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: scope.spaceId }], actor: "caller" });
+        socketGrantTestIssue = issue;
+        const state = artifactState(scope.documentId, scope.spaceId)!;
+        inferenceApprovalUndoOwner = {
+          historyEpoch: ++inferenceApprovalUndoEpoch,
+          scope,
+          clientInstanceId: state.openClientInstanceId,
+          receipt: {
+            schema: "semio.hub.inference-approval-receipt/v1",
+            jobId: "1".repeat(32),
+            mutationId: "2".repeat(32),
+            commandHash: "3".repeat(64),
+            proposalHash: "4".repeat(64),
+            applied: true,
+            undo: { targetId: "5".repeat(32), expectedCurrent: { documentId: scope.documentId, headEditOrdinal: 1, headEditId: "edit-1", lastCommitSeq: 1, chainSha256: "6".repeat(64) } },
+          },
+          idempotencyKey: "7".repeat(32),
+          sourceCatalogGenerationId: "8".repeat(64),
+          sourceComponentSha256: "9".repeat(64),
+          sourceDescriptorSha256: "a".repeat(64),
+          sourceBrowserActorSha256: "b".repeat(64),
+          sourceDirectoryRevision: 1,
+          sourceMembershipGeneration: 1,
+          sourceSessionGeneration: 1,
+          abort: new AbortController(),
+          mount: null,
+          phase: "submitting",
+          retryable: true,
+        };
+        const revokedOwner = inferenceApprovalUndoOwner;
         socket.triggerClose(4401);
         await Promise.resolve();
         await vi.advanceTimersByTimeAsync(HUB_RECONNECT_MAX_MS * 2);
         expect(scopedDirectoryStreams.size).toBe(0);
         expect(FakeDirectoryWebSocket.instances).toHaveLength(1);
+        expect(artifacts.has(state.runtimeKey)).toBe(false);
+        expect(revokedOwner.abort.signal.aborted).toBe(true);
+        expect(inferenceApprovalUndoOwner).toBeNull();
+        expect(posted.some((message) => message.kind === "inference-history-status" && message.historyEpoch === revokedOwner.historyEpoch && message.status.phase === "unavailable")).toBe(true);
+        expect(posted.some((message) => message.kind === "directory-scope-revoked")).toBe(true);
       } finally {
         closeDirectory();
         socketGrantTestIssue = null;
+        workerPostTestSink = null;
         (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
         vi.useRealTimers();
       }
@@ -5744,14 +6393,28 @@ if (import.meta.vitest) {
         scope: { spaceId: SPACE, documentId: DOCUMENT },
         descriptorDigestV1: HASH,
         catalog: { generationId: HASH },
-        package: { pluginId: "gis", packageId: "semio:gis", version: "0.1.0", componentSha256: HASH, componentBlake3: HASH, descriptorByteSha256: HASH },
+        package: { pluginId: "gis", packageId: "semio:gis", version: "0.1.0", componentSha256: HASH, componentBlake3: HASH, descriptorByteSha256: HASH, executionProtocol: { appChannelVersion: DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } },
         component: { sha256: HASH, blake3: HASH, byteLength: 1 },
         descriptor: { sha256: HASH, byteLength: 1 },
-        browserActor: { kind: "none" },
+        browserActor: {
+          kind: "closed-browser-actor",
+          schema: "semio.os.closed-browser-actor.v1",
+          codegenPolicy: "semio.os.browser-jco-1.27.0-jspi.v1",
+          byteLength: 3,
+          sha256: HASH,
+          sourceComponentSha256: HASH,
+          sourceDescriptorByteSha256: HASH,
+          policySha256: "4".repeat(64),
+          importInterfaces: ["semio:framework/host-async@1.0.0", "semio:framework/pure@1.0.0"],
+        },
         artifact: { kind: "s.gis.gismap", schema: "gis.map", packSchemaHash: HASH },
         parentDialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "*" },
-        surface: { surfaceId: "inference", appId: "gis", windowKindId: "gis-main", role: write ? "editor" : "viewer", rendererTarget: "wgpu" },
+        surface: { surfaceId: "inference", appId: "gis", windowKindId: "gis-main", role: write ? "editor" : "viewer", rendererTarget: "wasm" },
         grant: { read: true, write, observe: true },
+        checkpoint: {
+          checkpointId: HASH, descriptorDigestV1: HASH, aggregateSha256: HASH,
+          baselineFrontier: { documentId: DOCUMENT, headEditOrdinal: 0, headEditId: "", lastCommitSeq: 0, chainHash: Array(32).fill(0) },
+        },
         revalidation: { directoryRevision: 1, membershipGeneration: 1, sessionGeneration: 1 },
       });
     }
@@ -5934,7 +6597,15 @@ if (import.meta.vitest) {
         await driveInferencePort(6);
         expect(harness.ports().at(-1)?.preview).toEqual(PREVIEW);
         harness.statuses.push(200);
-        harness.bodies.push(JSON.stringify({ schema: "semio.hub.inference-approval-receipt/v1", jobId: JOB, mutationId: HASH, commandHash: HASH, proposalHash: HASH, applied: true }));
+        harness.bodies.push(JSON.stringify({
+          schema: "semio.hub.inference-approval-receipt/v1",
+          jobId: JOB,
+          mutationId: JOB,
+          commandHash: HASH,
+          proposalHash: HASH,
+          applied: true,
+          undo: { targetId: "2".repeat(32), expectedCurrent: { documentId: DOCUMENT, headEditOrdinal: 2, headEditId: "edit-2", lastCommitSeq: 2, chainSha256: "3".repeat(64) } },
+        }));
         handleTsRequest({ kind: "inference-approve", operationEpoch: 6 });
         expect(harness.ports().at(-1)?.phase).toBe("approving");
         await settleInferenceTurns();
@@ -6392,8 +7063,7 @@ if (import.meta.vitest) {
 
     async function executionTargetLeaseFixture(): Promise<ExecutionTargetLeaseFixture> {
       const { readFile } = await import("node:fs/promises");
-      const { resolve } = await import("node:path");
-      return JSON.parse(await readFile(resolve(process.cwd(), "../../../../../../../../../..", "🌎️hub/🧪️fixtures/📇️directory/🔏️document-execution-target-lease-v1/🔣️.json"), "utf8")) as ExecutionTargetLeaseFixture;
+      return JSON.parse(await readFile(new URL("../../../🌎️hub/🧪️fixtures/📇️directory/🔏️document-execution-target-lease-v1/🔣️.json", import.meta.url), "utf8")) as ExecutionTargetLeaseFixture;
     }
 
     function executionTargetBytes(hexText: string): Uint8Array {
@@ -7411,6 +8081,7 @@ if (import.meta.vitest) {
       const received = new Uint8Array(pack.byteLength + spr.byteLength),
         pageIndexes: number[] = [],
         statuses: Extract<BackboneWorkerResponse, { kind: "execution-target-status" }>[] = [],
+        historyStatuses: Extract<BackboneWorkerResponse, { kind: "inference-history-status" }>[] = [],
         patchOffers: BrowserActorUiPatchOfferV1[] = [],
         uiStore = new UiDocumentStore(windowKindId);
       let lifecycleAcknowledged = false,
@@ -7586,9 +8257,10 @@ if (import.meta.vitest) {
         last_commit_seq: fields.checkpoint.baselineFrontier.lastCommitSeq,
         chain_hash: fields.checkpoint.baselineFrontier.chainHash,
       };
-      const intent = { ...structuredClone(fixture.intent), scope: { spaceId: binding.spaceId, documentId } };
-      const receipt = { ...structuredClone(fixture.socketGrant), expiresAtMs: Date.now() + 25_000 };
-      lease.admitBrowserActor(documentExecutionTargetLeaseMintToken, receipt, Date.now() + 30_000, { binding, intent, assertCurrent() {} });
+      const intent = { ...structuredClone(fixture.intent), scope: { spaceId: binding.spaceId, documentId } },
+        actorFixtureExpiresAtMs = Date.now() + 120_000,
+        receipt = { ...structuredClone(fixture.socketGrant), expiresAtMs: actorFixtureExpiresAtMs };
+      lease.admitBrowserActor(documentExecutionTargetLeaseMintToken, receipt, actorFixtureExpiresAtMs + 5_000, { binding, intent, assertCurrent() {} });
       state.actor = receipt.actorId;
       state.hubActorReady = true;
       state.pendingSocketActorId = null;
@@ -7597,6 +8269,10 @@ if (import.meta.vitest) {
       socket.open();
       executionTargetStatusObserver = (status) => statuses.push(status);
       workerPostTestSink = (message) => {
+        if (message.kind === "inference-history-status") {
+          historyStatuses.push(message);
+          return;
+        }
         if (message.kind !== "browser-actor-ui-patch") return;
         patchOffers.push(message);
         const before = uiStore.getState();
@@ -7630,6 +8306,8 @@ if (import.meta.vitest) {
         });
       };
       (globalThis as unknown as { Worker: unknown }).Worker = ColdPairWorker;
+      clearLocalBrowserBrokerProof();
+      installLocalBrowserBrokerProof("d".repeat(64));
       globalThis.fetch = async (input) => {
         expect(String(input).endsWith("/execution-target/browser-actor")).toBe(true);
         return executionTargetBodyResponse(actorBytes);
@@ -7657,8 +8335,42 @@ if (import.meta.vitest) {
         };
         owner = new VerifiedColdDocumentPair(verifiedColdDocumentPairMintToken, state, lease, bootstrap, { pack, spr }, { pack: publishedPack, spr: publishedSpr });
         state.verifiedColdPair = owner;
+        const approvalReceipt = parseGisMapInferenceApprovalReceiptV1({
+          schema: "semio.hub.inference-approval-receipt/v1",
+          jobId: "1".repeat(32),
+          mutationId: "2".repeat(32),
+          commandHash: "3".repeat(64),
+          proposalHash: "4".repeat(64),
+          applied: true,
+          undo: {
+            targetId: "5".repeat(32),
+            expectedCurrent: {
+              documentId,
+              headEditOrdinal: fields.checkpoint.baselineFrontier.headEditOrdinal,
+              headEditId: fields.checkpoint.baselineFrontier.headEditId,
+              lastCommitSeq: fields.checkpoint.baselineFrontier.lastCommitSeq,
+              chainSha256: executionTargetHex(Uint8Array.from(fields.checkpoint.baselineFrontier.chainHash)),
+            },
+          },
+        });
+        const operation: InferenceOperationV1 = {
+          operationEpoch: 1,
+          scope: { spaceId: binding.spaceId, documentId },
+          abort: new AbortController(),
+          status: idleGisMapInferencePortStatusV1(),
+          turns: 0,
+          pollTimer: null,
+          inFlight: false,
+          cancelSent: false,
+          closed: false,
+        };
+        retainInferenceApprovalUndo(operation, approvalReceipt);
+        expect(inferenceApprovalUndoOwner).toMatchObject({ phase: "awaiting-mount", clientInstanceId: state.openClientInstanceId });
+        expect(historyStatuses).toEqual([]);
         expect(owner.pageCount).toBe(exact.pageCount);
         await reservation!.installColdPair(owner);
+        expect(inferenceApprovalUndoOwner).toMatchObject({ phase: "available", clientInstanceId: state.openClientInstanceId });
+        expect(historyStatuses.at(-1)?.status).toEqual({ phase: "available", canUndo: true, code: null });
         expect(renderEvents).toEqual(corpus.browserRender.events);
         await reservation!.installColdPair(owner);
         expect(renderEvents).toEqual(corpus.browserRender.events);
@@ -7671,6 +8383,102 @@ if (import.meta.vitest) {
         expect(patchRejected).toBe(true);
         expect(uiStore.getRevisionSnapshot()).toBe(rendererOracle.revision);
         expect(uiStore.getState().nodes.get(uiStore.getState().root!)?.component).toMatchObject({ type: "surface", kind: rendererOracle.nodeKind });
+
+        retainInferenceApprovalUndo(operation, approvalReceipt);
+        reissueInferenceApprovalUndoForRebootstrap(state);
+        const ownerAwaitingA = inferenceApprovalUndoOwner!;
+        const stateB: ArtifactState = {
+          ...state,
+          runtimeKey: documentRuntimeKeyV1({ kind: "hub", spaceId: "unrelated-space", documentId: "unrelated-document" }),
+          config: { ...state.config, documentId: "unrelated-document", bindings: [{ kind: "hub", baseUrl: fixture.hubOrigin, spaceId: "unrelated-space" }] },
+          openClientInstanceId: "unrelated-client",
+          browserActorReservation: reservation,
+          verifiedColdPair: owner,
+        };
+        bindInferenceApprovalUndoToMountedPair(stateB, reservation!, owner);
+        expect(inferenceApprovalUndoOwner).toBe(ownerAwaitingA);
+        expect(inferenceApprovalUndoOwner?.phase).toBe("awaiting-mount");
+        reservation!.bindApprovalUndoIfMounted();
+        expect(inferenceApprovalUndoOwner?.phase).toBe("available");
+
+        for (const field of ["directoryRevision", "membershipGeneration", "sessionGeneration"] as const) {
+          retainInferenceApprovalUndo(operation, approvalReceipt);
+          const originalOwner = inferenceApprovalUndoOwner!;
+          reissueInferenceApprovalUndoForRebootstrap(state);
+          const reissued = inferenceApprovalUndoOwner!;
+          expect(originalOwner.abort.signal.aborted).toBe(true);
+          expect(reissued).toMatchObject({ phase: "awaiting-mount", idempotencyKey: originalOwner.idempotencyKey });
+          const rotatedFields = structuredClone(fields);
+          rotatedFields.revalidation[field] = (rotatedFields.revalidation[field] ?? 0) + 1;
+          const rotatedLease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, parseDocumentExecutionTargetLeaseFieldsV1(rotatedFields), fixture.hubOrigin, executionTargetBytes(fixture.componentHex), executionTargetBytes(fixture.descriptorHex));
+          state.executionTargetLease = rotatedLease;
+          reservation!.bindApprovalUndoIfMounted();
+          expect(inferenceApprovalUndoOwner).toBeNull();
+          expect(historyStatuses.at(-1)?.status).toEqual({ phase: "unavailable", canUndo: false, code: null });
+          rotatedLease.drop();
+          state.executionTargetLease = lease;
+        }
+
+        const shareFields = structuredClone(fields);
+        delete shareFields.revalidation.sessionGeneration;
+        shareFields.revalidation.shareGeneration = 1;
+        const shareLease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, parseDocumentExecutionTargetLeaseFieldsV1(shareFields), fixture.hubOrigin, executionTargetBytes(fixture.componentHex), executionTargetBytes(fixture.descriptorHex));
+        state.executionTargetLease = shareLease;
+        retainInferenceApprovalUndo(operation, approvalReceipt);
+        reissueInferenceApprovalUndoForRebootstrap(state);
+        const rotatedShareFields = structuredClone(shareFields);
+        rotatedShareFields.revalidation.shareGeneration = (rotatedShareFields.revalidation.shareGeneration ?? 0) + 1;
+        const rotatedShareLease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, parseDocumentExecutionTargetLeaseFieldsV1(rotatedShareFields), fixture.hubOrigin, executionTargetBytes(fixture.componentHex), executionTargetBytes(fixture.descriptorHex));
+        state.executionTargetLease = rotatedShareLease;
+        reservation!.bindApprovalUndoIfMounted();
+        expect(inferenceApprovalUndoOwner).toBeNull();
+        rotatedShareLease.drop();
+        shareLease.drop();
+        state.executionTargetLease = lease;
+
+        retainInferenceApprovalUndo(operation, approvalReceipt);
+        reservation!.bindApprovalUndoIfMounted();
+        const submittingOwner = inferenceApprovalUndoOwner!;
+        expect(submittingOwner.phase).toBe("available");
+        clearLocalBrowserBrokerProof();
+        expect(installLocalBrowserBrokerProof("e".repeat(64))).toBe(true);
+        const answerUndo: { resolve: ((response: Response) => void) | null } = { resolve: null };
+        globalThis.fetch = async (input) => {
+          expect(String(input).endsWith("/inference/gis-map/approval-undos")).toBe(true);
+          return await new Promise<Response>((resolve) => {
+            answerUndo.resolve = resolve;
+          });
+        };
+        const pendingUndo = undoInferenceApproval(submittingOwner.historyEpoch, submittingOwner.clientInstanceId, submittingOwner.scope);
+        await vi.waitFor(() => {
+          expect(inferenceApprovalUndoOwner?.phase).toBe("submitting");
+          expect(answerUndo.resolve).not.toBeNull();
+        });
+        reissueInferenceApprovalUndoForRebootstrap(state);
+        const reissuedOwner = inferenceApprovalUndoOwner!;
+        expect(reissuedOwner.idempotencyKey).toBe(submittingOwner.idempotencyKey);
+        expect(submittingOwner.abort.signal.aborted).toBe(true);
+        const respondUndo = answerUndo.resolve;
+        if (respondUndo === null) throw new Error("approval undo fetch did not enter");
+        respondUndo(
+          Response.json(
+            {
+              schema: "semio.hub.gis-map-approval-undo-receipt/v1",
+              targetId: approvalReceipt.undo.targetId,
+              originalJobId: approvalReceipt.jobId,
+              mutationId: "6".repeat(32),
+              commandHash: "7".repeat(64),
+              applied: true,
+              replayed: false,
+              frontier: { ...approvalReceipt.undo.expectedCurrent, headEditOrdinal: approvalReceipt.undo.expectedCurrent.headEditOrdinal + 1, headEditId: "undo-edit" },
+            },
+            { headers: { "x-semio-browser-broker-advanced": "1" } },
+          ),
+        );
+        await pendingUndo;
+        expect(inferenceApprovalUndoOwner).toBe(reissuedOwner);
+        expect(historyStatuses.some((message) => message.historyEpoch === submittingOwner.historyEpoch && message.status.phase === "applied")).toBe(false);
+        expect(inferenceApprovalUndoOwner?.phase).toBe("awaiting-mount");
 
         const renderDriver = reservation as unknown as { renderSurface(child: DocumentBrowserActorChild, assertCurrent: () => void): Promise<void> };
         for (const row of corpus.browserRender.hostile) {
@@ -7719,6 +8527,7 @@ if (import.meta.vitest) {
         expect(browserActorChildCapacity()).toEqual({ actors: 0, bytes: 0 });
         executionTargetStatusObserver = null;
         workerPostTestSink = null;
+        clearLocalBrowserBrokerProof();
         globalThis.fetch = originalFetch;
         (globalThis as unknown as { Worker: unknown }).Worker = originalWorker;
       }

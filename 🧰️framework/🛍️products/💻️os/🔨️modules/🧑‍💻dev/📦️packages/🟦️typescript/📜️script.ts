@@ -1,11 +1,16 @@
 #!/usr/bin/env bun
 /** @emoji 🧭️ `@semio-tech/framework-os-dev` task router — Rust plugin OS dev host. */
+import { ACTOR_COMPONENT_EXPORTS, assertActorComponentExports, artifactFiles, browserModuleRoot, finalizePluginDescriptor, PLUGIN_DESCRIPTOR_PROBE_SOURCE } from "../../../🔌️plugin/📦️packages/🟦️typescript/📜️script.ts";
+import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, nextActivationReceipt, publishActivationReceipt, readActivationReceipt } from "../../♻️activation/🟦️.ts";
+import { stageArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import { FONT_ASSET, validateFontAsset } from "../../../♾️infinite/📦️packages/🦀️rust/📜️script.ts";
+import { SCALE_COMPONENT_ARTIFACT } from "../../../../🧫️fixtures/⚖️scale/🟦️.ts";
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { EventEmitter } from "node:events";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   BundleScript,
   ScriptRouter,
@@ -14,6 +19,7 @@ import {
   describeDevPortOccupant,
   devServerUrl,
   getWorkspaceRoot,
+  getRepoMetaDir,
   isDevPortInUse,
   loadFrameworkOsPlaygroundCatalog,
   probeWgpuDevPort,
@@ -309,41 +315,6 @@ export function syncBuiltExtensionsToInstallRoot(entries: readonly PluginRegistr
 }
 
 //#region 🛂️DescriptorPublication
-const ACTOR_COMPONENT_EXPORTS = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "🧫️fixtures/🔣️.json"), "utf8")) as Record<string, string[]>;
-
-/** 🛂️ Both package roles must expose the complete actor world before publication. */
-function assertActorComponentExports(component: Record<string, unknown>, required: Record<string, string[]>): void {
-  for (const [name, methods] of Object.entries(required)) {
-    const api = component[name] as Record<string, unknown> | undefined;
-    for (const method of methods) {
-      if (typeof api?.[method] !== "function") throw new Error(`Missing actor export ${name}.${method}`);
-    }
-  }
-}
-
-const PLUGIN_DESCRIPTOR_PROBE_SOURCE = `
-import { pathToFileURL } from "node:url";
-${assertActorComponentExports.toString()}
-const component = await import(pathToFileURL(process.argv[1]).href);
-assertActorComponentExports(component, ${JSON.stringify(ACTOR_COMPONENT_EXPORTS)});
-const bytes = await component.describe.describe();
-if (!(bytes instanceof Uint8Array) || bytes.length === 0 || bytes.length > 8 * 1024 * 1024) throw new Error("Invalid descriptor byte extent");
-process.stdout.write(Buffer.from(bytes).toString("base64"));
-`;
-
-/** 🔏️ Uses the same native pack self-hash convention for the genuine guest descriptor. */
-function finalizePluginDescriptor(bytes: Uint8Array, pluginId: string, wasmSha256: string, coreWasmSha256: string): { pack: Uint8Array; json: string } {
-  const descriptor = decodePackValue(bytes) as unknown as { manifest?: { pluginId?: string }; hashes?: Record<string, string> };
-  if (descriptor?.manifest?.pluginId === "assembly-failed") throw new Error("Plugin descriptor assembly failed");
-  if (descriptor?.manifest?.pluginId !== pluginId || !descriptor.hashes) throw new Error("Plugin descriptor identity mismatch");
-  if (![wasmSha256, coreWasmSha256].every((hash) => /^[a-f0-9]{64}$/.test(hash))) throw new Error("Invalid plugin artifact digest");
-  descriptor.hashes.wasmSha256 = wasmSha256;
-  descriptor.hashes.coreWasmSha256 = coreWasmSha256;
-  descriptor.hashes.descriptorSha256 = "";
-  descriptor.hashes.descriptorSha256 = createHash("sha256").update(encodePackValue(descriptor as PackValue)).digest("hex");
-  return { pack: encodePackValue(descriptor as PackValue), json: JSON.stringify(packValueToExactJson(descriptor as PackValue), null, 2) + "\n" };
-}
-
 async function pluginFileDigest(path: string): Promise<string> {
   const hash = createHash("sha256");
   for await (const chunk of createReadStream(path)) hash.update(chunk);
@@ -911,7 +882,7 @@ function engineWasmScriptPath(cratePath: string): string {
 
 /** @emoji 🍎 Prefer Command Line Tools over an unlicensed Xcode.app so cargo/wasm-pack can link. */
 function ensureAppleDeveloperDir(): void {
-  if (process.env.FORCE_XCODE === "1") return;
+  if (process.platform !== "darwin" || process.env.FORCE_XCODE === "1") return;
   const clt = "/Library/Developer/CommandLineTools";
   if (!existsSync(clt)) return;
   // Prefer CLT over an installed-but-unlicensed Xcode.app (cargo/cc otherwise die with exit 69).
@@ -1228,153 +1199,165 @@ function releasePluginBuildLease(variant: string): void {
 }
 //#endregion 🔖️PluginBuildLease
 
+class PreparationScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    const [variant, renderer, profile] = args;
+    if (args.length !== 3 || renderer !== "react" || !["dev", "release"].includes(profile) || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("prepare <variant> react <dev|release>");
+    const playground = playgroundCatalog.find((row) => row.variant === variant);
+    if (!playground) throw new Error(`Missing generated playground ${variant}`);
+    const moduleRoot = browserModuleRoot(profile as "dev" | "release"), registry = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry");
+    const session = (await import(pathToFileURL(join(registry, "dist/sessions", variant, "🟦️session.ts")).href)).PLAYGROUND_SESSION;
+    if (session.variant !== variant || session.registryPluginId !== playground.pluginId) throw new Error("Prepared session identity mismatch");
+    for (const plugin of session.plugins) {
+      const directory = join(moduleRoot, moduleDirectoryName(plugin.pluginId));
+      const descriptor = JSON.parse(readFileSync(join(directory, "🔣️.json"), "utf8"));
+      if (descriptor.manifest?.pluginId !== plugin.pluginId || !existsSync(join(directory, MODULE_BRIDGE_FILE)) || !existsSync(join(directory, ".nx-artifact.json"))) throw new Error(`Incomplete prepared component ${plugin.pluginId}`);
+    }
+    for (const path of [join(PREVIEW2_VENDOR_RELATIVE, ".nx-artifact.json"), join(MODULE_SHARD_DIRECTORY, SHARD_WORKER_FILE)]) if (!existsSync(join(moduleRoot, path))) throw new Error(`Missing browser support ${path}`);
+    const fonts = validateFontAsset(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts", FONT_ASSET)));
+    console.log(`Prepared ${variant} ${renderer} ${profile}: ${session.plugins.length} components, session, browser support and ${fonts} fonts`);
+  }
+}
+
+/** 🔏️ Includes every completed module/support byte in its runtime activation identity. */
+async function activationFilesDigest(files: ReadonlyMap<string, string>, signal: AbortSignal): Promise<string> {
+  const hash = createHash("sha256");
+  for (const [name, path] of [...files].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) {
+    signal.throwIfAborted();
+    hash.update(JSON.stringify([name.replaceAll("\\", "/"), statSync(path).size]) + "\n");
+    for await (const chunk of createReadStream(path, { signal })) hash.update(chunk);
+  }
+  return hash.digest("hex");
+}
+
+/** 🧩️ Installs source-owned extensions into this development variant's runtime namespace. */
+function publishActivatedExtension(target: PluginRegistryEntry, source: string, installRoot: string, artifactSha256: string, rebuiltAt: number): void {
+  const output = join(installRoot, moduleDirectoryName(target.pluginId)), recordPath = join(output, EXTENSION_INSTALL_META);
+  const files = artifactFiles(source);
+  files.delete(".nx-artifact.json");
+  if (existsSync(recordPath) && JSON.parse(readFileSync(recordPath, "utf8")).packageHash === artifactSha256 && [...files.keys()].every((name) => existsSync(join(output, name)))) return;
+  mkdirSync(installRoot, { recursive: true });
+  const temporary = mkdtempSync(join(installRoot, `.extension-${target.pluginId}-`));
+  try {
+    for (const [name, path] of files) if (name.endsWith(".js")) {
+      const rewritten = rewritePreview2ShimImportSource(readFileSync(path, "utf8"), `../..${MODULE_PLUGIN_ROUTE}/${PREVIEW2_VENDOR_RELATIVE}/`);
+      const destination = join(temporary, name);
+      mkdirSync(dirname(destination), { recursive: true });
+      writeFileSync(destination, rewritten);
+      files.set(name, destination);
+    }
+    const record = { extensionId: target.pluginId, directoryName: moduleDirectoryName(target.pluginId), version: "0.0.0-dev", label: target.pluginId, extends: target.extends ?? "", moduleUrl: `${MODULE_EXTENSION_ROUTE}/${moduleDirectoryName(target.pluginId)}/${MODULE_BRIDGE_FILE}`, packageHash: artifactSha256, installedAt: rebuiltAt };
+    const metadata = join(temporary, EXTENSION_INSTALL_META);
+    writeFileSync(metadata, JSON.stringify(record) + "\n");
+    files.set(EXTENSION_INSTALL_META, metadata);
+    stageArtifacts(output, `development-extension:${target.pluginId}`, files);
+    console.log(`Activated extension ${target.pluginId}`);
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+}
+
+class ActivationScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    await new PreparationScript(this.root).run(args);
+    const [variant, , selectedProfile] = args, profile = selectedProfile as "dev" | "release";
+    const runtime = developmentRuntimeRoot(this.root, variant, profile), receiptRoot = join(runtime, "activation"), moduleRoot = browserModuleRoot(profile);
+    const sessionPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions", variant, "🟦️session.ts");
+    const session = (await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION;
+    const catalog = new Map(readGeneratedCatalogProjection().entries.map((entry) => [entry.pluginId, entry]));
+    const controller = new AbortController(), cancel = (): void => controller.abort();
+    for (const signal of ["SIGINT", "SIGTERM"] as const) process.once(signal, cancel);
+    try {
+      const support = new Map<string, string>();
+      for (const directory of [PREVIEW2_VENDOR_RELATIVE, MODULE_SHARD_DIRECTORY]) for (const [name, path] of artifactFiles(join(moduleRoot, directory))) support.set(join(directory, name), path);
+      support.set(FONT_ASSET, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts", FONT_ASSET));
+      const supportDigest = await activationFilesDigest(support, controller.signal), completed = [];
+      for (const plugin of session.plugins) {
+        const digest = await activationFilesDigest(artifactFiles(join(moduleRoot, moduleDirectoryName(plugin.pluginId))), controller.signal);
+        completed.push({ pluginId: plugin.pluginId, artifactSha256: createHash("sha256").update(supportDigest + digest).digest("hex") });
+      }
+      const previous = existsSync(join(receiptRoot, ACTIVATION_RECEIPT_FILE)) ? readActivationReceipt(receiptRoot) : undefined;
+      const receipt = nextActivationReceipt(variant, profile, completed, previous);
+      for (const plugin of receipt.plugins) {
+        controller.signal.throwIfAborted();
+        const target = catalog.get(plugin.pluginId);
+        if (!target) throw new Error(`Missing activation catalog entry: ${plugin.pluginId}`);
+        if (target.role === "extension") publishActivatedExtension(target, join(moduleRoot, moduleDirectoryName(plugin.pluginId)), join(runtime, "extensions"), plugin.artifactSha256, plugin.rebuiltAt);
+      }
+      controller.signal.throwIfAborted();
+      const changed = publishActivationReceipt(receiptRoot, receipt);
+      console.log(`Activated ${variant} react ${profile}: ${receipt.plugins.length} completed components (${changed ? "changed" : "unchanged"})`);
+    } finally { for (const signal of ["SIGINT", "SIGTERM"] as const) process.removeListener(signal, cancel); }
+  }
+}
+
+class ServeScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    const [variant, renderer, selectedProfile, ...serverArgs] = args;
+    if (renderer !== "react" || !["dev", "release"].includes(selectedProfile)) throw new Error("serve <variant> react <dev|release> [server options]");
+    const profile = selectedProfile as "dev" | "release", runtime = developmentRuntimeRoot(this.root, variant, profile);
+    const receipt = readActivationReceipt(join(runtime, "activation"));
+    if (receipt.variant !== variant || receipt.profile !== profile) throw new Error("Server activation identity mismatch");
+    const resolved = resolvePlaygroundFilter(variant);
+    await runViteBunxDev(this.root, serverArgs, { portEnv: "S_OS_PORT", defaultPort: String(frameworkOsPlaygroundDefaultPort(playgroundCatalog, variant, renderer)), fixedPort: true, env: { SEMIO_PLUGIN: variant, SEMIO_RENDERER: renderer, SEMIO_BUILD_MODE: profile === "release" ? "ship" : "dev", SEMIO_BRAND: resolved.brand ?? "", VITE_SEMIO_PLUGIN: variant, VITE_SEMIO_RENDERER: renderer, VITE_SEMIO_APP_ID: resolved.appId ?? "", ...frameworkOsLockedPrefsEnv() } });
+  }
+}
+
 class DevScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    ensureAppleDeveloperDir();
-    // 🧵️ The shard worker is one package-agnostic file with no per-plugin cargo dependency — publish
-    // it unconditionally before any lease/build branching below so `SKIP_PLUGIN_BUILD=1` (the hub
-    // `users` launcher's mode, and `multi`, neither of which ever reaches `buildPlugin`) still leaves
-    // `/🔌️plugin-modules/🧵️shard/🟨️shard-worker.js` on disk for `PluginRuntime.getShardClient()` to fetch.
-    publishShardWorker();
-    if (segments[0] === "multi") {
-      // 🐚️ The multi-shell harness mounts several already-built playground variants' plugin modules
-      // side by side (see `🧪️tests/🧪️multi-shell-harness/🟦️.tsx`) — it doesn't own any one variant's plugin/engine build, so it
-      // never triggers `buildPlugins`/`buildEngineWasm` itself (unlike every other `dev <variant>`
-      // branch below): run `dev note`/`dev gis2d` (or set `SKIP_PLUGIN_BUILD=1` and build by hand) first
-      // if their `🔌️plugin-modules/` output is missing or stale. Leaving `SEMIO_PLUGIN` unset makes the
-      // vite config fall back to its studio ("s") default, which serves the whole unfiltered
-      // `plugin-modules/` directory — exactly what hosting several distinct plugins at once needs.
-      await runViteBunxDev(this.root, segments.slice(1), {
-        portEnv: "S_OS_PORT",
-        defaultPort: FRAMEWORK_OS_MULTI_HARNESS_PORT,
-        fixedPort: true,
-        env: { SEMIO_RENDERER: "react", VITE_SEMIO_RENDERER: "react" },
-      });
-      return;
-    }
     const variantSegment = segments[0] && !segments[0].startsWith("-") ? segments[0] : undefined;
-    const viteSegments = variantSegment ? segments.slice(1) : segments;
-    const filterPlugin = variantSegment ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT;
-    const renderer = process.env.SEMIO_RENDERER ?? "react";
-    const plugin = filterPlugin;
-    const defaultPort = String(frameworkOsPlaygroundDefaultPort(playgroundCatalog, plugin, renderer));
-    // 🌊️ React serves over Vite, which only needs the fast (no-`cargo`) registry + playground session
-    // regenerated before it starts (`⚙️vite.config.ts` imports the generated catalog at config-eval
-    // time) — the ~37-crate plugin build itself streams in AFTER Vite is already listening
-    // (`buildPluginsStreaming`, called post-`runViteBunxDev` below), instead of blocking the dev
-    // server's first byte on every crate finishing. wgpu (native trunk — no browser runtime to stream
-    // installs into) and `SKIP_PLUGIN_BUILD=1` (explicitly asks to skip building) keep the original
-    // build-then-serve order.
-    const streamPluginBuilds = renderer === "react" && process.env.SKIP_PLUGIN_BUILD !== "1";
-    // 🔐️ Two `dev s` processes for the same variant (the hub `users` launchers) must not both run the
-    // ~30-crate `buildPluginsStreaming` — only the lease holder does; a follower waits for the holder's
-    // registry catalog + engine wasm and then serves its own Vite off the same `🔌️plugin-modules/`.
-    const leasePort = Number(process.env.S_OS_PORT || defaultPort);
-    const pluginBuildLease = streamPluginBuilds ? acquirePluginBuildLease(plugin, leasePort) : undefined;
-    if (pluginBuildLease) {
-      const release = (): void => releasePluginBuildLease(plugin);
-      process.once("exit", release);
-      for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"] as const) {
-        process.once(signal, () => {
-          release();
-          process.exit(signal === "SIGINT" ? 130 : 143);
-        });
-      }
-    }
-    // 🔀️ `follower` only survives as a role while the holder genuinely delivers: if it never reports
-    // ready within the budget, or reported ready without leaving usable outputs on disk, this process
-    // takes the lease over and builds for itself. The lease may cost a duplicated build; it may never
-    // cost a broken `dev`.
-    let leaseRole = pluginBuildLease?.role;
-    if (leaseRole === "follower") {
-      console.log(`[dev] plugin builds owned by pid ${pluginBuildLease?.role === "follower" ? pluginBuildLease.lease.pid : "?"} (port ${pluginBuildLease?.role === "follower" ? pluginBuildLease.lease.port : "?"}); serving only`);
-      const ready = await waitForPluginBuildLeaseReady(plugin, PLUGIN_BUILD_LEASE_READY_TIMEOUT_MS);
-      if (!ready) console.warn(`[dev] plugin-build lease for "${plugin}" did not report ready within ${PLUGIN_BUILD_LEASE_READY_TIMEOUT_MS}ms — building here instead of waiting further`);
-      else if (!pluginBuildOutputsPresent()) console.warn(`[dev] plugin-build lease for "${plugin}" reported ready but 🔌️plugin-modules/ is empty — building here`);
-      if (!ready || !pluginBuildOutputsPresent()) {
-        takeOverPluginBuildLease(plugin, leasePort);
-        leaseRole = "holder";
-      }
-    }
-    if (leaseRole === "follower") {
-      // 🍽️ Holder delivered: nothing to build, serve its outputs.
-    } else if (streamPluginBuilds || process.env.SKIP_PLUGIN_BUILD === "1") {
-      await ensurePluginRegistry(filterPlugin);
-      await buildEngineWasm(plugin, renderer);
-      if (leaseRole === "holder") markPluginBuildLeaseReady(plugin);
-    } else {
-      await buildPlugins(filterPlugin);
-      await buildEngineWasm(plugin, renderer);
-    }
-    if (renderer === "wgpu") {
-      const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
-      const port = Number(process.env.S_OS_PORT ?? defaultPort);
-      const playUrl = wgpuDevPlayUrl(host, port, plugin);
-      if (isDevPortInUse(host, port)) {
-        const entry = probeWgpuDevPort(host, port);
-        if (entry?.entryPath === "/") {
-          console.log(`[dev] Port ${port} already serving wgpu trunk at ${playUrl}`);
-          return;
-        }
-        const occupant = describeDevPortOccupant(port);
-        if (occupant?.startsWith("trunk")) {
-          console.log(`[dev] Restarting stale trunk on port ${port} (${occupant})`);
-          stopTrunkDevPort(port);
-          // ⏳️ `stopTrunkDevPort` kills a process this function did not spawn (found via port
-          // occupancy, not a held child handle) — no exit event available, so a TCP-freed poll via
-          // 🔖️PollHelpers's `awaitTcpReady` is the legitimate signal per THE RULE. Same 40×250ms=10s
-          // budget as before; outcome intentionally unchecked — the caller proceeds either way, same
-          // as the original attempt-bounded loop did.
-          await awaitTcpReady(host, port, { deadlineMs: 10_000, intervalMs: 250, mode: "closed" });
-        } else if (entry) {
-          console.log(`[dev] Port ${port} already serving legacy wgpu trunk at ${wgpuDevPlayUrl(host, port, plugin, entry.entryPath)}`);
-          return;
-        } else {
-          console.error(`[dev] Port ${port} is already in use${occupant ? ` by ${occupant}` : ""}. Stop that process or set S_OS_PORT.`);
-          process.exit(1);
-        }
-      }
-      const serveStatus = runCmdStatus("bun", [WGPU_SCRIPT_PATH, "serve"], {
-        cwd: WGPU_PACKAGE_ROOT,
-        env: {
-          ...process.env,
-          SEMIO_PLUGIN: plugin,
-          SEMIO_RENDERER: renderer,
-          S_OS_PORT: String(port),
-        },
-        ...daemonBudgetOpts(),
-      });
-      if (serveStatus !== 0 && !probeWgpuDevPort(host, port)) {
-        throw new Error("wgpu trunk serve failed");
-      }
-      console.log(`[dev] wgpu trunk serving at ${playUrl}`);
+    const serverArgs = variantSegment ? segments.slice(1) : segments;
+    const plugin = variantSegment === "multi" ? DEFAULT_HOST_VARIANT : variantSegment ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT;
+    const renderer = variantSegment === "multi" ? "react" : process.env.SEMIO_RENDERER ?? "react";
+    if (renderer === "react") {
+      await new ServeScript(this.root).run([plugin, renderer, semioBuildMode() === "ship" ? "release" : "dev", ...serverArgs]);
       return;
     }
-    const resolvedFilter = resolvePlaygroundFilter(plugin);
-    // 🐚️ Start Vite without awaiting so plugin builds can stream in while the browser already has a
-    // listening shell; then await the Vite child so this process stays alive for the session.
-    const viteDone = runViteBunxDev(this.root, viteSegments, {
-      portEnv: "S_OS_PORT",
-      defaultPort,
-      fixedPort: true,
+    if (renderer !== "wgpu") throw new Error(`Unknown development renderer: ${renderer}`);
+    ensureAppleDeveloperDir();
+    await buildPlugins(plugin);
+    await buildEngineWasm(plugin, renderer);
+    const defaultPort = String(frameworkOsPlaygroundDefaultPort(playgroundCatalog, plugin, renderer));
+    const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
+    const port = Number(process.env.S_OS_PORT ?? defaultPort);
+    const playUrl = wgpuDevPlayUrl(host, port, plugin);
+    if (isDevPortInUse(host, port)) {
+      const entry = probeWgpuDevPort(host, port);
+      if (entry?.entryPath === "/") {
+        console.log(`[dev] Port ${port} already serving wgpu trunk at ${playUrl}`);
+        return;
+      }
+      const occupant = describeDevPortOccupant(port);
+      if (occupant?.startsWith("trunk")) {
+        console.log(`[dev] Restarting stale trunk on port ${port} (${occupant})`);
+        stopTrunkDevPort(port);
+        // ⏳️ `stopTrunkDevPort` kills a process this function did not spawn (found via port
+        // occupancy, not a held child handle) — no exit event available, so a TCP-freed poll via
+        // 🔖️PollHelpers's `awaitTcpReady` is the legitimate signal per THE RULE. Same 40×250ms=10s
+        // budget as before; outcome intentionally unchecked — the caller proceeds either way, same
+        // as the original attempt-bounded loop did.
+        await awaitTcpReady(host, port, { deadlineMs: 10_000, intervalMs: 250, mode: "closed" });
+      } else if (entry) {
+        console.log(`[dev] Port ${port} already serving legacy wgpu trunk at ${wgpuDevPlayUrl(host, port, plugin, entry.entryPath)}`);
+        return;
+      } else {
+        console.error(`[dev] Port ${port} is already in use${occupant ? ` by ${occupant}` : ""}. Stop that process or set S_OS_PORT.`);
+        process.exit(1);
+      }
+    }
+    const serveStatus = runCmdStatus("bun", [WGPU_SCRIPT_PATH, "serve"], {
+      cwd: WGPU_PACKAGE_ROOT,
       env: {
+        ...process.env,
         SEMIO_PLUGIN: plugin,
         SEMIO_RENDERER: renderer,
-        VITE_SEMIO_RENDERER: renderer,
-        VITE_SEMIO_PLUGIN: resolvedFilter.pluginId,
-        ...(resolvedFilter.appId ? { VITE_SEMIO_APP_ID: resolvedFilter.appId } : {}),
-        ...(resolvedFilter.brand && !process.env.SEMIO_BRAND ? { SEMIO_BRAND: resolvedFilter.brand } : {}),
-        ...frameworkOsLockedPrefsEnv(),
+        S_OS_PORT: String(port),
       },
+      ...daemonBudgetOpts(),
     });
-    if (leaseRole === "holder") {
-      await buildPluginsStreaming(filterPlugin);
-      const filterPluginId = resolveCatalogFilterPluginId(filterPlugin);
-      const catalogEntries = filterProjectedPluginRegistry(readGeneratedCatalogProjection(), filterPluginId);
-      const targets = resolvePluginBuildTargets(catalogEntries, filterPlugin);
-      watchPluginRebuilds(targets);
+    if (serveStatus !== 0 && !probeWgpuDevPort(host, port)) {
+      throw new Error("wgpu trunk serve failed");
     }
-    await viteDone;
+    console.log(`[dev] wgpu trunk serving at ${playUrl}`);
+    return;
   }
 }
 
@@ -4924,20 +4907,13 @@ class ScaleFixtureCheckScript extends BundleScript {
  * @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/📓️design-workforce.md §4
  * @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/📓️terra-bench-web-rows-report.md
  */
-const BENCH_TICKET_DIR_DEFAULT = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME";
-
-function benchOutDir(): string {
-  const configured = process.env.BENCH_OUT_DIR ?? BENCH_TICKET_DIR_DEFAULT;
+function benchOutDir(renderer: string): string {
+  const configured = process.env.BENCH_OUT_DIR ?? join(getRepoMetaDir(repoRoot), "⚡️cache", "bench", "plugins", renderer);
   const dir = resolve(repoRoot, configured);
   mkdirSync(dir, { recursive: true });
   return dir;
 }
 
-function benchTargetDir(): string {
-  const dir = join(benchOutDir(), "🎯️target-v1b");
-  mkdirSync(dir, { recursive: true });
-  return dir;
-}
 
 type BenchBudgetDefinition = Readonly<{ id: number; description: string; nativeThreshold?: string; webThreshold?: string }>;
 
@@ -5078,12 +5054,13 @@ async function benchWebRows(budgets: readonly BenchBudgetDefinition[], renderer:
 //#endregion 🧪️BenchWebRows
 
 class BenchPluginsScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const renderer = benchFlag(segments, "renderer", "native");
+  async run(args: string[]): Promise<void> {
+    const [renderer, ...segments] = args;
+    if (!["native", "react", "wgpu"].includes(renderer) || segments.some((segment) => segment === "--renderer" || segment.startsWith("--renderer="))) throw new Error("Select the renderer through the Nx benchmark target");
     const pluginCount = Number(benchFlag(segments, "count", "50"));
     const extensionsPerPlugin = Number(benchFlag(segments, "extensions", "50"));
     const shardCount = Number(benchFlag(segments, "shards", "8"));
-    const outDir = benchOutDir();
+    const outDir = benchOutDir(renderer);
     const outPath = benchFlag(segments, "out", join(outDir, `terra-v1b-bench-${renderer}.json`));
 
     const registryPath = join(outDir, "🔣️bench-registry.json");
@@ -5096,17 +5073,12 @@ class BenchPluginsScript extends BundleScript {
     const rows: Record<string, unknown>[] = [benchRegistryRow(registryPath, registry.recordCount)];
 
     if (renderer === "native") {
-      const targetDir = benchTargetDir();
-      const cargoEnv = { ...process.env, CARGO_TARGET_DIR: targetDir };
-      console.log(`bench: building scale-fixture wasm (CARGO_TARGET_DIR=${targetDir})`);
-      if (runCmdStatus("cargo", ["build", "-p", "semio-framework-os-scale-fixture", "--target", "wasm32-wasip2", "--profile", "wasm-dev", "--features", "component-guest"], { cwd: repoRoot, env: cargoEnv, budgetMs: buildBudgetMs() }) !== 0) {
-        throw new Error("bench: scale-fixture wasm build failed");
-      }
-      const wasmPath = join(targetDir, "wasm32-wasip2", "wasm-dev", "semio_framework_os_scale_fixture.wasm");
+      const cargoEnv = process.env;
+      const wasmPath = join(repoRoot, SCALE_COMPONENT_ARTIFACT);
       if (!existsSync(wasmPath)) throw new Error(`bench: expected wasm artifact missing: ${wasmPath}`);
       const nativeReportPath = join(outDir, "🔣️bench-native-raw.json");
       console.log(`bench: running native scale-bench (shards=${shardCount})`);
-      if (runCmdStatus("bun", [WGPU_SCRIPT_PATH, "native", "--scale", registryPath, "--scale-wasm", wasmPath, "--shards", String(shardCount), "--report", nativeReportPath], { cwd: repoRoot, env: cargoEnv, budgetMs: buildBudgetMs() }) !== 0) {
+      if (runCmdStatus("bun", [WGPU_SCRIPT_PATH, "native", "dev", "--scale", registryPath, "--scale-wasm", wasmPath, "--shards", String(shardCount), "--report", nativeReportPath], { cwd: repoRoot, env: cargoEnv, budgetMs: buildBudgetMs() }) !== 0) {
         throw new Error("bench: native scale-bench run failed");
       }
       const nativeReport = JSON.parse(readFileSync(nativeReportPath, "utf8")) as { budgets: Record<string, unknown>[] };
@@ -5136,6 +5108,16 @@ type CanonicalBootstrapFolderMirrorCorpusV1 = {
   readonly baselineFrontier: CanonicalBootstrapFolderMirrorReserveV1["baselineFrontier"];
   readonly pairs: readonly { readonly name: "a" | "b"; readonly packHex: string; readonly sprHex: string; readonly aggregateSha256: string }[];
   readonly hostile: readonly { readonly name: string; readonly expected: "invalid" | "conflict" | "too-large" }[];
+};
+
+type CanonicalPairFrontierCaseV1 = {
+  readonly id: string;
+  readonly documentId: string;
+  readonly headEditOrdinal: number;
+  readonly headEditId: string;
+  readonly lastCommitSeq: number;
+  readonly chainHash: string;
+  readonly accepted: boolean;
 };
 
 function canonicalBootstrapFolderMirrorFixtureRoot(repoRoot: string): string {
@@ -5169,9 +5151,15 @@ class CanonicalBootstrapFolderMirrorCheckScript extends BundleScript {
     const fixtureRoot = canonicalBootstrapFolderMirrorFixtureRoot(this.repoRoot);
     const corpus = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as CanonicalBootstrapFolderMirrorCorpusV1;
     const schema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8"));
+    const canonicalPairRoot = join(this.repoRoot, "🌎️hub", "🛰️lag-rebootstrap", "🧪️fixtures", "🪢️canonical-pair");
+    const canonicalPairCorpus = JSON.parse(readFileSync(join(canonicalPairRoot, "🔣️.json"), "utf8")) as { selection: { documentId: string }; frontierCases: readonly CanonicalPairFrontierCaseV1[] };
+    const canonicalPairSchema = JSON.parse(readFileSync(join(canonicalPairRoot, "🧬️.schema.json"), "utf8"));
     const { default: Ajv2020 } = await import("ajv/dist/2020.js");
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+    const ajv = new Ajv2020({ strict: true, allErrors: true });
+    const validate = ajv.compile(schema);
     if (!validate(corpus)) throw new Error(`canonical bootstrap folder mirror corpus: ${JSON.stringify(validate.errors)}`);
+    const validateCanonicalPair = ajv.compile(canonicalPairSchema);
+    if (!validateCanonicalPair(canonicalPairCorpus)) throw new Error(`canonical pair corpus: ${JSON.stringify(validateCanonicalPair.errors)}`);
     const own = readFileSync(join(this.root, "🔌️vite-plugins.ts"), "utf8");
     const worker = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"), "utf8");
     const markers = [
@@ -5205,6 +5193,23 @@ class CanonicalBootstrapFolderMirrorCheckScript extends BundleScript {
       const firstParty = createHash("sha256").update(item.pack).update(item.spr).digest("hex");
       const thirdParty = Buffer.from(await crypto.subtle.digest("SHA-256", Buffer.concat([item.pack, item.spr]))).toString("hex");
       if (firstParty !== item.row.aggregateSha256 || thirdParty !== firstParty) throw new Error(`canonical bootstrap folder mirror ${item.row.name} aggregate oracle mismatch`);
+    }
+
+    for (const row of canonicalPairCorpus.frontierCases) {
+      const request: CanonicalBootstrapFolderMirrorReserveV1 = {
+        schema: "semio.backbone.canonical-bootstrap-folder-mirror-reserve/v1",
+        artifactSchema: corpus.artifactSchema,
+        descriptorDigestV1: corpus.descriptorDigestV1,
+        aggregateSha256: a.row.aggregateSha256,
+        baselineFrontier: { documentId: row.documentId, headEditOrdinal: row.headEditOrdinal, headEditId: row.headEditId, lastCommitSeq: row.lastCommitSeq, chainSha256: row.chainHash },
+      };
+      const operation = reserveCanonicalBootstrapFolderMirror(uri, canonicalPairCorpus.selection.documentId, request);
+      if (row.accepted) {
+        const owner = await operation;
+        await retireCanonicalBootstrapFolderMirror(uri, canonicalPairCorpus.selection.documentId, owner);
+      } else {
+        await expectCanonicalBootstrapFolderMirrorFailure(operation, "invalid");
+      }
     }
 
     const genericId = `${corpus.documentId}-generic`;
@@ -5255,12 +5260,15 @@ class CanonicalBootstrapFolderMirrorCheckScript extends BundleScript {
     const successor = await reserveCanonicalBootstrapFolderMirror(uri, corpus.documentId, canonicalBootstrapFolderMirrorReserve(corpus, b.row.aggregateSha256));
     if (successor.epoch !== ownerB.epoch + 1 || (await readBackbonePayload(uri, corpus.documentId)) !== null) throw new Error("canonical bootstrap folder mirror generic transition reset or bypassed the server epoch");
     await retireCanonicalBootstrapFolderMirror(uri, corpus.documentId, successor);
-    console.log(`canonical-bootstrap-folder-mirror: phase=process ajv=1 sqlite=1 sha256=2 stale=7 hostile=${corpus.hostile.length} mixed=1 monotonic-epoch=1`);
+    console.log(`canonical-bootstrap-folder-mirror: phase=process ajv=2 sqlite=1 sha256=2 frontiers=${canonicalPairCorpus.frontierCases.length} stale=7 hostile=${corpus.hostile.length} mixed=1 monotonic-epoch=1`);
   }
 }
 //#endregion 🔖️CanonicalBootstrapFolderMirror
 
 const router = new ScriptRouter(import.meta.dir)
+  .register("prepare", PreparationScript)
+  .register("activate", ActivationScript)
+  .register("serve", ServeScript)
   .register("canonical-bootstrap-folder-mirror-check", CanonicalBootstrapFolderMirrorCheckScript)
   .register("closed-browser-component-factory-check", class extends BundleScript {
     async run(segments: string[]): Promise<void> {

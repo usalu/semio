@@ -1,0 +1,16 @@
+{
+  "schema": "semio.stdio.native-catalog-surface/v1",
+  "definitionCount": 36,
+  "codecCount": 26,
+  "cases": [
+    { "id": "exact-complete", "mutation": "none", "accepted": true },
+    { "id": "order-independent", "mutation": "reverse", "accepted": true },
+    { "id": "missing-kind", "mutation": "missing", "accepted": false },
+    { "id": "extra-kind", "mutation": "extra", "accepted": false },
+    { "id": "duplicate-kind", "mutation": "duplicate", "accepted": false },
+    { "id": "foreign-kind", "mutation": "identity", "accepted": false },
+    { "id": "foreign-schema", "mutation": "schema", "accepted": false },
+    { "id": "foreign-label", "mutation": "name", "accepted": false },
+    { "id": "foreign-source-format", "mutation": "source-format", "accepted": false }
+  ]
+}

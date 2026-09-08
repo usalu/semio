@@ -169,7 +169,7 @@ impl store::ArtifactPack for PlySnapshot {
         // every Pack round-trip for a binary-format snapshot (`decode_pack(encode_pack(snap))`
         // would come back with `format: Ascii` regardless of what was persisted) — a real,
         // pre-existing correctness bug, fixed here.
-        let raw = crate::artifacts::ply::engine::encode_ply_with_format(self, self.format).map_err(|e| store::PackError::Schema(e))?;
+        let raw = crate::artifacts::ply::engine::encode_ply_with_format(self, self.format).map_err(store::PackError::Schema)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -179,7 +179,7 @@ impl store::ArtifactPack for PlySnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        crate::artifacts::ply::engine::decode_ply(&inner).map_err(|e| store::PackError::Schema(e))
+        crate::artifacts::ply::engine::decode_ply(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

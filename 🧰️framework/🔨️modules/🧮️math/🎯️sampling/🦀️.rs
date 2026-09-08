@@ -2308,6 +2308,7 @@ async fn processor_spec_from_json(value: &JsonValue) -> Result<ProcessorSpec, Sa
 
 /// ⚙️ Chainable constructor for [`SamplingConfig`]; `build()` runs full validation once.
 #[derive(Clone, Debug)]
+#[derive(Default)]
 pub struct SamplingConfigBuilder {
     config: SamplingConfig,
 }
@@ -2396,14 +2397,6 @@ impl SamplingConfigBuilder {
     pub async fn build(self) -> Result<SamplingConfig, SamplingError> {
         self.config.validate().await?;
         Ok(self.config)
-    }
-}
-
-impl Default for SamplingConfigBuilder {
-    // 🚫️async: E1 impl of an externally-declared trait (`Default`) — cannot call the now-async
-    // `Self::new()`, so it inlines `new()`'s trivial body directly (O1 de-dyn, math-dedyn).
-    fn default() -> Self {
-        Self { config: SamplingConfig::default() }
     }
 }
 // #endregion 🔖️Config

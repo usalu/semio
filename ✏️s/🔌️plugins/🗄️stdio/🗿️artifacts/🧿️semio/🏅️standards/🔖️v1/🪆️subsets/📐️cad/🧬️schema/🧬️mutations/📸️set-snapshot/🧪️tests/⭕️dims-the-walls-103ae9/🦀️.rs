@@ -22,13 +22,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioCadSnapshot {
-    serde_json::from_str(BEFORE).expect("before CAD snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("before CAD snapshot decodes")
 }
 fn expected_after() -> SemioCadSnapshot {
-    serde_json::from_str(AFTER).expect("after CAD snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("after CAD snapshot decodes")
 }
 fn mutation() -> SemioCadMutation {
-    serde_json::from_str(MUTATION).expect("set-snapshot mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("set-snapshot mutation decodes")
 }
 
 /// ▶️ `set-snapshot` carries the drawing to exactly the committed `after`: a hidden green `WALLS`
@@ -69,12 +69,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioCadSnapshot = serde_json::from_str(text).expect("CAD snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("CAD snapshot encodes");
+        let decoded: SemioCadSnapshot = dsl::json::from_json_str(text).expect("CAD snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("CAD snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("CAD snapshot reparses");
         assert_eq!(reencoded, original, "semio-cad/set-snapshot: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("set-snapshot mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("set-snapshot mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("set-snapshot mutation reparses");
     assert_eq!(reencoded, original, "semio-cad/set-snapshot: committed mutation JSON is not canonical");
 }
@@ -100,7 +100,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioCadMutation as protocol::Mutation<SemioCadSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced CAD diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced CAD diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed CAD diff decodes");
     assert_eq!(produced, committed, "semio-cad/set-snapshot: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -109,7 +109,7 @@ async fn produces_committed_diff() {
 /// name, one entity patched by handle, no removals and no additions.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: SemioCadDiff = serde_json::from_str(DIFF).expect("committed CAD diff decodes");
+    let decoded: SemioCadDiff = dsl::json::from_json_str(DIFF).expect("committed CAD diff decodes");
     assert!(decoded.blocks.is_none(), "semio-cad/set-snapshot: the block table must stay untouched");
     let layers = decoded.layers.as_ref().expect("the committed diff carries a layers triple");
     assert!(layers.removed.is_empty() && layers.added.is_empty() && layers.modified.len() == 1 && layers.modified[0].key == "WALLS", "semio-cad/set-snapshot: exactly the WALLS layer may be patched, addressed by name");
@@ -117,7 +117,7 @@ async fn committed_diff_is_canonical() {
     let entities = decoded.entities.as_ref().expect("the committed diff carries an entities triple");
     assert!(entities.removed.is_empty() && entities.added.is_empty() && entities.modified.len() == 1 && entities.modified[0].key == "h-1", "semio-cad/set-snapshot: exactly entity h-1 may be patched, addressed by handle");
     assert!(entities.modified[0].diff.layer.is_none(), "semio-cad/set-snapshot: widening a circle must not restate its owning layer");
-    let reencoded = serde_json::to_value(&decoded).expect("CAD diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("CAD diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed CAD diff reparses");
     assert_eq!(reencoded, original, "semio-cad/set-snapshot: committed diff JSON is not canonical");
 }
@@ -126,7 +126,7 @@ async fn committed_diff_is_canonical() {
 /// and entity patches together are a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioCadDiff = serde_json::from_str(DIFF).expect("committed CAD diff decodes");
+    let decoded: SemioCadDiff = dsl::json::from_json_str(DIFF).expect("committed CAD diff decodes");
     let produced = <SemioCadDiff as protocol::MutationDiff<SemioCadSnapshot>>::apply(&decoded, &before()).expect("committed CAD diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "semio-cad/set-snapshot: committed diff did not carry before to after");
 }

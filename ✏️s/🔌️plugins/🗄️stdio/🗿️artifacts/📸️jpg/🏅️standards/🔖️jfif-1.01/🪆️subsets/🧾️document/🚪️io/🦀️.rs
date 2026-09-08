@@ -94,13 +94,13 @@ const ZIGZAG_TO_NATURAL: [usize; 64] = [
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn idct_1d(input: &[f64; 8]) -> [f64; 8] {
     let mut out = [0f64; 8];
-    for x in 0..8 {
+    for (x, value) in out.iter_mut().enumerate() {
         let mut sum = 0f64;
-        for u in 0..8 {
+        for (u, &sample) in input.iter().enumerate() {
             let cu = if u == 0 { std::f64::consts::FRAC_1_SQRT_2 } else { 1.0 };
-            sum += cu * input[u] * ((2.0 * x as f64 + 1.0) * u as f64 * std::f64::consts::PI / 16.0).cos();
+            sum += cu * sample * ((2.0 * x as f64 + 1.0) * u as f64 * std::f64::consts::PI / 16.0).cos();
         }
-        out[x] = 0.5 * sum;
+        *value = 0.5 * sum;
     }
     out
 }
@@ -109,13 +109,13 @@ fn idct_1d(input: &[f64; 8]) -> [f64; 8] {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn fdct_1d(input: &[f64; 8]) -> [f64; 8] {
     let mut out = [0f64; 8];
-    for u in 0..8 {
+    for (u, value) in out.iter_mut().enumerate() {
         let cu = if u == 0 { std::f64::consts::FRAC_1_SQRT_2 } else { 1.0 };
         let mut sum = 0f64;
-        for x in 0..8 {
-            sum += input[x] * ((2.0 * x as f64 + 1.0) * u as f64 * std::f64::consts::PI / 16.0).cos();
+        for (x, &sample) in input.iter().enumerate() {
+            sum += sample * ((2.0 * x as f64 + 1.0) * u as f64 * std::f64::consts::PI / 16.0).cos();
         }
-        out[u] = 0.5 * cu * sum;
+        *value = 0.5 * cu * sum;
     }
     out
 }
@@ -662,14 +662,14 @@ pub fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
         return Err(JpgError::Unsupported("image dimensions exceed JPEG's 16-bit SOF0 width/height field".into()));
     }
     let (width, height): (u16, u16) = (snap.width as u16, snap.height as u16);
-    let quality = snap.re_encode_quality.map(|q| q as i32).unwrap_or(90);
+    let quality = snap.re_encode_quality.map_or(90, |q| q as i32);
     let comps = frame_components_of(snap)?;
     let hmax = comps.iter().map(|c| c.h_sampling as usize).max().unwrap_or(1);
     let vmax = comps.iter().map(|c| c.v_sampling as usize).max().unwrap_or(1);
     let mcu_w = 8 * hmax;
     let mcu_h = 8 * vmax;
-    let mcus_x = (width as usize + mcu_w - 1) / mcu_w;
-    let mcus_y = (height as usize + mcu_h - 1) / mcu_h;
+    let mcus_x = (width as usize).div_ceil(mcu_w);
+    let mcus_y = (height as usize).div_ceil(mcu_h);
     let pw = mcus_x * mcu_w;
     let ph = mcus_y * mcu_h;
 
@@ -1046,7 +1046,7 @@ pub fn decode_jpg_source(data: &dyn JpgByteSource) -> Result<JpgSnapshot, JpgErr
                 i += len;
             }
             0xDA => {
-                let frame = frame.clone().ok_or_else(|| JpgError::Malformed("SOS before SOF0".into()))?;
+                let frame = frame.ok_or_else(|| JpgError::Malformed("SOS before SOF0".into()))?;
                 let len = read_u16(data, i)?;
                 let seg = source_range(data, i + 2, len.saturating_sub(2))?;
                 let ns = *seg.first().ok_or_else(|| JpgError::Malformed("SOS truncated".into()))? as usize;
@@ -1146,8 +1146,8 @@ fn decode_scan(
     let mcu_w = 8 * hmax;
     let mcu_h = 8 * vmax;
     let (width, height) = (frame.width as usize, frame.height as usize);
-    let mcus_x = (width + mcu_w - 1) / mcu_w;
-    let mcus_y = (height + mcu_h - 1) / mcu_h;
+    let mcus_x = width.div_ceil(mcu_w);
+    let mcus_y = height.div_ceil(mcu_h);
 
     let mut planes: Vec<Vec<f64>> = Vec::with_capacity(frame.components.len());
     let mut plane_dims: Vec<(usize, usize)> = Vec::with_capacity(frame.components.len());

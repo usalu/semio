@@ -82,7 +82,7 @@ pub mod derived_composition {
     /// (`crate::artifacts::xml::standards::v1_0::engine::io_registry::entries()`).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        let _ = register_subset_validator(validator_entry());
+        register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
     }
     //#endregion 🔖️SubsetValidator
 
@@ -208,7 +208,7 @@ pub mod derived_composition {
             let positive = store::os_store::test_support::ExampleAsset { bytes: text.as_bytes(), text: Some(text), provenance: "✳️any/📚️examples/🎬️demo (conforming doctype for valid)" };
             let negative_text = crate::artifacts::xml::standards::v1_0::subsets::valid::examples::no_doctype::PRIMARY_TEXT;
             let negative = store::os_store::test_support::ExampleAsset { bytes: negative_text.as_bytes(), text: Some(negative_text), provenance: "✳️valid/📚️examples/🚫️no-doctype" };
-            store::os_store::test_support::assert_subset_roundtrip::<XmlValidRoundtrip>(&positive, Some(&negative));
+            store::os_store::test_support::assert_subset_roundtrip::<XmlValidRoundtrip>(&positive, Some(&negative)).await;
         }
         //#endregion 🧪️SubsetRoundtrip
     }

@@ -54,7 +54,7 @@ fn install_exact_clock(authority: &OnceLock<fn() -> Option<u64>>, clock: fn() ->
 /// 🌐️ Converts fractional platform milliseconds into checked unsigned microseconds.
 pub fn microseconds_from_milliseconds(milliseconds: f64) -> Option<u64> {
     let microseconds = milliseconds * 1_000.0;
-    (microseconds.is_finite() && microseconds >= 0.0 && microseconds < 18_446_744_073_709_551_616.0).then(|| microseconds.floor() as u64)
+    ((0.0..18_446_744_073_709_551_616.0).contains(&microseconds)).then(|| microseconds.floor() as u64)
 }
 
 /// 🕰️ Native and WASI p2 clocks preserve their actual monotonic microsecond precision.
@@ -92,6 +92,21 @@ pub const INTERACTIVE_STEP_CEILING_US: u64 = 8_000;
 /// 🚨️ Interactive callbacks must finish strictly below the shared eight-millisecond ceiling.
 pub fn interactive_step_contract_violated(elapsed_us: u64) -> bool {
     elapsed_us >= INTERACTIVE_STEP_CEILING_US
+}
+
+/// 🚪️ Hard ceiling, in microseconds, for one GUEST LIFECYCLE turn — an instance open/close/ACK, which
+/// mounts or tears down a whole app instance (its manifest, fixture and initial scene) in a single
+/// one-shot turn. Deliberately NOT [`INTERACTIVE_STEP_CEILING_US`]: that budget bounds a per-frame
+/// interactive step, and holding a one-shot mount to a frame budget is the same category error the
+/// wgpu frame worker documents for browser-owned suspensions. Measured: `s.puzzle.puzzle3d@1/*#editor`
+/// opens in ~446 ms, which no 8 ms frame budget can ever admit. Sized under the shard watchdog's own
+/// `heartbeatTimeoutMs` (5 s) so a genuinely wedged open still surfaces as a clean guest fault here
+/// rather than as the host killing the whole shard.
+pub const GUEST_LIFECYCLE_TURN_CEILING_US: u64 = 5_000_000;
+
+/// 🚪️ A guest lifecycle turn must finish strictly below [`GUEST_LIFECYCLE_TURN_CEILING_US`].
+pub fn guest_lifecycle_turn_contract_violated(elapsed_us: u64) -> bool {
+    elapsed_us >= GUEST_LIFECYCLE_TURN_CEILING_US
 }
 
 /// 🎯️ Soft target for a UI event handler (input → dispatch), in microseconds.

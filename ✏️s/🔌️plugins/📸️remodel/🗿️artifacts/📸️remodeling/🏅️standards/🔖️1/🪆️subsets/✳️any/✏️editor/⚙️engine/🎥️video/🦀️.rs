@@ -3337,12 +3337,16 @@ mod tests {
                     rc_frame_top: 0,
                     rc_frame_right: 0,
                     rc_frame_bottom: 0,
+                    rc_frame_width: 16,
+                    strh_extra: Vec::new(),
                 },
                 strf: AviStreamFormat::WaveFormat { format_tag: 1, channels: 1, samples_per_sec: 44100, avg_bytes_per_sec: 88200, block_align: 2, bits_per_sample: 16, extra: vec![] },
                 chunks: vec![],
+                strl_extra: Vec::new(),
             }],
             idx1_present: false,
             unknown_chunks: vec![],
+            hdrl_extra: Vec::new(),
         };
         let bytes = avi_engine::encode_avi(&snapshot);
         assert!(matches!(probe_avi(&bytes), Err(VideoError::NoVideoTrack)));
@@ -3471,12 +3475,16 @@ mod tests {
                     rc_frame_top: 0,
                     rc_frame_right: 8,
                     rc_frame_bottom: 8,
+                    rc_frame_width: 16,
+                    strh_extra: Vec::new(),
                 },
                 strf: AviStreamFormat::BitmapInfo { size: 40, width: 8, height: 8, planes: 1, bit_count: 24, compression: "XVID".into(), size_image: 0, x_pels_per_meter: 0, y_pels_per_meter: 0, colors_used: 0, colors_important: 0 },
                 chunks: vec![],
+                strl_extra: Vec::new(),
             }],
             idx1_present: false,
             unknown_chunks: vec![],
+            hdrl_extra: Vec::new(),
         };
         let bytes = avi_engine::encode_avi(&snapshot);
         let info = probe_avi(&bytes).expect("XVID still probes for provenance");

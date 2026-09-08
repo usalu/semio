@@ -432,69 +432,6 @@ mod derive_transformation {
         objects
     }
 
-    #[cfg(test)]
-    const BUILDING_TO_STRUCTURE: &[(&str, &str)] = &[
-        ("building.building.slab", "structure.structure.onewayreinforcedconcreteslab"),
-        ("building.building.column", "structure.structure.reinforcedconcretecolumn"),
-        ("building.building.beam", "structure.structure.reinforcedconcretebeam"),
-        ("building.building.wall", "structure.structure.reinforcedconcreteinternalwall"),
-        ("aec.building.slab", "structure.structure.onewayreinforcedconcreteslab"),
-        ("aec.building.column", "structure.structure.reinforcedconcretecolumn"),
-    ];
-
-    /// @emoji 🔄️ Maps building typologies to structure-classic equivalents (premigration `from_building` applier).
-    #[cfg(test)]
-    pub(crate) fn apply_from_building(source_objects: &[CadObject], id_seed: &str) -> Vec<CadObject> {
-        let mut counts: HashMap<&str, usize> = HashMap::new();
-        source_objects
-            .iter()
-            .filter_map(|object| BUILDING_TO_STRUCTURE.iter().find(|(from, _)| *from == object.typology.as_str()).map(|(_, to)| (*to, object)))
-            .map(|(mapped, object)| {
-                let index = counts.entry(mapped).or_insert(0);
-                let object_id = format!("{id_seed}-{mapped}-{index}");
-                *index += 1;
-                CadObject {
-                    id: object_id,
-                    label: object.label.clone(),
-                    typology: mapped.into(),
-                    visible: object.visible,
-                    locked: object.locked,
-                    origin: object.origin,
-                    orientation: object.orientation,
-                    scale: object.scale,
-                    mesh_url: object.mesh_url.clone(),
-                    extent: object.extent,
-                    solid_handle: object.solid_handle.clone(),
-                    primitives: object.primitives.clone(),
-                }
-            })
-            .collect()
-    }
-
-    /// @emoji 🔄️ Filters source objects to whitelisted typologies (premigration `applyTransformationFallback`).
-    #[cfg(test)]
-    pub(crate) fn apply_typology_fallback(source_objects: &[CadObject], typologies: &[&str], id_seed: &str) -> Vec<CadObject> {
-        source_objects
-            .iter()
-            .enumerate()
-            .filter(|(_, object)| typologies.contains(&object.typology.as_str()))
-            .map(|(index, object)| CadObject {
-                id: format!("{id_seed}-{index}"),
-                label: object.label.clone(),
-                typology: object.typology.clone(),
-                visible: object.visible,
-                locked: object.locked,
-                origin: object.origin,
-                orientation: object.orientation,
-                scale: object.scale,
-                mesh_url: object.mesh_url.clone(),
-                extent: object.extent,
-                solid_handle: object.solid_handle.clone(),
-                primitives: object.primitives.clone(),
-            })
-            .collect()
-    }
-
     pub fn energy_typologies() -> &'static [&'static str] {
         ENERGY_TYPOLOGIES
     }
@@ -506,7 +443,7 @@ mod derive_transformation {
 
         #[semio_framework_async_macros::async_test]
         async fn derive_from_geometry_classifies_box() {
-            let mut kernel = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::Brep::new();
+            let mut kernel = Brep::new();
             let solid = kernel.box_prim(2.0, 2.0, 3.0).expect("box");
             let source = vec![CadObject {
                 id: "object-box".into(),

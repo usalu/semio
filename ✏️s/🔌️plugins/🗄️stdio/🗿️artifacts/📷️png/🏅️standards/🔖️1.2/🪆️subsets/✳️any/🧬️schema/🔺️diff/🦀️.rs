@@ -22,6 +22,9 @@
 //! hand-rolled below/in `🧬️mutations/🦀️.rs`, following the gif89a/svg template exactly
 //! (`f6-recon-report.md` §5).
 
+/// 🧩 Ordered removed keys, modified values, and inserted items.
+pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>);
+
 use crate::artifacts::png::schema::snapshot::{PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims, PngRgb, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp, PngTransparency};
 use crate::artifacts::png::PngSnapshot;
 use protocol::command::DiffAlgebra;
@@ -250,7 +253,7 @@ fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
-    removed.iter().copied().chain(modified_indices).chain(added_indices).max().map(|m| m + 1).unwrap_or(0)
+    removed.iter().copied().chain(modified_indices).chain(added_indices).max().map_or(0, |m| m + 1)
 }
 
 /// ➕️ Structural, total, base-free absorb for an index-keyed collection of WEAK values (the
@@ -262,10 +265,10 @@ fn absorb_weak_index_triple<T: Clone>(
     d1_removed: Vec<usize>,
     d1_modified: Vec<(usize, T)>,
     d1_added: Vec<(usize, T)>,
-    d2_removed: Vec<usize>,
-    d2_modified: Vec<(usize, T)>,
+    d2_removed: &[usize],
+    d2_modified: &[(usize, T)],
     d2_added: Vec<(usize, T)>,
-) -> (Vec<usize>, Vec<(usize, T)>, Vec<(usize, T)>) {
+) -> IndexedDiffParts<T, T> {
     let d1_added_indices: Vec<usize> = d1_added.iter().map(|(i, _)| *i).collect();
     let removed_count = {
         let mut r = d1_removed.clone();
@@ -273,7 +276,7 @@ fn absorb_weak_index_triple<T: Clone>(
         r.dedup();
         r.len()
     };
-    let needed_mid_len = d2_removed.iter().copied().chain(d2_modified.iter().map(|(i, _)| *i)).max().map(|m| m + 1).unwrap_or(0);
+    let needed_mid_len = d2_removed.iter().copied().chain(d2_modified.iter().map(|(i, _)| *i)).max().map_or(0, |m| m + 1);
     let base_len = base_len_hint(&d1_removed, d1_modified.iter().map(|(i, _)| *i), d1_added_indices.iter().copied()).max((needed_mid_len + removed_count).saturating_sub(d1_added.len()));
     let mid_slots = simulate_slots(base_len, &d1_removed, &d1_added_indices);
 
@@ -281,7 +284,7 @@ fn absorb_weak_index_triple<T: Clone>(
     let mut modified_map: BTreeMap<usize, T> = d1_modified.into_iter().collect();
     let mut added_alive: Vec<Option<(usize, T)>> = d1_added.into_iter().map(Some).collect();
 
-    for mid_idx in &d2_removed {
+    for mid_idx in d2_removed {
         match mid_slots.get(*mid_idx) {
             Some(Slot::Base(b)) => {
                 final_removed.push(*b);
@@ -293,7 +296,7 @@ fn absorb_weak_index_triple<T: Clone>(
             None => {}
         }
     }
-    for (mid_idx, val) in &d2_modified {
+    for (mid_idx, val) in d2_modified {
         match mid_slots.get(*mid_idx) {
             Some(Slot::Base(b)) => {
                 modified_map.insert(*b, val.clone());
@@ -323,8 +326,8 @@ fn absorb_weak_index_triple<T: Clone>(
         })
         .collect();
     let d2_added_indices: Vec<usize> = d2_added.iter().map(|(i, _)| *i).collect();
-    let mid_len = d2_removed.iter().copied().chain(d2_modified.iter().map(|(i, _)| *i)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map(|m| m + 1).unwrap_or(0);
-    let after_slots = simulate_slots(mid_len, &d2_removed, &d2_added_indices);
+    let mid_len = d2_removed.iter().copied().chain(d2_modified.iter().map(|(i, _)| *i)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map_or(0, |m| m + 1);
+    let after_slots = simulate_slots(mid_len, d2_removed, &d2_added_indices);
     let mut mid_to_after: HashMap<usize, usize> = HashMap::new();
     for (pos, slot) in after_slots.iter().enumerate() {
         if let Slot::Base(m) = slot {
@@ -360,7 +363,7 @@ fn absorb_text_chunks(d1: PngTextChunksDiff, d2: PngTextChunksDiff) -> PngTextCh
         r.dedup();
         r.len()
     };
-    let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map(|m| m + 1).unwrap_or(0);
+    let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map_or(0, |m| m + 1);
     let base_len = base_len_hint(&d1.removed, d1.modified.iter().map(|m| m.index), d1_added_indices.iter().copied()).max((needed_mid_len + removed_count).saturating_sub(d1.added.len()));
     let mid_slots = simulate_slots(base_len, &d1.removed, &d1_added_indices);
 
@@ -411,7 +414,7 @@ fn absorb_text_chunks(d1: PngTextChunksDiff, d2: PngTextChunksDiff) -> PngTextCh
         })
         .collect();
     let d2_added_indices: Vec<usize> = d2.added.iter().map(|a| a.index).collect();
-    let mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map(|m| m + 1).unwrap_or(0);
+    let mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map_or(0, |m| m + 1);
     let after_slots = simulate_slots(mid_len, &d2.removed, &d2_added_indices);
     let mut mid_to_after: HashMap<usize, usize> = HashMap::new();
     for (pos, slot) in after_slots.iter().enumerate() {
@@ -504,14 +507,7 @@ fn absorb_plte(base: &mut Option<Option<PngPlteDiff>>, other: Option<Option<PngP
                 *base = Some(Some(t2));
             }
             Some(Some(t1)) => {
-                let (removed, modified, added) = absorb_weak_index_triple(
-                    t1.removed,
-                    t1.modified.into_iter().map(|m| (m.index, m.rgb)).collect(),
-                    t1.added.into_iter().map(|a| (a.index, a.rgb)).collect(),
-                    t2.removed,
-                    t2.modified.into_iter().map(|m| (m.index, m.rgb)).collect(),
-                    t2.added.into_iter().map(|a| (a.index, a.rgb)).collect(),
-                );
+                let (removed, modified, added) = absorb_weak_index_triple(t1.removed, t1.modified.into_iter().map(|m| (m.index, m.rgb)).collect(), t1.added.into_iter().map(|a| (a.index, a.rgb)).collect(), &t2.removed, &t2.modified.into_iter().map(|m| (m.index, m.rgb)).collect::<Vec<_>>(), t2.added.into_iter().map(|a| (a.index, a.rgb)).collect());
                 *base = Some(Some(PngPlteDiff { removed, modified: modified.into_iter().map(|(index, rgb)| PngPlteEntryModified { index, rgb }).collect(), added: added.into_iter().map(|(index, rgb)| PngPlteEntryAdded { index, rgb }).collect() }));
             }
         },
@@ -665,14 +661,7 @@ fn absorb_unknown_chunks_opt(base: &mut Option<PngUnknownChunksDiff>, other: Opt
         (None, o) => *base = o,
         (Some(b), None) => *base = Some(b),
         (Some(b), Some(o)) => {
-            let (removed, modified, added) = absorb_weak_index_triple(
-                b.removed,
-                b.modified.into_iter().map(|m| (m.index, m.chunk)).collect(),
-                b.added.into_iter().map(|a| (a.index, a.chunk)).collect(),
-                o.removed,
-                o.modified.into_iter().map(|m| (m.index, m.chunk)).collect(),
-                o.added.into_iter().map(|a| (a.index, a.chunk)).collect(),
-            );
+            let (removed, modified, added) = absorb_weak_index_triple(b.removed, b.modified.into_iter().map(|m| (m.index, m.chunk)).collect(), b.added.into_iter().map(|a| (a.index, a.chunk)).collect(), &o.removed, &o.modified.into_iter().map(|m| (m.index, m.chunk)).collect::<Vec<_>>(), o.added.into_iter().map(|a| (a.index, a.chunk)).collect());
             *base = Some(PngUnknownChunksDiff {
                 removed,
                 modified: modified.into_iter().map(|(index, chunk)| PngUnknownChunkModified { index, chunk }).collect(),
@@ -688,14 +677,7 @@ fn absorb_chunk_order_opt(base: &mut Option<PngChunkOrderDiff>, other: Option<Pn
         (None, o) => *base = o,
         (Some(b), None) => *base = Some(b),
         (Some(b), Some(o)) => {
-            let (removed, modified, added) = absorb_weak_index_triple(
-                b.removed,
-                b.modified.into_iter().map(|m| (m.index, m.marker)).collect(),
-                b.added.into_iter().map(|a| (a.index, a.marker)).collect(),
-                o.removed,
-                o.modified.into_iter().map(|m| (m.index, m.marker)).collect(),
-                o.added.into_iter().map(|a| (a.index, a.marker)).collect(),
-            );
+            let (removed, modified, added) = absorb_weak_index_triple(b.removed, b.modified.into_iter().map(|m| (m.index, m.marker)).collect(), b.added.into_iter().map(|a| (a.index, a.marker)).collect(), &o.removed, &o.modified.into_iter().map(|m| (m.index, m.marker)).collect::<Vec<_>>(), o.added.into_iter().map(|a| (a.index, a.marker)).collect());
             *base = Some(PngChunkOrderDiff {
                 removed,
                 modified: modified.into_iter().map(|(index, marker)| PngChunkOrderModified { index, marker }).collect(),
@@ -751,30 +733,11 @@ pub fn chunk_order_presence_diff(order: &[PngChunkMarker], is_marker: fn(&PngChu
         let pos = chunk_order_insert_pos(order, &marker);
         Some(PngChunkOrderDiff { removed: vec![], modified: vec![], added: vec![PngChunkOrderAdded { index: pos, marker }] })
     } else {
-        order.iter().position(|m| is_marker(m)).map(|idx| PngChunkOrderDiff { removed: vec![idx], modified: vec![], added: vec![] })
+        order.iter().position(is_marker).map(|idx| PngChunkOrderDiff { removed: vec![idx], modified: vec![], added: vec![] })
     }
 }
 
-/// ➕️ Diff for inserting a new `Text{index: at}` marker: renumbers every existing `Text`
-/// marker whose embedded index is `>= at` (`modified`, same `chunk_order` position, bumped
-/// payload) and appends the new marker just before `Iend` (`added`).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-
-
-/// ➖️ Diff for removing the `Text{index: at}` marker: drops it (`removed`) and renumbers every
-/// `Text` marker with a HIGHER embedded index down by one (`modified`).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-
-
-/// ➕️ `Unknown{index}` analogue of [`chunk_order_insert_text_diff`].
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-
-
-/// ➖️ `Unknown{index}` analogue of [`chunk_order_remove_text_diff`].
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-
 //#endregion 🔖️ChunkOrderMutationHelpers
-
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.png`. No `snapshot: Option<PngSnapshot>` full-replace slot — even
 /// `SetSnapshot`'s diff is `PngDiff::between(base, next)`.
@@ -1126,7 +1089,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -1201,7 +1164,7 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
-    format!("[{}]", items.iter().map(|i| enc(i)).collect::<Vec<_>>().join(","))
+    format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
@@ -1412,7 +1375,7 @@ fn enc_triple_body(removed: &[usize], modified: &[(usize, String)], added: &[(us
     format!("[{removed}];[{modified}];[{added}]")
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_triple_body(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<(usize, String)>), String> {
+fn dec_triple_body(body: &str) -> Result<IndexedDiffParts<String, String>, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("triple: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
@@ -1771,11 +1734,7 @@ pub(crate) fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl F
     }
     Ok(out)
 }
-/// 🧩 Whole-`PngSnapshot` binary encoding for sparse diff field serialization.
-
-
 //#endregion 🔖️RealBinaryPrimitives
-
 //#region 🔖️RealBinaryDiffFrame
 // 🧪️ P2-P2: real binary encodings for the three collection-triple diff types
 // (`PngPlteDiff`/`PngTextChunksDiff`/`PngChunkOrderDiff`/`PngUnknownChunksDiff`) — each
@@ -1947,7 +1906,7 @@ fn read_bin_tri_flag<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mu
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
+fn diff_pack_err(e: &dsl::PackError) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "png diff binary", offset: 0, detail: e.to_string() }
 }
 //#endregion 🔖️RealBinaryDiffFrame
@@ -2084,10 +2043,10 @@ impl protocol::DiffCodec for PngDiff {
             write_bin_blob(w, &inner.into_bytes());
         });
         write_bin_tri_flag(&mut w, &self.gama, |w, v| w.write_u32_le(*v));
-        write_bin_tri_flag(&mut w, &self.chrm, |w, v| write_bin_chromaticities(w, v));
+        write_bin_tri_flag(&mut w, &self.chrm, write_bin_chromaticities);
         write_bin_tri_flag(&mut w, &self.srgb, |w, v| w.write_u8(v.to_u8()));
-        write_bin_tri_flag(&mut w, &self.phys, |w, v| write_bin_physical_dims(w, v));
-        write_bin_tri_flag(&mut w, &self.time, |w, v| write_bin_timestamp(w, v));
+        write_bin_tri_flag(&mut w, &self.phys, write_bin_physical_dims);
+        write_bin_tri_flag(&mut w, &self.time, write_bin_timestamp);
         write_bin_tri_flag(&mut w, &self.bkgd, |w, v| {
             let mut inner = dsl::ByteWriter::new();
             write_bin_background(&mut inner, v);
@@ -2103,35 +2062,35 @@ impl protocol::DiffCodec for PngDiff {
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut r = dsl::ByteReader::new(bytes);
-        let width = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
-        let height = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
-        let bit_depth = read_bin_option(&mut r, |r| r.read_u8()).map_err(diff_pack_err)?;
-        let color_type = read_bin_option(&mut r, |r| PngColorType::from_u8(r.read_u8()?).map_err(|e| dsl::PackError::Malformed { what: "png diff color type", offset: 0, detail: e })).map_err(diff_pack_err)?;
-        let interlace = read_bin_option(&mut r, |r| Ok(r.read_u8()? != 0)).map_err(diff_pack_err)?;
+        let width = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(|error| diff_pack_err(&error))?;
+        let height = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(|error| diff_pack_err(&error))?;
+        let bit_depth = read_bin_option(&mut r, |r| r.read_u8()).map_err(|error| diff_pack_err(&error))?;
+        let color_type = read_bin_option(&mut r, |r| PngColorType::from_u8(r.read_u8()?).map_err(|e| dsl::PackError::Malformed { what: "png diff color type", offset: 0, detail: e })).map_err(|error| diff_pack_err(&error))?;
+        let interlace = read_bin_option(&mut r, |r| Ok(r.read_u8()? != 0)).map_err(|error| diff_pack_err(&error))?;
 
-        let plte = read_bin_tri_flag(&mut r, |r| dec_plte_diff_bin(&read_bin_blob(r)?)).map_err(diff_pack_err)?;
+        let plte = read_bin_tri_flag(&mut r, |r| dec_plte_diff_bin(&read_bin_blob(r)?)).map_err(|error| diff_pack_err(&error))?;
         let trns = read_bin_tri_flag(&mut r, |r| {
             let blob = read_bin_blob(r)?;
             let mut inner = dsl::ByteReader::new(&blob);
             read_bin_transparency(&mut inner)
         })
-        .map_err(diff_pack_err)?;
-        let gama = read_bin_tri_flag(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
-        let chrm = read_bin_tri_flag(&mut r, read_bin_chromaticities).map_err(diff_pack_err)?;
-        let srgb = read_bin_tri_flag(&mut r, |r| PngSrgbIntent::from_u8(r.read_u8()?).map_err(|e| dsl::PackError::Malformed { what: "png diff srgb intent", offset: 0, detail: e })).map_err(diff_pack_err)?;
-        let phys = read_bin_tri_flag(&mut r, read_bin_physical_dims).map_err(diff_pack_err)?;
-        let time = read_bin_tri_flag(&mut r, read_bin_timestamp).map_err(diff_pack_err)?;
+        .map_err(|error| diff_pack_err(&error))?;
+        let gama = read_bin_tri_flag(&mut r, |r| r.read_u32_le()).map_err(|error| diff_pack_err(&error))?;
+        let chrm = read_bin_tri_flag(&mut r, read_bin_chromaticities).map_err(|error| diff_pack_err(&error))?;
+        let srgb = read_bin_tri_flag(&mut r, |r| PngSrgbIntent::from_u8(r.read_u8()?).map_err(|e| dsl::PackError::Malformed { what: "png diff srgb intent", offset: 0, detail: e })).map_err(|error| diff_pack_err(&error))?;
+        let phys = read_bin_tri_flag(&mut r, read_bin_physical_dims).map_err(|error| diff_pack_err(&error))?;
+        let time = read_bin_tri_flag(&mut r, read_bin_timestamp).map_err(|error| diff_pack_err(&error))?;
         let bkgd = read_bin_tri_flag(&mut r, |r| {
             let blob = read_bin_blob(r)?;
             let mut inner = dsl::ByteReader::new(&blob);
             read_bin_background(&mut inner)
         })
-        .map_err(diff_pack_err)?;
+        .map_err(|error| diff_pack_err(&error))?;
 
-        let text_chunks = read_bin_option(&mut r, |r| dec_text_chunks_diff_bin(&read_bin_blob(r)?)).map_err(diff_pack_err)?;
-        let pixels = read_bin_option(&mut r, |r| read_bin_blob(r)).map_err(diff_pack_err)?;
-        let chunk_order = read_bin_option(&mut r, |r| dec_chunk_order_diff_bin(&read_bin_blob(r)?)).map_err(diff_pack_err)?;
-        let unknown_chunks = read_bin_option(&mut r, |r| dec_unknown_chunks_diff_bin(&read_bin_blob(r)?)).map_err(diff_pack_err)?;
+        let text_chunks = read_bin_option(&mut r, |r| dec_text_chunks_diff_bin(&read_bin_blob(r)?)).map_err(|error| diff_pack_err(&error))?;
+        let pixels = read_bin_option(&mut r, read_bin_blob).map_err(|error| diff_pack_err(&error))?;
+        let chunk_order = read_bin_option(&mut r, |r| dec_chunk_order_diff_bin(&read_bin_blob(r)?)).map_err(|error| diff_pack_err(&error))?;
+        let unknown_chunks = read_bin_option(&mut r, |r| dec_unknown_chunks_diff_bin(&read_bin_blob(r)?)).map_err(|error| diff_pack_err(&error))?;
 
         Ok(PngDiff { width, height, bit_depth, color_type, interlace, plte, trns, gama, chrm, srgb, phys, time, bkgd, text_chunks, pixels, chunk_order, unknown_chunks })
     }

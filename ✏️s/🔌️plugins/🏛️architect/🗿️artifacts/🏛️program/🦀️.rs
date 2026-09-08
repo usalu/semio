@@ -207,8 +207,8 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: ARCHITECT_PROGRAM_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"],
-        import_stdio_kinds: vec!["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"],
+        export_stdio_kinds: vec!["stdio.csv".into(), "stdio.json".into(), "stdio.xlsx".into(), "stdio.zip".into()],
+        import_stdio_kinds: vec!["stdio.csv".into(), "stdio.json".into(), "stdio.xlsx".into(), "stdio.zip".into()],
     }
 }
 //#endregion 🔖️ArtifactKind
@@ -513,8 +513,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn sample_plugin_round_trips_json() {
         let program = sample_plugin();
-        let json = serde_json::to_string(&program).expect("serialize");
-        let decoded: ProgramSnapshot = serde_json::from_str(&json).expect("deserialize");
+        let json = dsl::json::to_json_string(&program);
+        let decoded: ProgramSnapshot = dsl::json::from_json_str(&json).expect("deserialize");
+        let oracle: serde_json::Value = serde_json::from_str(&json).expect("third-party JSON oracle");
+        assert_eq!(oracle["elements"].as_array().expect("elements").len(), decoded.elements.len());
+        assert_eq!(oracle["adjacencies"].as_array().expect("adjacencies").len(), decoded.adjacencies.len());
         assert_eq!(decoded.elements.len(), 2);
         assert_eq!(decoded.adjacencies.len(), 1);
     }
@@ -523,10 +526,10 @@ mod tests {
     async fn composed_register_rows_belong_to_each_exact_child() {
         let benchmarks = benchmarks_child_from_records(&[]);
         let knowledge = knowledge_child_from_records(&[]);
-        let benchmark_wire = serde_json::to_vec(&benchmarks).expect("Architect benchmark child wire identity");
-        let knowledge_wire = serde_json::to_vec(&knowledge).expect("Architect knowledge child wire identity");
-        let reconstructed_benchmarks: ProgramBenchmarksChild = serde_json::from_slice(&benchmark_wire).expect("Architect benchmark child wire roundtrip");
-        let reconstructed_knowledge: ProgramKnowledgeChild = serde_json::from_slice(&knowledge_wire).expect("Architect knowledge child wire roundtrip");
+        let benchmark_wire = dsl::json::to_json_string(&benchmarks);
+        let knowledge_wire = dsl::json::to_json_string(&knowledge);
+        let reconstructed_benchmarks: ProgramBenchmarksChild = dsl::json::from_json_str(&benchmark_wire).expect("Architect benchmark child wire roundtrip");
+        let reconstructed_knowledge: ProgramKnowledgeChild = dsl::json::from_json_str(&knowledge_wire).expect("Architect knowledge child wire roundtrip");
         let observed = serde_json::json!({
             "benchmarksOwned": benchmarks.local_owner::<ProgramBenchmarksWorkingTable>().is_some(),
             "knowledgeOwned": knowledge.local_owner::<ProgramKnowledgeWorkingTable>().is_some(),

@@ -2,7 +2,7 @@
 name = "semio-framework-dispatch-macros"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 autotests = false
 description = "#[dyn_enum] / dyn_enum! — enum-dispatch codegen replacing dyn Trait objects (O1: drop dyn dispatch) so AFIT traits stay object-usable without Box<dyn Future>"
 

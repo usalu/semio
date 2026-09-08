@@ -270,16 +270,16 @@ fn simulate_mid_origins(base_len: usize, removed: &[usize], added_idx: &[usize])
 /// 🧮️ Sequential-coalesce absorb (base-free index-transport over `d1`'s own removed/added),
 /// mirroring svg's `absorb_children_diff` generically over `T`/`D`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_indexed<T: Clone, D: Clone>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T> {
+fn absorb_indexed<T: Clone, D: Clone>(d1: IndexedTripleDiff<D, T>, d2: &IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T> {
     let d1_added_idx = added_indices(&d1.added);
     let d1_ref_max = d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).max();
-    let mut base_len = d1_ref_max.map(|m| m + 1).unwrap_or(0);
+    let mut base_len = d1_ref_max.map_or(0, |m| m + 1);
     let mid_len_needed_by_d1 = d1_added_idx.iter().map(|&i| i + 1).max().unwrap_or(0);
     while base_len.saturating_sub(d1.removed.len()) + d1.added.len() < mid_len_needed_by_d1 {
         base_len += 1;
     }
     let d2_ref_max = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max();
-    let required_mid_len = d2_ref_max.map(|m| m + 1).unwrap_or(0);
+    let required_mid_len = d2_ref_max.map_or(0, |m| m + 1);
     while base_len.saturating_sub(d1.removed.len()) + d1.added.len() < required_mid_len {
         base_len += 1;
     }
@@ -288,7 +288,7 @@ fn absorb_indexed<T: Clone, D: Clone>(d1: IndexedTripleDiff<D, T>, d2: IndexedTr
 
     let mut removed = d1.removed.clone();
     let mut modified = d1.modified.clone();
-    let mut working_added = d1.added.clone();
+    let mut working_added = d1.added;
     let mut annihilated: std::collections::HashSet<usize> = std::collections::HashSet::new();
 
     for &r2 in &d2.removed {
@@ -394,7 +394,7 @@ fn between_named<K: PartialEq + Clone, D, T: Clone + PartialEq>(base: &[T], othe
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_named<K: PartialEq + Clone, D, T: Clone>(base: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T> {
-    let removed: Vec<K> = diff.added.iter().map(|t| key_of(t)).collect();
+    let removed: Vec<K> = diff.added.iter().map(&key_of).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
         if let Some(orig) = base.iter().find(|b| key_of(b) == m.key) {
@@ -417,7 +417,7 @@ where
     D: Clone,
     T: Clone,
 {
-    let a1_added_keys: std::collections::HashSet<K> = d1.added.iter().map(|t| key_of(t)).collect();
+    let a1_added_keys: std::collections::HashSet<K> = d1.added.iter().map(&key_of).collect();
     let mut removed = d1.removed.clone();
     let mut annihilated: std::collections::HashSet<K> = std::collections::HashSet::new();
     for k in &d2.removed {
@@ -548,7 +548,7 @@ fn inverse_node_diff(current: &DrawNode, diff: &DrawNodeDiff) -> DrawNodeDiff {
         },
         DrawNodeDiff::Group(gd) => match current {
             DrawNode::Group { transform, children } => {
-                DrawNodeDiff::Group(DrawGroupDiff { transform: gd.transform.as_ref().map(|_| *transform), children: gd.children.as_ref().map(|cd| inverse_indexed(children, cd, |c, d| inverse_node_diff(c, d))) })
+                DrawNodeDiff::Group(DrawGroupDiff { transform: gd.transform.as_ref().map(|_| *transform), children: gd.children.as_ref().map(|cd| inverse_indexed(children, cd, inverse_node_diff)) })
             }
             other => DrawNodeDiff::Replace { node: other.clone() },
         },
@@ -577,7 +577,7 @@ fn absorb_node_diff(a: DrawNodeDiff, b: DrawNodeDiff) -> DrawNodeDiff {
             children: match (ga.children, gb.children) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(ac), Some(bc)) => Some(absorb_indexed(ac, bc, absorb_node_diff, apply_node_diff)),
+                (Some(ac), Some(bc)) => Some(absorb_indexed(ac, &bc, absorb_node_diff, apply_node_diff)),
             },
         }),
         (DrawNodeDiff::Image(ia), DrawNodeDiff::Image(ib)) => DrawNodeDiff::Image(DrawImageDiff { at: ib.at.or(ia.at), width: ib.width.or(ia.width), height: ib.height.or(ia.height), mime: ib.mime.or(ia.mime), bytes: ib.bytes.or(ia.bytes) }),
@@ -591,7 +591,7 @@ fn absorb_node_diff(a: DrawNodeDiff, b: DrawNodeDiff) -> DrawNodeDiff {
 //#region 🔖️ScalarAlgebra
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_canvas_diff(canvas: &DrawCanvas, diff: &DrawCanvasDiff) -> DrawCanvas {
-    DrawCanvas { width: diff.width.unwrap_or(canvas.width), height: diff.height.unwrap_or(canvas.height), background: diff.background.clone().unwrap_or(canvas.background) }
+    DrawCanvas { width: diff.width.unwrap_or(canvas.width), height: diff.height.unwrap_or(canvas.height), background: diff.background.unwrap_or(canvas.background) }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn between_canvas_diff(base: &DrawCanvas, other: &DrawCanvas) -> Option<DrawCanvasDiff> {
@@ -609,7 +609,7 @@ fn inverse_canvas_diff(base: &DrawCanvas, diff: &DrawCanvasDiff) -> DrawCanvasDi
     DrawCanvasDiff { width: diff.width.map(|_| base.width), height: diff.height.map(|_| base.height), background: diff.background.as_ref().map(|_| base.background) }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_canvas_diff(a: DrawCanvasDiff, b: DrawCanvasDiff) -> DrawCanvasDiff {
+fn absorb_canvas_diff(a: &DrawCanvasDiff, b: &DrawCanvasDiff) -> DrawCanvasDiff {
     DrawCanvasDiff { width: b.width.or(a.width), height: b.height.or(a.height), background: b.background.or(a.background) }
 }
 
@@ -617,8 +617,8 @@ fn absorb_canvas_diff(a: DrawCanvasDiff, b: DrawCanvasDiff) -> DrawCanvasDiff {
 fn apply_style_diff(style: &DrawStyle, diff: &DrawStyleDiff) -> DrawStyle {
     DrawStyle {
         name: style.name.clone(),
-        fill: diff.fill.clone().unwrap_or(style.fill),
-        stroke: diff.stroke.clone().unwrap_or(style.stroke),
+        fill: diff.fill.unwrap_or(style.fill),
+        stroke: diff.stroke.unwrap_or(style.stroke),
         stroke_width: diff.stroke_width.unwrap_or(style.stroke_width),
         opacity: diff.opacity.unwrap_or(style.opacity),
     }
@@ -640,7 +640,7 @@ fn inverse_style_diff(base: &DrawStyle, diff: &DrawStyleDiff) -> DrawStyleDiff {
     DrawStyleDiff { fill: diff.fill.map(|_| base.fill), stroke: diff.stroke.map(|_| base.stroke), stroke_width: diff.stroke_width.map(|_| base.stroke_width), opacity: diff.opacity.map(|_| base.opacity) }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_style_diff(a: DrawStyleDiff, b: DrawStyleDiff) -> DrawStyleDiff {
+fn absorb_style_diff(a: &DrawStyleDiff, b: &DrawStyleDiff) -> DrawStyleDiff {
     DrawStyleDiff { fill: b.fill.or(a.fill), stroke: b.stroke.or(a.stroke), stroke_width: b.stroke_width.or(a.stroke_width), opacity: b.opacity.or(a.opacity) }
 }
 
@@ -709,17 +709,17 @@ impl MutationDiff<SemioDrawingSnapshot> for SemioDrawingDiff {
         self.canvas = match (self.canvas.take(), other.canvas) {
             (None, x) => x,
             (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_canvas_diff(a, b)),
+            (Some(a), Some(b)) => Some(absorb_canvas_diff(&a, &b)),
         };
         self.styles = match (self.styles.take(), other.styles) {
             (None, x) => x,
             (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, absorb_style_diff, apply_style_diff, |s: &DrawStyle| s.name.clone())),
+            (Some(a), Some(b)) => Some(absorb_named(a, b, |a, b| absorb_style_diff(&a, &b), apply_style_diff, |s: &DrawStyle| s.name.clone())),
         };
         self.layers = match (self.layers.take(), other.layers) {
             (None, x) => x,
             (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_indexed(a, b, absorb_layer_diff, apply_layer_diff)),
+            (Some(a), Some(b)) => Some(absorb_indexed(a, &b, absorb_layer_diff, apply_layer_diff)),
         };
     }
 }
@@ -863,7 +863,7 @@ fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -1299,7 +1299,7 @@ mod tests {
         let base: Vec<DrawStyle> = vec![DrawStyle { name: "a".into(), fill: None, stroke: None, stroke_width: None, opacity: None }];
         let d1: NamedTripleDiff<String, DrawStyleDiff, DrawStyle> = NamedTripleDiff { removed: vec![], modified: vec![], added: vec![DrawStyle { name: "b".into(), fill: None, stroke: None, stroke_width: None, opacity: None }] };
         let d2: NamedTripleDiff<String, DrawStyleDiff, DrawStyle> = NamedTripleDiff { removed: vec!["b".to_string()], modified: vec![], added: vec![] };
-        let absorbed = absorb_named(d1, d2, absorb_style_diff, apply_style_diff, |s: &DrawStyle| s.name.clone());
+        let absorbed = absorb_named(d1, d2, |a, b| absorb_style_diff(&a, &b), apply_style_diff, |s: &DrawStyle| s.name.clone());
         assert!(absorbed.added.is_empty());
         assert!(absorbed.removed.is_empty());
         let applied = apply_named(&base, &absorbed, |s| &s.name, apply_style_diff);

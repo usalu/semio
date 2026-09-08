@@ -781,7 +781,7 @@ fn gap_1d(a0: f64, a1: f64, b0: f64, b1: f64) -> f64 {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn loop_area(body: &Body, face: FaceId, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId, chord_tol: f64) -> Result<f64, KernelError> {
     let surface = face_surface(body, face)?;
-    let flipped = body.faces.get(face).map(|f| f.flipped).unwrap_or(false);
+    let flipped = body.faces.get(face).is_some_and(|f| f.flipped);
     match surface {
         Surface::Plane { frame } if loop_has_only_straight_edges(body, loop_id) => {
             let pts = loop_positions(body, loop_id)?;
@@ -866,7 +866,7 @@ fn loop_volume_contribution(body: &Body, face: FaceId, loop_id: crate::artifacts
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn loop_volume_moments(body: &Body, face: FaceId, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId, chord_tol: f64) -> Result<(f64, f64, f64, f64), KernelError> {
     let surface = face_surface(body, face)?;
-    let flipped = body.faces.get(face).map(|f| f.flipped).unwrap_or(false);
+    let flipped = body.faces.get(face).is_some_and(|f| f.flipped);
     match surface {
         Surface::Plane { .. } if loop_has_only_straight_edges(body, loop_id) => {
             let pts = loop_positions(body, loop_id)?;
@@ -925,7 +925,7 @@ fn loop_positions(body: &Body, loop_id: crate::artifacts::semio::standards::v1::
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn face_surface<'a>(body: &'a Body, face: FaceId) -> Result<&'a Surface, KernelError> {
+fn face_surface(body: &Body, face: FaceId) -> Result<&Surface, KernelError> {
     let face_ent = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity("face".into()))?;
     body.surfaces.get(face_ent.surface).ok_or_else(|| KernelError::MissingEntity("surface".into()))
 }

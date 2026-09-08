@@ -237,8 +237,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: "sourcing.curation".into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
-        import_stdio_kinds: vec!["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.zip"],
+        export_stdio_kinds: vec!["stdio.json".into(), "stdio.obj".into(), "stdio.png".into(), "stdio.stl".into(), "stdio.zip".into()],
+        import_stdio_kinds: vec!["stdio.json".into(), "stdio.obj".into(), "stdio.png".into(), "stdio.stl".into(), "stdio.zip".into()],
     }
 }
 //#endregion 🔖️ArtifactKind

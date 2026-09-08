@@ -2,7 +2,7 @@
 name = "semio-s-plugin-draw-fsm-macros"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Draw plugin - fsm statechart! proc-macro (draw-fsm's sibling; a proc-macro crate can never be merged into a normal rlib/cdylib crate)"
 
 [lints]

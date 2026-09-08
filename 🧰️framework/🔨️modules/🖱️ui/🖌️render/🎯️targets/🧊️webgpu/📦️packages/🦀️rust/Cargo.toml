@@ -2,7 +2,7 @@
 name = "semio-framework-ui-backend-webgpu"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Browser WebGPU backend (wgpu) — the ONLY place wgpu is permitted in this repo"
 
 [package.metadata.semio]
@@ -31,4 +31,4 @@ ui_render = { path = "../../../../📦️packages/🦀️rust", package = "semio
 # never embedded inside a shipped plugin component (see `🖥️host`'s docstring), so there is no
 # wasip2 arm here.
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
-wgpu = { version = "27.0.1", default-features = false, features = ["webgpu", "wgsl"] }
+wgpu = { version = "29.0.4", default-features = false, features = ["std", "webgpu", "wgsl"] }

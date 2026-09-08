@@ -1,0 +1,17 @@
+{
+  "schema": "semio.os.gis-map-approval-history-fixture/v1",
+  "version": 1,
+  "phases": ["unavailable", "available", "submitting", "applied", "failed"],
+  "cases": [
+    { "name": "approval-waits-for-mounted-current", "current": null, "event": "approval-received", "ownerMatches": true, "mountedCurrentMatches": false, "revalidationMatches": true, "expected": { "phase": "unavailable", "canUndo": false, "retained": true, "oldOwnerRetired": false } },
+    { "name": "mounted-current-makes-owner-available", "current": "unavailable", "event": "mounted-current", "ownerMatches": true, "mountedCurrentMatches": true, "revalidationMatches": true, "expected": { "phase": "available", "canUndo": true, "retained": true, "oldOwnerRetired": false } },
+    { "name": "ordinary-history-undo-admits-exact-owner", "current": "available", "event": "undo", "ownerMatches": true, "mountedCurrentMatches": true, "revalidationMatches": true, "expected": { "phase": "submitting", "canUndo": false, "retained": true, "oldOwnerRetired": false } },
+    { "name": "stale-owner-is-inert", "current": "available", "event": "undo", "ownerMatches": false, "mountedCurrentMatches": true, "revalidationMatches": true, "expected": { "phase": "available", "canUndo": true, "retained": true, "oldOwnerRetired": false } },
+    { "name": "rebootstrap-retires-and-reissues-private-owner", "current": "submitting", "event": "rebootstrap", "ownerMatches": true, "mountedCurrentMatches": false, "revalidationMatches": true, "expected": { "phase": "unavailable", "canUndo": false, "retained": true, "oldOwnerRetired": true } },
+    { "name": "rotated-session-cannot-reactivate-old-undo", "current": "unavailable", "event": "mounted-current", "ownerMatches": true, "mountedCurrentMatches": true, "revalidationMatches": false, "expected": { "phase": "unavailable", "canUndo": false, "retained": false, "oldOwnerRetired": true } },
+    { "name": "changed-frontier-retires-reissued-undo", "current": "unavailable", "event": "mounted-current", "ownerMatches": true, "mountedCurrentMatches": false, "revalidationMatches": true, "expected": { "phase": "unavailable", "canUndo": false, "retained": false, "oldOwnerRetired": true } },
+    { "name": "close-retires-owner", "current": "failed", "event": "close", "ownerMatches": true, "mountedCurrentMatches": true, "revalidationMatches": true, "expected": { "phase": "unavailable", "canUndo": false, "retained": false, "oldOwnerRetired": true } }
+  ],
+  "ordinaryHistory": { "remoteNewerThanLocal": "remote", "localNewerThanRemote": "local", "remoteSubmitting": "blocked", "noRemote": "local" },
+  "nonclaims": ["no-shell-browser-process", "no-gis-scene", "no-second-peer", "no-redo"]
+}

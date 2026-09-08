@@ -136,10 +136,10 @@ pub fn heal_solid(body: &mut Body, solid: SolidId, tolerance: f64, rec: &mut OpR
     let ids: Vec<_> = body.vertices.iter().map(|(id, _)| id).collect();
     for i in 0..ids.len() {
         let Some(pi) = body.vertices.get(ids[i]).map(|v| v.position) else { continue };
-        for j in (i + 1)..ids.len() {
-            let Some(pj) = body.vertices.get(ids[j]).map(|v| v.position) else { continue };
+        for &id in &ids[i + 1..] {
+            let Some(pj) = body.vertices.get(id).map(|v| v.position) else { continue };
             if (pj - pi).norm() <= tol {
-                if let Some(v) = body.vertices.get_mut(ids[j]) {
+                if let Some(v) = body.vertices.get_mut(id) {
                     v.position = pi;
                     rec.record_modified(v.label);
                     report.vertices_merged += 1;

@@ -236,7 +236,7 @@ mod subject {
                 }
                 let mut snapshot = base.clone();
                 snapshot.document.header.file_schema = vec![Part21Value::List(schemas.into_iter().map(Part21Value::Str).collect())];
-                Ifc2x3Cv20Mutation::SetSnapshot(semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::cv20::schema::mutations::set_snapshot::SetSnapshot { snapshot })
+                Ifc2x3Cv20Mutation::SetSnapshot(semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::cv20::schema::mutations::set_snapshot::SetSnapshot { snapshot: Box::new(snapshot) })
             }
             "set-view-definition" => Ifc2x3Cv20Mutation::SetViewDefinition(semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::cv20::schema::mutations::set_view_definition::SetViewDefinition { view: str_field(params, "view")? }),
             "set-structural-entity" => {

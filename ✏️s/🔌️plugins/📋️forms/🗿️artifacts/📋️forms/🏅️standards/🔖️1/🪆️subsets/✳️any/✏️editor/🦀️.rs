@@ -772,16 +772,8 @@ impl ArtifactEditor for FormsPlayApp {
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
         };
-        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            request.context,
-            operation_context,
-            request.completion,
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
             FormsCommand::command_id,
             FORMS_RETAINED_RAW_BYTES,
             1,
@@ -1011,14 +1003,14 @@ pub fn create_forms_app() -> AppDefinition {
                     LocalizedLabel::native("Kind", "Art"),
                     FORM_BUILTIN_KINDS.iter().map(|kind| ActionArgOption::new(*kind, LocalizedLabel::data(*kind))).collect(),
                 )
-                .default_value("text"),
+                .default_value(&"text"),
             ])
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
                     ActionArgOption::new("default", LocalizedLabel::native("Default", "Standard")),
                     ActionArgOption::new("onboarding", LocalizedLabel::native("Onboarding", "Einführung")),
                     ActionArgOption::new("building-component", LocalizedLabel::native("Building Component", "Baukomponente")),
-                ]).default_value("default"),
+                ]).default_value(&"default"),
             ])
             .action_args("setSpecJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Spec JSON", "Spezifikations-JSON"))])
             .keybinding("mod+z", "undo")
@@ -1125,7 +1117,7 @@ pub(crate) mod testkit {
     /// 🧩️ A standalone `buildingComponent` question, for tests that exercise `render_extension_question`
     /// directly without going through a full document.
     pub fn building_component_question() -> FormQuestion {
-        let mut question = crate::editor::forms::commands::add_question::question_shell("geometry".into(), "Geometry".into(), "buildingComponent".into());
+        let mut question = add_question::question_shell("geometry".into(), "Geometry".into(), "buildingComponent".into());
         question.fixture_slug = Some("hexagonal-mushroom-column".into());
         question.params = Some(crate::artifacts::forms::schema::value_to_dsl(&dsl::json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })));
         question
@@ -1404,7 +1396,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_disjoint_edits() {
-        semio_framework_plugin::testkit::assert_two_instances_converge::<semio_framework_plugin::EditorApp<FormsPlayApp>, (usize, usize)>(
+        semio_framework_plugin::testkit::assert_two_instances_converge::<EditorApp<FormsPlayApp>, (usize, usize)>(
             "mem://forms-convergence",
             FormsCommand::AddQuestion(add_question::AddQuestion { kind: "text".into(), step_id: None }),
             FormsCommand::AddStep(add_step::AddStep {}),
@@ -1413,7 +1405,7 @@ mod tests {
                 let steps = forms_steps(&projection);
                 (steps.len(), steps[0].blocks.len())
             },
-        );
+        ).await;
     }
     //#endregion 🔖️CrossCutting
 

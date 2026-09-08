@@ -63,7 +63,7 @@ mod tests {
         let _serial = crate::editor::generation3d::test_support::lock();
         let mut app = app().await;
         let before_fixture = app.snapshot().expect("snapshot").fixture.clone();
-        let mut before_session = flow::FlowEvalSession::new();
+        let mut before_session = FlowEvalSession::new();
         let mut before_host = flow::flow_host_with_session(&before_fixture, &before_session);
         before_session.sync(&before_host);
         while before_session.tick(&mut before_host) {}
@@ -72,7 +72,7 @@ mod tests {
 
         dispatch(&mut app, Generation3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["height".into()], field: "value".into(), value: Some(9.5) })).await;
         let after_fixture = app.snapshot().expect("snapshot").fixture.clone();
-        let mut after_session = flow::FlowEvalSession::new();
+        let mut after_session = FlowEvalSession::new();
         let mut after_host = flow::flow_host_with_session(&after_fixture, &after_session);
         after_session.sync(&after_host);
         while after_session.tick(&mut after_host) {}

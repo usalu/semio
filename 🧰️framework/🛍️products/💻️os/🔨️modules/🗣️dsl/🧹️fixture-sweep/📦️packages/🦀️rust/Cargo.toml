@@ -2,7 +2,7 @@
 name = "semio-framework-os-dsl-fixture-sweep"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 publish = false
 autotests = false
 description = "Fleet-wide real DSL fixture conformance test leaf"

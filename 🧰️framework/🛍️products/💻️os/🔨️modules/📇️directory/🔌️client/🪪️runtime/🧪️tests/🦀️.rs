@@ -29,7 +29,7 @@ async fn directory_native_runtime_identity_preserves_original_injected_owners() 
         drop(scope);
         drop(foreign);
         drop(runtime);
-        pool.shutdown();
+        pool.shutdown().expect("released directory fixture pool shuts down");
         assert_eq!(observed, (true, false, true, true, workers), "{case}");
         assert_eq!((drain.finished, drain.cancelled, drain.leaked), (0, 0, 0));
     }

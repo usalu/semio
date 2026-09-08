@@ -36,12 +36,11 @@ fn code_f64(codes: &[(i32, DxfValue)], code: i32) -> f64 {
     codes
         .iter()
         .find(|(c, _)| *c == code)
-        .map(|(_, v)| match v {
+        .map_or(0.0, |(_, v)| match v {
             DxfValue::Double { value } => *value,
             DxfValue::Int { value } => *value as f64,
             _ => 0.0,
         })
-        .unwrap_or(0.0)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn code_str(codes: &[(i32, DxfValue)], code: i32) -> String {

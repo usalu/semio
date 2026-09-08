@@ -136,7 +136,9 @@ impl fmt::Display for PdfDecimal {
 /// `/Filter`, `/F`, `/DecodeParms`, and `/DP` are removed during native deserialization.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
+#[derive(Default)]
 pub enum PdfObject {
+    #[default]
     Null,
     Bool(bool),
     Int(i64),
@@ -149,11 +151,6 @@ pub enum PdfObject {
     Stream { dict: Vec<PdfDictEntry>, data: Vec<u8>, filters: Vec<PdfStreamFilter> },
 }
 
-impl Default for PdfObject {
-    fn default() -> Self {
-        PdfObject::Null
-    }
-}
 
 impl PdfObject {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -401,7 +398,7 @@ impl store::ArtifactDsl for PdfSnapshot {
             Err(_) => text,
         };
         let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
-        if hex.len() % 2 != 0 {
+        if !hex.len().is_multiple_of(2) {
             return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
         }
         let mut bytes = Vec::with_capacity(hex.len() / 2);

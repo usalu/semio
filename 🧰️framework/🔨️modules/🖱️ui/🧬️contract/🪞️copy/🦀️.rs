@@ -34,8 +34,11 @@ trait TypedCopy: Sized {
     fn copy_one(&self, candidate: &mut Self, path: &mut [usize], byte_candidate: &mut Vec<u8>, allocation: usize, work: usize) -> Result<UiComponentCopyProgress, UiFixedListAllocationError>;
 }
 
-fn field<T: TypedCopy>(source: &T, candidate: &mut T, index: &mut usize, path: &mut [usize], count: usize, byte_candidate: &mut Vec<u8>, allocation: usize, work: usize) -> Result<UiComponentCopyProgress, UiFixedListAllocationError> {
-    let mut step = source.copy_one(candidate, path, byte_candidate, allocation, work)?;
+#[derive(Clone, Copy)]
+struct CopyGrant { allocation: usize, work: usize }
+
+fn field<T: TypedCopy>(source: &T, candidate: &mut T, index: &mut usize, path: &mut [usize], count: usize, byte_candidate: &mut Vec<u8>, grant: CopyGrant) -> Result<UiComponentCopyProgress, UiFixedListAllocationError> {
+    let mut step = source.copy_one(candidate, path, byte_candidate, grant.allocation, grant.work)?;
     if step.complete { *index += 1; path.fill(0); }
     step.complete = *index == count;
     Ok(step)
@@ -62,7 +65,7 @@ macro_rules! typed_fields {
                 let Self { $($field: _),* } = self;
                 let (index, path) = split(path)?;
                 let count = 0 $(+ { let _ = stringify!($field); 1 })*;
-                match *index { $($index => field(&self.$field, &mut candidate.$field, index, path, count, byte_candidate, allocation, work),)* _ => Ok(done()) }
+                match *index { $($index => field(&self.$field, &mut candidate.$field, index, path, count, byte_candidate, CopyGrant { allocation, work }),)* _ => Ok(done()) }
             }
         }
     };
@@ -193,7 +196,7 @@ impl<A: TypedCopy, B: TypedCopy> TypedCopy for (A, B) {
     }
     fn copy_one(&self, candidate: &mut Self, path: &mut [usize], byte_candidate: &mut Vec<u8>, allocation: usize, work: usize) -> Result<UiComponentCopyProgress, UiFixedListAllocationError> {
         let (index, path) = split(path)?;
-        match *index { 0 => field(&self.0, &mut candidate.0, index, path, 2, byte_candidate, allocation, work), 1 => field(&self.1, &mut candidate.1, index, path, 2, byte_candidate, allocation, work), _ => Ok(done()) }
+        match *index { 0 => field(&self.0, &mut candidate.0, index, path, 2, byte_candidate, CopyGrant { allocation, work }), 1 => field(&self.1, &mut candidate.1, index, path, 2, byte_candidate, CopyGrant { allocation, work }), _ => Ok(done()) }
     }
 }
 

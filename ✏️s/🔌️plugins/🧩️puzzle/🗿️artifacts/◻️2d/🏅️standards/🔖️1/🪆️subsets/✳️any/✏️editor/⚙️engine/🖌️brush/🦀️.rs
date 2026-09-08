@@ -202,7 +202,7 @@ mod tests {
         }
         let result = result.expect("fill completion within bounded opportunities");
         close_fill_session(&mut session);
-        pool.shutdown();
+        pool.shutdown().expect("bounded fixture operation succeeds");
         (placements, previews, result)
     }
 
@@ -235,14 +235,13 @@ mod tests {
                     }
                     session.resume().expect("checkpoint search resume");
                 }
-                WorkerJobPoll::Terminal => panic!("fill completed before first checkpoint"),
                 WorkerJobPoll::Closing | WorkerJobPoll::TerminalEmpty => panic!("fill closed before first checkpoint"),
                 WorkerJobPoll::CheckedOut => panic!("checkpoint outcome remained checked out"),
             }
         }
         let checkpoint = checkpoint.expect("checkpoint within bounded opportunities");
         close_fill_session(&mut session);
-        pool.shutdown();
+        pool.shutdown().expect("bounded fixture operation succeeds");
         checkpoint
     }
 
@@ -606,7 +605,7 @@ mod tests {
         }
         assert!(cancelled, "cancel terminal exceeded bounded opportunities");
         close_fill_session(&mut session);
-        pool.shutdown();
+        pool.shutdown().expect("bounded fixture operation succeeds");
 
         let stale_operation = Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(11), semio_framework_job::Generation(4), 9);
         let stale_job = BoardFillJob::with_operation(capture_fill_snapshot(&host), 32, stale_operation);
@@ -638,7 +637,7 @@ mod tests {
         }
         assert!(stale_fault, "stale terminal exceeded bounded opportunities");
         close_fill_session(&mut stale);
-        stale_pool.shutdown();
+        stale_pool.shutdown().expect("bounded fixture operation succeeds");
     }
 
     #[test]
@@ -672,7 +671,7 @@ mod tests {
         }
         assert!(yielded, "deadline yield exceeded bounded opportunities");
         close_fill_session(&mut session);
-        pool.shutdown();
+        pool.shutdown().expect("bounded fixture operation succeeds");
     }
 
     #[test]
@@ -689,7 +688,7 @@ mod tests {
         let refused_job = BoardFillJob::with_operation(capture_fill_snapshot(&host), 4, refused_operation);
         let mut refused = mount_fill_session(refused_job, refused_params);
         let unavailable = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
-        unavailable.shutdown();
+        unavailable.shutdown().expect("bounded fixture operation succeeds");
         assert!(matches!(refused.pump_one(&unavailable, semio_framework_async::Lane::Background), Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(_))));
         close_fill_session(&mut refused);
 
@@ -720,7 +719,7 @@ mod tests {
         }
         assert!(terminal, "unclaimed completion exceeded bounded opportunities");
         close_fill_session(&mut complete);
-        pool.shutdown();
+        pool.shutdown().expect("bounded fixture operation succeeds");
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -772,7 +771,7 @@ mod tests {
         );
         gate.store(true, std::sync::atomic::Ordering::Release);
         close_fill_session(&mut session);
-        pool.shutdown();
+        pool.shutdown().expect("bounded fixture operation succeeds");
         assert!(queue_filled);
         assert!(saturated);
     }
@@ -936,7 +935,7 @@ mod tests {
         assert!(checkpointed);
         assert!(seen.into_iter().all(|value| value));
         close_fill_session(&mut session);
-        pool.shutdown();
+        pool.shutdown().expect("bounded fixture operation succeeds");
     }
 
     #[test]

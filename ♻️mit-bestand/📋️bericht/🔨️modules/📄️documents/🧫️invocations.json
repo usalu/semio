@@ -1,0 +1,66 @@
+{
+  "valid": [
+    {
+      "input": [
+        "run",
+        "@semio-tech/mit-bestand-bericht:build"
+      ],
+      "args": [
+        "run",
+        "@semio-tech/mit-bestand-bericht:build"
+      ]
+    },
+    {
+      "input": [
+        "run",
+        "@semio-tech/mit-bestand-bericht:watch"
+      ],
+      "args": [
+        "run",
+        "@semio-tech/mit-bestand-bericht:watch"
+      ],
+      "watch": "@semio-tech/mit-bestand-bericht:build"
+    },
+    {
+      "input": [
+        "run",
+        "@semio-tech/mit-bestand-bericht:watch-kompaktbericht"
+      ],
+      "args": [
+        "run",
+        "@semio-tech/mit-bestand-bericht:watch-kompaktbericht"
+      ],
+      "watch": "@semio-tech/mit-bestand-bericht:build-kompaktbericht"
+    },
+    {
+      "input": [
+        "run",
+        "@semio-tech/mit-bestand-bericht:watch-forschungsbericht",
+        "--graph=stdout"
+      ],
+      "args": [
+        "run",
+        "@semio-tech/mit-bestand-bericht:watch-forschungsbericht",
+        "--graph=stdout"
+      ]
+    }
+  ],
+  "invalid": [
+    [
+      "run",
+      "@semio-tech/mit-bestand-bericht:build-unknown"
+    ],
+    [
+      "run",
+      "@semio-tech/mit-bestand-bericht:build-kompaktbericht",
+      "--",
+      "elsewhere.tex"
+    ],
+    [
+      "run",
+      "@semio-tech/mit-bestand-bericht:watch",
+      "--",
+      "kompaktbericht"
+    ]
+  ]
+}

@@ -2,14 +2,10 @@
 //! layer list at a FINAL-state index; layers have no stable id, only position.
 
 use crate::artifacts::lowpoly::{LowpolyMutation, LowpolyPaintLayer, LowpolySnapshot};
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct InsertPaintLayer {
     pub object_id: String,

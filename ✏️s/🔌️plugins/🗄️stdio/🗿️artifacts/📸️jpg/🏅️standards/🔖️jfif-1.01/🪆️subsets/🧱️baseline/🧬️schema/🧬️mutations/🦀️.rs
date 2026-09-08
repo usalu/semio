@@ -141,13 +141,13 @@ pub fn encode_jpg_baseline_projection_json(snapshot: &JpgSnapshot) -> String {
     let quoted = |values: Vec<String>| format!("[{}]", values.into_iter().map(|value| format!("\"{value}\"")).collect::<Vec<_>>().join(","));
     let tables = quoted(snapshot.huffman_tables.iter().map(|table| format!("{:?}:{}", table.class, table.id).to_lowercase()).collect());
     let components = quoted(snapshot.frame.as_ref().map(|frame| frame.components.iter().map(|component| format!("{}:{}x{}", component.id, component.h_sampling, component.v_sampling)).collect()).unwrap_or_default());
-    let verdict = quoted(crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance(snapshot).into_iter().map(|finding| finding.code.0.to_string()).collect());
+    let verdict = quoted(crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance(snapshot).into_iter().map(|finding| finding.code.0).collect());
     format!(
         "{{\"format\":\"jpg-baseline\",\"sofMarker\":\"{:02x}\",\"precision\":{},\"arithmetic\":{},\"componentCount\":{},\"huffmanTables\":{tables},\"components\":{components},\"conformance\":{verdict}}}",
         snapshot.sof_marker,
-        snapshot.frame.as_ref().map(|frame| frame.precision).unwrap_or(0),
+        snapshot.frame.as_ref().map_or(0, |frame| frame.precision),
         snapshot.arithmetic,
-        snapshot.frame.as_ref().map(|frame| frame.components.len()).unwrap_or(0)
+        snapshot.frame.as_ref().map_or(0, |frame| frame.components.len())
     )
 }
 
@@ -155,7 +155,7 @@ pub fn encode_jpg_baseline_projection_json(snapshot: &JpgSnapshot) -> String {
 /// scenario names when it claims a kind leaves the class by its own axis.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn jpg_baseline_conformance_codes(snapshot: &JpgSnapshot) -> Vec<String> {
-    crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance(snapshot).into_iter().map(|finding| finding.code.0.to_string()).collect()
+    crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance(snapshot).into_iter().map(|finding| finding.code.0).collect()
 }
 //#endregion 🌉️ConformanceProjection
 //#endregion 🔖️Mutations
@@ -365,7 +365,7 @@ mod tests {
         ];
         assert_eq!(variants.len(), KINDS.len(), "every variant needs exactly one KINDS entry");
         for (variant, kind) in variants.iter().zip(KINDS) {
-            let tag = match serde_json::to_value(variant).expect("serialize") {
+            let tag = match serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(variant)).expect("serialize") {
                 serde_json::Value::Object(members) => members.get("mutation").and_then(|value| value.as_str()).expect("tagged enum carries its own discriminant").to_string(),
                 other => panic!("a tagged enum must serialize as an object, got {other:?}"),
             };

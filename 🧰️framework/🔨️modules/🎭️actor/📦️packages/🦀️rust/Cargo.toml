@@ -2,7 +2,7 @@
 name = "semio-framework-actor"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Pooled actor/plugin runtime kernel: PackageId/ActorId/Lane/Budget vocabulary, the hierarchical deficit-round-robin scheduler, mailbox backpressure, the failure ladder, scene-commit + metrics, and the Kernel facade — pure, no I/O, no clock, no wasm_bindgen/web_sys/winit/tokio/std::thread in the core (transports and time are injected)."
 
 [package.metadata.semio]

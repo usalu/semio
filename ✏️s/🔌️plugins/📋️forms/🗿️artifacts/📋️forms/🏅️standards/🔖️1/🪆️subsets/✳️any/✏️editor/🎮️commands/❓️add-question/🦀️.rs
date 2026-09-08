@@ -211,7 +211,7 @@ mod tests {
             |app| crate::artifacts::forms::schema::flatten_questions(&app.snapshot().expect("projection")).len(),
             before,
             before + 1,
-        );
+        ).await;
     }
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the dropped question is no longer

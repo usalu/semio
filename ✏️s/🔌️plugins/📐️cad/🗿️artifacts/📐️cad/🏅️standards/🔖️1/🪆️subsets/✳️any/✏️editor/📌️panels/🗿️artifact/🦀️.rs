@@ -232,7 +232,7 @@ mod tests {
     use crate::editor::cad::terminology::cad_labels;
     use crate::editor::cad::testkit::*;
     use crate::editor::cad::{make_object_for_typology, CadPlayApp, CadPlayRuntime};
-    use semio_framework_plugin::{ArtifactView, PluginApp, UiNode, ViewModel};
+    use semio_framework_plugin::{ArtifactView, PluginApp, ViewModel};
 
     #[semio_framework_async_macros::async_test]
     async fn document_lists_nodes() {

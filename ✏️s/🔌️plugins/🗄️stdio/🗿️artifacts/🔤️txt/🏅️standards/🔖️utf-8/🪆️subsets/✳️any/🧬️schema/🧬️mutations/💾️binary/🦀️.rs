@@ -1,11 +1,14 @@
 //! 💾️ Generic framing and descriptor roster for the transparent TxtMutation.
 //#region 🔖️Registry
+/// 📦 Encodes a recognized mutation payload or declines another variant.
+pub type TxtMutationPayloadEncoder = fn(&TxtMutation) -> Option<Result<Vec<u8>, String>>;
+
 use crate::artifacts::txt::schema::mutations::{TxtMutation, insert_line, remove_line, set_line, set_line_ending, set_trailing_newline};
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 struct BinaryCodec {
     tag: u32,
-    try_encode: fn(&TxtMutation) -> Option<Result<Vec<u8>, String>>,
+    try_encode: TxtMutationPayloadEncoder,
     decode: fn(&[u8]) -> Result<TxtMutation, String>,
 }
 const BINARY_CODECS: &[BinaryCodec] = &[

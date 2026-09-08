@@ -20,8 +20,10 @@ use schema::ArtifactSchema;
 /// `step::engine::part21::Part21Value`'s shape but is IFC's own type (never shared cross-artifact).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", content = "value", rename_all = "camelCase")]
+#[derive(Default)]
 pub enum IfcValue {
     /// `$` — attribute explicitly unset.
+    #[default]
     Unset,
     /// `*` — attribute derived from a supertype, not stored here.
     Derived,
@@ -39,11 +41,6 @@ pub enum IfcValue {
     TypedValue { name: String, items: Vec<IfcValue> },
 }
 
-impl Default for IfcValue {
-    fn default() -> Self {
-        IfcValue::Unset
-    }
-}
 
 impl IfcValue {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

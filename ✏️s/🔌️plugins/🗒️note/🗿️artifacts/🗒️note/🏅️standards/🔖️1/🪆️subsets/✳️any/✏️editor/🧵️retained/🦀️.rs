@@ -8,7 +8,7 @@ use crate::editor::note::{NoteCommand, NoteDispatchCtx, NotePlayApp, NOTE_INTERA
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES};
-use semio_framework_plugin::{AppOperationContext, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, EditorApp, Emit, Fault, FaultCode, FaultOrigin, HistoryView};
+use semio_framework_plugin::{AppOperationContext, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, EditorApp, Emit, Fault, FaultCode, FaultOrigin};
 
 //#region 🔖️Contract
 pub const NOTE_RETAINED_PAYLOAD_SCHEMA: &str = "semio.note.retained-command.v1";
@@ -257,7 +257,6 @@ impl NoteCommandWork {
         self.accumulated.effects.append(&mut emit.effects);
         self.accumulated.events.append(&mut emit.events);
         self.accumulated.child_emits.append(&mut emit.child_emits);
-        self.accumulated.tasks.append(&mut emit.tasks);
         Ok(())
     }
 
@@ -271,7 +270,6 @@ impl NoteCommandWork {
             || self.accumulated.effects.pop().is_some()
             || self.accumulated.events.pop().is_some()
             || self.accumulated.child_emits.pop().is_some()
-            || self.accumulated.tasks.pop().is_some()
             || self.accumulated.description.take().is_some()
             || self.accumulated.coalesce_key.take().is_some()
         {
@@ -297,17 +295,8 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
         Some(self.units.len())
     }
 
-    fn step(
-        &mut self,
-        _command: &NoteCommand,
-        snapshot: &NoteSnapshot,
-        config: &NoteConfig,
-        history: &HistoryView,
-        _interaction: &protocol::InteractionState,
-        _hover: &semio_framework_plugin::app::InteractionHoverState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<NotePlayApp>>>,
-        operation: &AppOperationContext,
-    ) -> Result<ArtifactCommandWorkStep<EditorApp<NotePlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<NotePlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<NotePlayApp>>, Fault> {
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config, history, interaction: _interaction, hover: _hover, context: _context, operation } = *input;
         if self.complete || self.cursor >= self.units.len() {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("note.retained.repeated"), "Note retained work was stepped after completion"));
         }
@@ -396,7 +385,6 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
             && self.accumulated.effects.is_empty()
             && self.accumulated.events.is_empty()
             && self.accumulated.child_emits.is_empty()
-            && self.accumulated.tasks.is_empty()
             && self.accumulated.description.is_none()
             && self.accumulated.coalesce_key.is_none()
             && self.projection.is_none()
@@ -485,16 +473,8 @@ pub fn build(request: ArtifactOwnedToolJobRequest<EditorApp<NotePlayApp>>) -> Re
     };
     let tool_id = request.command.command_id();
     let work = Box::new(NoteCommandWork::new(tool_id, &request.command, &request.snapshot, &request.interaction_state, &operation)?);
-    let payload = ArtifactRetainedCommandPayload::try_new_with_context(
-        *request.command,
-        request.snapshot,
-        request.config,
-        request.history,
-        request.interaction_state,
-        request.interaction_hover,
-        request.context,
-        operation,
-        request.completion,
+    let payload = ArtifactRetainedCommandPayload::try_new(
+        semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion },
         NoteCommand::command_id,
         NOTE_RETAINED_RAW_BYTES,
         NOTE_RETAINED_MAXIMUM_UNITS,

@@ -92,22 +92,22 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    fn create_en1996_viewer_builds_a_definition_for_this_dialect() {
+    async fn create_en1996_viewer_builds_a_definition_for_this_dialect() {
         let def = create_en1996_viewer();
         assert_eq!(def.dialect, EN1996_DIALECT.into());
     }
 
     #[semio_framework_async_macros::async_test]
-    fn viewer_dialect_matches_the_artifact_coordinate() {
+    async fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<En1996Viewer as ArtifactViewer>::DIALECT, EN1996_DIALECT);
     }
 
     #[semio_framework_async_macros::async_test]
-    fn an_unknown_body_key_falls_back_to_a_text_node() {
+    async fn an_unknown_body_key_falls_back_to_a_text_node() {
         let snapshot = En1996Snapshot::default();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
-        let json = serde_json::to_string(&<En1996Viewer as ArtifactViewer>::render("nope", &doc, &ConfigView { snapshot: &NoConfig::default() })).expect("json");
+        let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(<En1996Viewer as ArtifactViewer>::render("nope", &doc, &ConfigView { snapshot: &NoConfig::default() }).expect("viewer assembly")).expect("json");
         assert!(json.contains("Unknown body"));
     }
 }

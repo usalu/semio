@@ -11,7 +11,7 @@ use super::*;
 #[value(rename_all = "camelCase")]
 pub struct InsertRecord {
     pub index: usize,
-    pub record: EpwRecord,
+    pub record: Box<EpwRecord>,
 }
 
 impl protocol::MutationKind<EpwSnapshot, EpwMutation> for InsertRecord {

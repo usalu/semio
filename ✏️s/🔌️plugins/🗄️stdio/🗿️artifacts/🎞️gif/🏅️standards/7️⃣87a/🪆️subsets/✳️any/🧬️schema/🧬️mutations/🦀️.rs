@@ -379,7 +379,7 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📸️set-snapshot/🧪️tests/🖼️repaints-the-right-pixel-of-the-single-image/🦀️.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/🖼️repaints-the-right-319285/🦀️.rs"]
     mod tests_set_snapshot_repaints_the_right_pixel_of_the_single_image;
 }
 //#endregion 🧪️FixtureTests

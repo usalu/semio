@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "lock",
+    "patches",
+    "resolutions",
+    "closures",
+    "mutations",
+    "importers",
+    "unresolvedImports"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "lock": {
+      "type": "object",
+      "required": [
+        "lockfileVersion",
+        "workspaces",
+        "packages"
+      ]
+    },
+    "patches": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "resolutions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "from",
+          "name",
+          "key"
+        ],
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "closures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "root",
+          "keys"
+        ],
+        "properties": {
+          "root": {
+            "type": "string"
+          },
+          "keys": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "mutations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "package",
+          "root",
+          "changed"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "package": {
+            "type": "string"
+          },
+          "root": {
+            "type": "string"
+          },
+          "changed": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "importers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "file",
+          "name",
+          "key"
+        ],
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "unresolvedImports": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

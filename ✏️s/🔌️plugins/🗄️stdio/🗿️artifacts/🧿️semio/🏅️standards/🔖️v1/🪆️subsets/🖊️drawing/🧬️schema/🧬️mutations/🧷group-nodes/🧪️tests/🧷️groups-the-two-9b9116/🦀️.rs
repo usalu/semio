@@ -18,13 +18,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioDrawingSnapshot {
-    serde_json::from_str(BEFORE).expect("group before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("group before snapshot decodes")
 }
 fn expected_after() -> SemioDrawingSnapshot {
-    serde_json::from_str(AFTER).expect("group after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("group after snapshot decodes")
 }
 fn mutation() -> SemioDrawingMutation {
-    serde_json::from_str(MUTATION).expect("group mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("group mutation decodes")
 }
 
 /// ▶️ The two leading siblings disappear into a new group that takes their place.
@@ -63,12 +63,12 @@ async fn the_undo_ungroup_dissolves_the_new_group_again() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioDrawingSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: SemioDrawingSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "group/groups-the-two-leading-children-into-a-new-group: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("group mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("group mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("group mutation reparses");
     assert_eq!(reencoded, original, "group/groups-the-two-leading-children-into-a-new-group: committed mutation JSON is not canonical");
 }
@@ -87,7 +87,7 @@ async fn declared_outcome_holds_as_committed() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "group/groups-the-two-leading-children-into-a-new-group: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -96,7 +96,7 @@ async fn produces_committed_diff() {
 /// this subset ever writes — stays absent from it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioDrawingDiff = serde_json::from_str(DIFF).expect("committed group diff decodes");
+    let decoded: SemioDrawingDiff = dsl::json::from_json_str(DIFF).expect("committed group diff decodes");
     assert!(decoded.canvas.is_none(), "no drawing mutation writes the canvas slot");
     let layers = decoded.layers.as_ref().expect("the layers triple must be present");
     assert!(layers.removed.is_empty() && layers.added.is_empty(), "a node-level edit modifies its layer, never removes or re-adds it");
@@ -111,7 +111,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
     assert_eq!(children.added[0].index, 0, "at the first grouped index");
     assert!(children.modified.is_empty(), "grouping modifies no sibling in place");
     assert!(decoded.styles.is_none(), "the style table must stay untouched");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "group/groups-the-two-leading-children-into-a-new-group: committed diff JSON is not canonical");
 }
@@ -119,7 +119,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioDrawingDiff = serde_json::from_str(DIFF).expect("committed group diff decodes");
+    let decoded: SemioDrawingDiff = dsl::json::from_json_str(DIFF).expect("committed group diff decodes");
     let produced = decoded.apply(&before()).expect("committed group diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "group/groups-the-two-leading-children-into-a-new-group: committed diff did not carry before to after");
 }

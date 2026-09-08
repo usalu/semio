@@ -8,7 +8,7 @@ pub fn register() {}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &BinarySnapshot) -> Result<BmpSnapshot, store::PackError> {
-    let mut snap = crate::artifacts::bmp::engine::decode_bmp(&from.bytes).map_err(|e| store::PackError::Schema(e))?;
+    let mut snap = crate::artifacts::bmp::engine::decode_bmp(&from.bytes).map_err(store::PackError::Schema)?;
     snap.schema = STDIO_BMP_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }

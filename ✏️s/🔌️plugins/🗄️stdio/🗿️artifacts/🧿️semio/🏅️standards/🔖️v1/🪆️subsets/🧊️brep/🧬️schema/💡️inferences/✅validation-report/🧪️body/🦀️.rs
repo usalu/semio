@@ -343,7 +343,7 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn attach_planar_pcurves(body: &mut Body, face: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::FaceId, frame: &Frame3) {
+    fn attach_planar_pcurves(body: &mut Body, face: FaceId, frame: &Frame3) {
         for coedge_id in body.face_coedges(face) {
             let co = body.coedges.get(coedge_id).unwrap();
             let edge = body.edges.get(co.edge).unwrap();
@@ -386,7 +386,7 @@ mod tests {
             let normal = (positions[tri[1]] - positions[tri[0]]).cross(positions[tri[2]] - positions[tri[0]]);
             let frame = Frame3::from_normal(positions[tri[0]], normal).unwrap();
             let surface = body.surfaces.insert(Surface::Plane { frame });
-            let members: Vec<(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::EdgeId, bool)> = (0..3)
+            let members: Vec<(EdgeId, bool)> = (0..3)
                 .map(|i| {
                     let a = tri[i];
                     let b = tri[(i + 1) % 3];

@@ -453,7 +453,7 @@ fn prepare_flow_config(base: &FlowConfig, mutation: FlowConfigMutation) -> Resul
         FlowConfigMutation::SetGeneration { json } => post.generation_json = json.clone(),
         FlowConfigMutation::SetDuplicateWidgetProgress { json } => post.duplicate_widget_progress_json = json.clone(),
         FlowConfigMutation::CancelDuplicateWidget { generation } => {
-            let active = serde_json::from_str::<serde_json::Value>(&post.duplicate_widget_progress_json).ok().and_then(|value| value.get("generation").and_then(serde_json::Value::as_u64));
+            let active = dsl::json::parse(&post.duplicate_widget_progress_json).ok().and_then(|value| value.get("generation").and_then(|value| value.as_u64()));
             if active == Some(*generation) {
                 post.duplicate_widget_progress_json.clear();
             }
@@ -492,7 +492,7 @@ impl Write for FlowBoundedByteCounter {
 #[cfg(test)]
 fn flow_bounded_serialized_bytes<T: dsl::ToValue>(value: &T, maximum_bytes: usize) -> Result<usize, String> {
     let mut counter = FlowBoundedByteCounter { written: 0, maximum_bytes };
-    let json: serde_json::Value = dsl::ToValue::to_value(value).into();
+    let json: Value = dsl::ToValue::to_value(value).into();
     serde_json::to_writer(&mut counter, &json).map_err(|error| error.to_string())?;
     Ok(counter.written)
 }
@@ -918,17 +918,8 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         }
     }
 
-    fn step(
-        &mut self,
-        command: &FlowCommand,
-        snapshot: &FlowSnapshot,
-        config: &FlowConfig,
-        _history: &semio_framework_plugin::HistoryView,
-        interaction: &protocol::InteractionState,
-        _hover: &semio_framework_plugin::app::InteractionHoverState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
-        operation: &semio_framework_plugin::AppOperationContext,
-    ) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, history: _history, interaction, hover: _hover, context: _context, operation } = *input;
         if self.completed || self.closing {
             return Err(Fault::from("flow-retained-direct-work-terminal"));
         }
@@ -1324,17 +1315,8 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         (text_bytes <= FLOW_CHILD_GROUP_RAW_BYTES && x.is_finite() && y.is_finite() && child.nodes.len() <= FLOW_STORE_MAX_MUTATION_ITEMS && child.edges.len() <= FLOW_STORE_MAX_MUTATION_ITEMS).then_some(1)
     }
 
-    fn step(
-        &mut self,
-        command: &FlowCommand,
-        snapshot: &FlowSnapshot,
-        config: &FlowConfig,
-        history: &semio_framework_plugin::HistoryView,
-        _interaction: &protocol::InteractionState,
-        _hover: &semio_framework_plugin::app::InteractionHoverState,
-        context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
-        _operation: &semio_framework_plugin::AppOperationContext,
-    ) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, history, interaction: _interaction, hover: _hover, context, operation: _operation } = *input;
         if self.closing || self.completed {
             return Err(Fault::from("flow-retained-add-widget-terminal"));
         }
@@ -1355,7 +1337,6 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             || emit.coalesce_key.is_some()
             || !emit.effects.is_empty()
             || !emit.events.is_empty()
-            || !emit.tasks.is_empty()
         {
             return Err(Fault::from("flow-retained-add-widget-output-contract"));
         }
@@ -1883,16 +1864,8 @@ impl ArtifactEditor for FlowPlayApp {
                 generation: request.operation.generation.0,
                 canonical_base_revision: request.canonical_base_revision,
             };
-            let payload = ArtifactRetainedCommandPayload::try_new_with_context(
-                *request.command,
-                request.snapshot,
-                request.config,
-                request.history,
-                request.interaction_state,
-                request.interaction_hover,
-                request.context,
-                operation_context,
-                request.completion,
+            let payload = ArtifactRetainedCommandPayload::try_new(
+                semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
                 FlowCommand::command_id,
                 if FLOW_CHILD_GROUP_TOOL_IDS.contains(&request.tool_id.as_str()) { FLOW_CHILD_GROUP_RAW_BYTES } else { FLOW_DIRECT_STORE_RAW_BYTES },
                 if FLOW_CHILD_GROUP_TOOL_IDS.contains(&request.tool_id.as_str()) { 1 } else { FLOW_STORE_MAX_MUTATION_ITEMS },
@@ -2171,7 +2144,7 @@ pub fn create_flow_app() -> AppDefinition {
             ActionArgOption::new("inputSlider", LocalizedLabel::native("Slider", "Schieberegler")),
             ActionArgOption::new("inputNote", LocalizedLabel::native("Note", "Notiz")),
         ])
-        .default_value("inputSlider")])
+        .default_value(&"inputSlider")])
         .action_interactive_job("addWidget", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("removeWidget", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("duplicateWidget", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
@@ -2344,7 +2317,7 @@ pub(crate) mod testkit {
         semio_framework_plugin::testkit::project_and_retire_fixture_tree(tree).expect("rendered fixture observation and retirement")
     }
 
-    fn projection_fixture_node(value: &serde_json::Value) -> semio_framework_plugin::BuiltNode {
+    fn projection_fixture_node(value: &Value) -> semio_framework_plugin::BuiltNode {
         let mut node = semio_framework_plugin::BuiltNode::try_new(value["key"].as_str().unwrap(), serde_json::from_value(value["component"].clone()).unwrap()).unwrap();
         for child in value["children"].as_array().unwrap() { node.children.try_push(projection_fixture_node(child)).unwrap(); }
         if value["rejected"].as_bool() == Some(true) {
@@ -2378,7 +2351,7 @@ pub(crate) mod testkit {
     #[test]
     fn flow_render_fixture_projection_retires_populated_and_rejected_pages() {
         use semio_framework_plugin::testkit::{project_and_retire_fixture_tree, FIXTURE_TREE_MAX_DEPTH, FIXTURE_TREE_MAX_NODES, FIXTURE_TREE_RETIRE_STEPS};
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🖼️tree-projection/🔣️.json")).unwrap();
+        let fixture: Value = serde_json::from_str(include_str!("🧪️fixtures/🖼️tree-projection/🔣️.json")).unwrap();
         assert_eq!(fixture["contractId"], "semio.fixture.tree-projection/v1");
         assert_eq!(fixture["maximumDepth"], FIXTURE_TREE_MAX_DEPTH);
         assert_eq!(fixture["maximumNodes"], FIXTURE_TREE_MAX_NODES);
@@ -2386,7 +2359,7 @@ pub(crate) mod testkit {
         for row in fixture["cases"].as_array().unwrap() {
             let tree = semio_framework_plugin::ComponentTree { root: projection_fixture_node(&row["input"]) };
             match project_and_retire_fixture_tree(tree) {
-                Ok(json) => assert_eq!(serde_json::from_str::<serde_json::Value>(&json).unwrap(), row["expected"]),
+                Ok(json) => assert_eq!(serde_json::from_str::<Value>(&json).unwrap(), row["expected"]),
                 Err(error) => assert_eq!(Some(error), row["error"].as_str()),
             }
             assert!(semio_framework_ui_contract::close_built_node_page_one());
@@ -2418,7 +2391,7 @@ pub(crate) mod testkit {
     /// prefixed `InteractionTarget` ids the document panel tree/`interaction_topology` both use (see
     /// `flow_graph_node_target_id`/`flow_graph_edge_target_id`).
     pub async fn select_graph(app: &mut FlowApp, node_ids: &[&str], edge_ids: &[&str]) {
-        let mut targets: Vec<serde_json::Value> = node_ids.iter().map(|id| serde_json::json!({ "granularity": "node", "id": flow_graph_node_target_id(id) })).collect();
+        let mut targets: Vec<Value> = node_ids.iter().map(|id| serde_json::json!({ "granularity": "node", "id": flow_graph_node_target_id(id) })).collect();
         targets.extend(edge_ids.iter().map(|id| serde_json::json!({ "granularity": "edge", "id": flow_graph_edge_target_id(id) })));
         let targets_json = serde_json::to_string(&targets).expect("targets json");
         let args = dsl::DslValue::from(serde_json::json!({ "domainId": FLOW_INTERACTION_GRAPH, "targets": targets_json, "merge": "replace" }));
@@ -2459,7 +2432,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires() {
-        use semio_framework_plugin::TypedOperationResultLane;
+        use semio_framework_plugin::app::TypedOperationResultLane;
         use store::{ArtifactPack, SpaceMember};
 
         let fixture: Value = serde_json::from_str(include_str!("🧪️fixtures/🧵️add-widget-retained/🔣️.json")).expect("retained addWidget fixture");

@@ -4,7 +4,7 @@
 //! `mutation.target-missing`; otherwise the diff is a bare `solids.removed[id]`. A solid is the
 //! TOP of this artifact's topology, so there is nothing above it to cascade into, and the leaf
 //! deliberately does not cascade down into its shells either.
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::{decode_semio_brep_diff_json, SemioBrepDiff};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::decode_semio_brep_diff_json;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{decode_semio_brep_mutation_json, SemioBrepMutation};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{decode_semio_brep_snapshot_json, SemioBrepSnapshot};
 use pack::value::ToValue;

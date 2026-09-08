@@ -78,7 +78,7 @@ fn decode_id3_text(data: &[u8]) -> String {
         Some(3) => String::from_utf8_lossy(&data[1..]).into_owned(),
         Some(1) | Some(2) if data.len() > 2 => {
             let body = &data[1..];
-            let units: Vec<u16> = body.chunks_exact(2).map(|c| u16::from_le_bytes([c[0], c[1]])).collect();
+            let units: Vec<u16> = body.as_chunks::<2>().0.iter().map(|c| u16::from_le_bytes([c[0], c[1]])).collect();
             String::from_utf16_lossy(&units)
         }
         _ => data.iter().map(|&b| b as char).collect(),

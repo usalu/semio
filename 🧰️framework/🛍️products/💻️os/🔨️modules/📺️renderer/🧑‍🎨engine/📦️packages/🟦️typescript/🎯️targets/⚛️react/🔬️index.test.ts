@@ -4,11 +4,37 @@ import { applyPatch } from "fast-json-patch";
 import { Layout } from "@semio-tech/ui-react";
 import { resolvePluginCanvasStatus, type PluginSupervisorState } from "../../../../🧱️elements/🐚️Shell/🟦️.tsx";
 import bootCanvasFixture from "../../../../🧱️elements/🐚️Shell/🧪️fixtures/🔣️.json";
-import { dispatchInvokeExtensionEffect, runInvokeExtensionEffect, tutorialInteractionSelectionActions } from "../../../../🧱️elements/🏛️ShellHost/🟦️.tsx";
+import {
+  dispatchInvokeExtensionEffect,
+  mountedGisMapProbeV1,
+  runInvokeExtensionEffect,
+  spaceArtifactCreationOwnerAcceptsStatus,
+  spaceArtifactCreationReadyOpening,
+  spaceArtifactCreationRequestFromAction,
+  tutorialInteractionSelectionActions,
+  type SpaceArtifactCreationOwnerV1,
+} from "../../../../🧱️elements/🏛️ShellHost/🟦️.tsx";
+import { EMPTY_APP_LABELS_OVERLAY, makeEffectDispatchOne, resolveDialogDefinition } from "../../../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import type { LoadedProgramState } from "../../../../🧱️elements/🐚️Shell/🟦️.tsx";
 import extensionInvocationFixture from "../../../../🧱️elements/🏛️ShellHost/🧪️fixtures/🔣️extension-invocation.json";
 import extensionInvocationSchema from "../../../../🧱️elements/🏛️ShellHost/🧪️fixtures/🧬️.schema.json";
+import mountedGisMapProbeFixture from "../../../../🧱️elements/🏛️ShellHost/🧪️fixtures/🔬️mounted-gis-map-probe-v1/🔣️.json";
+import mountedGisMapProbeSchema from "../../../../🧱️elements/🏛️ShellHost/🧪️fixtures/🔬️mounted-gis-map-probe-v1/🧬️.schema.json";
 import Ajv from "ajv";
+import Ajv2020 from "ajv/dist/2020.js";
+import deepEqual from "fast-deep-equal";
+import dialogOriginFixture from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🔣️.json";
+import dialogOriginSchema from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🧬️.schema.json";
+import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellEffectSourceIsCurrentV1, type ShellDialogOriginV1 } from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🟦️.ts";
+import admittedInstanceFixture from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🚪️opening/🔣️.json";
+import admittedInstanceSchema from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🚪️opening/🧬️.schema.json";
+import artifactCreationProgressFixture from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🌱️artifact-creation/🔣️.json";
+import artifactCreationProgressSchema from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🌱️artifact-creation/🧬️.schema.json";
+import { ARTIFACT_CREATION_PROGRESS_CAPACITY, ARTIFACT_CREATION_PROGRESS_TEXT_V1, ArtifactCreationCatalogNotice, ArtifactCreationProgressNotice, artifactCreationProgressLocaleV1, artifactCreationProgressRoleV1, artifactCreationProgressTerminalV1, reduceArtifactCreationProgressUiV1, type ArtifactCreationProgressOwnerV1 } from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🌱️artifact-creation/🏦️.tsx";
+import { OwnedShellDialog, type OwnedShellDialogProps } from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🌐️browser/🟦️.tsx";
+import tutorialRunFixture from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🎥️tutorial/🔣️.json";
+import tutorialRunSchema from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🎥️tutorial/🧬️.schema.json";
+import { OwnedTutorialRunV1 } from "../../../../🧱️elements/🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🎥️tutorial/🟦️.ts";
 import descriptorLoadFixture from "../../../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/📇️descriptor-load/🔣️.json";
 import descriptorLoadSchema from "../../../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/📇️descriptor-load/🧬️.schema.json";
 import { createInstance as createTranslationOracle } from "i18next";
@@ -24,7 +50,7 @@ import tutorialDocumentSchema from "../../../../../../../../../../🧰️framewo
 import boardSessionFixture from "../../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️fixtures/🔣️session-factory.json";
 import boardSessionSchema from "../../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️fixtures/🧬️.schema.json";
 import { tutorialSlice, validateTutorial } from "@semio-tech/ui-react";
-import type { TutorialDefinition, TutorialUiChange, TutorialUiSnapshot } from "@semio-tech/framework";
+import type { DialogDefinition, TutorialDefinition, TutorialUiChange, TutorialUiSnapshot } from "@semio-tech/framework";
 import presenceOverlayFixture from "../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️fixtures/👥️presence-overlay.json";
 import presenceOverlaySchema from "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️fixtures/🔣️.schema.json";
 import { createRequire } from "node:module";
@@ -32,6 +58,439 @@ import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolu
 import { decodeLocalInteractionCaptureJson, LOCAL_INTERACTION_CAPTURE_MAX_BYTES } from "@semio-tech/framework-replication";
 
 const { computeAccessibleName }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
+
+describe("catalog-resolved artifact creation kinds", () => {
+  const localized = (en: string, de: string) => ({ native: { en, de }, reuse: { en, de } });
+  const dialog: DialogDefinition = {
+    id: "createArtifact",
+    title: localized("Create Artifact", "Artefakt erstellen"),
+    args: [{ id: "kindChoice", label: localized("Kind", "Art"), required: true, schema: { kind: "string", options: [], format: { kind: "artifactKind", roles: ["editor"] } } }],
+    submitAction: "createArtifact",
+    submitLabel: localized("Create", "Erstellen"),
+  };
+  const manifests = [{
+    pluginId: "gis",
+    label: "GIS",
+    version: "1",
+    apps: [
+      { id: "gis-map-editor", role: "editor", dialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "*" }, label: localized("GIS Map", "GIS-Karte"), io: { documentSchema: "gis.map" } },
+      { id: "gis-map-viewer", role: "viewer", dialect: { artifactKind: "s.gis.viewer", standard: "1", subset: "*" }, label: localized("GIS Viewer", "GIS-Betrachter"), io: { documentSchema: "gis.map" } },
+    ],
+    workflows: [],
+    examples: [],
+  }];
+
+  it("projects only live catalog editor kinds into the ordinary dialog in the requested locale", () => {
+    const english = resolveDialogDefinition(dialog, EMPTY_APP_LABELS_OVERLAY, "native", "en", manifests);
+    const german = resolveDialogDefinition(dialog, EMPTY_APP_LABELS_OVERLAY, "native", "de", manifests);
+    expect(english.args[0]?.schema).toMatchObject({ kind: "string", options: [{ label: "GIS Map" }] });
+    expect(german.args[0]?.schema).toMatchObject({ kind: "string", options: [{ label: "GIS-Karte" }] });
+    const option = english.args[0]?.schema.kind === "string" ? english.args[0].schema.options[0] : undefined;
+    expect(option?.value).toBe('{"kindId":"s.gis.gismap","schema":"gis.map","dialect":{"artifactKind":"s.gis.gismap","standard":"1","subset":"*"},"label":{"en":"GIS Map","de":"GIS-Karte"}}');
+    expect(JSON.stringify(english)).not.toContain("s.gis.viewer");
+  });
+
+  it("uses only the selected trusted catalog projection and fails closed while it is unavailable", () => {
+    const selected = [{ kindId: "s.gis.gismap", schema: "s.gis.gismap", dialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "any" }, label: { en: "Shared GIS Map", de: "Gemeinsame GIS-Karte" } }];
+    const exact = resolveDialogDefinition(dialog, EMPTY_APP_LABELS_OVERLAY, "native", "de", manifests, selected);
+    const unavailable = resolveDialogDefinition(dialog, EMPTY_APP_LABELS_OVERLAY, "native", "en", manifests, []);
+    expect(exact.args[0]?.schema).toMatchObject({ kind: "string", options: [{ label: "Gemeinsame GIS-Karte" }] });
+    expect(JSON.stringify(exact)).not.toContain("s.gis.viewer");
+    expect(unavailable.args[0]?.schema).toMatchObject({ kind: "string", options: [] });
+  });
+});
+
+describe("Shell dialog origin", () => {
+  it("admits an explicit target handoff once and retires a target created after its source expired", async () => {
+    expect(new Ajv({ strict: true }).compile(admittedInstanceSchema)(admittedInstanceFixture)).toBe(true);
+    for (const row of admittedInstanceFixture.cases) {
+      let admitted = row.before;
+      const target = { instanceId: 9 };
+      const create = vi.fn(async () => { admitted = row.after; return target; });
+      const retire = vi.fn(async () => {});
+      const result = await createAdmittedShellInstanceV1(() => admitted, create, retire);
+      expect(deepEqual(result, target), row.id).toBe(row.before && row.after);
+      expect(result !== null, row.id).toBe(row.accepted);
+      expect(create, row.id).toHaveBeenCalledTimes(row.creates);
+      expect(retire, row.id).toHaveBeenCalledTimes(row.retires);
+      if (row.retires === 1) expect(retire).toHaveBeenCalledWith(target);
+    }
+    console.log("[DEBUG] Shell dialog origin: admitted-instance neutral=3 stale-target-retirement=1");
+  });
+
+  it("retires a spawned source independently of its still-visible primary presentation owner", async () => {
+    const source = dialogOriginFixture.owner;
+    const primary = { pluginId: "host", instanceId: 1, app: { id: "host", controllerId: "host" } };
+    const spawned = [{ pluginId: source.pluginId, appId: source.appId, instanceId: source.sessionInstanceId }];
+    for (const row of dialogOriginFixture.cases) {
+      const mounted = applyPatch(structuredClone(source), row.patch as Parameters<typeof applyPatch>[1]).newDocument;
+      expect(shellEffectSourceIsCurrentV1(source, mounted, primary, spawned), row.id).toBe(row.accepted);
+    }
+    expect(shellEffectSourceIsCurrentV1(source, source, primary, [])).toBe(false);
+    expect(shellEffectSourceIsCurrentV1(source, source, primary, [{ ...spawned[0]!, appId: "replacement" }])).toBe(false);
+    expect(shellEffectSourceIsCurrentV1(source, source, primary, [{ ...spawned[0]!, pluginId: "replacement" }])).toBe(false);
+    const applyEffects = vi.fn(async () => {});
+    let members = spawned;
+    let complete!: (response: { requestedEffects: readonly unknown[] }) => void;
+    const plugin = { handle: { handleAction: () => new Promise((done) => { complete = done; }) } } as unknown as LoadedProgramState;
+    const session = { pluginId: source.pluginId, instanceId: source.sessionInstanceId, app: { id: source.appId, controllerId: source.controllerId, modes: [], windowKinds: [], commands: [] }, viewState: {} } as unknown as Parameters<typeof makeEffectDispatchOne>[1];
+    const pending = makeEffectDispatchOne(plugin, session, applyEffects, () => shellEffectSourceIsCurrentV1(source, source, primary, members))("lateAction");
+    members = [];
+    complete({ requestedEffects: [{ navigate: { uri: "/wrong" } }, { setPanel: { panelJson: "{}" } }] });
+    await pending;
+    expect(applyEffects).not.toHaveBeenCalled();
+    console.log("[DEBUG] Shell dialog origin: removed-spawned-source effects=0 primary-retained=1");
+  });
+
+  it("keeps tutorial snapshots on their exact run and never restores into a replacement session", async () => {
+    expect(new Ajv({ strict: true }).compile(tutorialRunSchema)(tutorialRunFixture)).toBe(true);
+    for (const row of tutorialRunFixture.cases) {
+      let current = structuredClone(dialogOriginFixture.owner);
+      let epoch = 1;
+      const restore = vi.fn(async () => {});
+      let resolve!: (snapshot: { pack: Uint8Array; spr: Uint8Array }) => void;
+      const run = new OwnedTutorialRunV1("tour", dialogOriginFixture.owner, () => epoch === 1 && shellDialogOriginIsCurrentV1(dialogOriginFixture.owner, current), {
+        read: () => new Promise((done) => { resolve = done; }), restore,
+      });
+      const started = run.start();
+      let oracleCurrent = true;
+      let oracleClosed = false;
+      let oracleSnapshot = false;
+      let oracleStarted = false;
+      let oracleRestores = 0;
+      for (const event of row.events) {
+        if (event === "switch") {
+          current = applyPatch(current, [{ op: "replace", path: "/document/clientInstanceId", value: "client-b" }]).newDocument;
+          oracleCurrent = deepEqual(dialogOriginFixture.owner, current);
+        } else if (event === "replace") {
+          epoch = 2;
+          oracleCurrent = false;
+        } else if (event === "resolve") {
+          resolve({ pack: Uint8Array.of(1, 2), spr: Uint8Array.of(3) });
+          oracleStarted = oracleCurrent && !oracleClosed;
+          oracleSnapshot = oracleStarted;
+          expect(await started, row.id).toBe(oracleStarted);
+        } else {
+          if (!oracleClosed && oracleCurrent && oracleSnapshot) oracleRestores += 1;
+          oracleClosed = true;
+          await run.stop();
+        }
+      }
+      expect(await started, row.id).toBe(row.started);
+      expect(oracleRestores, row.id).toBe(row.restores);
+      expect(restore, row.id).toHaveBeenCalledTimes(row.restores);
+      await run.stop();
+      expect(restore, row.id).toHaveBeenCalledTimes(row.restores);
+      expect(run.isCurrent()).toBe(false);
+    }
+    console.log("[DEBUG] Shell dialog origin: tutorial-run neutral=5 replacement-restores=0");
+  });
+
+  it("remounts staged fields and rejects old callbacks before they can dispatch into or close a replacement", () => {
+    const a = { openingId: 1, dialogId: "createArtifact", origin: dialogOriginFixture.owner, seedArgs: { name: "A seed" } };
+    const b = { openingId: 2, dialogId: "createArtifact", origin: { ...dialogOriginFixture.owner, document: { ...dialogOriginFixture.owner.document, clientInstanceId: "client-b" } }, seedArgs: { name: "B seed" } };
+    let current: ShellDialogOriginV1 | null = a.origin;
+    let live: number | null = a.openingId;
+    const dispatch = vi.fn();
+    const props = (owner: typeof a): OwnedShellDialogProps => ({
+      owner,
+      dialog: {
+        id: "createArtifact", title: { native: { en: "Create Artifact", de: "Artefakt erstellen" } },
+        args: [{ id: "name", label: { native: { en: "Name", de: "Name" } }, required: true, schema: { kind: "string", options: [] } }],
+        submitAction: "createArtifact", submitLabel: { native: { en: "Create", de: "Erstellen" } }, cancelAction: "cancelArtifact",
+      },
+      renderField: (def, value, onChange) => createElement("input", { "aria-label": def.id, value: String(value ?? ""), onChange: (event: { target: { value: string } }) => onChange(event.target.value) }),
+      isCurrent: (origin) => shellDialogOriginIsCurrentV1(origin, current),
+      close: (openingId) => {
+        if (live !== openingId) return false;
+        live = null;
+        return true;
+      },
+      dispatch,
+    });
+    const firstCallbacks = OwnedShellDialog(props(a))!.props as { onSubmit: (args: Record<string, unknown>) => void; onCancel: () => void };
+    const view = render(createElement(OwnedShellDialog, props(a)));
+    fireEvent.change(view.getByRole("textbox", { name: "name" }), { target: { value: "A staged" } });
+    expect((view.getByRole("textbox", { name: "name" }) as HTMLInputElement).value).toBe("A staged");
+    current = b.origin;
+    live = b.openingId;
+    view.rerender(createElement(OwnedShellDialog, props(b)));
+    expect((view.getByRole("textbox", { name: "name" }) as HTMLInputElement).value).toBe("B seed");
+    firstCallbacks.onSubmit({ name: "A staged" });
+    firstCallbacks.onCancel();
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(live).toBe(b.openingId);
+    const secondCallbacks = OwnedShellDialog(props(b))!.props as { onSubmit: (args: Record<string, unknown>) => void };
+    current = null;
+    secondCallbacks.onSubmit({ name: "B stale" });
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(live).toBeNull();
+    current = b.origin;
+    live = b.openingId;
+    secondCallbacks.onSubmit({ name: "B accepted" });
+    secondCallbacks.onSubmit({ name: "B duplicate" });
+    expect(dispatch).toHaveBeenCalledExactlyOnceWith("createArtifact", b.origin, { name: "B accepted" });
+    view.unmount();
+    console.log("[DEBUG] Shell dialog origin: mounted staged-reset=1 stale-submit=2 stale-cancel=1 exact-once=1");
+  });
+
+  it("drops delayed effect replies and scheduled invocations after the owning mount retires", async () => {
+    let current = true;
+    let resolve!: (value: { requestedEffects: readonly unknown[] }) => void;
+    const handleAction = vi.fn(() => new Promise<{ requestedEffects: readonly unknown[] }>((done) => { resolve = done; }));
+    const plugin = { handle: { handleAction } } as unknown as LoadedProgramState;
+    const session = { pluginId: "space", instanceId: 7, app: { id: "space.editor", controllerId: "space.editor", windowKinds: [], commands: [], modes: [] }, viewState: {} } as unknown as Parameters<typeof makeEffectDispatchOne>[1];
+    const applyEffects = vi.fn(async () => {});
+    const invoke = makeEffectDispatchOne(plugin, session, applyEffects, () => current);
+    const pending = invoke("openCreateArtifact", {});
+    expect(handleAction).toHaveBeenCalledTimes(1);
+    current = false;
+    resolve({ requestedEffects: [{ openDialog: { dialogId: "createArtifact" } }] });
+    await pending;
+    await invoke("openCreateArtifact", {});
+    expect(applyEffects).not.toHaveBeenCalled();
+    expect(handleAction).toHaveBeenCalledTimes(1);
+    console.log("[DEBUG] Shell dialog origin: late-effect-reply=0 retired-scheduled-dispatch=0");
+  });
+
+  it("rejects every changed origin with the same result as the independent JSON Patch and equality oracle", () => {
+    expect(new Ajv({ strict: true }).compile(dialogOriginSchema)(dialogOriginFixture)).toBe(true);
+    for (const row of dialogOriginFixture.cases) {
+      const current = applyPatch(structuredClone(dialogOriginFixture.owner), row.patch as Parameters<typeof applyPatch>[1]).newDocument;
+      expect(deepEqual(dialogOriginFixture.owner, current), row.id).toBe(row.accepted);
+      expect(shellDialogOriginIsCurrentV1(dialogOriginFixture.owner, current), row.id).toBe(row.accepted);
+    }
+    expect(shellDialogOriginIsCurrentV1(dialogOriginFixture.owner, null)).toBe(false);
+    expect(shellDialogOriginIsCurrentV1(null, dialogOriginFixture.owner)).toBe(false);
+    console.log("[DEBUG] Shell dialog origin: neutral cases=11 exact-owner=1");
+  });
+
+  it("requires a unique exact mounted session and supports documentless dialogs without lending document authority", () => {
+    const source = dialogOriginFixture.owner;
+    const session = { pluginId: source.pluginId, instanceId: source.sessionInstanceId, app: { id: source.appId, controllerId: source.controllerId } };
+    const mount = { session, ...source.document };
+    expect(shellDialogOriginV1(session, [mount])).toEqual(source);
+    expect(shellDialogOriginV1(session, [mount, mount])).toBeNull();
+    expect(shellDialogOriginV1(null, [mount])).toBeNull();
+    const unmounted = shellDialogOriginV1(session, []);
+    expect(unmounted).toEqual({ ...source, document: null });
+    expect(shellDialogOriginIsCurrentV1(unmounted, structuredClone(unmounted))).toBe(true);
+    expect(shellDialogOriginIsCurrentV1(source, unmounted)).toBe(false);
+  });
+});
+
+describe("Space artifact creation host owner", () => {
+  const requestId = "1".repeat(32);
+  const choice = '{"kindId":"s.gis.gismap","schema":"s.gis.gismap","dialect":{"artifactKind":"s.gis.gismap","standard":"1","subset":"*"},"label":{"en":"GIS Map","de":"GIS-Karte"}}';
+  const owner: SpaceArtifactCreationOwnerV1 = {
+    requestId,
+    name: "Shared Map",
+    spaceId: "space-a",
+    kindId: "s.gis.gismap",
+    runtimeKey: "hub:space-a:index",
+    clientInstanceId: "client-a",
+    sessionInstanceId: 7,
+    opening: false,
+    cancelRequested: false,
+  };
+
+  it("forwards only the user intent and rejects presentation overposts or mismatched kinds", () => {
+    expect(spaceArtifactCreationRequestFromAction("os.create-space-artifact", { kindChoice: choice, name: "Shared Map" }, "space-a", requestId)).toEqual({
+      kind: "space-artifact-create",
+      requestId,
+      spaceId: "space-a",
+      kindId: "s.gis.gismap",
+      name: "Shared Map",
+    });
+    expect(spaceArtifactCreationRequestFromAction("os.create-space-artifact", { kindChoice: choice, name: "Shared Map", documentId: "forged" }, "space-a", requestId)).toBeNull();
+    expect(spaceArtifactCreationRequestFromAction("os.create-space-artifact", { kindChoice: choice.replaceAll("s.gis.gismap", "s.gis.viewer"), name: "Shared Map" }, "space-a", requestId)?.kindId).toBe("s.gis.viewer");
+    expect(spaceArtifactCreationRequestFromAction("os.create-space-artifact", { kindChoice: choice.replace('"kindId":"s.gis.gismap"', '"kindId":"forged"'), name: "Shared Map" }, "space-a", requestId)).toBeNull();
+  });
+
+  it("opens only an exact Ready tuple owned by the originating Space mount", () => {
+    const ready = {
+      kind: "space-artifact-creation-status" as const,
+      requestId,
+      spaceId: "space-a",
+      phase: "ready" as const,
+      ready: {
+        documentId: `artifact-${"2".repeat(32)}`,
+        kindId: "s.gis.gismap",
+        artifactSchema: "s.gis.gismap",
+        parentDialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "*" },
+      },
+    };
+    expect(spaceArtifactCreationOwnerAcceptsStatus(owner, ready)).toBe(true);
+    expect(spaceArtifactCreationOwnerAcceptsStatus(owner, { ...ready, requestId: "3".repeat(32) })).toBe(false);
+    expect(spaceArtifactCreationOwnerAcceptsStatus(owner, { ...ready, ready: { ...ready.ready, kindId: "s.draw.draw" } })).toBe(false);
+    expect(spaceArtifactCreationReadyOpening(ready)).toEqual({
+      artifactRef: "s.gis.gismap@1/*",
+      documentId: `artifact-${"2".repeat(32)}`,
+      spaceId: "space-a",
+      schema: "s.gis.gismap",
+    });
+    expect(spaceArtifactCreationReadyOpening({ kind: "space-artifact-creation-status", requestId, spaceId: "space-a", phase: "preparing" })).toBeNull();
+  });
+
+  it("retains exact sibling owners through one-shot cancellation and accepts a racing Ready", () => {
+    const progressOwner: ArtifactCreationProgressOwnerV1 = owner;
+    const sibling: ArtifactCreationProgressOwnerV1 = { ...progressOwner, requestId: "2".repeat(32), name: "Second Map" };
+    let state = reduceArtifactCreationProgressUiV1({}, { kind: "issued", owner: progressOwner });
+    state = reduceArtifactCreationProgressUiV1(state, { kind: "issued", owner: sibling });
+    const unchanged = state;
+    expect(reduceArtifactCreationProgressUiV1(state, { kind: "status", message: { kind: "space-artifact-creation-status", requestId: "3".repeat(32), spaceId: "space-a", phase: "failed" } })).toBe(unchanged);
+    expect(reduceArtifactCreationProgressUiV1(state, { kind: "status", message: { kind: "space-artifact-creation-status", requestId, spaceId: "foreign-space", phase: "failed" } })).toBe(unchanged);
+    state = reduceArtifactCreationProgressUiV1(state, { kind: "cancel-requested", requestId, spaceId: "space-a" });
+    expect(state[requestId]).toMatchObject({ phase: "accepted", cancelRequested: true });
+    expect(state[sibling.requestId]).toMatchObject({ phase: "accepted", cancelRequested: false });
+    expect(reduceArtifactCreationProgressUiV1(state, { kind: "cancel-requested", requestId, spaceId: "space-a" })).toBe(state);
+    const wrongKind = {
+      kind: "space-artifact-creation-status" as const,
+      requestId,
+      spaceId: "space-a",
+      phase: "ready" as const,
+      ready: { documentId: `artifact-${"4".repeat(32)}`, kindId: "s.draw.draw", artifactSchema: "s.draw.draw", parentDialect: { artifactKind: "s.draw.draw", standard: "1", subset: "*" } },
+    };
+    expect(reduceArtifactCreationProgressUiV1(state, { kind: "status", message: wrongKind })).toBe(state);
+    const ready = { ...wrongKind, ready: { ...wrongKind.ready, kindId: owner.kindId, artifactSchema: owner.kindId, parentDialect: { artifactKind: owner.kindId, standard: "1", subset: "*" } } };
+    state = reduceArtifactCreationProgressUiV1(state, { kind: "status", message: ready });
+    expect(state[requestId]).toMatchObject({ phase: "ready", cancelRequested: true });
+    expect(state[sibling.requestId]).toMatchObject({ phase: "accepted", cancelRequested: false });
+    state = reduceArtifactCreationProgressUiV1(state, { kind: "cleared", requestId });
+    expect(state[requestId]).toBeUndefined();
+    expect(state[sibling.requestId]).toBeDefined();
+  });
+
+  it("bounds presentation state without evicting a live retained owner", () => {
+    let state: ReturnType<typeof reduceArtifactCreationProgressUiV1> = {};
+    const owners = Array.from({ length: ARTIFACT_CREATION_PROGRESS_CAPACITY }, (_, index) => ({
+      ...owner,
+      requestId: index.toString(16).padStart(32, "0"),
+      name: `Map ${index}`,
+    }));
+    for (const candidate of owners) state = reduceArtifactCreationProgressUiV1(state, { kind: "issued", owner: candidate });
+    const full = state;
+    const replacement = { ...owner, requestId: "f".repeat(32), name: "Replacement" };
+    expect(reduceArtifactCreationProgressUiV1(state, { kind: "issued", owner: replacement })).toBe(full);
+    state = reduceArtifactCreationProgressUiV1(state, {
+      kind: "status",
+      message: { kind: "space-artifact-creation-status", requestId: owners[0]!.requestId, spaceId: owner.spaceId, phase: "failed" },
+    });
+    state = reduceArtifactCreationProgressUiV1(state, { kind: "issued", owner: replacement });
+    expect(Object.keys(state)).toHaveLength(ARTIFACT_CREATION_PROGRESS_CAPACITY);
+    expect(state[owners[0]!.requestId]).toBeUndefined();
+    expect(state[replacement.requestId]).toMatchObject({ phase: "accepted", cancelRequested: false });
+  });
+
+  it("renders the schema-owned English and German lifecycle without inventing numeric progress", async () => {
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(artifactCreationProgressSchema);
+    expect(validate(artifactCreationProgressFixture), JSON.stringify(validate.errors)).toBe(true);
+    expect(deepEqual(artifactCreationProgressFixture.locales, ARTIFACT_CREATION_PROGRESS_TEXT_V1)).toBe(true);
+    const oracle = createTranslationOracle();
+    await oracle.init({ fallbackLng: false, resources: {
+      en: { translation: artifactCreationProgressFixture.locales.en },
+      de: { translation: artifactCreationProgressFixture.locales.de },
+    } });
+    for (const row of artifactCreationProgressFixture.cases) {
+      const phase = row.phase as keyof typeof ARTIFACT_CREATION_PROGRESS_TEXT_V1.en.phases;
+      const locale = row.locale as "en" | "de";
+      expect(ARTIFACT_CREATION_PROGRESS_TEXT_V1[locale].phases[phase], row.id).toBe(oracle.t(`phases.${phase}`, { lng: locale }));
+      expect(artifactCreationProgressRoleV1(phase), row.id).toBe(row.role);
+      expect(artifactCreationProgressTerminalV1(phase), row.id).toBe(["ready", "indeterminate", "failed", "cancelled"].includes(phase));
+      const view = render(createElement(ArtifactCreationProgressNotice, {
+        state: { ...owner, phase, cancelRequested: row.cancelRequested },
+        locale,
+        onCancel: () => {},
+      }));
+      const region = view.getByRole(row.role, { name: `${artifactCreationProgressFixture.locales[locale].heading}: Shared Map` });
+      expect(computeAccessibleName(region), row.id).toBe(`${artifactCreationProgressFixture.locales[locale].heading}: Shared Map`);
+      expect(region.getAttribute("aria-live"), row.id).toBe(row.live);
+      expect(region.querySelector("progress"), row.id).toBeNull();
+      const button = region.querySelector("button");
+      if (artifactCreationProgressTerminalV1(phase)) expect(button, row.id).toBeNull();
+      else expect(button?.hasAttribute("disabled"), row.id).toBe(row.cancelRequested);
+      view.unmount();
+    }
+    for (const row of artifactCreationProgressFixture.catalogCases) {
+      const locale = row.locale as "en" | "de";
+      const phase = row.phase as "loading" | "ready" | "unavailable";
+      expect(ARTIFACT_CREATION_PROGRESS_TEXT_V1[locale].catalog[phase], row.id).toBe(oracle.t(`catalog.${phase}`, { lng: locale }));
+      const view = render(createElement(ArtifactCreationCatalogNotice, {
+        status: { kind: "space-artifact-creation-catalog-status", clientInstanceId: "12345678-1234-4123-8123-123456789abc", spaceId: "space-a", phase },
+        locale,
+      }));
+      const region = view.getByRole(row.role, { name: artifactCreationProgressFixture.locales[locale].catalog[phase] });
+      expect(region.getAttribute("aria-live"), row.id).toBe(row.live);
+      expect(region.getAttribute("aria-busy"), row.id).toBe(phase === "loading" ? "true" : null);
+      view.unmount();
+    }
+    for (const locale of artifactCreationProgressFixture.unsupportedLocales) {
+      expect(artifactCreationProgressLocaleV1(locale), locale).toBeNull();
+      expect(renderToStaticMarkup(createElement(ArtifactCreationProgressNotice, { state: { ...owner, phase: "accepted", cancelRequested: false }, locale, onCancel: () => {} })), locale).toBe("");
+    }
+  });
+
+  it("dispatches cancel once with the exact retained owner", () => {
+    const onCancel = vi.fn();
+    const view = render(createElement(ArtifactCreationProgressNotice, { state: { ...owner, phase: "preparing", cancelRequested: false }, locale: "de", onCancel }));
+    fireEvent.click(view.getByRole("button", { name: "Erstellung abbrechen: Shared Map" }));
+    expect(onCancel).toHaveBeenCalledExactlyOnceWith(requestId, "space-a");
+    view.rerender(createElement(ArtifactCreationProgressNotice, { state: { ...owner, phase: "preparing", cancelRequested: true }, locale: "de", onCancel }));
+    fireEvent.click(view.getByRole("button", { name: "Erstellung abbrechen: Shared Map" }));
+    expect(onCancel).toHaveBeenCalledTimes(1);
+    view.unmount();
+  });
+});
+
+describe("mounted GIS map probe", () => {
+  it("projects only exact acknowledged identity and region ids from the retained Shell store", async () => {
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(mountedGisMapProbeSchema);
+    expect(validate(mountedGisMapProbeFixture)).toBe(true);
+    const { encodePackValue } = await import("@semio-tech/framework-os");
+    const source = mountedGisMapProbeFixture.source;
+    const storeFor = (kind: "tiled-map" | "canvas-2d", regions: readonly unknown[], bytes?: readonly number[]): UiDocumentStore => {
+      const store = new UiDocumentStore(source.surface);
+      const node: UiNodeRecord = {
+        id: 0,
+        key: "map-root",
+        component: { type: "surface", kind, docSchema: `${kind}@1`, doc: { bytes: Array.from(bytes ?? encodePackValue({ regions })) }, bindings: [] },
+        layout: { kind: "leaf", width: "fill", height: "fill" },
+        style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" },
+        activity: "idle",
+        disabled: false,
+        transition: null,
+        accessibility: { label: null, description: null, live: "off", shortcut: null, hidden: false },
+        bindings: [],
+        menu: null,
+        children: [],
+      };
+      expect(store.applyPatch({ surface: source.surface, baseRevision: 0, revision: 1, ops: [{ type: "upsert", ...node }, { type: "setRoot", id: 0 }] })).toEqual({ ok: true });
+      return store;
+    };
+    const retained = {
+      scope: source.scope,
+      clientInstanceId: source.clientInstanceId,
+      activationGeneration: source.activationGeneration,
+      verifiedSurfaceId: source.verifiedSurfaceId,
+      catalogGenerationId: source.catalogGenerationId,
+      componentSha256: source.componentSha256,
+      descriptorSha256: source.descriptorSha256,
+      browserActorSha256: source.browserActorSha256,
+      uiRevision: source.uiRevision,
+      sessionInstanceId: 9,
+      windowKindId: source.surface,
+      store: storeFor("tiled-map", source.regions),
+    };
+    const projected = mountedGisMapProbeV1(retained);
+    expect(projected).toEqual(mountedGisMapProbeFixture.expected);
+    expect(deepEqual(projected, mountedGisMapProbeFixture.expected)).toBe(true);
+    expect(mountedGisMapProbeV1(null)).toBeNull();
+    expect(mountedGisMapProbeV1({ ...retained, uiRevision: 2 })).toBeNull();
+    expect(mountedGisMapProbeV1({ ...retained, store: storeFor("canvas-2d", source.regions) })).toBeNull();
+    expect(mountedGisMapProbeV1({ ...retained, store: storeFor("tiled-map", [], [0xff]) })).toBeNull();
+    expect(mountedGisMapProbeV1({ ...retained, store: storeFor("tiled-map", [source.regions[0], source.regions[0]]) })).toBeNull();
+  });
+});
 
 //#region 🔁️ExtensionInvocation
 describe("extension invocation completion ownership", () => {
@@ -1125,6 +1584,7 @@ describe("shell store reducer", () => {
     publishInteractionSelection: (selection: ShellState["interaction"]["selection"]) => void = () => {},
   ): import("../../../../🧱️elements/🛠️ShellHelpers/🟦️.tsx").TutorialUiBridgeContext => ({
     session: null,
+    restoreDialog: () => null,
     appLabelsOverlay: {
       windowKindLabels: {}, panelTabLabels: {}, modeLabels: {}, actionLabels: {}, utilityLabels: {}, exampleLabels: {}, actionArgLabels: {}, dialogLabels: {}, introductionLabels: {}, groupLabels: {},
     },
@@ -1209,13 +1669,17 @@ describe("shell store reducer", () => {
   it("opens, replaces, and closes a dialog via SET_DIALOG without touching unrelated slices", () => {
     const state = baseState();
     expect(state.overlays.dialog).toBeNull();
-    const opened = shellReducer(state, { type: "SET_DIALOG", value: { dialogId: "addObject", seedArgs: { objectKind: "Object" } } });
-    expect(opened.overlays.dialog).toEqual({ dialogId: "addObject", seedArgs: { objectKind: "Object" } });
+    const first = { openingId: 1, dialogId: "addObject", origin: dialogOriginFixture.owner, seedArgs: { objectKind: "Object" } };
+    const opened = shellReducer(state, { type: "SET_DIALOG", value: first });
+    expect(opened.overlays.dialog).toEqual(first);
     expect(opened.layout).toBe(state.layout);
     expect(opened.pluginRuntime).toBe(state.pluginRuntime);
-    const replaced = shellReducer(opened, { type: "SET_DIALOG", value: { dialogId: "confirmDelete" } });
-    expect(replaced.overlays.dialog).toEqual({ dialogId: "confirmDelete" });
-    const closed = shellReducer(replaced, { type: "SET_DIALOG", value: null });
+    const second = { openingId: 2, dialogId: "confirmDelete", origin: dialogOriginFixture.owner };
+    const replaced = shellReducer(opened, { type: "SET_DIALOG", value: second });
+    expect(replaced.overlays.dialog).toEqual(second);
+    const staleClose = shellReducer(replaced, { type: "CLOSE_DIALOG", openingId: first.openingId });
+    expect(staleClose.overlays).toBe(replaced.overlays);
+    const closed = shellReducer(staleClose, { type: "CLOSE_DIALOG", openingId: second.openingId });
     expect(closed.overlays.dialog).toBeNull();
   });
 
@@ -1423,7 +1887,7 @@ describe("shell store reducer", () => {
         treeOpenStates: { "catalogue.section": true },
         activeUtilityByWindowId: { "puzzle3d-main": "transform" },
         activeToolId: "fill",
-        openDialogId: "addObject",
+        dialog: { openingId: 3, dialogId: "addObject", origin: dialogOriginFixture.owner },
         commandPanelOpen: true,
       },
     });
@@ -1432,7 +1896,7 @@ describe("shell store reducer", () => {
     expect(snapshot.layout.treeOpenStates).toEqual({ "catalogue.section": true });
     expect(snapshot.actionPane.activeUtilityByWindowId).toEqual({ "puzzle3d-main": "transform" });
     expect(snapshot.actionPane.activeToolId).toBe("fill");
-    expect(snapshot.overlays.dialog).toEqual({ dialogId: "addObject" });
+    expect(snapshot.overlays.dialog).toEqual({ openingId: 3, dialogId: "addObject", origin: dialogOriginFixture.owner });
     expect(snapshot.overlays.searchOpen).toBe(true);
     expect(snapshot.interaction).toBe(state.interaction);
     expect(snapshot.pluginRuntime).toBe(state.pluginRuntime);
@@ -1900,10 +2364,10 @@ describe("framework plugin runtime", () => {
   it("fetchDescriptorManifest refuses a missing descriptor and surfaces a published one", async () => {
     const originalFetch = globalThis.fetch;
     try {
-      globalThis.fetch = (async () => ({ ok: false, status: 404 })) as unknown as typeof fetch;
+      globalThis.fetch = (async () => new Response(null, { status: 404 })) as typeof fetch;
       await expect(fetchDescriptorManifest("mock", "/🔌️plugin-modules/mock/index.js")).rejects.toThrow("plugin.descriptor-unavailable");
 
-      globalThis.fetch = (async () => ({ ok: true, json: async () => ({ manifest: { pluginId: "mock", label: "Mock", version: "1.0.0", apps: [{ id: "main" }] } }) })) as unknown as typeof fetch;
+      globalThis.fetch = (async () => new Response(JSON.stringify({ manifest: { pluginId: "mock", label: "Mock", version: "1.0.0", apps: [{ id: "main" }] } }), { headers: { "content-type": "application/json" } })) as typeof fetch;
       const real = await fetchDescriptorManifest("mock", "/🔌️plugin-modules/mock/index.js");
       expect(real).toEqual({ pluginId: "mock", label: "Mock", version: "1.0.0", apps: [{ id: "main" }] });
     } finally {

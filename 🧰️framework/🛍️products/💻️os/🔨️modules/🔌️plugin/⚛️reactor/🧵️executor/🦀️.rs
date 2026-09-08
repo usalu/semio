@@ -295,9 +295,7 @@ impl ReactorExecutor {
                 slot.task.take().map(|task| (index, slot.generation, task))
             } else if inner.live != 0 {
                 return ReactorTaskStep::Blocked { reason: "reactor executor shutdown cursor lost a live task owner" };
-            } else if inner.free.pop_front().is_some() {
-                return ReactorTaskStep::Pending { processed_units: 1, processed_bytes: 0 };
-            } else if inner.slots.pop_back().is_some() {
+            } else if inner.free.pop_front().is_some() || inner.slots.pop_back().is_some() {
                 return ReactorTaskStep::Pending { processed_units: 1, processed_bytes: 0 };
             } else {
                 return ReactorTaskStep::Complete;

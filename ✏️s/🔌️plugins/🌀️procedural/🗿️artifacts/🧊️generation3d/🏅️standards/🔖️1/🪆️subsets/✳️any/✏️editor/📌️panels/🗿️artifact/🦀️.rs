@@ -49,7 +49,7 @@ pub fn render(fixture: &FlowFixture, labels: &Generation3dLabels) -> semio_frame
 mod tests {
     use super::*;
     use crate::editor::generation3d::testkit::{app, render as render_body};
-    use semio_framework_plugin::PluginApp;
+    
 
     #[semio_framework_async_macros::async_test]
     async fn document_lists_widgets() {

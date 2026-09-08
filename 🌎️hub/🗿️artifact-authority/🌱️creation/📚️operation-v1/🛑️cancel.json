@@ -1,0 +1,67 @@
+{
+  "cases": [
+    {
+      "state": "accepted",
+      "expectedRevision": 1,
+      "observedAtMs": 1002,
+      "accepted": true,
+      "phase": "cancelled"
+    },
+    {
+      "state": "prepared",
+      "expectedRevision": 1,
+      "observedAtMs": 1002,
+      "accepted": true,
+      "phase": "cancelled"
+    },
+    {
+      "state": "prepared",
+      "expectedRevision": 2,
+      "observedAtMs": 1002,
+      "accepted": true,
+      "phase": "cancelled"
+    },
+    {
+      "state": "prepared",
+      "expectedRevision": 3,
+      "observedAtMs": 1002,
+      "accepted": false,
+      "phase": null
+    },
+    {
+      "state": "prepared",
+      "expectedRevision": 0,
+      "observedAtMs": 1002,
+      "accepted": false,
+      "phase": null
+    },
+    {
+      "state": "prepared",
+      "expectedRevision": 1,
+      "observedAtMs": 1000,
+      "accepted": false,
+      "phase": null
+    },
+    {
+      "state": "committed",
+      "expectedRevision": 1,
+      "observedAtMs": 1003,
+      "accepted": true,
+      "phase": "ready"
+    },
+    {
+      "state": "cancelled",
+      "expectedRevision": 1,
+      "observedAtMs": 1002,
+      "accepted": true,
+      "phase": "cancelled"
+    },
+    {
+      "state": "failed",
+      "expectedRevision": 1,
+      "observedAtMs": 1002,
+      "accepted": true,
+      "phase": "failed"
+    }
+  ]
+}

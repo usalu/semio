@@ -233,7 +233,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_annex_round_trips() {
+    async fn change_annex_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
         let after = round_trip(&base, &mutation);
@@ -241,7 +241,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn update_member_properties_round_trips() {
+    async fn update_member_properties_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateMemberProperties(update_member_properties::UpdateMemberProperties {
             new_n_ed_kn: 999.0,
@@ -271,7 +271,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn update_fire_inputs_round_trips() {
+    async fn update_fire_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateFireInputs(update_fire_inputs::UpdateFireInputs {
             new_fire_thickness_mm: 999.0,
@@ -289,7 +289,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn update_cold_formed_inputs_round_trips() {
+    async fn update_cold_formed_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateColdFormedInputs(update_cold_formed_inputs::UpdateColdFormedInputs {
             new_cf_b_bar_mm: 999.0,
@@ -309,7 +309,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn update_stainless_inputs_round_trips() {
+    async fn update_stainless_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateStainlessInputs(update_stainless_inputs::UpdateStainlessInputs { new_stainless_m_ed_knm: 999.0, new_stainless_w_pl_mm3: 999.0, new_stainless_f_y_mpa: 999.0 });
         let after = round_trip(&base, &mutation);
@@ -319,7 +319,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn update_plated_inputs_round_trips() {
+    async fn update_plated_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdatePlatedInputs(update_plated_inputs::UpdatePlatedInputs { new_plated_lambda_p: 999.0, new_plated_sigma_ed_mpa: 999.0 });
         let after = round_trip(&base, &mutation);
@@ -328,7 +328,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn update_silo_shell_inputs_round_trips() {
+    async fn update_silo_shell_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateSiloShellInputs(update_silo_shell_inputs::UpdateSiloShellInputs {
             new_silo_t_mm: 999.0,
@@ -348,7 +348,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn update_bolt_inputs_round_trips() {
+    async fn update_bolt_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateBoltInputs(update_bolt_inputs::UpdateBoltInputs {
             new_bolt_f_ed_kn: 999.0,
@@ -376,7 +376,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn update_weld_inputs_round_trips() {
+    async fn update_weld_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateWeldInputs(update_weld_inputs::UpdateWeldInputs { new_weld_a_mm: 999.0, new_weld_l_mm: 999.0, new_weld_f_u_mpa: 999.0, new_weld_steel_grade: "changed".to_string(), new_weld_f_ed_kn: 999.0 });
         let after = round_trip(&base, &mutation);
@@ -388,7 +388,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn update_fatigue_inputs_round_trips() {
+    async fn update_fatigue_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateFatigueInputs(update_fatigue_inputs::UpdateFatigueInputs { new_delta_sigma_mpa: 999.0, new_fatigue_category: 9, new_fatigue_method: "changed".to_string() });
         let after = round_trip(&base, &mutation);
@@ -398,7 +398,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn update_through_thickness_inputs_round_trips() {
+    async fn update_through_thickness_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateThroughThicknessInputs(update_through_thickness_inputs::UpdateThroughThicknessInputs { new_t10_steel_subgrade: "changed".to_string(), new_t10_actual_thickness_mm: 999.0, new_t10_t_ed_c: 999.0 });
         let after = round_trip(&base, &mutation);
@@ -408,7 +408,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn update_tension_component_inputs_round_trips() {
+    async fn update_tension_component_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation =
             En1993Mutation::UpdateTensionComponentInputs(update_tension_component_inputs::UpdateTensionComponentInputs { new_tension_component_f_uk_kn: 999.0, new_tension_component_f_k_kn: 999.0, new_tension_component_n_ed_kn: 999.0 });
@@ -419,7 +419,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn update_hss_inputs_round_trips() {
+    async fn update_hss_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateHssInputs(update_hss_inputs::UpdateHssInputs { new_hss_w_el_mm3: 999.0, new_hss_f_y_mpa: 999.0, new_hss_section_class: 9, new_hss_m_ed_knm: 999.0 });
         let after = round_trip(&base, &mutation);
@@ -430,7 +430,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn update_bridge_inputs_round_trips() {
+    async fn update_bridge_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateBridgeInputs(update_bridge_inputs::UpdateBridgeInputs { new_bridge_lambda: 999.0, new_bridge_phi_2: 999.0, new_bridge_delta_sigma_p_mpa: 999.0 });
         let after = round_trip(&base, &mutation);
@@ -440,7 +440,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn update_tower_inputs_round_trips() {
+    async fn update_tower_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateTowerInputs(update_tower_inputs::UpdateTowerInputs { new_tower_wind_factor: 999.0, new_tower_n_ed_kn: 999.0 });
         let after = round_trip(&base, &mutation);
@@ -449,7 +449,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn update_pile_inputs_round_trips() {
+    async fn update_pile_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdatePileInputs(update_pile_inputs::UpdatePileInputs { new_pile_sigma_mpa: 999.0, new_pile_k_red: 999.0, new_pile_n_ed_kn: 999.0 });
         let after = round_trip(&base, &mutation);
@@ -459,7 +459,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn update_crane_inputs_round_trips() {
+    async fn update_crane_inputs_round_trips() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::UpdateCraneInputs(update_crane_inputs::UpdateCraneInputs { new_crane_f_z_ed_kn: 999.0, new_crane_wheel_contact_length_mm: 999.0, new_crane_dispersion_mm: 999.0, new_crane_t_w_mm: 999.0 });
         let after = round_trip(&base, &mutation);
@@ -470,7 +470,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_annex_diff_is_sparse() {
+    async fn change_annex_diff_is_sparse() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
         let outcome = mutation.diff(&base);
@@ -482,7 +482,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn semantic_kinds_cover_every_variant() {
+    async fn semantic_kinds_cover_every_variant() {
         assert_eq!(En1993Mutation::kinds().len(), 17);
         let mutation = En1993Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
         assert_eq!(mutation.semantics().kind, "change-annex");
@@ -518,39 +518,39 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "🌍️change-annex/🧪️tests/🌐️switches-the-national-annex-from-de-to-en/🦀️.rs"]
+    #[path = "🌍️change-annex/🧪️tests/🌐️switches-the-5142ef/🦀️.rs"]
     mod tests_change_annex_switches_the_national_annex_from_de_to_en;
-    #[path = "🔩️update-bolt-inputs/🧪️tests/🔩️moves-the-connection-to-four-m24-grade-10-9-bolts/🦀️.rs"]
+    #[path = "🔩️update-bolt-inputs/🧪️tests/🔩️moves-the-aa5f6d/🦀️.rs"]
     mod tests_update_bolt_inputs_moves_the_connection_to_four_m24_grade_10_9_bolts;
-    #[path = "🌉️update-bridge-inputs/🧪️tests/🌉️raises-the-bridge-damage-equivalence-and-dynamic-factors/🦀️.rs"]
+    #[path = "🌉️update-bridge-inputs/🧪️tests/t030/🦀️.rs"]
     mod tests_update_bridge_inputs_raises_the_bridge_damage_equivalence_and_dynamic_factors;
-    #[path = "🥶️update-cold-formed-inputs/🧪️tests/↪️thickens-the-cold-formed-flange-and-reverses-its-stress-gradient/🦀️.rs"]
+    #[path = "🥶️update-cold-formed-inputs/🧪️tests/↪️thicker-flange/🦀️.rs"]
     mod tests_update_cold_formed_inputs_thickens_the_cold_formed_flange_and_reverses_its_stress_gradient;
-    #[path = "🏗️update-crane-inputs/🧪️tests/🏋️widens-the-crane-wheel-contact-patch-under-a-heavier-wheel/🦀️.rs"]
+    #[path = "🏗️update-crane-inputs/🧪️tests/t031/🦀️.rs"]
     mod tests_update_crane_inputs_widens_the_crane_wheel_contact_patch_under_a_heavier_wheel;
-    #[path = "🔁️update-fatigue-inputs/🧪️tests/🔁️drops-to-detail-category-56-under-a-safe-life-assessment/🦀️.rs"]
+    #[path = "🔁️update-fatigue-inputs/🧪️tests/t033/🦀️.rs"]
     mod tests_update_fatigue_inputs_drops_to_detail_category_56_under_a_safe_life_assessment;
-    #[path = "🔥️update-fire-inputs/🧪️tests/🧯️raises-the-fire-protection-to-r90/🦀️.rs"]
+    #[path = "🔥️update-fire-inputs/🧪️tests/🧯️raises-the-fire-17846d/🦀️.rs"]
     mod tests_update_fire_inputs_raises_the_fire_protection_to_r90;
-    #[path = "⬜️update-hss-inputs/🧪️tests/⬜️reclassifies-the-hollow-section-to-class-3-in-s355/🦀️.rs"]
+    #[path = "⬜️update-hss-inputs/🧪️tests/⬜️reclassifies-the-c62eb3/🦀️.rs"]
     mod tests_update_hss_inputs_reclassifies_the_hollow_section_to_class_3_in_s355;
-    #[path = "📊️update-member-properties/🧪️tests/🏋️re-grades-the-base-member-to-s460-under-a-heavier-load/🦀️.rs"]
+    #[path = "📊️update-member-properties/🧪️tests/t032/🦀️.rs"]
     mod tests_update_member_properties_re_grades_the_base_member_to_s460_under_a_heavier_load;
-    #[path = "🪵️update-pile-inputs/🧪️tests/🔨️derates-the-driven-pile-for-hard-driving/🦀️.rs"]
+    #[path = "🪵️update-pile-inputs/🧪️tests/🔨️derates-the-56d04b/🦀️.rs"]
     mod tests_update_pile_inputs_derates_the_driven_pile_for_hard_driving;
-    #[path = "🧱️update-plated-inputs/🧪️tests/📈️makes-the-plate-panel-more-slender-and-more-stressed/🦀️.rs"]
+    #[path = "🧱️update-plated-inputs/🧪️tests/📈️makes-the-plate-42337a/🦀️.rs"]
     mod tests_update_plated_inputs_makes_the_plate_panel_more_slender_and_more_stressed;
-    #[path = "🛢️update-silo-shell-inputs/🧪️tests/🛢️deepens-the-silo-and-thickens-its-shell/🦀️.rs"]
+    #[path = "🛢️update-silo-shell-inputs/🧪️tests/🛢️deepens-the-silo-aefd4c/🦀️.rs"]
     mod tests_update_silo_shell_inputs_deepens_the_silo_and_thickens_its_shell;
-    #[path = "✨️update-stainless-inputs/🧪️tests/✨️upsizes-the-stainless-section-to-a-duplex-grade/🦀️.rs"]
+    #[path = "✨️update-stainless-inputs/🧪️tests/✨️upsizes-the-b45fb8/🦀️.rs"]
     mod tests_update_stainless_inputs_upsizes_the_stainless_section_to_a_duplex_grade;
-    #[path = "🪢️update-tension-component-inputs/🧪️tests/📉️derates-the-tension-rod-to-a-400-kn-characteristic-strength/🦀️.rs"]
+    #[path = "🪢️update-tension-component-inputs/🧪️tests/📉️rod-400/🦀️.rs"]
     mod tests_update_tension_component_inputs_derates_the_tension_rod_to_a_400_kn_characteristic_strength;
-    #[path = "↕️update-through-thickness-inputs/🧪️tests/🥶️upgrades-the-subgrade-to-k2-for-a-thicker-plate-at-minus-20c/🦀️.rs"]
+    #[path = "↕️update-through-thickness-inputs/🧪️tests/🥶️subgrade-993225/🦀️.rs"]
     mod tests_update_through_thickness_inputs_upgrades_the_subgrade_to_k2_for_a_thicker_plate_at_minus_20c;
-    #[path = "🗼️update-tower-inputs/🧪️tests/🌬️raises-the-tower-wind-factor-and-leg-force/🦀️.rs"]
+    #[path = "🗼️update-tower-inputs/🧪️tests/🌬️raises-the-tower-cb6721/🦀️.rs"]
     mod tests_update_tower_inputs_raises_the_tower_wind_factor_and_leg_force;
-    #[path = "🧲️update-weld-inputs/🧪️tests/🧲️lengthens-the-fillet-weld-and-re-grades-it-to-s460/🦀️.rs"]
+    #[path = "🧲️update-weld-inputs/🧪️tests/🧲️lengthens-the-a4acee/🦀️.rs"]
     mod tests_update_weld_inputs_lengthens_the_fillet_weld_and_re_grades_it_to_s460;
 }
 //#endregion 🧪️FixtureTests

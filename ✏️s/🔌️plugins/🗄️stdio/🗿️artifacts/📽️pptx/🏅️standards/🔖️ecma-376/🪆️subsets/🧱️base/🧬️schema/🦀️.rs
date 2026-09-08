@@ -613,7 +613,6 @@ mod tests {
         members
     }
 
-    #[track_caller]
     async fn assert_exact_export(snapshot: &PptxSnapshot, expected: &[u8]) {
         let actual = encode_pptx(snapshot).expect("export exact fixture");
         if actual != expected {

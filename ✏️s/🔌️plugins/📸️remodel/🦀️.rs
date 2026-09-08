@@ -64,12 +64,12 @@ mod surface_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn remodeling_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::remodeling::RemodelingViewer>();
+        assert_viewer_never_mutates::<crate::viewer::remodeling::RemodelingViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn remodeling_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::remodeling::RemodelingPlayApp, crate::viewer::remodeling::RemodelingViewer>();
+        assert_editor_and_viewer_share_dialect::<crate::editor::remodeling::RemodelingPlayApp, crate::viewer::remodeling::RemodelingViewer>().await;
     }
 }
 //#endregion 🧪️Tests

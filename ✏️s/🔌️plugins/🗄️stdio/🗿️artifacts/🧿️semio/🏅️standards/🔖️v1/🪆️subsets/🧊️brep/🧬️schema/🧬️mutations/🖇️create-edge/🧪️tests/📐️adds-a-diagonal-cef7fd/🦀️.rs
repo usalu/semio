@@ -4,7 +4,7 @@
 //! `mutation.duplicate-id` and that is the ONLY guard — note there is deliberately no
 //! referential-integrity check on `start_vertex`/`end_vertex` here, unlike `🕸️graph`'s own
 //! `create-edge`. The diff is the `edges` triple's `added` arm alone.
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::{decode_semio_brep_diff_json, SemioBrepDiff};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::decode_semio_brep_diff_json;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{decode_semio_brep_mutation_json, SemioBrepMutation};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{decode_semio_brep_snapshot_json, SemioBrepSnapshot};
 use pack::value::ToValue;

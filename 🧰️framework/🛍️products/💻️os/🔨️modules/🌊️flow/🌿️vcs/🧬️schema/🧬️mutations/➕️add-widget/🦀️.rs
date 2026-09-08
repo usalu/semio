@@ -1,16 +1,12 @@
 //! ➕️ Add Widget direct payload and owned behavior.
 use super::super::{FlowFixture, FlowDiff, FlowDelta, FlowCollectionDelta, FlowMutation, Widget};
 use crate::os_spr::{MutationKind, MutationOutcome, SemanticDescriptor, Identified};
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧬️Payload
-/// 🔮️ `serde` is TEST-ONLY — see `ReplaceFlowFixture`'s docstring; `widget: Widget` is the same seam.
+/// 🔮️ First-party Add Widget payload.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, crate::os_dsl::MutationLeaf)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "add-widget")]
 pub struct AddWidget { pub index: u32, #[dsl(block)] pub widget: Widget }

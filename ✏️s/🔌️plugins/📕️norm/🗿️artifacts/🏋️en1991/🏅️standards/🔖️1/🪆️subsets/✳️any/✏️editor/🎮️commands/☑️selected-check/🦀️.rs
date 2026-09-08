@@ -32,7 +32,7 @@ mod tests {
     use semio_framework_plugin::HistoryView;
 
     #[semio_framework_async_macros::async_test]
-    fn handle_emits_only_a_config_operation() {
+    async fn handle_emits_only_a_config_operation() {
         let projection = En1991Snapshot::default();
         let config = NormConfig::default();
         let emit = handle(&SetSelectedCheckIndex { index: Some(4) }, &ArtifactView::new(&projection, &HistoryView::empty()), &ConfigView { snapshot: &config }).expect("handle");

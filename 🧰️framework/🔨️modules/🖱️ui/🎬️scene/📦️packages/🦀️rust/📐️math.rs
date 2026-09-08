@@ -682,9 +682,9 @@ pub fn mesh3d_write_vec3(token: Mesh3dWriteToken, field: Mesh3dField, value: [f3
     let owner = authority.writing(token)?;
     let item = owner.write(field, &bytes)?;
     if field == Mesh3dField::Positions {
-        for axis in 0..3 {
-            owner.aabb_min[axis] = owner.aabb_min[axis].min(value[axis]);
-            owner.aabb_max[axis] = owner.aabb_max[axis].max(value[axis]);
+        for (axis, coordinate) in value.into_iter().enumerate() {
+            owner.aabb_min[axis] = owner.aabb_min[axis].min(coordinate);
+            owner.aabb_max[axis] = owner.aabb_max[axis].max(coordinate);
         }
     }
     let _ = item;
@@ -798,7 +798,7 @@ pub fn mesh3d_close_step(lease: Mesh3dLease) -> Result<bool, Mesh3dFault> {
 }
 
 pub fn mesh3d_terminal_is_empty(lease: Mesh3dLease) -> bool {
-    mesh3d_authority().lock().map_or(false, |authority| authority.slots.get(usize::from(lease.slot)).and_then(Option::as_ref).is_none_or(|slot| slot.epoch != lease.epoch))
+    mesh3d_authority().lock().is_ok_and(|authority| authority.slots.get(usize::from(lease.slot)).and_then(Option::as_ref).is_none_or(|slot| slot.epoch != lease.epoch))
 }
 
 impl Mesh3dLease {
@@ -915,7 +915,7 @@ pub enum Mesh3dItem {
 }
 
 impl Mesh3dItemCursor {
-    pub fn next(&mut self) -> Result<Option<Mesh3dItem>, Mesh3dFault> {
+    pub fn read_next(&mut self) -> Result<Option<Mesh3dItem>, Mesh3dFault> {
         if self.index == self.len {
             return Ok(None);
         }

@@ -33,18 +33,6 @@ enum Process3dOutputKind {
     Terminal = 3,
 }
 
-impl Process3dOutputKind {
-    fn from_u8(value: u8) -> Option<Self> {
-        match value {
-            0 => Some(Self::Progress),
-            1 => Some(Self::Checkpoint),
-            2 => Some(Self::Preview),
-            3 => Some(Self::Terminal),
-            _ => None,
-        }
-    }
-}
-
 #[derive(Clone, Copy)]
 struct Process3dOutputPage {
     operation: u64,
@@ -122,8 +110,6 @@ impl Process3dIngressCredits {
 struct Process3dMountedOperation {
     operation: u64,
     generation: u64,
-    base_revision: u64,
-    parent_revision: u64,
     credits: Process3dIngressCredits,
     admitted_pages: usize,
     admitted_bytes: usize,
@@ -180,16 +166,12 @@ impl Process3dMountedRegistry {
         Self { operations: std::array::from_fn(|_| None) }
     }
 
-    fn can_insert(&self) -> bool {
-        self.operations.iter().any(Option::is_none)
-    }
-
-    fn insert(&mut self, operation: u64, generation: u64, base_revision: u64, parent_revision: u64, credits: Process3dIngressCredits) -> Result<(), &'static str> {
+    fn insert(&mut self, operation: u64, generation: u64, credits: Process3dIngressCredits) -> Result<(), &'static str> {
         if self.operations.iter().flatten().any(|entry| entry.operation == operation) {
             return Err("process3d-envelope.operation-duplicate");
         }
         let slot = self.operations.iter_mut().find(|slot| slot.is_none()).ok_or("process3d-envelope.operation-capacity")?;
-        *slot = Some(Process3dMountedOperation { operation, generation, base_revision, parent_revision, credits, admitted_pages: 0, admitted_bytes: 0, sequence: 0, outputs: std::array::from_fn(|_| Process3dOutputSlot::empty()) });
+        *slot = Some(Process3dMountedOperation { operation, generation, credits, admitted_pages: 0, admitted_bytes: 0, sequence: 0, outputs: std::array::from_fn(|_| Process3dOutputSlot::empty()) });
         Ok(())
     }
 
@@ -328,7 +310,7 @@ mod mounted_laws {
     }
 
     fn insert(registry: &mut Process3dMountedRegistry, operation: u64, generation: u64, credits: Process3dIngressCredits) {
-        registry.insert(operation, generation, generation, generation, credits).expect("Process3d mounted operation admission");
+        registry.insert(operation, generation, credits).expect("Process3d mounted operation admission");
     }
 
     #[test]
@@ -354,7 +336,7 @@ mod mounted_laws {
         for operation in 1..=PROCESS3D_ENVELOPE_OPERATION_SLOTS as u64 {
             insert(&mut registry, operation, 7, credits);
         }
-        assert_eq!(registry.insert(99, 7, 7, 7, credits), Err("process3d-envelope.operation-capacity"));
+        assert_eq!(registry.insert(99, 7, credits), Err("process3d-envelope.operation-capacity"));
 
         let producer_calls = Cell::new(0);
         registry.operation(1, 7).expect("first operation").preflight_page(PROCESS3D_OUTPUT_PAGE_BYTES).expect("exact page");

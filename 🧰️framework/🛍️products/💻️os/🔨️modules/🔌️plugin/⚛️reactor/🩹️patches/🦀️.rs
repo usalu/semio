@@ -123,12 +123,14 @@ pub struct MountedReconcileGrant {
     active: bool,
 }
 
+#[expect(clippy::large_enum_variant, reason = "The grant keeps its reconciler and reservation inline until the exact ownership transfer; an extra heap owner would escape that pre-admitted storage.")]
 enum MountedReconcileOwner {
     Live { reconciler: SurfaceReconciler, reservation: SurfaceReconcileReservation },
     Transferred,
 }
 
 impl MountedReconcileGrant {
+    #[expect(clippy::result_large_err, reason = "Admission failure returns the original bounded surface identity or tree owner without allocation.")]
     pub fn commit_source(mut self, root: TreeNode) -> Result<(), TreeNode> {
         let mut state = self.state.borrow_mut();
         if state.closing_instances.iter().flatten().any(|closing| closing.key == self.key) {
@@ -338,6 +340,7 @@ impl PatchTracker {
         state.slots.iter().any(Option::is_none)
     }
 
+    #[expect(clippy::result_large_err, reason = "Admission failure returns the original bounded surface identity or tree owner without allocation.")]
     pub fn defer(&self, surface: ui_contract::SurfaceId) -> Result<(), ui_contract::SurfaceId> {
         let mut state = self.state.borrow_mut();
         if state.closing_instances.iter().flatten().any(|closing| surface_instance(surface.as_ref()) == Some(closing.instance)) {
@@ -387,6 +390,7 @@ impl PatchTracker {
         self.begin(surface, tree)
     }
 
+    #[expect(clippy::result_large_err, reason = "Admission failure returns the original bounded surface identity or tree owner without allocation.")]
     pub(crate) fn reserve_mounted(&self, surface: ui_contract::SurfaceId, key: NativeCloseKey) -> Result<MountedReconcileGrant, ui_contract::SurfaceId> {
         if surface_instance(surface.as_ref()) != Some(key.instance()) {
             return Err(surface);
@@ -394,6 +398,7 @@ impl PatchTracker {
         self.reserve_mounted_owned(surface, key)
     }
 
+    #[expect(clippy::result_large_err, reason = "Admission failure returns the original bounded surface identity or tree owner without allocation.")]
     fn reserve_mounted_owned(&self, surface: ui_contract::SurfaceId, key: NativeCloseKey) -> Result<MountedReconcileGrant, ui_contract::SurfaceId> {
         let mut state = self.state.borrow_mut();
         if state.closing_instances.iter().flatten().any(|closing| surface_instance(surface.as_ref()) == Some(closing.instance)) {
@@ -429,7 +434,7 @@ impl PatchTracker {
                 key,
                 output_index: Some(output_index),
                 reconciler: None,
-                surface: surface.clone(),
+                surface,
                 generation,
                 operation: semio_framework_job::allocate_operation_id(),
                 preview_sequence: 0,
@@ -572,7 +577,7 @@ impl PatchTracker {
         let generation = terminal.authority.generation();
         let instance = terminal.instance.unwrap_or(0);
         terminal.close = true;
-        let surface = state.slots.iter().flatten().find(|slot| slot.generation == generation).map(|slot| slot.surface.as_ref()).unwrap_or("unknown surface");
+        let surface = state.slots.iter().flatten().find(|slot| slot.generation == generation).map_or("unknown surface", |slot| slot.surface.as_ref());
         Some((instance, format!("{surface}: {fault:?}")))
     }
 

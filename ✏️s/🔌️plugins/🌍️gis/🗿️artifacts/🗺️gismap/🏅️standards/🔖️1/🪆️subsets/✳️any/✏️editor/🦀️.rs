@@ -694,16 +694,8 @@ impl ArtifactEditor for Gis2dPlayApp {
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
         };
-        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            request.context,
-            operation_context,
-            request.completion,
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
             Gis2dCommand::command_id,
             GIS2D_RETAINED_RAW_BYTES,
             GIS2D_RETAINED_WORK_ITEMS,
@@ -991,24 +983,24 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
                     ActionArgOption::new("reuse-map", LocalizedLabel::native("Reuse Map", "Karte wiederverwenden")),
-                ]).default_value("reuse-map"),
+                ]).default_value(&"reuse-map"),
             ])
             .action_args("setRenderMode", vec![
                 ActionArgDef::select("value", LocalizedLabel::native("Render Mode", "Darstellungsmodus"), vec![
                     ActionArgOption::new("image", LocalizedLabel::native("Image", "Bild")),
                     ActionArgOption::new("vector", LocalizedLabel::native("Vector", "Vektor")),
                     ActionArgOption::new("combined", LocalizedLabel::native("Combined", "Kombiniert")),
-                ]).default_value("combined"),
+                ]).default_value(&"combined"),
             ])
             .action_args("setVectorStyle", vec![
                 ActionArgDef::select("value", LocalizedLabel::native("Vector Style", "Vektorstil"), vec![
                     ActionArgOption::new("colored", LocalizedLabel::native("Colored", "Farbig")),
                     ActionArgOption::new("figureGround", LocalizedLabel::native("Figure Ground", "Figur-Grund")),
                     ActionArgOption::new("invertedFigure", LocalizedLabel::native("Inverted Figure", "Invertierte Figur")),
-                ]).default_value("colored"),
+                ]).default_value(&"colored"),
             ])
             .action_args("setLodMode", vec![
-                ActionArgDef::select("value", LocalizedLabel::native("LOD Mode", "LOD-Modus"), map::options::lod_mode::lod_arg_options()).default_value(framework_surface::tiled_map::GIS_MAP_LOD_MODE_AUTOMATIC),
+                ActionArgDef::select("value", LocalizedLabel::native("LOD Mode", "LOD-Modus"), map::options::lod_mode::lod_arg_options()).default_value(&framework_surface::tiled_map::GIS_MAP_LOD_MODE_AUTOMATIC),
             ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
@@ -1032,8 +1024,8 @@ pub(crate) mod testkit {
 
     pub type Gis2dApp = VcsArtifactApp<EditorApp<Gis2dPlayApp>>;
 
-    pub fn app() -> Gis2dApp {
-        new_app::<EditorApp<Gis2dPlayApp>>()
+    pub async fn app() -> Gis2dApp {
+        new_app::<EditorApp<Gis2dPlayApp>>().await
     }
 
     /// ✏️ Adapts `create_gis2d_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
@@ -1044,20 +1036,20 @@ pub(crate) mod testkit {
     }
 
     /// 🧬️ A wrapper carrying the real registry so kind discipline (View/Shell-emits-operations rejection) runs.
-    pub fn app_with_registry() -> Gis2dApp {
-        new_app_with_registry::<EditorApp<Gis2dPlayApp>>(gis2d_app_manifest_for_testkit)
+    pub async fn app_with_registry() -> Gis2dApp {
+        new_app_with_registry::<EditorApp<Gis2dPlayApp>>(gis2d_app_manifest_for_testkit).await
     }
 
-    pub fn dispatch(app: &mut Gis2dApp, command: Gis2dCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+    pub async fn dispatch(app: &mut Gis2dApp, command: Gis2dCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
     }
 
-    pub fn render(app: &mut Gis2dApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+    pub async fn render(app: &mut Gis2dApp, body_key: &str) -> String {
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render projection")
     }
 
-    pub fn main_window_measures(app: &mut Gis2dApp) -> Vec<WindowMeasure> {
-        app.window_measures().get(map::GIS2D_PLAY_WINDOW_MAIN).cloned().unwrap_or_default()
+    pub async fn main_window_measures(app: &mut Gis2dApp) -> Vec<WindowMeasure> {
+        app.window_measures().await.get(map::GIS2D_PLAY_WINDOW_MAIN).cloned().unwrap_or_default()
     }
 }
 //#endregion 🧪️Testkit
@@ -1138,7 +1130,7 @@ mod tests {
             let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
             bytes[..chunk.len()].copy_from_slice(chunk);
             let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded GIS live envelope page");
-            app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("GIS live envelope page admission failed: {fault}"));
+            app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("GIS live envelope page admission failed: {fault:?}"));
         }
         assert!(app.seal_artifact_envelope_ingress(handle).expect("GIS live envelope seal/submit"));
         handle
@@ -1158,7 +1150,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn gis_map_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed() {
-        let mut app = app();
+        let mut app = app().await;
         let base_generation = app.artifact_generation_now();
         let handle = admit_gis_map_envelope(&mut app, &gis_map_envelope_wire());
         assert_eq!(handle.generation, base_generation);
@@ -1170,7 +1162,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn gis_map_live_envelope_cancel_closes_retained_pages_without_publication() {
-        let mut app = app();
+        let mut app = app().await;
         let base_generation = app.artifact_generation_now();
         let wire = gis_map_envelope_wire();
         let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
@@ -1179,7 +1171,7 @@ mod tests {
         let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
         bytes[..first.len()].copy_from_slice(first);
         let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled GIS first page");
-        app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled GIS page admission failed: {fault}"));
+        app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled GIS page admission failed: {fault:?}"));
         app.cancel_artifact_envelope_load(handle).expect("cancel exact GIS ingress");
         assert_eq!(drive_gis_map_live_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
         assert_eq!(app.artifact_generation_now(), base_generation);
@@ -1273,7 +1265,7 @@ mod tests {
     /// knows the framework-injected ids to skip (`undo`/`copy`/`recordTutorial`/…).
     #[semio_framework_async_macros::async_test]
     async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
-        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Gis2dPlayApp>>(gis2d_app_manifest_for_testkit);
+        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Gis2dPlayApp>>(gis2d_app_manifest_for_testkit).await;
         assert!(Gis2dPlayApp::command_from_action("noSuchAction", None).is_err());
     }
     //#endregion 🔖️CommandSurface
@@ -1281,7 +1273,7 @@ mod tests {
     //#region 🔖️Manifest
     #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
-        let definition = create_gis2d_app().definition;
+        let definition = create_gis2d_app();
         assert_eq!(definition.modes.len(), 1);
         assert_eq!(definition.window_kinds.len(), 1);
         // 🧷️ The framework injects its own panel tabs on top of the app's three, so assert the app's
@@ -1294,19 +1286,19 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_falls_back_to_a_text_node() {
-        let mut app = app();
-        assert!(render(&mut app, "gis2d.play.nope").contains("Unknown body"));
+        let mut app = app().await;
+        assert!(render(&mut app, "gis2d.play.nope").await.contains("Unknown body"));
     }
     //#endregion 🔖️Manifest
 
     //#region 🔖️Media
     #[semio_framework_async_macros::async_test]
     async fn export_media_map_out_produces_a_2d_map_structured_payload() {
-        let app = app();
+        let app = app().await;
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
-        let media = semio_framework_plugin::resolve_ready(Gis2dPlayApp::export_media("map:out", &doc)).expect("map:out export");
+        let media = Gis2dPlayApp::export_media("map:out", &doc).expect("map:out export");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "2d.map");
         assert!(json.contains("positions"));
@@ -1314,11 +1306,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn import_media_features_in_adds_new_positions_as_operations() {
-        let app = app();
+        let app = app().await;
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
-        let incoming = json!({ "positions": [{ "id": "imported-1", "lon": 1.0, "lat": 2.0 }] }).to_string();
+        let incoming = serde_json::json!({ "positions": [{ "id": "imported-1", "lon": 1.0, "lat": 2.0 }] }).to_string();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.map".into(), json: incoming } };
         let emit = Gis2dPlayApp::import_media("features:in", &media, &doc).expect("features:in import");
         assert!(emit.artifact_mutations.iter().any(|operation| matches!(operation, GisMapMutation::CreatePosition(payload) if payload.item.id == "imported-1")));
@@ -1326,8 +1318,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn media_ports_declare_features_in_and_map_out() {
-        let app = Gis2dPlayApp;
-        let ports = Gis2dPlayApp::media_ports();
+                let ports = Gis2dPlayApp::media_ports().await;
         assert!(ports.iter().any(|port| port.id == "features:in"));
         assert!(ports.iter().any(|port| port.id == "map:out"));
     }
@@ -1339,7 +1330,7 @@ mod tests {
         let io = gis2d_io();
         assert_eq!(io.document_schema, GIS_MAP_SCHEMA);
         assert_eq!(io.artifact.id, crate::artifacts::gismap::GISMAP_DIALECT.artifact_kind);
-        let ports = io.all_ports();
+        let ports = io.all_ports().await;
         assert!(ports.iter().any(|port| port.id == "features:in" && port.direction == semio_framework_plugin::MediaPortDirection::In));
         let map_out = ports.iter().find(|port| port.id == "map:out").expect("map:out declared");
         assert_eq!(map_out.direction, semio_framework_plugin::MediaPortDirection::Out);
@@ -1350,7 +1341,7 @@ mod tests {
     async fn gis2d_map_media_exports_the_document_descriptor() {
         let document = crate::artifacts::gismap::schema::default_document();
         let media = gis2d_map_media(&document);
-        let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else {
+        let MediaPayload::Structured { schema, json } = media.payload else {
             panic!("expected a structured map:out payload");
         };
         assert_eq!(schema, "2d.map");
@@ -1364,9 +1355,9 @@ mod tests {
     /// canonical migration pattern.
     #[semio_framework_async_macros::async_test]
     async fn context_menu_stays_within_budget_and_keeps_clear_selection_destructive_last() {
-        let mut app = app_with_registry();
+        let mut app = app_with_registry().await;
         let request = ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "gis2dMap".into(), args: None }, surface: None, window_instance_id: None, point: None };
-        let menu = app.context_menu(&request);
+        let menu = app.context_menu(&request).await;
         assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
         let last = menu.last().expect("empty-canvas context menu should not be empty");
         assert_eq!(last.id, "clearSelection", "known destructive clearSelection must be last: {menu:?}");

@@ -919,7 +919,7 @@ mod tests {
                 ]),
             )),
         };
-        let contributions_json = serde_json::to_string(&vec![entry]).unwrap();
+        let contributions_json = dsl::json::to_json_string(&vec![entry]);
         let modules = available_modules(&contributions_json);
         assert_eq!(modules.len(), 4);
         assert_eq!(modules[0].module_id, "beams");
@@ -942,7 +942,7 @@ mod tests {
                 ]),
             )),
         };
-        let json = serde_json::to_string(&vec![entry]).unwrap();
+        let json = dsl::json::to_json_string(&vec![entry]);
         assert!(sourcing_modules(&json).iter().any(|module| module.module_id() == "hot-test"));
         assert!(!sourcing_modules("[]").iter().any(|module| module.module_id() == "hot-test"));
     }

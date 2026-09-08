@@ -1,8 +1,6 @@
 //! 💰️ Utility tariffs and life-cycle costing (non-physics post-pass).
 
 use crate::meters::FuelType;
-#[cfg(test)]
-use crate::meters::MeterTable;
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
@@ -28,13 +26,6 @@ pub struct UtilityTariff {
     pub ratchet_percent: f64,
 }
 
-impl UtilityTariff {
-    #[cfg(test)]
-    pub(crate) fn energy_cost(&self, energy_kwh: f64, hour: u8, month: u8) -> f64 {
-        let rate = self.periods.iter().find(|p| p.months.contains(&month) && hour >= p.start_hour && hour < p.end_hour).map_or(0.1, |p| p.energy_rate_per_kwh);
-        energy_kwh * rate
-    }
-}
 // #endregion 🔖️Tariff
 
 // #region 🔖️Lcca
@@ -89,22 +80,6 @@ pub struct EconomicsResult {
     pub lcca: Option<LccaResult>,
 }
 
-/// 💰️ Apply tariffs to meter store (annual run).
-#[cfg(test)]
-pub(crate) fn apply_tariffs(meters: &MeterTable, tariffs: &[UtilityTariff]) -> EconomicsResult {
-    let mut annual_energy_cost = 0.0;
-    let mut annual_demand_cost = 0.0;
-    for meter in meters.meters.values() {
-        let kwh = meter.energy_kwh();
-        if let Some(tariff) = tariffs.iter().find(|t| t.fuel == meter.fuel) {
-            annual_energy_cost += tariff.energy_cost(kwh, 12, 7);
-            if let Some(period) = tariff.periods.first() {
-                annual_demand_cost += meter.peak_demand_w / 1000.0 * period.demand_rate_per_kw;
-            }
-        }
-    }
-    EconomicsResult { annual_energy_cost, annual_demand_cost, lcca: None }
-}
 // #endregion 🔖️Economics
 
 #[cfg(test)]

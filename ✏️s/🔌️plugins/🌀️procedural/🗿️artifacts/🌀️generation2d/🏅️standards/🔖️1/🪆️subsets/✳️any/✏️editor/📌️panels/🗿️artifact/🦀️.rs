@@ -41,7 +41,7 @@ pub fn render(document: &Generation2dSnapshot, _config: &Generation2dConfig, lab
 mod tests {
     use super::*;
     use crate::editor::generation2d::testkit::{app, render as render_body};
-    use semio_framework_plugin::PluginApp;
+    
 
     #[semio_framework_async_macros::async_test]
     async fn document_lists_widgets() {

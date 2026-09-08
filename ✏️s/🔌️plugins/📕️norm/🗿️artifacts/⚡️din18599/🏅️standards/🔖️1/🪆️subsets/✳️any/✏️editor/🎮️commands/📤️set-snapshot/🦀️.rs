@@ -52,7 +52,7 @@ mod tests {
     use semio_framework_plugin::HistoryView;
 
     #[semio_framework_async_macros::async_test]
-    fn handle_commits_the_payload_document_under_its_action_id() {
+    async fn handle_commits_the_payload_document_under_its_action_id() {
         let projection = Din18599Snapshot::default();
         let config = NormConfig::default();
         let text = crate::document::escape_op_text_field(&<Din18599Snapshot as store::ArtifactDsl>::print_dsl(&Din18599Snapshot::default()));
@@ -66,7 +66,7 @@ mod tests {
     /// `serde_json` — a value whose shortest round-trip representation needs its full 17
     /// significant digits must survive the command's own payload encoding exactly.
     #[semio_framework_async_macros::async_test]
-    fn handle_preserves_full_f64_precision_through_the_payload() {
+    async fn handle_preserves_full_f64_precision_through_the_payload() {
         let projection = Din18599Snapshot::default();
         let config = NormConfig::default();
         let text = crate::document::escape_op_text_field(&<Din18599Snapshot as store::ArtifactDsl>::print_dsl(&Din18599Snapshot::default()));

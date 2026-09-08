@@ -6,12 +6,12 @@ import "./🎨️.css";
 
 export type { PluginBuildTarget } from "../🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts";
 export { PLUGIN_BUILD_TARGETS, EXTENSION_TARGETS, PROGRAM_TARGETS, pluginModuleUrl, extensionModuleUrl } from "../🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts";
-export { PLAYGROUND_SESSION } from "./🤖️generated/🟦️session.ts";
+export { PLAYGROUND_SESSION } from "virtual:semio-playground-session";
 
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
 import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-js";
 import { PLUGIN_CATALOG } from "../🔌️plugin/📇️registry/🟦️.ts";
-import { PLAYGROUND_SESSION } from "./🤖️generated/🟦️session.ts";
+import { PLAYGROUND_SESSION } from "virtual:semio-playground-session";
 import { resolveShellBrandById } from "./🏷️brand/🟦️.ts";
 
 const renderer = import.meta.env.VITE_SEMIO_RENDERER ?? import.meta.env.SEMIO_RENDERER ?? "react";

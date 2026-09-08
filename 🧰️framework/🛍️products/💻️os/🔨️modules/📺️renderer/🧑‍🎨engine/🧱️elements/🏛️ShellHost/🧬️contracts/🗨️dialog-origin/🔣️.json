@@ -1,0 +1,134 @@
+{
+  "schema": "semio.shell.dialog-origin-fixture.v1",
+  "owner": {
+    "pluginId": "space",
+    "appId": "space.editor",
+    "controllerId": "space.editor",
+    "sessionInstanceId": 7,
+    "document": {
+      "runtimeKey": "v1:7:5:space-aindex",
+      "clientInstanceId": "client-a",
+      "scope": {
+        "spaceId": "space-a",
+        "documentId": "index"
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "same-origin",
+      "patch": [],
+      "accepted": true
+    },
+    {
+      "id": "different-plugin",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/pluginId",
+          "value": "other"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "different-app",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/appId",
+          "value": "other"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "different-controller",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/controllerId",
+          "value": "other"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "different-instance",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/sessionInstanceId",
+          "value": 8
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "different-runtime",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/document/runtimeKey",
+          "value": "other"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "reopened-client",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/document/clientInstanceId",
+          "value": "client-b"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "different-space",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/document/scope/spaceId",
+          "value": "space-b"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "different-document",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/document/scope/documentId",
+          "value": "other"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "scope-detached",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/document/scope",
+          "value": null
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "mount-closed",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/document",
+          "value": null
+        }
+      ],
+      "accepted": false
+    }
+  ]
+}

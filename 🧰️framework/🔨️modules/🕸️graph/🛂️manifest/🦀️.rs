@@ -33,18 +33,18 @@ fn value_type_from_value(value: dsl_core::DslValue) -> Result<ValueType, dsl_cor
     if let Ok(value_type) = <ValueType as dsl_core::FromValue>::from_value(value.clone()) {
         return Ok(value_type);
     }
-    match &value {
+    match value {
         dsl_core::DslValue::String(s) => Ok(match s.as_str() {
             "boolean" | "bool" => ValueType::Boolean,
             "integer" | "int" => ValueType::Integer,
             "number" | "decimal" | "float" => ValueType::Decimal,
             "text" | "string" => ValueType::Text,
             "object" | "any" => ValueType::Any,
-            schema => ValueType::Schema(schema.to_string()),
+            _ => ValueType::Schema(s),
         }),
         dsl_core::DslValue::Object(entries) if entries.len() == 1 => match entries.first() {
             Some((key, dsl_core::DslValue::String(schema))) if key == "schema" => Ok(ValueType::Schema(schema.clone())),
-            _ => Err(dsl_core::ValueError::new(format!("unsupported valueType object {value:?}"))),
+            _ => Err(dsl_core::ValueError::new(format!("unsupported valueType object {:?}", dsl_core::DslValue::Object(entries)))),
         },
         other => Err(dsl_core::ValueError::new(format!("unsupported valueType {other:?}"))),
     }
@@ -214,12 +214,29 @@ pub struct PropertyDef {
     pub expr: Option<String>,
 }
 
+/// 📏️ The supplied retirement byte grant cannot release the exact schema string.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ValueTypeRetirementError {
+    pub required_bytes: usize,
+    pub maximum_bytes: usize,
+}
+
+impl std::fmt::Display for ValueTypeRetirementError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "value type retirement requires {} bytes, granted {}", self.required_bytes, self.maximum_bytes)
+    }
+}
+
+impl std::error::Error for ValueTypeRetirementError {}
+
 impl PropertyDef {
     /// @emoji 🧹️ Detaches at most one exact nested value-type string or list box. A terminal
     /// definition has only the definitionally shallow `Any` tag left for its final drop.
-    pub fn retire_value_type_step(&mut self, maximum_bytes: usize) -> Result<Option<String>, ()> {
-        if matches!(&self.value_type, ValueType::Schema(value) if value.len() > maximum_bytes) {
-            return Err(());
+    pub fn retire_value_type_step(&mut self, maximum_bytes: usize) -> Result<Option<String>, ValueTypeRetirementError> {
+        if let ValueType::Schema(value) = &self.value_type {
+            if value.len() > maximum_bytes {
+                return Err(ValueTypeRetirementError { required_bytes: value.len(), maximum_bytes });
+            }
         }
         match std::mem::take(&mut self.value_type) {
             ValueType::Schema(value) => Ok(Some(value)),

@@ -1,0 +1,21 @@
+{
+  "files": {
+    "package.json": "{\"name\":\"workspace\"}\n",
+    "nx.json": "{}\n",
+    "domain/📦️packages/🦀️rust/Cargo.toml": "[package]\nname=\"native-input-fixture\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"../../🦀️.rs\"\n[[test]]\nname=\"separate\"\npath=\"../../🧪️tests/🦀️.rs\"\n",
+    "domain/🦀️.rs": "pub const DATA: &[u8] = include_bytes!(\"shared.bin\");\n",
+    "domain/shared.bin": "shared-data",
+    "domain/🟦️.ts": "export const ui = 1;\n",
+    "domain/🧪️tests/🦀️.rs": "#[test] fn fixture() { assert!(true); }\n"
+  },
+  "included": [
+    "domain/📦️packages/🦀️rust/Cargo.toml",
+    "domain/🦀️.rs",
+    "domain/shared.bin"
+  ],
+  "excluded": [
+    "domain/🟦️.ts",
+    "domain/🧪️tests/🦀️.rs",
+    "📜️script.ts"
+  ]
+}

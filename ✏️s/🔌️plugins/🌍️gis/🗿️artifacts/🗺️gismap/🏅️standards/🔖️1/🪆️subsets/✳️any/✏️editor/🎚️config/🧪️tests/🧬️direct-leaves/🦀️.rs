@@ -9,23 +9,23 @@ fn fixture() -> serde_json::Value {
 }
 
 pub(crate) fn assert_leaf<T>(sample: usize, wrap: fn(T) -> Gis2dConfigMutation, descriptor: &str)
-where T: MutationLeaf + serde::Serialize + serde::de::DeserializeOwned + PartialEq + std::fmt::Debug {
+where T: MutationLeaf + dsl::ToValue + dsl::FromValue + PartialEq + std::fmt::Debug {
     let fixture = fixture();
     let envelope = &fixture["valid"][sample]["payload"];
     let mut payload = envelope.clone();
     payload.as_object_mut().unwrap().remove("operation");
-    let value: T = serde_json::from_value(payload.clone()).expect("leaf payload");
-    assert_eq!(serde_json::to_value(&value).unwrap(), payload);
-    assert_eq!(serde_json::to_value(T::DESCRIPTOR).unwrap(), serde_json::from_str::<serde_json::Value>(descriptor).unwrap());
+    let value: T = dsl::json::from_json_str(&(payload.clone()).to_string()).expect("leaf payload");
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&value)).unwrap(), payload);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&T::DESCRIPTOR)).unwrap(), serde_json::from_str::<serde_json::Value>(descriptor).unwrap());
     assert_eq!(T::PROVENANCE.owner, T::DESCRIPTOR.owner);
     assert_eq!(T::PROVENANCE.source_path, format!("{}/🦀️.rs", T::DESCRIPTOR.owner));
     assert_eq!(T::PROVENANCE.descriptor_path, format!("{}/🔣️.json", T::DESCRIPTOR.owner));
     payload["unknown"] = serde_json::json!(true);
-    assert!(serde_json::from_value::<T>(payload).is_err());
+    assert!(dsl::json::from_json_str::<T>(&(payload).to_string()).is_err());
     let operation = wrap(value);
     assert_eq!(operation.descriptor(), &T::DESCRIPTOR);
-    assert_eq!(serde_json::to_value(&operation).unwrap(), *envelope);
-    assert_eq!(serde_json::from_value::<Gis2dConfigMutation>(envelope.clone()).unwrap(), operation);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&operation)).unwrap(), *envelope);
+    assert_eq!(dsl::json::from_json_str::<Gis2dConfigMutation>(&(envelope.clone()).to_string()).unwrap(), operation);
     assert_eq!(operation.print_op().split_whitespace().next(), T::DESCRIPTOR.text_opcode);
     assert_eq!(Gis2dConfigMutation::parse_op(&operation.print_op()).unwrap(), operation);
     let bytes = operation.encode_op().expect("binary leaf payload");
@@ -41,15 +41,15 @@ fn neutral_envelopes_share_json_text_binary_and_inverse_contracts() {
     let fixture = fixture();
     assert_eq!(Gis2dConfigMutation::DESCRIPTORS.len(), 7);
     for row in fixture["valid"].as_array().unwrap() {
-        let operation: Gis2dConfigMutation = serde_json::from_value(row["payload"].clone()).unwrap();
-        assert_eq!(serde_json::to_value(&operation).unwrap(), row["payload"]);
+        let operation: Gis2dConfigMutation = dsl::json::from_json_str(&(row["payload"].clone()).to_string()).unwrap();
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&operation)).unwrap(), row["payload"]);
         assert_eq!(Gis2dConfigMutation::parse_op(&operation.print_op()).unwrap(), operation);
         assert_eq!(Gis2dConfigMutation::decode_op(&operation.encode_op().unwrap()).unwrap(), operation);
         let before = populated();
         assert_eq!(undo(&before, &operation), before);
     }
     for row in fixture["invalid"].as_array().unwrap() {
-        assert!(serde_json::from_value::<Gis2dConfigMutation>(row["payload"].clone()).is_err(), "{}", row["name"]);
+        assert!(dsl::json::from_json_str::<Gis2dConfigMutation>(&(row["payload"].clone()).to_string()).is_err(), "{}", row["name"]);
     }
     assert!(Gis2dConfigMutation::parse_op("camera {}").is_err());
     assert!(Gis2dConfigMutation::parse_op("unknown").is_err());
@@ -60,12 +60,12 @@ fn neutral_envelopes_share_json_text_binary_and_inverse_contracts() {
 #[test]
 fn neutral_state_cases_match_stored_and_replayed_inverse_order() {
     for row in fixture()["stateCases"].as_array().unwrap() {
-        let before: Gis2dConfig = serde_json::from_value(row["before"].clone()).unwrap();
+        let before: Gis2dConfig = dsl::json::from_json_str(&(row["before"].clone()).to_string()).unwrap();
         let operations = row.get("operations").cloned().unwrap_or_else(|| serde_json::json!([row["operation"]]));
         let mut after = before.clone();
         let mut inverses = Vec::new();
         for value in operations.as_array().unwrap() {
-            let operation: Gis2dConfigMutation = serde_json::from_value(value.clone()).unwrap();
+            let operation: Gis2dConfigMutation = dsl::json::from_json_str(&(value.clone()).to_string()).unwrap();
             inverses.extend(operation.inverse(&after));
             let outcome = operation.diff(&after);
             if row["expected"]["outcome"] == "warning" { assert_eq!(outcome.worst_level(), Some(dsl::Severity::Warning)); }
@@ -73,12 +73,12 @@ fn neutral_state_cases_match_stored_and_replayed_inverse_order() {
         }
         if row["expected"]["afterEqualsBefore"] == true { assert_eq!(after, before); }
         if let Some(expected) = row.get("after") {
-            let actual = serde_json::to_value(&after).unwrap();
+            let actual = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&after)).unwrap();
             for (key, value) in expected.as_object().unwrap() { assert_eq!(&actual[key], value); }
         }
-        if let Some(expected) = row.get("inverseStoredOrder") { assert_eq!(serde_json::to_value(&inverses).unwrap(), *expected); }
+        if let Some(expected) = row.get("inverseStoredOrder") { assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&inverses)).unwrap(), *expected); }
         inverses.reverse();
-        if let Some(expected) = row.get("inverseReplayOrder") { assert_eq!(serde_json::to_value(&inverses).unwrap(), *expected); }
+        if let Some(expected) = row.get("inverseReplayOrder") { assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&inverses)).unwrap(), *expected); }
         for operation in inverses { after = apply(&after, &operation); }
         assert_eq!(after, before);
     }
@@ -157,7 +157,7 @@ fn independent_sparse_writes_compose_and_serde_retains_removal() {
     let mut combined = camera.diff(&base).into_parts().0;
     combined.absorb(locale.diff(&base).into_parts().0);
     combined.absorb(clear.diff(&base).into_parts().0);
-    let decoded = serde_json::from_value::<Gis2dConfigDiff>(serde_json::to_value(&combined).unwrap()).unwrap();
+    let decoded = dsl::json::from_json_str::<Gis2dConfigDiff>(&(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&combined)).unwrap()).to_string()).unwrap();
     let actual = decoded.apply(&base).unwrap();
     assert_eq!(actual, apply(&apply(&apply(&base, &camera), &locale), &clear));
     assert_eq!(actual.camera_json, "{}");
@@ -183,9 +183,9 @@ fn non_finite_values_cannot_serialize_as_override_removals() {
         let outcome = operation.diff(&base);
         assert_eq!(outcome.worst_level(), Some(dsl::Severity::Fatal));
         assert_eq!(outcome.diff().apply(&base).unwrap(), base);
-        assert!(serde_json::to_value(&operation).is_err());
+        assert!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&operation)).is_err());
         let delta = Gis2dConfigDelta { layer_stroke_scale: BTreeMap::from([("roads".into(), Some(value))]), ..Default::default() };
-        assert!(serde_json::to_value(Gis2dConfigDiff::from(delta)).is_err());
+        assert!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&Gis2dConfigDiff::from(delta))).is_err());
     }
 }
 //#endregion 🧪️Composition

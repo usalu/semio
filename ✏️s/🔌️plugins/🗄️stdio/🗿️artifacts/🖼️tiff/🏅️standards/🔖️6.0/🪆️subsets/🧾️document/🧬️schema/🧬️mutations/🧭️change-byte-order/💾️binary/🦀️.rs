@@ -10,11 +10,10 @@ pub fn encode(value: &TiffMutation) -> Option<Result<Vec<u8>, protocol::Protocol
 }
 pub fn encode_payload(payload: &ChangeByteOrderMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     let ChangeByteOrderMutation { byte_order } = payload;
-    let mut out = Vec::new();
-    out.push(match byte_order {
+    let out = vec![match byte_order {
         TiffByteOrder::LittleEndian => 0,
         TiffByteOrder::BigEndian => 1,
-    });
+    }];
     Ok(out)
 }
 pub fn decode(bytes: &[u8]) -> Result<TiffMutation, protocol::ProtocolError> {

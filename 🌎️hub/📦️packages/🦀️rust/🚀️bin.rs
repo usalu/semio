@@ -60,6 +60,10 @@ use semio_hub::artifact_authority::{
     ArtifactPair, AuthorityError, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, CanonicalArtifactAuthority, CheckpointPublicationOrchestrator, CheckpointRequest, OperationContext, ValidatingCanonicalArtifactAuthority,
     VerifiedCheckpointPublisher,
 };
+#[cfg(any(test, feature = "native-artifact-execution"))]
+use semio_hub::artifact_authority::creation::{ArtifactCreationActorV1, ArtifactCreationCommitAuthorityV1, ArtifactCreationCommitFutureV1, ArtifactCreationCommitLeaseV1, ArtifactCreationServiceV1};
+#[cfg(any(test, feature = "native-artifact-execution"))]
+use directory::os_directory::schema::space_artifact_creation::{SPACE_ARTIFACT_CREATION_MAX_BYTES, SpaceArtifactCreateV1, SpaceArtifactCreationCatalogV1, SpaceArtifactCreationPhaseV1, SpaceArtifactCreationStatusV1};
 use semio_hub::directory::error::DirectoryError;
 #[cfg(test)]
 use semio_hub::directory::model::AuthSessionIssue;
@@ -83,6 +87,8 @@ use semio_hub::inference::runtime::{
     GisMapApprovalCheckpointPublisherV1, GisMapApprovalCheckpointRequestV1, GisMapApprovalCommitErrorV1, GisMapApprovalIngressAuthorityV1, GisMapDocumentWriteAuthorityV1, HubInferenceRuntimeV1, InferenceApprovalRouteContextV1, InferenceRouteErrorV1,
     RetainedGisMapApprovalCommitterV1,
 };
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution", feature = "test-support"))]
+use semio_hub::inference::runtime::InferenceCheckpointTestGateV1;
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 use semio_hub::inference::sqlite::InferenceJobLedgerV1;
 #[cfg(feature = "native-artifact-execution")]
@@ -1234,7 +1240,7 @@ struct DocumentOpenPlanAuthorityV1 {
     surface: DocumentOpenSurfaceV1,
     browser_actor: os_directory::DocumentOpenBrowserActorV1,
     grant: DocumentOpenGrantV1,
-    checkpoint: Option<DocumentOpenCheckpointV1>,
+    checkpoint: DocumentOpenCheckpointV1,
     revalidation: DocumentOpenRevalidationV1,
     subject: SocketSubjectV1,
     server_actor_id: String,
@@ -1271,7 +1277,9 @@ impl DocumentOpenPlanAuthorityV1 {
             || !binding_matches
             || self.server_actor_id.is_empty()
             || self.client_instance_id_digest == [0; 32]
-            || self.checkpoint.as_ref().is_some_and(|checkpoint| checkpoint.descriptor_digest_v1 != self.descriptor_digest_v1 || checkpoint.baseline_frontier.document_id != self.scope.document_id)
+            || self.checkpoint.descriptor_digest_v1 != self.descriptor_digest_v1
+            || self.checkpoint.baseline_frontier.document_id != self.scope.document_id
+            || !(self.checkpoint.baseline_frontier.is_genesis_for(&self.scope) || self.checkpoint.baseline_frontier.is_edited_for(&self.scope))
         {
             return Err(DocumentOpenPlanErrorCodeV1::Stale);
         }
@@ -1566,6 +1574,12 @@ struct HubState {
     rebootstrap: Arc<VerifiedRebootstrapSource>,
     artifact_authority: Option<Arc<HubArtifactAuthority>>,
     verified_catalog: Option<Arc<VerifiedTrustedCatalog>>,
+    #[cfg(feature = "native-artifact-execution")]
+    artifact_creation: Option<Arc<ArtifactCreationServiceV1>>,
+    #[cfg(feature = "native-artifact-execution")]
+    artifact_creation_commit_authority: Arc<HubArtifactCreationCommitAuthorityV1>,
+    #[cfg(feature = "native-artifact-execution")]
+    artifact_creation_tasks: Arc<ArtifactCreationHttpTaskOwnerV1>,
     #[cfg(feature = "native-artifact-execution")]
     gis_map_binding: Option<Arc<VerifiedGisMapArtifactBindingV1>>,
     /// @emoji 💡️ The sole GIS Map proposal authority — present only when a verified trusted profile
@@ -2375,6 +2389,20 @@ async fn issue_document_open_plan_inner(space_id: String, document_id: String, h
     }
     let descriptor =
         state.directory.get_document_descriptor(&scope).await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?.ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::NotFound))?;
+    let descriptor_digest_v1 = os_directory::hex_lower(&os_directory::descriptor_digest_v1(&descriptor).map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale))?.0);
+    let checkpoint = state
+        .directory
+        .get_active_artifact_checkpoint(&scope)
+        .await
+        .map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?
+        .ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::NotFound))?;
+    if checkpoint.scope != scope
+        || os_directory::hex_lower(&checkpoint.descriptor_digest_v1.0) != descriptor_digest_v1
+        || !(checkpoint.baseline_frontier.is_genesis_for(&scope) || checkpoint.baseline_frontier.is_edited_for(&scope))
+    {
+        return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale));
+    }
+    let checkpoint = document_open_checkpoint(checkpoint);
     let catalog = state.openable_catalog.as_ref().ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::CatalogUnavailable))?;
     let writable = matches!(subject, SocketSubjectV1::Session { role: Some(SpaceRole::Author), .. });
     let selected = catalog.resolve_document_open(&descriptor, intent.requested_surface_id.as_deref(), writable).ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::ComponentUnavailable))?;
@@ -2382,8 +2410,6 @@ async fn issue_document_open_plan_inner(space_id: String, document_id: String, h
     if directory_revision == 0 || directory_revision > os_directory::DOCUMENT_OPEN_MAX_SAFE_INTEGER {
         return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded));
     }
-    let descriptor_digest_v1 = os_directory::hex_lower(&os_directory::descriptor_digest_v1(&descriptor).map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale))?.0);
-    let checkpoint = state.directory.get_active_artifact_checkpoint(&scope).await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?.map(document_open_checkpoint);
     let (session_generation, share_generation) = match &subject {
         SocketSubjectV1::Session { authorization_generation, .. } => (Some(*authorization_generation), None),
         SocketSubjectV1::Share { .. } => (None, Some(1)),
@@ -2569,12 +2595,24 @@ async fn document_execution_target_selection(space_id: String, document_id: Stri
     }
     let descriptor =
         state.directory.get_document_descriptor(&scope).await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?.ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::NotFound))?;
+    let descriptor_digest_v1 = os_directory::hex_lower(&os_directory::descriptor_digest_v1(&descriptor).map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale))?.0);
+    let checkpoint = state
+        .directory
+        .get_active_artifact_checkpoint(&scope)
+        .await
+        .map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?
+        .ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::NotFound))?;
+    if checkpoint.scope != scope
+        || os_directory::hex_lower(&checkpoint.descriptor_digest_v1.0) != descriptor_digest_v1
+        || !(checkpoint.baseline_frontier.is_genesis_for(&scope) || checkpoint.baseline_frontier.is_edited_for(&scope))
+    {
+        return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale));
+    }
+    let checkpoint = document_open_checkpoint(checkpoint);
     let catalog = state.openable_catalog.as_ref().ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::CatalogUnavailable))?;
     let writable = matches!(subject, SocketSubjectV1::Session { role: Some(SpaceRole::Author), .. });
     let generation_id = catalog.generation_id().to_string();
     let assets = catalog.assets_for_current_selection(&descriptor, intent.requested_surface_id.as_deref(), writable, &generation_id).ok_or_else(|| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::ComponentUnavailable))?;
-    let descriptor_digest_v1 = os_directory::hex_lower(&os_directory::descriptor_digest_v1(&descriptor).map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale))?.0);
-    let checkpoint = state.directory.get_active_artifact_checkpoint(&scope).await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?.map(document_open_checkpoint);
     let (session_generation, share_generation) = match &subject {
         SocketSubjectV1::Session { authorization_generation, .. } => (Some(*authorization_generation), None),
         SocketSubjectV1::Share { .. } => (None, Some(1)),
@@ -3190,7 +3228,7 @@ impl Drop for CheckpointPublicationHttpRequest {
 
 fn checkpoint_publication_current_matches(expected: &CheckpointPublicationCurrentV1, current: Option<&PublishedArtifactCheckpoint>) -> bool {
     match (expected, current) {
-        (CheckpointPublicationCurrentV1::None, None) => true,
+        (CheckpointPublicationCurrentV1::Genesis { checkpoint_id }, Some(current)) => current.checkpoint_id.hex() == *checkpoint_id && current.parent_checkpoint_id.is_none() && current.baseline_frontier.is_genesis_for(&current.scope),
         (CheckpointPublicationCurrentV1::Active { checkpoint_id, baseline_frontier }, Some(current)) => current.checkpoint_id.hex() == *checkpoint_id && baseline_frontier.artifact_frontier().as_ref() == Some(&current.baseline_frontier),
         _ => false,
     }
@@ -3225,8 +3263,7 @@ fn checkpoint_publication_replay_matches(scope: &DocumentScope, command: &Checkp
         && checkpoint.spr.sha256.hex() == command.spr.sha256
         && checkpoint.spr.byte_length == command.spr.byte_length
         && match &command.expected_current {
-            CheckpointPublicationCurrentV1::None => checkpoint.parent_checkpoint_id.is_none(),
-            CheckpointPublicationCurrentV1::Active { checkpoint_id, .. } => checkpoint.parent_checkpoint_id.is_some_and(|parent| parent.hex() == *checkpoint_id),
+            CheckpointPublicationCurrentV1::Genesis { checkpoint_id } | CheckpointPublicationCurrentV1::Active { checkpoint_id, .. } => checkpoint.parent_checkpoint_id.is_some_and(|parent| parent.hex() == *checkpoint_id),
         }
 }
 
@@ -3430,7 +3467,7 @@ impl GisMapApprovalCheckpointPublisherV1Impl {
         }
         match current {
             Some(checkpoint) => checkpoint.scope == *scope && checkpoint.baseline_frontier == *base,
-            None => base.head_edit_ordinal == 0 && base.head_edit_id.is_empty() && base.last_commit_seq == 0 && base.chain_hash == ArtifactHash([0; 32]),
+            None => false,
         }
     }
 }
@@ -4524,6 +4561,483 @@ async fn revalidate_directory_caller(state: &HubState, caller: &AuthedUser) -> R
         return Err(StatusCode::UNAUTHORIZED);
     }
     Ok(())
+}
+
+#[cfg(feature = "native-artifact-execution")]
+struct HubArtifactCreationCommitLeaseV1 {
+    _guards: Vec<tokio::sync::OwnedMutexGuard<()>>,
+}
+
+#[cfg(feature = "native-artifact-execution")]
+impl ArtifactCreationCommitLeaseV1 for HubArtifactCreationCommitLeaseV1 {}
+
+#[cfg(feature = "native-artifact-execution")]
+struct HubArtifactCreationCommitAuthorityV1 {
+    directory: Arc<HubDirectories>,
+    gates: Arc<SocketBindingGatesV1>,
+}
+
+#[cfg(feature = "native-artifact-execution")]
+impl ArtifactCreationCommitAuthorityV1 for HubArtifactCreationCommitAuthorityV1 {
+    fn acquire<'a>(&'a self, actor: &'a ArtifactCreationActorV1, space_id: &'a str) -> ArtifactCreationCommitFutureV1<'a> {
+        Box::pin(async move {
+            let guards = tokio::time::timeout(
+                std::time::Duration::from_secs(2),
+                self.gates.acquire_bindings(vec![
+                    SocketBindingKeyV1::User(actor.user_id.clone()),
+                    SocketBindingKeyV1::Session(actor.session_id.clone()),
+                    SocketBindingKeyV1::DirectorySpaceAuthority { space_id: space_id.to_string() },
+                    SocketBindingKeyV1::Membership { user_id: actor.user_id.clone(), space_id: space_id.to_string() },
+                ]),
+            )
+            .await
+            .map_err(|_| DirectoryError::Backend("artifact creation final authority unavailable".into()))?;
+            match tokio::time::timeout(
+                std::time::Duration::from_secs(2),
+                self.directory.socket_session_binding(&actor.session_id, &actor.user_id, actor.authorization_generation, Some(space_id), now_ms()),
+            )
+            .await
+            {
+                Ok(Ok(SocketSessionBindingStatus::Active { role: Some(SpaceRole::Author), .. })) => Ok(Box::new(HubArtifactCreationCommitLeaseV1 { _guards: guards }) as Box<dyn ArtifactCreationCommitLeaseV1>),
+                Ok(Ok(SocketSessionBindingStatus::Unavailable)) | Ok(Err(_)) | Err(_) => Err(DirectoryError::Backend("artifact creation final authority unavailable".into())),
+                _ => Err(DirectoryError::Unauthorized),
+            }
+        })
+    }
+}
+
+#[cfg(feature = "native-artifact-execution")]
+fn artifact_creation_space_id_v1(space_id: &str) -> bool {
+    !space_id.is_empty() && space_id.len() <= 256 && space_id.as_bytes()[0].is_ascii_alphanumeric() && space_id.bytes().all(|byte| byte.is_ascii_alphanumeric() || b"._:-".contains(&byte))
+}
+
+#[cfg(feature = "native-artifact-execution")]
+async fn acquire_artifact_creation_actor(
+    state: &HubState,
+    space_id: &str,
+    token: Option<&str>,
+) -> Result<(ArtifactCreationActorV1, Vec<tokio::sync::OwnedMutexGuard<()>>), StatusCode> {
+    if !artifact_creation_space_id_v1(space_id) { return Err(StatusCode::BAD_REQUEST); }
+    let caller = resolve_bearer_user(state, token).await.ok_or(StatusCode::UNAUTHORIZED)?;
+    let guards = tokio::time::timeout(
+        std::time::Duration::from_secs(2),
+        state.socket_binding_gates.acquire_bindings(vec![
+            SocketBindingKeyV1::User(caller.user_id.clone()),
+            SocketBindingKeyV1::Session(caller.session_id.clone()),
+            SocketBindingKeyV1::DirectorySpaceAuthority { space_id: space_id.to_string() },
+            SocketBindingKeyV1::Membership { user_id: caller.user_id.clone(), space_id: space_id.to_string() },
+        ]),
+    )
+    .await
+    .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
+    let binding = tokio::time::timeout(
+        std::time::Duration::from_secs(2),
+        state.directory.socket_session_binding(&caller.session_id, &caller.user_id, caller.authorization_generation, Some(space_id), now_ms()),
+    )
+    .await;
+    match binding {
+        Ok(Ok(SocketSessionBindingStatus::Active { role: Some(SpaceRole::Author), .. })) => Ok((ArtifactCreationActorV1 { user_id: caller.user_id, session_id: caller.session_id, authorization_generation: caller.authorization_generation }, guards)),
+        Ok(Ok(SocketSessionBindingStatus::Active { .. } | SocketSessionBindingStatus::MembershipLost)) => Err(StatusCode::FORBIDDEN),
+        Ok(Ok(SocketSessionBindingStatus::Revoked | SocketSessionBindingStatus::Expired)) => Err(StatusCode::UNAUTHORIZED),
+        Ok(Ok(SocketSessionBindingStatus::Unavailable)) | Ok(Err(_)) | Err(_) => Err(StatusCode::SERVICE_UNAVAILABLE),
+    }
+}
+
+#[cfg(feature = "native-artifact-execution")]
+const ARTIFACT_CREATION_HTTP_CAPACITY: usize = 8;
+#[cfg(feature = "native-artifact-execution")]
+const ARTIFACT_CREATION_SHUTDOWN_DEADLINE: std::time::Duration = std::time::Duration::from_secs(32);
+
+#[cfg(feature = "native-artifact-execution")]
+struct ArtifactCreationHttpControlV1 {
+    deadline: std::time::Instant,
+    cancelled: std::sync::atomic::AtomicBool,
+    shutdown_cancelled: Option<Arc<std::sync::atomic::AtomicBool>>,
+}
+
+#[cfg(feature = "native-artifact-execution")]
+impl ArtifactCreationHttpControlV1 {
+    fn new() -> Self {
+        Self { deadline: std::time::Instant::now() + std::time::Duration::from_millis(semio_hub::artifact_authority::creation::ARTIFACT_CREATION_DEADLINE_MS), cancelled: std::sync::atomic::AtomicBool::new(false), shutdown_cancelled: None }
+    }
+
+    fn recovery(shutdown_cancelled: Arc<std::sync::atomic::AtomicBool>) -> Self {
+        Self { shutdown_cancelled: Some(shutdown_cancelled), ..Self::new() }
+    }
+
+    fn cancel(&self) {
+        self.cancelled.store(true, std::sync::atomic::Ordering::Release);
+    }
+}
+
+#[cfg(feature = "native-artifact-execution")]
+impl AuthorityOperationControl for ArtifactCreationHttpControlV1 {
+    fn now_ms(&self) -> u64 {
+        SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |duration| u64::try_from(duration.as_millis()).unwrap_or(u64::MAX))
+    }
+
+    fn is_cancelled(&self) -> bool {
+        self.cancelled.load(std::sync::atomic::Ordering::Acquire)
+            || self.shutdown_cancelled.as_ref().is_some_and(|cancelled| cancelled.load(std::sync::atomic::Ordering::Acquire))
+            || std::time::Instant::now() >= self.deadline
+    }
+
+    fn report(&self, _progress: AuthorityProgress) {}
+}
+
+#[cfg(feature = "native-artifact-execution")]
+struct ArtifactCreationHttpTaskV1 {
+    control: Arc<ArtifactCreationHttpControlV1>,
+    pending: Arc<ArtifactCreationHttpPendingV1>,
+    task: tokio::task::JoinHandle<()>,
+}
+
+#[cfg(feature = "native-artifact-execution")]
+struct ArtifactCreationHttpPendingV1 {
+    control: Arc<ArtifactCreationHttpControlV1>,
+    disposition: std::sync::atomic::AtomicU8,
+    changed: tokio::sync::Notify,
+}
+
+#[cfg(feature = "native-artifact-execution")]
+struct ArtifactCreationHttpTaskOwnerStateV1 {
+    closing: bool,
+    reservations: BTreeMap<String, Arc<ArtifactCreationHttpPendingV1>>,
+    tasks: BTreeMap<String, ArtifactCreationHttpTaskV1>,
+    recovery: Option<tokio::task::JoinHandle<()>>,
+}
+
+#[cfg(feature = "native-artifact-execution")]
+struct ArtifactCreationHttpTaskOwnerV1 {
+    state: Mutex<ArtifactCreationHttpTaskOwnerStateV1>,
+    changed: Arc<tokio::sync::Notify>,
+    recovery_cancelled: Arc<std::sync::atomic::AtomicBool>,
+}
+
+#[cfg(feature = "native-artifact-execution")]
+struct ArtifactCreationHttpReservationV1 {
+    owner: Arc<ArtifactCreationHttpTaskOwnerV1>,
+    key: String,
+    pending: Arc<ArtifactCreationHttpPendingV1>,
+    activated: bool,
+}
+
+#[cfg(feature = "native-artifact-execution")]
+enum ArtifactCreationHttpAdmissionV1 {
+    Owner(ArtifactCreationHttpReservationV1),
+    Join(Arc<ArtifactCreationHttpPendingV1>),
+    Unavailable,
+}
+
+#[cfg(feature = "native-artifact-execution")]
+impl ArtifactCreationHttpTaskOwnerV1 {
+    fn new() -> Self {
+        Self {
+            state: Mutex::new(ArtifactCreationHttpTaskOwnerStateV1 { closing: false, reservations: BTreeMap::new(), tasks: BTreeMap::new(), recovery: None }),
+            changed: Arc::new(tokio::sync::Notify::new()),
+            recovery_cancelled: Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        }
+    }
+
+    fn reserve(self: &Arc<Self>, key: String, control: Arc<ArtifactCreationHttpControlV1>) -> ArtifactCreationHttpAdmissionV1 {
+        let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        state.tasks.retain(|_, task| !task.task.is_finished());
+        if state.closing { return ArtifactCreationHttpAdmissionV1::Unavailable; }
+        if let Some(pending) = state.reservations.get(&key).or_else(|| state.tasks.get(&key).map(|task| &task.pending)) {
+            return ArtifactCreationHttpAdmissionV1::Join(pending.clone());
+        }
+        if state.tasks.len().saturating_add(state.reservations.len()) >= ARTIFACT_CREATION_HTTP_CAPACITY { return ArtifactCreationHttpAdmissionV1::Unavailable; }
+        let pending = Arc::new(ArtifactCreationHttpPendingV1 { control, disposition: std::sync::atomic::AtomicU8::new(0), changed: tokio::sync::Notify::new() });
+        state.reservations.insert(key.clone(), pending.clone());
+        ArtifactCreationHttpAdmissionV1::Owner(ArtifactCreationHttpReservationV1 { owner: self.clone(), key, pending, activated: false })
+    }
+
+    fn start_recovery(self: &Arc<Self>, service: Arc<ArtifactCreationServiceV1>, authority: Arc<HubArtifactCreationCommitAuthorityV1>) {
+        let cancelled = self.recovery_cancelled.clone();
+        let wake = self.changed.clone();
+        let task = tokio::spawn(async move {
+            loop {
+                tokio::select! {
+                    _ = tokio::time::sleep(std::time::Duration::from_secs(1)) => {}
+                    _ = wake.notified() => {}
+                }
+                if cancelled.load(std::sync::atomic::Ordering::Acquire) { break; }
+                let scan_now = SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |duration| u64::try_from(duration.as_millis()).unwrap_or(u64::MAX));
+                let intents = match service.recovery_candidates(scan_now, 32).await {
+                    Ok(intents) => intents,
+                    Err(error) => {
+                        eprintln!("[DEBUG] artifact creation recovery scan unavailable: {error}");
+                        continue;
+                    }
+                };
+                for intent in intents {
+                    if cancelled.load(std::sync::atomic::Ordering::Acquire) { break; }
+                    let control = ArtifactCreationHttpControlV1::recovery(cancelled.clone());
+                    let deadline = control.now_ms().saturating_add(semio_hub::artifact_authority::creation::ARTIFACT_CREATION_DEADLINE_MS);
+                    let context = OperationContext::new(deadline, AuthorityLimits::maximum(), &control);
+                    if let Err(error) = service.recover(intent, authority.as_ref(), &context).await {
+                        eprintln!("[DEBUG] artifact creation recovery attempt unavailable: {error}");
+                    }
+                }
+            }
+        });
+        let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if state.closing || state.recovery.is_some() {
+            task.abort();
+        } else {
+            state.recovery = Some(task);
+        }
+    }
+
+    fn cancel(&self, key: &str) {
+        let state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if let Some(pending) = state.reservations.get(key) { pending.control.cancel(); }
+        if let Some(task) = state.tasks.get(key) { task.control.cancel(); }
+    }
+
+    async fn shutdown(&self) {
+        self.shutdown_with_deadline(ARTIFACT_CREATION_SHUTDOWN_DEADLINE).await;
+    }
+
+    async fn shutdown_with_deadline(&self, shutdown_deadline: std::time::Duration) {
+        self.recovery_cancelled.store(true, std::sync::atomic::Ordering::Release);
+        self.changed.notify_waiters();
+        let deadline = tokio::time::Instant::now() + shutdown_deadline;
+        loop {
+            let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            state.closing = true;
+            for pending in state.reservations.values() { pending.control.cancel(); }
+            for task in state.tasks.values() { task.control.cancel(); }
+            if state.reservations.is_empty() { break; }
+            drop(state);
+            if tokio::time::timeout_at(deadline, self.changed.notified()).await.is_err() { break; }
+        }
+        let (mut tasks, recovery, reservations) = {
+            let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let tasks = std::mem::take(&mut state.tasks).into_values().map(|task| task.task).collect::<Vec<_>>();
+            (tasks, state.recovery.take(), std::mem::take(&mut state.reservations).into_values().collect::<Vec<_>>())
+        };
+        for pending in reservations {
+            pending.control.cancel();
+            let _ = pending.disposition.compare_exchange(0, 2, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire);
+            pending.changed.notify_waiters();
+        }
+        self.changed.notify_waiters();
+        if let Some(recovery) = recovery {
+            tasks.push(recovery);
+        }
+        if tokio::time::timeout_at(deadline, futures::future::join_all(tasks.iter_mut())).await.is_err() {
+            for task in &tasks { task.abort(); }
+            for task in tasks { let _ = task.await; }
+        }
+    }
+
+    #[cfg(test)]
+    fn task_count(&self) -> usize {
+        let state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        state.reservations.len().saturating_add(state.tasks.values().filter(|task| !task.task.is_finished()).count())
+    }
+}
+
+#[cfg(feature = "native-artifact-execution")]
+impl ArtifactCreationHttpReservationV1 {
+    fn activate<F>(mut self, future: F)
+    where
+        F: std::future::Future<Output = ()> + Send + 'static,
+    {
+        let mut state = self.owner.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let owns_reservation = state.reservations.get(&self.key).is_some_and(|pending| Arc::ptr_eq(pending, &self.pending));
+        if !state.closing && owns_reservation {
+            state.reservations.remove(&self.key);
+            state.tasks.insert(self.key.clone(), ArtifactCreationHttpTaskV1 { control: self.pending.control.clone(), pending: self.pending.clone(), task: tokio::spawn(future) });
+            self.activated = true;
+        }
+        drop(state);
+        let disposition = if self.activated { 1 } else { 2 };
+        let _ = self.pending.disposition.compare_exchange(0, disposition, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire);
+        self.pending.changed.notify_waiters();
+        self.owner.changed.notify_waiters();
+    }
+
+    fn finish(mut self) {
+        let mut state = self.owner.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let owns_reservation = state.reservations.get(&self.key).is_some_and(|pending| Arc::ptr_eq(pending, &self.pending));
+        if owns_reservation { state.reservations.remove(&self.key); }
+        let disposition = if !state.closing && owns_reservation { 1 } else { 2 };
+        drop(state);
+        self.activated = true;
+        let _ = self.pending.disposition.compare_exchange(0, disposition, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire);
+        self.pending.changed.notify_waiters();
+        self.owner.changed.notify_waiters();
+    }
+}
+
+#[cfg(feature = "native-artifact-execution")]
+impl Drop for ArtifactCreationHttpReservationV1 {
+    fn drop(&mut self) {
+        if self.activated { return; }
+        let mut state = self.owner.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if state.reservations.get(&self.key).is_some_and(|pending| Arc::ptr_eq(pending, &self.pending)) { state.reservations.remove(&self.key); }
+        drop(state);
+        let _ = self.pending.disposition.compare_exchange(0, 2, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire);
+        self.pending.changed.notify_waiters();
+        self.owner.changed.notify_waiters();
+    }
+}
+
+#[cfg(feature = "native-artifact-execution")]
+async fn await_artifact_creation_http_admission_v1(pending: &ArtifactCreationHttpPendingV1) -> Option<u8> {
+    let disposition = pending.disposition.load(std::sync::atomic::Ordering::Acquire);
+    if disposition != 0 { return Some(disposition); }
+    tokio::time::timeout(std::time::Duration::from_secs(2), async {
+        loop {
+            let changed = pending.changed.notified();
+            let disposition = pending.disposition.load(std::sync::atomic::Ordering::Acquire);
+            if disposition != 0 { return disposition; }
+            changed.await;
+        }
+    })
+    .await
+    .ok()
+}
+
+#[cfg(feature = "native-artifact-execution")]
+fn artifact_creation_task_key_v1(user_id: &str, space_id: &str, request_id: &str) -> String {
+    format!("{user_id}\0{space_id}\0{request_id}")
+}
+
+#[cfg(feature = "native-artifact-execution")]
+fn artifact_creation_request_id_v1(request_id: &str) -> bool {
+    request_id.len() == 32 && request_id.bytes().any(|byte| byte != b'0') && request_id.bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
+}
+
+#[cfg(feature = "native-artifact-execution")]
+fn artifact_creation_error_status(error: DirectoryError) -> StatusCode {
+    match error {
+        DirectoryError::NotFound(_) => StatusCode::NOT_FOUND,
+        DirectoryError::Conflict(_) => StatusCode::CONFLICT,
+        DirectoryError::Unauthorized => StatusCode::UNAUTHORIZED,
+        DirectoryError::Backend(_) => StatusCode::SERVICE_UNAVAILABLE,
+    }
+}
+
+#[cfg(feature = "native-artifact-execution")]
+fn artifact_creation_status_response(status: SpaceArtifactCreationStatusV1) -> Response {
+    let code = match status.phase {
+        SpaceArtifactCreationPhaseV1::Accepted | SpaceArtifactCreationPhaseV1::Preparing => StatusCode::ACCEPTED,
+        SpaceArtifactCreationPhaseV1::Ready | SpaceArtifactCreationPhaseV1::Indeterminate | SpaceArtifactCreationPhaseV1::Failed | SpaceArtifactCreationPhaseV1::Cancelled => StatusCode::OK,
+    };
+    let mut response = (code, DirectoryJson(status)).into_response();
+    response.headers_mut().insert(axum::http::header::CACHE_CONTROL, axum::http::HeaderValue::from_static("no-store"));
+    response
+}
+
+#[cfg(feature = "native-artifact-execution")]
+async fn get_space_artifact_creation_catalog(Path(space_id): Path<String>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>) -> Response {
+    if uri.query().is_some() { return StatusCode::BAD_REQUEST.into_response(); }
+    let Some(service) = state.artifact_creation.as_ref() else { return StatusCode::SERVICE_UNAVAILABLE.into_response() };
+    let (actor, _guards) = match acquire_artifact_creation_actor(&state, &space_id, bearer(&headers).as_deref()).await {
+        Ok(actor) => actor,
+        Err(status) => return status.into_response(),
+    };
+    match service.creation_catalog(&actor, &space_id, u64::try_from(now_ms()).unwrap_or_default()).await {
+        Ok(catalog) => {
+            let mut response = DirectoryJson(catalog).into_response();
+            response.headers_mut().insert(axum::http::header::CACHE_CONTROL, axum::http::HeaderValue::from_static("no-store"));
+            response
+        }
+        Err(error) => artifact_creation_error_status(error).into_response(),
+    }
+}
+
+#[cfg(feature = "native-artifact-execution")]
+async fn post_space_artifact_creation(Path(space_id): Path<String>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
+    if uri.query().is_some()
+        || body.is_empty()
+        || body.len() > SPACE_ARTIFACT_CREATION_MAX_BYTES
+        || headers.get_all(axum::http::header::CONTENT_TYPE).iter().count() != 1
+        || headers.get(axum::http::header::CONTENT_TYPE).and_then(|value| value.to_str().ok()) != Some("application/json")
+    {
+        return StatusCode::BAD_REQUEST.into_response();
+    }
+    let request = match std::str::from_utf8(&body).ok().and_then(SpaceArtifactCreateV1::parse_canonical_json) {
+        Some(request) => request,
+        None => return StatusCode::BAD_REQUEST.into_response(),
+    };
+    let Some(service) = state.artifact_creation.as_ref().cloned() else { return StatusCode::SERVICE_UNAVAILABLE.into_response() };
+    let (actor, guards) = match acquire_artifact_creation_actor(&state, &space_id, bearer(&headers).as_deref()).await {
+        Ok(actor) => actor,
+        Err(status) => return status.into_response(),
+    };
+    let key = artifact_creation_task_key_v1(&actor.user_id, &space_id, &request.request_id);
+    let control = Arc::new(ArtifactCreationHttpControlV1::new());
+    let mut predecessor_failures = 0u8;
+    let reservation = loop {
+        match state.artifact_creation_tasks.reserve(key.clone(), control.clone()) {
+            ArtifactCreationHttpAdmissionV1::Owner(reservation) => break Some(reservation),
+            ArtifactCreationHttpAdmissionV1::Join(pending) => match await_artifact_creation_http_admission_v1(pending.as_ref()).await {
+                Some(1) => break None,
+                Some(2) if predecessor_failures < 2 => {
+                    predecessor_failures += 1;
+                    continue;
+                }
+                _ => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
+            },
+            ArtifactCreationHttpAdmissionV1::Unavailable => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
+        }
+    };
+    let deadline = control.now_ms().saturating_add(semio_hub::artifact_authority::creation::ARTIFACT_CREATION_DEADLINE_MS);
+    let context = OperationContext::new(deadline, AuthorityLimits::maximum(), control.as_ref());
+    let acceptance = match service.accept(&actor, &space_id, request, &context).await {
+        Ok(acceptance) => acceptance,
+        Err(error) => return artifact_creation_error_status(error).into_response(),
+    };
+    drop(guards);
+    if let Some(execution) = acceptance.execution {
+        let Some(reservation) = reservation else {
+            return StatusCode::SERVICE_UNAVAILABLE.into_response();
+        };
+        let authority = state.artifact_creation_commit_authority.clone();
+        reservation.activate(async move {
+            let deadline = control.now_ms().saturating_add(semio_hub::artifact_authority::creation::ARTIFACT_CREATION_DEADLINE_MS);
+            let context = OperationContext::new(deadline, AuthorityLimits::maximum(), control.as_ref());
+            if let Err(error) = service.execute(execution, authority.as_ref(), &context).await {
+                eprintln!("[DEBUG] artifact creation retained execution unavailable: {error}");
+            }
+        });
+    } else if let Some(reservation) = reservation { reservation.finish(); }
+    artifact_creation_status_response(acceptance.status)
+}
+
+#[cfg(feature = "native-artifact-execution")]
+async fn get_space_artifact_creation_status(Path((space_id, request_id)): Path<(String, String)>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>) -> Response {
+    if uri.query().is_some() || !artifact_creation_request_id_v1(&request_id) { return StatusCode::BAD_REQUEST.into_response(); }
+    let Some(service) = state.artifact_creation.as_ref() else { return StatusCode::SERVICE_UNAVAILABLE.into_response() };
+    let (actor, _guards) = match acquire_artifact_creation_actor(&state, &space_id, bearer(&headers).as_deref()).await {
+        Ok(actor) => actor,
+        Err(status) => return status.into_response(),
+    };
+    match service.status(&actor, &space_id, &request_id, u64::try_from(now_ms()).unwrap_or_default()).await {
+        Ok(status) => artifact_creation_status_response(status),
+        Err(error) => artifact_creation_error_status(error).into_response(),
+    }
+}
+
+#[cfg(feature = "native-artifact-execution")]
+async fn post_space_artifact_creation_cancel(Path((space_id, request_id)): Path<(String, String)>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
+    if uri.query().is_some() || !body.is_empty() || !artifact_creation_request_id_v1(&request_id) { return StatusCode::BAD_REQUEST.into_response(); }
+    let Some(service) = state.artifact_creation.as_ref() else { return StatusCode::SERVICE_UNAVAILABLE.into_response() };
+    let (actor, _guards) = match acquire_artifact_creation_actor(&state, &space_id, bearer(&headers).as_deref()).await {
+        Ok(actor) => actor,
+        Err(status) => return status.into_response(),
+    };
+    match service.cancel(&actor, &space_id, &request_id, u64::try_from(now_ms()).unwrap_or_default()).await {
+        Ok(status) => {
+            state.artifact_creation_tasks.cancel(&artifact_creation_task_key_v1(&actor.user_id, &space_id, &request_id));
+            artifact_creation_status_response(status)
+        }
+        Err(error) => artifact_creation_error_status(error).into_response(),
+    }
 }
 
 fn directory_error_status(error: DirectoryError) -> StatusCode {
@@ -5690,6 +6204,7 @@ fn directory_message_matches_scope(scope: &DocumentScope, message: &DirectoryStr
     match message {
         DirectoryStreamMessage::Event { event } => match &event.body {
             os_directory::DirectoryEventBody::DocumentAnnounced { descriptor } => descriptor.space_id == scope.space_id && descriptor.document_id == scope.document_id,
+            os_directory::DirectoryEventBody::DocumentIndexed { scope: indexed, .. } => indexed == scope,
             os_directory::DirectoryEventBody::ArtifactCheckpointPublished { checkpoint } => checkpoint.scope == *scope,
             os_directory::DirectoryEventBody::ArtifactRetentionAdvanced { retention } => retention.scope == *scope,
             os_directory::DirectoryEventBody::UserCreated { .. }
@@ -5766,7 +6281,7 @@ async fn pause_global_directory_send_for_test(state: &HubState, record: &SocketG
     }
 }
 
-async fn send_socket_directory_message(sender: &mut SplitSink<WebSocket, Message>, state: &HubState, record: &SocketGrantRecordV1, live_id: &str, message: &DirectoryStreamMessage) -> ScopedDirectoryFrameDecisionV1 {
+async fn send_socket_directory_message(sender: &mut SplitSink<WebSocket, Message>, state: &HubState, record: &SocketGrantRecordV1, live_id: &str, delivery_space_id: Option<&str>, delivery_epoch: u64, message: &DirectoryStreamMessage) -> ScopedDirectoryFrameDecisionV1 {
     #[cfg(test)]
     pause_global_directory_send_for_test(state, record, 1).await;
     #[cfg(test)]
@@ -5810,6 +6325,10 @@ async fn send_socket_directory_message(sender: &mut SplitSink<WebSocket, Message
     if decision != ScopedDirectoryFrameDecisionV1::Deliver {
         return decision;
     }
+    let _delivery = match tokio::time::timeout(std::time::Duration::from_secs(2), state.directory_service.acquire_delivery_lease(delivery_space_id, delivery_epoch)).await {
+        Ok(Some(delivery)) => delivery,
+        Ok(None) | Err(_) => return ScopedDirectoryFrameDecisionV1::CloseUnavailable,
+    };
     #[cfg(test)]
     pause_global_directory_send_for_test(state, record, 2).await;
     match tokio::time::timeout(std::time::Duration::from_secs(2), send_directory_message(sender, message)).await {
@@ -5818,7 +6337,7 @@ async fn send_socket_directory_message(sender: &mut SplitSink<WebSocket, Message
     }
 }
 
-async fn send_socket_directory_rebootstrap(sender: &mut SplitSink<WebSocket, Message>, state: &HubState, record: &SocketGrantRecordV1, live_id: &str, scope: &DocumentScope) -> SocketBindingValidityV1 {
+async fn send_socket_directory_rebootstrap(sender: &mut SplitSink<WebSocket, Message>, state: &HubState, record: &SocketGrantRecordV1, live_id: &str, delivery_space_id: Option<&str>, delivery_epoch: u64, scope: &DocumentScope) -> SocketBindingValidityV1 {
     let _admission = match socket_live_authority_with_bindings(state, record, live_id, directory_space_message_bindings(record, Some(&scope.space_id))).await {
         Ok(admission) => admission,
         Err(validity) => return validity,
@@ -5841,10 +6360,16 @@ async fn send_socket_directory_rebootstrap(sender: &mut SplitSink<WebSocket, Mes
         Err(_) => return SocketBindingValidityV1::Unavailable,
     };
     match control {
-        Some(control) => match tokio::time::timeout(std::time::Duration::from_secs(2), send_directory_message(sender, &DirectoryStreamMessage::RebootstrapRequired { control })).await {
-            Ok(true) => SocketBindingValidityV1::Active,
-            _ => SocketBindingValidityV1::Unavailable,
-        },
+        Some(control) => {
+            let _delivery = match tokio::time::timeout(std::time::Duration::from_secs(2), state.directory_service.acquire_delivery_lease(delivery_space_id, delivery_epoch)).await {
+                Ok(Some(delivery)) => delivery,
+                Ok(None) | Err(_) => return SocketBindingValidityV1::Unavailable,
+            };
+            match tokio::time::timeout(std::time::Duration::from_secs(2), send_directory_message(sender, &DirectoryStreamMessage::RebootstrapRequired { control })).await {
+                Ok(true) => SocketBindingValidityV1::Active,
+                _ => SocketBindingValidityV1::Unavailable,
+            }
+        }
         None => SocketBindingValidityV1::Active,
     }
 }
@@ -5897,6 +6422,12 @@ async fn handle_directory_ws_v1(socket: WebSocket, since: u64, scope: Option<Doc
         gate.socket_directory_admitted.add_permits(1);
         let _ = gate.socket_directory_release.acquire().await;
     }
+    let mut delivery_invalidations = state.directory_service.subscribe_delivery_invalidations();
+    let delivery_space_id = match &record.audience {
+        SocketAudienceV1::DirectoryScoped(scope) => Some(scope.space_id.as_str()),
+        SocketAudienceV1::Directory { .. } | SocketAudienceV1::Document(_) => None,
+    };
+    let delivery_epoch = state.directory_service.delivery_epoch(delivery_space_id);
     let mut live = state.directory_service.subscribe();
     let replay = match load_all_directory_events(state.directory.as_ref(), since).await {
         Ok(events) => events,
@@ -5908,8 +6439,8 @@ async fn handle_directory_ws_v1(socket: WebSocket, since: u64, scope: Option<Doc
     let mut last_replayed = since;
     for event in replay {
         let seq = event.seq;
-        let message = DirectoryStreamMessage::Event { event };
-        match send_socket_directory_message(&mut sender, &state, &record, &live_lease.id, &message).await {
+        let message = DirectoryStreamMessage::Event { event: Box::new(event) };
+        match send_socket_directory_message(&mut sender, &state, &record, &live_lease.id, delivery_space_id, delivery_epoch, &message).await {
             ScopedDirectoryFrameDecisionV1::Deliver => {
                 last_replayed = last_replayed.max(seq);
             }
@@ -5924,9 +6455,25 @@ async fn handle_directory_ws_v1(socket: WebSocket, since: u64, scope: Option<Doc
             }
         }
     }
+    if state.directory_service.delivery_epoch(delivery_space_id) != delivery_epoch {
+        let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "directory-replay-invalidated".into() }))).await;
+        return;
+    }
     let mut authorization_tick = tokio::time::interval(std::time::Duration::from_secs(1));
     loop {
         tokio::select! {
+            invalidation = delivery_invalidations.recv() => match invalidation {
+                Ok(_) => {
+                    if state.directory_service.delivery_epoch(delivery_space_id) != delivery_epoch {
+                        let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "directory-delivery-invalidated".into() }))).await;
+                        break;
+                    }
+                }
+                Err(broadcast::error::RecvError::Lagged(_) | broadcast::error::RecvError::Closed) => {
+                    let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "directory-delivery-invalidated".into() }))).await;
+                    break;
+                }
+            },
             _ = authorization_tick.tick() => match socket_live_authority(&state, &record, &live_lease.id).await {
                 Ok(_) => {}
                 Err(SocketBindingValidityV1::Unauthorized) => {
@@ -5950,7 +6497,7 @@ async fn handle_directory_ws_v1(socket: WebSocket, since: u64, scope: Option<Doc
                     if seq.is_some_and(|seq| seq <= last_replayed) {
                         continue;
                     }
-                    match send_socket_directory_message(&mut sender, &state, &record, &live_lease.id, &message).await {
+                    match send_socket_directory_message(&mut sender, &state, &record, &live_lease.id, delivery_space_id, delivery_epoch, &message).await {
                         ScopedDirectoryFrameDecisionV1::Deliver => {
                             if let Some(seq) = seq { last_replayed = last_replayed.max(seq); }
                         }
@@ -5967,7 +6514,7 @@ async fn handle_directory_ws_v1(socket: WebSocket, since: u64, scope: Option<Doc
                 }
                 Err(broadcast::error::RecvError::Lagged(_)) => {
                     let validity = match scope.as_ref() {
-                        Some(scope) => send_socket_directory_rebootstrap(&mut sender, &state, &record, &live_lease.id, scope).await,
+                        Some(scope) => send_socket_directory_rebootstrap(&mut sender, &state, &record, &live_lease.id, delivery_space_id, delivery_epoch, scope).await,
                         None => match socket_live_authority(&state, &record, &live_lease.id).await {
                             Ok(_) => SocketBindingValidityV1::Active,
                             Err(validity) => validity,
@@ -7538,12 +8085,34 @@ async fn post_inference_gis_map_job_approval(Path((space_id, document_id, job_id
 }
 
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+async fn post_inference_gis_map_approval_undo(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
+    let token = bearer(&headers);
+    let route = match inference_context(&state, &space_id, &document_id, &token) {
+        Ok(context) => context,
+        Err(response) => return response,
+    };
+    let ingress = match acquire_gis_map_approval_ingress(&state, route.scope.clone(), token.as_deref()).await {
+        Ok(ingress) => ingress,
+        Err(error) => return inference_error_response(error),
+    };
+    let context = InferenceApprovalRouteContextV1 { route, ingress: ingress.clone() };
+    match semio_hub::inference::runtime::undo_gis_map_approval(context, &body).await {
+        Ok(receipt) => match revalidate_gis_map_approval_delivery(&state, &ingress).await {
+            Ok(()) => Json(receipt).into_response(),
+            Err(error) => inference_error_response(error),
+        },
+        Err(error) => inference_error_response(error),
+    }
+}
+
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 fn inference_routes(router: Router<HubState>) -> Router<HubState> {
     router
         .route("/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs", post(post_inference_gis_map_job).layer(DefaultBodyLimit::max(INFERENCE_REQUEST_MAX_BYTES)))
         .route("/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/{job_id}/events", get(get_inference_gis_map_job_events))
         .route("/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/{job_id}/cancel", post(post_inference_gis_map_job_cancel).layer(DefaultBodyLimit::max(INFERENCE_REQUEST_MAX_BYTES)))
         .route("/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/{job_id}/approval", post(post_inference_gis_map_job_approval).layer(DefaultBodyLimit::max(INFERENCE_REQUEST_MAX_BYTES)))
+        .route("/spaces/{space_id}/documents/{document_id}/inference/gis-map/approval-undos", post(post_inference_gis_map_approval_undo).layer(DefaultBodyLimit::max(INFERENCE_REQUEST_MAX_BYTES)))
 }
 
 #[cfg(not(all(feature = "sqlite", feature = "native-artifact-execution")))]
@@ -7556,8 +8125,21 @@ const INFERENCE_REQUEST_MAX_BYTES: usize = 1024;
 //#endregion 💡️Inference
 
 //#region 🔖️Main
+#[cfg(feature = "native-artifact-execution")]
+fn artifact_creation_routes(router: Router<HubState>) -> Router<HubState> {
+    router
+        .route("/spaces/{space_id}/artifact-creations", get(get_space_artifact_creation_catalog).post(post_space_artifact_creation).layer(DefaultBodyLimit::max(SPACE_ARTIFACT_CREATION_MAX_BYTES)))
+        .route("/spaces/{space_id}/artifact-creations/{request_id}", get(get_space_artifact_creation_status))
+        .route("/spaces/{space_id}/artifact-creations/{request_id}/cancel", post(post_space_artifact_creation_cancel).layer(DefaultBodyLimit::max(0)))
+}
+
+#[cfg(not(feature = "native-artifact-execution"))]
+fn artifact_creation_routes(router: Router<HubState>) -> Router<HubState> {
+    router
+}
+
 fn router(state: HubState) -> Router {
-    inference_routes(Router::new())
+    artifact_creation_routes(inference_routes(Router::new()))
         .route("/readyz", get(get_readyz))
         .route("/auth/sessions/me", get(get_session_me).delete(delete_session_me))
         .route("/directory/commands", post(post_directory_commands).layer(DefaultBodyLimit::max(DIRECTORY_COMMAND_REQUEST_MAX_BYTES)))
@@ -7792,6 +8374,16 @@ async fn main() -> Result<(), HubError> {
     };
     let openable_catalog = artifact_authority.as_ref().map(|configured| -> Arc<dyn DocumentOpenCatalogAuthorityV1> { configured.catalog.clone() });
     let socket_binding_gates = Arc::new(SocketBindingGatesV1::default());
+    #[cfg(feature = "native-artifact-execution")]
+    let artifact_creation_commit_authority = Arc::new(HubArtifactCreationCommitAuthorityV1 { directory: directory.clone(), gates: socket_binding_gates.clone() });
+    #[cfg(feature = "native-artifact-execution")]
+    let artifact_creation_tasks = Arc::new(ArtifactCreationHttpTaskOwnerV1::new());
+    #[cfg(feature = "native-artifact-execution")]
+    let artifact_creation = verified_catalog.as_ref().map(|catalog| Arc::new(ArtifactCreationServiceV1::new(directory_service.clone(), catalog.clone(), artifact_cas.clone())));
+    #[cfg(feature = "native-artifact-execution")]
+    if let Some(service) = artifact_creation.as_ref() {
+        artifact_creation_tasks.start_recovery(service.clone(), artifact_creation_commit_authority.clone());
+    }
     let fanout = Arc::new(ShardedMap::new());
     let fanout_capacity = 256;
     #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
@@ -7810,7 +8402,17 @@ async fn main() -> Result<(), HubError> {
                 fanout_capacity,
             });
             let committer = Arc::new(RetainedGisMapApprovalCommitterV1::new(db.clone(), db.storage().await, ledger.clone(), publisher));
-            Some(Arc::new(HubInferenceRuntimeV1::new(binding.clone(), ledger, committer)))
+            let runtime = Arc::new(HubInferenceRuntimeV1::new(binding.clone(), ledger, committer));
+            #[cfg(feature = "test-support")]
+            if let Some(descriptor) = std::env::var_os("OS_HUB_TEST_INFERENCE_CHECKPOINT_FD") {
+                if mode != HubMode::Development || descriptor.to_str() != Some("4") {
+                    return Err(HubError::UnsafeAuthConfiguration("test inference checkpoint control requires development mode and inherited descriptor 4".into()));
+                }
+                runtime
+                    .install_checkpoint_test_gate(Arc::new(InferenceCheckpointTestGateV1::open_inherited().map_err(|_| HubError::UnsafeAuthConfiguration("test inference checkpoint control unavailable".into()))?))
+                    .map_err(|_| HubError::UnsafeAuthConfiguration("test inference checkpoint control already installed".into()))?;
+            }
+            Some(runtime)
         }
         None => None,
     };
@@ -7828,6 +8430,12 @@ async fn main() -> Result<(), HubError> {
         rebootstrap,
         artifact_authority: artifact_authority.map(|configured| configured.authority),
         verified_catalog,
+        #[cfg(feature = "native-artifact-execution")]
+        artifact_creation,
+        #[cfg(feature = "native-artifact-execution")]
+        artifact_creation_commit_authority,
+        #[cfg(feature = "native-artifact-execution")]
+        artifact_creation_tasks: artifact_creation_tasks.clone(),
         #[cfg(feature = "native-artifact-execution")]
         gis_map_binding,
         #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
@@ -7873,6 +8481,8 @@ async fn main() -> Result<(), HubError> {
     let addr = SocketAddr::new(bind, port);
     let listener = tokio::net::TcpListener::bind(addr).await?;
     let admin_operation_tasks = state.admin_operation_tasks.clone();
+    #[cfg(feature = "native-artifact-execution")]
+    let artifact_creation_tasks = state.artifact_creation_tasks.clone();
     let bootstrap_task = local_bootstrap.clone().map(|transport| {
         let control: Arc<dyn IdentityVerificationControl> = bootstrap_control.clone();
         tokio::spawn(serve_local_bootstrap(transport, directory, control))
@@ -7904,6 +8514,8 @@ async fn main() -> Result<(), HubError> {
         server.await.map_err(HubError::Io)
     };
     admin_operation_tasks.shutdown().await;
+    #[cfg(feature = "native-artifact-execution")]
+    artifact_creation_tasks.shutdown().await;
     #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
     let inference_close_result = match inference_runtime {
         Some(inference_runtime) => inference_runtime.close().await.map_err(HubError::InferenceShutdown),
@@ -8056,6 +8668,112 @@ mod tests {
 
     #[cfg(feature = "native-artifact-execution")]
     #[tokio::test]
+    async fn artifact_creation_admission_cannot_activate_after_shutdown_deadline() {
+        let owner = Arc::new(ArtifactCreationHttpTaskOwnerV1::new());
+        let control = Arc::new(ArtifactCreationHttpControlV1::new());
+        let reservation = match owner.reserve("user\0space\0request".into(), control) {
+            ArtifactCreationHttpAdmissionV1::Owner(reservation) => reservation,
+            _ => panic!("first exact admission owns its reservation"),
+        };
+        let pending = reservation.pending.clone();
+        let shutdown = tokio::spawn({
+            let owner = owner.clone();
+            async move { owner.shutdown_with_deadline(std::time::Duration::from_millis(10)).await }
+        });
+        loop {
+            if owner.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).closing { break; }
+            tokio::task::yield_now().await;
+        }
+        shutdown.await.expect("bounded owner shutdown");
+        let executed = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        reservation.activate({
+            let executed = executed.clone();
+            async move { executed.store(true, std::sync::atomic::Ordering::Release) }
+        });
+        tokio::task::yield_now().await;
+        assert!(!executed.load(std::sync::atomic::Ordering::Acquire), "a durable late acceptance cannot start its factory after close");
+        assert_eq!(pending.disposition.load(std::sync::atomic::Ordering::Acquire), 2, "joiners observe the retired pre-accept owner");
+        assert_eq!(owner.task_count(), 0, "shutdown clears reservations and cannot leak a post-close task");
+        assert!(matches!(owner.reserve("user\0space\0request".into(), Arc::new(ArtifactCreationHttpControlV1::new())), ArtifactCreationHttpAdmissionV1::Unavailable));
+    }
+
+    #[cfg(all(feature = "native-artifact-execution", feature = "test-support"))]
+    #[tokio::test]
+    async fn space_artifact_creation_routes_are_author_owned_idempotent_and_genesis_backed() {
+        use semio_hub::artifact_authority::creation::ArtifactCreationOperationV1;
+        use semio_hub::artifact_authority::trusted_catalog::test_support;
+
+        let profile = test_support::verified_gis_map_test_profile(&test_support::unique_profile_root("artifact-creation-http")).await.expect("verified GIS Map creation profile");
+        let mut state = test_state().await;
+        state.verified_catalog = Some(profile.catalog().clone());
+        state.artifact_creation = Some(Arc::new(ArtifactCreationServiceV1::new(state.directory_service.clone(), profile.catalog().clone(), state.artifact_cas.clone())));
+        let author = issue_test_session(&state, "creation-author@example.test").await;
+        let peer = issue_test_session(&state, "creation-peer@example.test").await;
+        let spectator = issue_test_session(&state, "creation-spectator@example.test").await;
+        let space_id = create_space_for_test(&state, &author.user_id, "Artifact Creation", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        upsert_member_for_test(&state, &space_id, "creation-author@example.test", DirectorySpaceRole::Author).await;
+        upsert_member_for_test(&state, &space_id, "creation-peer@example.test", DirectorySpaceRole::Author).await;
+        upsert_member_for_test(&state, &space_id, "creation-spectator@example.test", DirectorySpaceRole::Spectator).await;
+        let (addr, shutdown, server) = spawn_restartable_server(state.clone()).await;
+        let route = format!("/spaces/{space_id}/artifact-creations");
+        let author_bearer = format!("Bearer {}", author.token);
+        let peer_bearer = format!("Bearer {}", peer.token);
+        let spectator_bearer = format!("Bearer {}", spectator.token);
+        let catalog = raw_http_request(addr, "GET", &route, &[("Authorization", author_bearer.as_str())], &[]).await;
+        assert_eq!(catalog.status, 200);
+        let catalog_source = std::str::from_utf8(&catalog.body).expect("creation catalog UTF-8");
+        let catalog = SpaceArtifactCreationCatalogV1::parse_canonical_json(catalog_source).expect("canonical selected creation catalog");
+        assert_eq!(catalog.space_id, space_id);
+        assert_eq!(catalog.kinds.iter().map(|kind| kind.kind_id.as_str()).collect::<Vec<_>>(), vec!["s.gis.gismap"]);
+        assert_eq!(raw_http_request(addr, "GET", &route, &[], &[]).await.status, 401);
+        assert_eq!(raw_http_request(addr, "GET", &route, &[("Authorization", spectator_bearer.as_str())], &[]).await.status, 403);
+
+        let request = SpaceArtifactCreateV1 { schema: "semio.hub.space-artifact-create/v1".into(), request_id: "1234567890abcdef1234567890abcdef".into(), kind_id: "s.gis.gismap".into(), name: "Shared Map".into() };
+        let body = directory::os_pack::json::to_json_string(&request);
+        let malformed = body.replacen("{", "{\"documentId\":\"caller-owned\",", 1);
+        assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")], malformed.as_bytes()).await.status, 400);
+        let unknown = SpaceArtifactCreateV1 { request_id: "2234567890abcdef1234567890abcdef".into(), kind_id: "s.gis.unknown".into(), ..request.clone() };
+        assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")], directory::os_pack::json::to_json_string(&unknown).as_bytes()).await.status, 409);
+        let first = raw_http_request(addr, "POST", &route, &[("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")], body.as_bytes());
+        let duplicate = raw_http_request(addr, "POST", &route, &[("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")], body.as_bytes());
+        let (first, duplicate) = tokio::join!(first, duplicate);
+        assert!([200, 202].contains(&first.status) && [200, 202].contains(&duplicate.status), "exact concurrent duplicate never reports capacity or owns a second factory");
+        for response in [&first, &duplicate] {
+            let source = std::str::from_utf8(&response.body).expect("creation acceptance UTF-8");
+            assert!(SpaceArtifactCreationStatusV1::parse_canonical_json(source).is_some(), "creation acceptance is canonical");
+        }
+        let facts = state.directory.read_artifact_creation(&author.user_id, &request.request_id).await.expect("durable creation facts");
+        let operation = ArtifactCreationOperationV1::fold(&facts).expect("one durable creation operation");
+        assert!(operation.intent.scope.document_id.strip_prefix("artifact-").is_some_and(artifact_creation_request_id_v1));
+        let created_document_id = operation.intent.scope.document_id;
+
+        let status_route = format!("{route}/{}", request.request_id);
+        let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(30);
+        let ready = loop {
+            let response = raw_http_request(addr, "GET", &status_route, &[("Authorization", author_bearer.as_str())], &[]).await;
+            assert_eq!(response.status, 200);
+            let status = SpaceArtifactCreationStatusV1::parse_canonical_json(std::str::from_utf8(&response.body).expect("creation status UTF-8")).expect("canonical creation status");
+            if status.phase == SpaceArtifactCreationPhaseV1::Ready { break status; }
+            assert!(matches!(status.phase, SpaceArtifactCreationPhaseV1::Accepted | SpaceArtifactCreationPhaseV1::Preparing | SpaceArtifactCreationPhaseV1::Indeterminate), "creation reached an unexpected terminal phase");
+            assert!(tokio::time::Instant::now() < deadline, "actual native genesis did not become Ready");
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        };
+        let ready_scope = DocumentScope::new(&space_id, &ready.ready.as_ref().expect("Ready coordinates").document_id);
+        assert_eq!(ready_scope.document_id, created_document_id, "both concurrent requests retain one server-minted document");
+        assert!(state.directory.get_document_descriptor(&ready_scope).await.expect("created descriptor read").is_some());
+        assert!(state.directory.get_active_artifact_checkpoint(&ready_scope).await.expect("created checkpoint read").is_some_and(|checkpoint| checkpoint.baseline_frontier.is_genesis_for(&ready_scope)));
+        assert_eq!(raw_http_request(addr, "GET", &status_route, &[("Authorization", peer_bearer.as_str())], &[]).await.status, 404, "another Author cannot read the private request key");
+        let cancelled = raw_http_request(addr, "POST", &format!("{status_route}/cancel"), &[("Authorization", author_bearer.as_str())], &[]).await;
+        assert_eq!(cancelled.status, 200);
+        assert_eq!(SpaceArtifactCreationStatusV1::parse_canonical_json(std::str::from_utf8(&cancelled.body).expect("cancel status UTF-8")).expect("canonical cancel status").phase, SpaceArtifactCreationPhaseV1::Ready, "cancel cannot overwrite Ready");
+        assert_eq!(state.artifact_creation_tasks.task_count(), 0);
+        let _ = shutdown.send(());
+        server.await.expect("creation HTTP server stop");
+        state.artifact_creation_tasks.shutdown().await;
+    }
+
+    #[cfg(feature = "native-artifact-execution")]
+    #[tokio::test]
     async fn trusted_catalog_startup_is_selected_only_by_the_server_owned_data_root() {
         let data_root = std::fs::canonicalize(tempdir("unconfigured-trusted-catalog")).expect("canonical fixture-owned data root");
         assert!(configured_artifact_authority(&data_root, Some(&NativeCodecProviderSetV1::linked())).await.expect("unconfigured authority").is_none());
@@ -8086,9 +8804,18 @@ mod tests {
         let component_sha256 = os_directory::hex_lower(&Sha256::digest(component));
         let component_blake3 = blake3::hash(component).to_hex().to_string();
         let receipts = semio_s_plugin_stdio::registry::native_codec_factory_receipts().expect("artifact-owned stdio receipts");
-        let manifest = semio_s_plugin_stdio::plugin().expect("stdio descriptor source").manifest;
+        let viewer = semio_framework_plugin::Viewer::builder(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.json", standard: semio_framework_plugin::StandardId("rfc8259"), subset: semio_framework_plugin::SubsetId::ANY })
+            .document(["semio", "stdio", "json"])
+            .mode("view", semio_framework_plugin::LocalizedLabel::native("View", "Ansicht"), "eye")
+            .default_mode_id("view")
+            .window_kind_def(<semio_framework_plugin::app::TreeWindowKit as semio_framework_plugin::app::WindowKit>::window_kind())
+            .build_definition();
+        let mut manifest = semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::new("stdio", "Stdio Fixture", receipts[0].package_version).manifest;
+        manifest.artifact_kinds = semio_s_plugin_stdio::registry::native_codec_artifact_kinds();
+        manifest.apps.push(viewer.clone());
+        manifest.topic_contributions.push(semio_s_plugin_stdio::registry::native_artifact_catalog_contribution().expect("synthetic fixture retains full catalog semantics"));
         assert_eq!(manifest.artifact_kinds.len(), receipts.len(), "every descriptor artifact kind has one executable owner receipt");
-        let viewer = manifest.apps.iter().find(|app| app.id == "s.stdio.json@rfc8259/*#viewer").expect("descriptor-owned JSON viewer").clone();
+        assert_eq!(viewer.id, "s.stdio.json@rfc8259/*#viewer", "synthetic JSON fixture keeps the canonical surface coordinate");
         let viewer_id = viewer.id.clone();
         let window_id = viewer.window_kinds.iter().find(|window| window.id == "framework.window.tree").expect("descriptor-owned JSON viewer window").id.clone();
         let descriptor = semio_framework::PackageDescriptor {
@@ -8153,6 +8880,7 @@ mod tests {
                 "packageId": "semio:stdio",
                 "version": version,
                 "role": "plugin",
+                "executionProtocol": { "appChannelVersion": descriptor.execution_protocol.app_channel_version },
                 "dependencies": [],
                 "component": {
                     "path": "components/stdio.wasm",
@@ -8309,6 +9037,10 @@ mod tests {
         let artifact_publication =
             Arc::new(CheckpointPublicationOrchestrator::new(ArtifactChunkBlobStore::new(artifact_cas.clone()), HubVerifiedCheckpointPublisher::new(directory_service.clone(), artifact_cas.clone(), "system:artifact-authority-test")));
         let rebootstrap = Arc::new(VerifiedRebootstrapSource::new(directory.clone(), artifact_cas.clone()));
+        #[cfg(feature = "native-artifact-execution")]
+        let socket_binding_gates = Arc::new(SocketBindingGatesV1::default());
+        #[cfg(feature = "native-artifact-execution")]
+        let artifact_creation_commit_authority = Arc::new(HubArtifactCreationCommitAuthorityV1 { directory: directory.clone(), gates: socket_binding_gates.clone() });
         HubState {
             db: database,
             artifact_cas,
@@ -8316,6 +9048,12 @@ mod tests {
             rebootstrap,
             artifact_authority: None,
             verified_catalog: None,
+            #[cfg(feature = "native-artifact-execution")]
+            artifact_creation: None,
+            #[cfg(feature = "native-artifact-execution")]
+            artifact_creation_commit_authority,
+            #[cfg(feature = "native-artifact-execution")]
+            artifact_creation_tasks: Arc::new(ArtifactCreationHttpTaskOwnerV1::new()),
             #[cfg(feature = "native-artifact-execution")]
             gis_map_binding: None,
             #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
@@ -8347,7 +9085,12 @@ mod tests {
             session_kicks: Arc::new(ShardedMap::new()),
             socket_grants: Arc::new(SocketGrantLedgerV1::default()),
             document_open_plans: Arc::new(DocumentOpenPlanLedgerV1::default()),
-            socket_binding_gates: Arc::new(SocketBindingGatesV1::default()),
+            socket_binding_gates: {
+                #[cfg(feature = "native-artifact-execution")]
+                { socket_binding_gates }
+                #[cfg(not(feature = "native-artifact-execution"))]
+                { Arc::new(SocketBindingGatesV1::default()) }
+            },
             extensions_root: dir.join("extension-modules"),
             merge_policy: protocol::MergePolicy::default(),
         }
@@ -8370,6 +9113,10 @@ mod tests {
         let artifact_publication =
             Arc::new(CheckpointPublicationOrchestrator::new(ArtifactChunkBlobStore::new(artifact_cas.clone()), HubVerifiedCheckpointPublisher::new(directory_service.clone(), artifact_cas.clone(), "system:artifact-authority-test")));
         let rebootstrap = Arc::new(VerifiedRebootstrapSource::new(directory.clone(), artifact_cas.clone()));
+        #[cfg(feature = "native-artifact-execution")]
+        let socket_binding_gates = Arc::new(SocketBindingGatesV1::default());
+        #[cfg(feature = "native-artifact-execution")]
+        let artifact_creation_commit_authority = Arc::new(HubArtifactCreationCommitAuthorityV1 { directory: directory.clone(), gates: socket_binding_gates.clone() });
         HubState {
             db: database,
             artifact_cas,
@@ -8377,6 +9124,12 @@ mod tests {
             rebootstrap,
             artifact_authority: None,
             verified_catalog: None,
+            #[cfg(feature = "native-artifact-execution")]
+            artifact_creation: None,
+            #[cfg(feature = "native-artifact-execution")]
+            artifact_creation_commit_authority,
+            #[cfg(feature = "native-artifact-execution")]
+            artifact_creation_tasks: Arc::new(ArtifactCreationHttpTaskOwnerV1::new()),
             #[cfg(feature = "native-artifact-execution")]
             gis_map_binding: None,
             #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
@@ -8408,7 +9161,12 @@ mod tests {
             session_kicks: Arc::new(ShardedMap::new()),
             socket_grants: Arc::new(SocketGrantLedgerV1::default()),
             document_open_plans: Arc::new(DocumentOpenPlanLedgerV1::default()),
-            socket_binding_gates: Arc::new(SocketBindingGatesV1::default()),
+            socket_binding_gates: {
+                #[cfg(feature = "native-artifact-execution")]
+                { socket_binding_gates }
+                #[cfg(not(feature = "native-artifact-execution"))]
+                { Arc::new(SocketBindingGatesV1::default()) }
+            },
             extensions_root: dir.join("extension-modules"),
             merge_policy: protocol::MergePolicy::default(),
         }
@@ -8439,6 +9197,7 @@ mod tests {
     }
 
     fn document_descriptor_for_test(space_id: &str, document_id: &str) -> os_directory::DocumentDescriptor {
+        let bootstrap_snapshot_hash = os_directory::hex_lower(&Sha256::digest(b"document-open-genesis-pack"));
         os_directory::DocumentDescriptor {
             space_id: space_id.to_string(),
             document_id: document_id.to_string(),
@@ -8448,8 +9207,12 @@ mod tests {
             pack_schema_hash: "11".repeat(32),
             bootstrap_version: 1,
             bootstrap_frontier: os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 },
-            bootstrap_snapshot_hash: "33".repeat(32),
+            bootstrap_snapshot_hash,
         }
+    }
+
+    fn artifact_document_id_for_test(label: &str) -> String {
+        format!("artifact-{}", &os_directory::hex_lower(&Sha256::digest(label.as_bytes()))[..32])
     }
 
     async fn announce_document_for_test(state: &HubState, space_id: &str, document_id: &str) {
@@ -8462,6 +9225,7 @@ mod tests {
         let spr = b"verified-spr";
         let pack_hash = os_directory::ArtifactHash(Sha256::digest(pack));
         let spr_hash = os_directory::ArtifactHash(Sha256::digest(spr));
+        let accepted_at_ms = u64::try_from(now_ms()).expect("nonnegative genesis fixture clock");
         let mut aggregate = Sha256::new();
         aggregate.update(pack);
         aggregate.update(spr);
@@ -8478,7 +9242,7 @@ mod tests {
             pack: os_directory::ArtifactBlobRef { sha256: pack_hash, byte_length: pack.len() as u64, storage_key: artifact_cas_manifest_locator_v1(pack_plan.manifest_id) },
             spr: os_directory::ArtifactBlobRef { sha256: spr_hash, byte_length: spr.len() as u64, storage_key: artifact_cas_manifest_locator_v1(spr_plan.manifest_id) },
             aggregate_sha256: os_directory::ArtifactHash(aggregate.finalize()),
-            published_at_ms: 1,
+            published_at_ms: accepted_at_ms,
         };
         checkpoint.checkpoint_id = os_directory::ArtifactHash(Sha256::digest(&checkpoint_id_encoding_v1(&checkpoint).expect("checkpoint identity")));
         let ownership = prepare_artifact_cas_ownership_v1(&checkpoint, &ArtifactPair { pack: pack.to_vec(), spr: spr.to_vec() }).expect("ownership plan");
@@ -8492,6 +9256,106 @@ mod tests {
         assert_eq!(staged_spr.storage_key, checkpoint.spr.storage_key);
         state.directory_service.publish_reserved_artifact_checkpoint(DirectoryActor { kind: DirectoryActorKind::System, id: "system:lag-rebootstrap-test".into() }, checkpoint.clone(), reservation, 100).await.expect("publish verified checkpoint");
         checkpoint
+    }
+
+    async fn publish_genesis_checkpoint_for_test(
+        state: &HubState,
+        actor: ArtifactCreationActorV1,
+        catalog_generation: String,
+        parent_dialect: directory::os_io::ArtifactDialect,
+        descriptor: DocumentDescriptor,
+        pack: &[u8],
+        spr: &[u8],
+    ) -> os_directory::ArtifactCheckpoint {
+        use semio_hub::artifact_authority::creation::{
+            ARTIFACT_CREATION_DEADLINE_MS, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationIntentV1, ArtifactCreationPreparedV1, artifact_creation_command_digest_v1,
+        };
+        let scope = DocumentScope::new(&descriptor.space_id, &descriptor.document_id);
+        let pack_hash = os_directory::ArtifactHash(Sha256::digest(pack));
+        let spr_hash = os_directory::ArtifactHash(Sha256::digest(spr));
+        let mut aggregate = Sha256::new();
+        aggregate.update(pack);
+        aggregate.update(spr);
+        let pack_plan = prepare_artifact_cas_manifest_v1(&scope.space_id, pack).expect("genesis pack manifest plan");
+        let spr_plan = prepare_artifact_cas_manifest_v1(&scope.space_id, spr).expect("genesis SPR manifest plan");
+        let mut checkpoint = os_directory::ArtifactCheckpoint {
+            scope: scope.clone(),
+            checkpoint_id: os_directory::ArtifactHash([0; 32]),
+            parent_checkpoint_id: None,
+            descriptor_digest_v1: os_directory::descriptor_digest_v1(&descriptor).expect("genesis descriptor digest"),
+            baseline_frontier: os_directory::ArtifactFrontier { document_id: scope.document_id.clone(), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: os_directory::ArtifactHash([0; 32]) },
+            pack: os_directory::ArtifactBlobRef { sha256: pack_hash, byte_length: pack.len() as u64, storage_key: artifact_cas_manifest_locator_v1(pack_plan.manifest_id) },
+            spr: os_directory::ArtifactBlobRef { sha256: spr_hash, byte_length: spr.len() as u64, storage_key: artifact_cas_manifest_locator_v1(spr_plan.manifest_id) },
+            aggregate_sha256: os_directory::ArtifactHash(aggregate.finalize()),
+            published_at_ms: 1,
+        };
+        checkpoint.checkpoint_id = os_directory::ArtifactHash(Sha256::digest(&checkpoint_id_encoding_v1(&checkpoint).expect("genesis checkpoint identity")));
+        let request = SpaceArtifactCreateV1 {
+            schema: "semio.hub.space-artifact-create/v1".into(),
+            request_id: scope.document_id.strip_prefix("artifact-").expect("creation-owned document id").into(),
+            kind_id: descriptor.artifact_kind.clone(),
+            name: "Checkpoint publication fixture".into(),
+        };
+        let intent = ArtifactCreationIntentV1 {
+            actor,
+            scope: scope.clone(),
+            command_sha256: artifact_creation_command_digest_v1(&scope.space_id, &request).expect("genesis creation digest"),
+            request,
+            catalog_generation,
+            owner: descriptor.owner.clone(),
+            artifact_schema: descriptor.artifact_schema.clone(),
+            pack_schema_hash: descriptor.pack_schema_hash.clone(),
+            parent_dialect,
+            accepted_at_ms,
+            deadline_ms: accepted_at_ms + ARTIFACT_CREATION_DEADLINE_MS,
+        };
+        let prepared = ArtifactCreationPreparedV1 { descriptor, checkpoint: checkpoint.clone(), pack: pack.to_vec(), spr: spr.to_vec() };
+        prepared.validate(&intent).expect("exact prepared publication genesis");
+        assert!(matches!(state.directory.claim_artifact_creation(&intent).await.expect("claim publication genesis"), ArtifactCreationClaimV1::Accepted(_)));
+        state
+            .directory
+            .append_artifact_creation_fact(&ArtifactCreationFactAppendV1 {
+                actor: intent.actor.clone(),
+                space_id: scope.space_id.clone(),
+                request_id: intent.request.request_id.clone(),
+                command_sha256: intent.command_sha256.clone(),
+                expected_revision: 1,
+                recorded_at_ms: accepted_at_ms,
+                body: ArtifactCreationFactBodyV1::Prepared { candidate: prepared.clone() },
+            })
+            .await
+            .expect("prepare publication genesis");
+        let pair = ArtifactPair { pack: pack.to_vec(), spr: spr.to_vec() };
+        let ownership = prepare_artifact_cas_ownership_v1(&checkpoint, &pair).expect("genesis ownership plan");
+        let reservation = state
+            .directory_service
+            .reserve_artifact_cas(DirectoryActor { kind: DirectoryActorKind::System, id: "system:checkpoint-publication-genesis-test".into() }, ownership, intent.deadline_ms, accepted_at_ms)
+            .await
+            .expect("reserve genesis objects");
+        let cas = ArtifactChunkBlobStore::new(state.artifact_cas.clone());
+        let control = StartupCatalogControl;
+        let context = OperationContext::new(u64::MAX, AuthorityLimits::maximum(), &control);
+        cas.stage(&scope.space_id, ArtifactBlobIntegrity { sha256: pack_hash, byte_length: pack.len() as u64 }, pack, &context).await.expect("stage genesis pack");
+        cas.stage(&scope.space_id, ArtifactBlobIntegrity { sha256: spr_hash, byte_length: spr.len() as u64 }, spr, &context).await.expect("stage genesis SPR");
+        state.directory_service.publish_document_genesis(intent, &prepared, checkpoint.clone(), reservation, accepted_at_ms).await.expect("publish dedicated creation genesis");
+        checkpoint
+    }
+
+    async fn publish_openable_document_for_test(state: &HubState, token: &str, space_id: &str, document_id: &str) -> (DocumentDescriptor, os_directory::ArtifactCheckpoint) {
+        let pack = b"document-open-genesis-pack";
+        let spr = b"document-open-genesis-spr";
+        let mut descriptor = document_descriptor_for_test(space_id, document_id);
+        descriptor.bootstrap_snapshot_hash = os_directory::hex_lower(&Sha256::digest(pack));
+        let session = state
+            .directory
+            .authenticate_session(&SessionCapability::parse(token).expect("document-open author capability"))
+            .await
+            .expect("document-open author session read")
+            .expect("document-open author session");
+        let actor = ArtifactCreationActorV1 { user_id: session.user_id, session_id: session.id, authorization_generation: session.authorization_generation };
+        let parent_dialect = directory::os_io::ArtifactDialect { artifact_kind: descriptor.artifact_kind.clone(), standard: "1".into(), subset: "*".into() };
+        let checkpoint = publish_genesis_checkpoint_for_test(state, actor, "66".repeat(32), parent_dialect, descriptor.clone(), pack, spr).await;
+        (descriptor, checkpoint)
     }
 
     async fn sample_envelope(id: &str, document: &WireArtifactId) -> MutationEnvelope {
@@ -8552,7 +9416,8 @@ mod tests {
         let space_id = create_space_for_test(&state, &author.user_id, &format!("Checkpoint {label}"), os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
         upsert_member_for_test(&state, &space_id, &format!("checkpoint-{label}-author@example.test"), DirectorySpaceRole::Author).await;
         upsert_member_for_test(&state, &space_id, &format!("checkpoint-{label}-spectator@example.test"), DirectorySpaceRole::Spectator).await;
-        let scope = DocumentScope::new(space_id, format!("checkpoint-{label}"));
+        let request_id = os_directory::hex_lower(&Sha256::digest(format!("checkpoint-{label}").as_bytes()))[..32].to_string();
+        let scope = DocumentScope::new(space_id, format!("artifact-{request_id}"));
         let descriptor = DocumentDescriptor {
             space_id: scope.space_id.clone(),
             document_id: scope.document_id.clone(),
@@ -8562,24 +9427,38 @@ mod tests {
             pack_schema_hash: selection.artifact.pack_schema_hash,
             bootstrap_version: 1,
             bootstrap_frontier: os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 },
-            bootstrap_snapshot_hash: "33".repeat(32),
+            bootstrap_snapshot_hash: String::new(),
         };
-        state
-            .directory_service
-            .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#checkpoint-test", author.user_id) }, DirectoryCommand::AnnounceDocument { descriptor: descriptor.clone() })
-            .await
-            .expect("announce selected publication document");
         state.artifact_authority = Some(configured.authority);
+        let catalog_generation = configured.catalog.generation_id().to_string();
+        let parent_dialect = selection.parent_dialect;
         state.openable_catalog = Some(configured.catalog);
         let document = db_artifact_id(&scope);
+        let snapshot_value = semio_s_plugin_stdio::artifacts::json::schema::snapshot::demo_json_snapshot();
+        let pack = <semio_s_plugin_stdio::artifacts::json::JsonSnapshot as directory::os_store::ArtifactPack>::encode_pack(&snapshot_value);
+        let spr = directory::os_store::empty_document_spr(&document.0, &descriptor.artifact_schema).await;
+        let mut descriptor = descriptor;
+        descriptor.bootstrap_snapshot_hash = os_directory::hex_lower(&Sha256::digest(&pack));
+        let session = state
+            .directory
+            .authenticate_session(&SessionCapability::parse(&author.token).expect("publication author capability"))
+            .await
+            .expect("publication author session read")
+            .expect("publication author session");
+        let actor = ArtifactCreationActorV1 { user_id: author.user_id.clone(), session_id: session.id, authorization_generation: session.authorization_generation };
+        let genesis = publish_genesis_checkpoint_for_test(&state, actor, catalog_generation, parent_dialect, descriptor.clone(), &pack, &spr).await;
         let handle = state.ensure_document(&document).await.expect("publication document actor");
         let batch = db::document::CommandBatch::new(vec![sample_envelope(&format!("checkpoint-{label}-edit-1"), &WireArtifactId(document.0.clone())).await]).await.expect("publication command batch");
         handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync, policy: protocol::MergePolicy::default() }).await.expect("publication actor response").expect("publication edit accepted");
         let snapshot = handle.checkpoint_publication_snapshot().await.expect("publication actor snapshot");
-        let snapshot_value = semio_s_plugin_stdio::artifacts::json::schema::snapshot::demo_json_snapshot();
-        let pack = <semio_s_plugin_stdio::artifacts::json::JsonSnapshot as directory::os_store::ArtifactPack>::encode_pack(&snapshot_value);
-        let spr = directory::os_store::empty_document_spr(&document.0, &descriptor.artifact_schema).await;
-        let command = checkpoint_publication_command("1234567890abcdef1234567890abcdef", &descriptor, &snapshot, CheckpointPublicationCurrentV1::None, &pack, &spr);
+        let command = checkpoint_publication_command(
+            "1234567890abcdef1234567890abcdef",
+            &descriptor,
+            &snapshot,
+            CheckpointPublicationCurrentV1::Genesis { checkpoint_id: genesis.checkpoint_id.hex() },
+            &pack,
+            &spr,
+        );
         CheckpointPublicationFixture { state, author, spectator, scope, handle, command, pack, spr, catalog_root }
     }
 
@@ -8604,7 +9483,7 @@ mod tests {
         let generation_id = bundle["profiles"][0]["generationId"].as_str().expect("verified generation id");
         let generation = stage.join("data/trusted-catalog/generations").join(generation_id);
         std::fs::create_dir_all(&generation).expect("create trusted generation");
-        for name in ["component.wasm", "descriptor.semio", "closed-actor.mjs", "trusted-catalog.json"] {
+        for name in ["component.wasm", "descriptor.semio", "closed-actor.mjs", "stdio-component.wasm", "stdio-descriptor.semio", "trusted-catalog.json"] {
             std::fs::copy(source.join(name), generation.join(name)).unwrap_or_else(|error| panic!("copy verified {name}: {error}"));
         }
         let bundle_sha256 = os_directory::hex_lower(&Sha256::digest(&bundle_bytes));
@@ -8655,6 +9534,18 @@ mod tests {
         });
         std::fs::write(stage.join("fixture.json"), serde_json::to_vec_pretty(&fixture).expect("encode process fixture")).expect("write process fixture receipt");
         std::fs::rename(&stage, &destination).expect("publish process fixture atomically");
+        let dependency_fixture: serde_json::Value = serde_json::from_str(include_str!("../../🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🔗️compiled-dependencies/🔣️.json")).expect("compiled dependency fixture");
+        let expected_files: std::collections::BTreeSet<_> = dependency_fixture["publicationFiles"].as_array().unwrap().iter().map(|name| name.as_str().unwrap().to_owned()).collect();
+        let retained_generation = destination.join("data/trusted-catalog/generations").join(generation_id);
+        let actual_files: std::collections::BTreeSet<_> = std::fs::read_dir(&retained_generation).unwrap().map(|entry| entry.unwrap().file_name().into_string().unwrap()).collect();
+        assert_eq!(actual_files, expected_files);
+        let control = StartupCatalogControl;
+        let context = OperationContext::new(control.now_ms().saturating_add(30_000), AuthorityLimits::maximum(), &control);
+        let relocated = TrustedCatalogLoader::load_current(&destination.join("data"), &NativeCodecProviderSetV1::linked(), &context).await.expect("relocated process catalog dependency closure").expect("relocated current");
+        assert_eq!(relocated.codec_count(), 28);
+        assert_eq!(relocated.packages().len(), 2);
+        assert_eq!(relocated.generation_id(), generation_id);
+        eprintln!("[DEBUG] checkpoint process fixture relocated files=6 packages=2 codecs=28");
         assert!(destination.join("data/trusted-catalog/current.json").is_file());
         assert_eq!(std::fs::read(destination.join("payload/pack.bin")).expect("read retained GIS pack"), pack);
         assert_eq!(std::fs::read(destination.join("payload/spr.bin")).expect("read retained GIS SPR"), spr);
@@ -8831,7 +9722,7 @@ mod tests {
             published_at_ms: 17,
         };
         let genesis = ArtifactFrontier { document_id: scope.document_id.clone(), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: ArtifactHash([0; 32]) };
-        assert!(GisMapApprovalCheckpointPublisherV1Impl::current_matches_base(&scope, &genesis, None));
+        assert!(!GisMapApprovalCheckpointPublisherV1Impl::current_matches_base(&scope, &genesis, None));
         for hostile in [
             ArtifactFrontier { document_id: "substituted-document".into(), ..genesis.clone() },
             ArtifactFrontier { head_edit_ordinal: 1, ..genesis.clone() },
@@ -8839,7 +9730,7 @@ mod tests {
             ArtifactFrontier { last_commit_seq: 1, ..genesis.clone() },
             ArtifactFrontier { chain_hash: ArtifactHash([1; 32]), ..genesis.clone() },
         ] {
-            assert!(!GisMapApprovalCheckpointPublisherV1Impl::current_matches_base(&scope, &hostile, None), "a missing Directory checkpoint accepts only the exact actor genesis frontier");
+            assert!(!GisMapApprovalCheckpointPublisherV1Impl::current_matches_base(&scope, &hostile, None), "a missing Directory checkpoint is never a publication base");
         }
         assert!(GisMapApprovalCheckpointPublisherV1Impl::current_matches_base(&scope, &checkpoint.baseline_frontier, Some(&checkpoint)));
         let substituted_scope = DocumentScope::new("substituted-space", scope.document_id.clone());
@@ -8940,8 +9831,10 @@ mod tests {
         let space_id = create_space_for_test(&state, &author.user_id, "GIS Map Space", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
         upsert_member_for_test(&state, &space_id, author_email, DirectorySpaceRole::Author).await;
         upsert_member_for_test(&state, &space_id, spectator_email, DirectorySpaceRole::Spectator).await;
-        let document_id = "gis-map-document".to_string();
+        let document_id = artifact_document_id_for_test("gis-map-inference");
         let selection = profile.binding().selection();
+        let genesis_pack = <semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot as directory::ArtifactPack>::encode_pack(&semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot::default());
+        let genesis_spr = b"gis-map-genesis-spr";
         let descriptor = os_directory::DocumentDescriptor {
             space_id: space_id.clone(),
             document_id: document_id.clone(),
@@ -8951,17 +9844,33 @@ mod tests {
             pack_schema_hash: selection.artifact.pack_schema_hash.clone(),
             bootstrap_version: 1,
             bootstrap_frontier: os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 },
-            bootstrap_snapshot_hash: "33".repeat(32),
+            bootstrap_snapshot_hash: os_directory::hex_lower(&Sha256::digest(&genesis_pack)),
         };
-        state.directory_service.execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#test", author.user_id) }, DirectoryCommand::AnnounceDocument { descriptor }).await.expect("announce GIS Map document");
+        let authenticated = state
+            .directory
+            .authenticate_session(&SessionCapability::parse(&author.token).expect("GIS Map author capability"))
+            .await
+            .expect("GIS Map author session read")
+            .expect("GIS Map author session");
+        let actor = ArtifactCreationActorV1 { user_id: author.user_id.clone(), session_id: authenticated.id, authorization_generation: authenticated.authorization_generation };
+        let genesis = publish_genesis_checkpoint_for_test(
+            &state,
+            actor,
+            profile.catalog().generation_id().to_string(),
+            selection.parent_dialect.clone(),
+            descriptor,
+            &genesis_pack,
+            genesis_spr,
+        )
+        .await;
         let snapshot_pack = <semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot as directory::ArtifactPack>::encode_pack(&gis_map_test_snapshot());
-        publish_gis_checkpoint_for_test(&state, &space_id, &document_id, &snapshot_pack).await;
+        publish_gis_checkpoint_for_test(&state, &space_id, &document_id, &snapshot_pack, &genesis).await;
         (GisMapInferenceFixture { state, profile, space_id, document_id, snapshot_pack, ledger_path }, author, spectator)
     }
 
     /// 🧾️ Publishes one verified active checkpoint whose pack is the literal GIS Map snapshot bytes.
     #[cfg(all(feature = "sqlite", feature = "test-support"))]
-    async fn publish_gis_checkpoint_for_test(state: &HubState, space_id: &str, document_id: &str, pack: &[u8]) {
+    async fn publish_gis_checkpoint_for_test(state: &HubState, space_id: &str, document_id: &str, pack: &[u8], genesis: &os_directory::ArtifactCheckpoint) {
         let spr = b"gis-map-spr";
         let pack_hash = os_directory::ArtifactHash(Sha256::digest(pack));
         let spr_hash = os_directory::ArtifactHash(Sha256::digest(spr));
@@ -8975,13 +9884,13 @@ mod tests {
         let mut checkpoint = os_directory::ArtifactCheckpoint {
             scope: scope.clone(),
             checkpoint_id: os_directory::ArtifactHash([0; 32]),
-            parent_checkpoint_id: None,
+            parent_checkpoint_id: Some(genesis.checkpoint_id),
             descriptor_digest_v1: os_directory::descriptor_digest_v1(&descriptor).expect("descriptor digest"),
             baseline_frontier: os_directory::ArtifactFrontier { document_id: document_id.to_string(), head_edit_ordinal: 1, head_edit_id: "gis-map-edit-1".into(), last_commit_seq: 1, chain_hash: os_directory::ArtifactHash([0x44; 32]) },
             pack: os_directory::ArtifactBlobRef { sha256: pack_hash, byte_length: pack.len() as u64, storage_key: artifact_cas_manifest_locator_v1(pack_plan.manifest_id) },
             spr: os_directory::ArtifactBlobRef { sha256: spr_hash, byte_length: spr.len() as u64, storage_key: artifact_cas_manifest_locator_v1(spr_plan.manifest_id) },
             aggregate_sha256: os_directory::ArtifactHash(aggregate.finalize()),
-            published_at_ms: 1,
+            published_at_ms: genesis.published_at_ms.saturating_add(1),
         };
         checkpoint.checkpoint_id = os_directory::ArtifactHash(Sha256::digest(&checkpoint_id_encoding_v1(&checkpoint).expect("checkpoint identity")));
         let ownership = prepare_artifact_cas_ownership_v1(&checkpoint, &ArtifactPair { pack: pack.to_vec(), spr: spr.to_vec() }).expect("ownership plan");
@@ -9839,8 +10748,9 @@ mod tests {
         let mut authority = base.clone();
         authority.scope.document_id = format!("document-{document}");
         authority.descriptor.document_id = authority.scope.document_id.clone();
-        authority.checkpoint = None;
         authority.descriptor_digest_v1 = os_directory::hex_lower(&os_directory::descriptor_digest_v1(&authority.descriptor).expect("scoped descriptor digest").0);
+        authority.checkpoint.descriptor_digest_v1 = authority.descriptor_digest_v1.clone();
+        authority.checkpoint.baseline_frontier.document_id = authority.scope.document_id.clone();
         authority.subject = SocketSubjectV1::Session {
             session_id: format!("open-plan-session-{binding}"),
             user_id: format!("open-plan-user-{binding}"),
@@ -9877,7 +10787,9 @@ mod tests {
             authority.browser_actor = selected.browser_actor;
             authority.grant = selected.grant;
         }
-        authority.checkpoint = None;
+        authority.checkpoint = document_open_checkpoint(
+            state.directory.get_active_artifact_checkpoint(&authority.scope).await.expect("checkpoint lookup").expect("committed document checkpoint"),
+        );
         authority.grant.write = matches!(role, SpaceRole::Author);
         let directory_revision = state.directory.head_seq().await.expect("directory revision");
         authority.revalidation.directory_revision = directory_revision;
@@ -10107,13 +11019,12 @@ mod tests {
     #[tokio::test]
     async fn execution_target_asset_routes_revalidate_scope_role_descriptor_and_catalog_before_each_body() {
         let mut state = test_state().await;
-        let document_id = "execution-target-assets";
-        announce_document_for_test(&state, STUDIO, document_id).await;
-        let scope = DocumentScope::new(STUDIO, document_id);
-        let descriptor = state.directory.get_document_descriptor(&scope).await.expect("descriptor lookup").expect("descriptor");
+        let document_id = artifact_document_id_for_test("execution-target-assets");
+        let token = seed_author_token(&state).await;
+        let (descriptor, _) = publish_openable_document_for_test(&state, &token, STUDIO, &document_id).await;
+        let scope = DocumentScope::new(STUDIO, &document_id);
         state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
         state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
-        let token = seed_author_token(&state).await;
         let authorization = format!("Bearer {token}");
         let headers = [("Authorization", authorization.as_str()), ("Content-Type", "application/json")];
         let root = format!("/spaces/{STUDIO}/documents/{document_id}/execution-target");
@@ -10246,12 +11157,12 @@ mod tests {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🌎️hub/🧪️fixtures/🪪️execution-target-relay-v1/🔣️.json")).expect("execution-target relay fixture");
         for vector in fixture["fences"].as_array().expect("neutral fences") {
             let mut state = test_state().await;
-            let scope = DocumentScope::new(STUDIO, "execution-target-fence");
-            announce_document_for_test(&state, STUDIO, &scope.document_id).await;
-            let descriptor = state.directory.get_document_descriptor(&scope).await.expect("descriptor lookup").expect("descriptor");
+            let token = seed_author_token(&state).await;
+            let document_id = artifact_document_id_for_test("execution-target-fence");
+            let (descriptor, _) = publish_openable_document_for_test(&state, &token, STUDIO, &document_id).await;
+            let scope = DocumentScope::new(STUDIO, document_id);
             state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
             state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
-            let token = seed_author_token(&state).await;
             let mut headers = bearer_headers(&token);
             headers.insert(axum::http::header::CONTENT_TYPE, "application/json".parse().expect("content type"));
             let gate = Arc::new(TestDocumentOpenPlanIssueGate::default());
@@ -10294,15 +11205,97 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn document_open_and_execution_target_refuse_descriptor_or_index_without_genesis() {
+        for indexed in [false, true] {
+            let mut state = test_state().await;
+            let token = seed_author_token(&state).await;
+            let document_id = artifact_document_id_for_test(if indexed { "indexed-without-genesis" } else { "descriptor-without-genesis" });
+            let scope = DocumentScope::new(STUDIO, &document_id);
+            announce_document_for_test(&state, STUDIO, &document_id).await;
+            let descriptor = state.directory.get_document_descriptor(&scope).await.expect("descriptor lookup").expect("descriptor-only document");
+            if indexed {
+                let session = state
+                    .directory
+                    .authenticate_session(&SessionCapability::parse(&token).expect("indexed author capability"))
+                    .await
+                    .expect("indexed author session read")
+                    .expect("indexed author session");
+                let event = semio_hub::directory::NewDirectoryEvent {
+                    hlc: semio_hub::directory::HubClock::new().tick(),
+                    actor: DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#indexed-without-genesis", session.user_id) },
+                    space_id: Some(scope.space_id.clone()),
+                    user_id: Some(session.user_id),
+                    body: os_directory::DirectoryEventBody::DocumentIndexed {
+                        scope: scope.clone(),
+                        descriptor_digest_v1: os_directory::descriptor_digest_v1(&descriptor).expect("descriptor digest"),
+                        entry: os_directory::DocumentIndexEntryV1 {
+                            name: "Indexed without genesis".into(),
+                            dialect: directory::os_io::ArtifactDialect { artifact_kind: descriptor.artifact_kind.clone(), standard: "1".into(), subset: "*".into() },
+                        },
+                    },
+                };
+                state.directory.append_decided_events(&[event]).await.expect("corrupt indexed-only fixture");
+            }
+            install_document_open_catalog_for_test(&mut state, &descriptor);
+            let mut headers = bearer_headers(&token);
+            headers.insert(axum::http::header::CONTENT_TYPE, "application/json".parse().expect("content type"));
+            let body = Bytes::from(directory::os_pack::json::to_json_string(&DocumentOpenIntentV1 {
+                schema: "semio.hub.document-open-intent/v1".into(),
+                version: 1,
+                scope: scope.clone(),
+                requested_surface_id: Some("surface.test.editor".into()),
+                client_instance_id: "client:no-genesis".into(),
+            }));
+            let authorization = format!("Bearer {token}");
+            let raw_headers = [("Authorization", authorization.as_str()), ("Content-Type", "application/json")];
+            let addr = spawn_server(state.clone()).await;
+            for path in [
+                format!("/spaces/{}/documents/{}/open-plan", scope.space_id, scope.document_id),
+                format!("/spaces/{}/documents/{}/execution-target/manifest", scope.space_id, scope.document_id),
+            ] {
+                let denied = raw_http_request(addr, "POST", &path, &raw_headers, &body).await;
+                assert_eq!(denied.status, 404, "{path} must refuse a document without committed genesis");
+                let error: serde_json::Value = serde_json::from_slice(&denied.body).expect("closed checkpoint error");
+                assert_eq!(error["code"], "not-found");
+                assert!(!denied.body.windows(TEST_EXECUTION_TARGET_COMPONENT_BYTES.len()).any(|window| window == TEST_EXECUTION_TARGET_COMPONENT_BYTES));
+            }
+            assert!(state.document_open_plans.inner.lock().expect("plan ledger").records.is_empty(), "pre-genesis route refusal cannot mint a plan");
+            if !indexed {
+                let mut no_catalog = state.clone();
+                no_catalog.openable_catalog = None;
+                let no_catalog_addr = spawn_server(no_catalog).await;
+                let denied = raw_http_request(
+                    no_catalog_addr,
+                    "POST",
+                    &format!("/spaces/{}/documents/{}/execution-target/manifest", scope.space_id, scope.document_id),
+                    &raw_headers,
+                    &body,
+                )
+                .await;
+                assert_eq!(denied.status, 404, "checkpoint absence must be decided before catalog availability");
+                assert_eq!(serde_json::from_slice::<serde_json::Value>(&denied.body).expect("closed no-catalog checkpoint error")["code"], "not-found");
+            }
+            let Err((plan_status, DirectoryJson(plan_error))) = issue_document_open_plan_inner(scope.space_id.clone(), scope.document_id.clone(), headers.clone(), state.clone(), body.clone()).await else {
+                panic!("descriptor/index without genesis minted an open plan");
+            };
+            assert_eq!((plan_status, plan_error.code), (StatusCode::NOT_FOUND, DocumentOpenPlanErrorCodeV1::NotFound));
+            let Err((target_status, DirectoryJson(target_error))) = document_execution_target_selection(scope.space_id.clone(), scope.document_id.clone(), headers, state, body).await else {
+                panic!("descriptor/index without genesis minted an execution target");
+            };
+            assert_eq!((target_status, target_error.code), (StatusCode::NOT_FOUND, DocumentOpenPlanErrorCodeV1::NotFound));
+        }
+        eprintln!("[DEBUG] required-checkpoint-open: descriptor-only and indexed-without-genesis refused before plan or lease");
+    }
+
+    #[tokio::test]
     async fn document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_cancel_safe_and_exchangeable() {
         let mut state = test_state().await;
-        let document_id = "open-plan-issue";
-        announce_document_for_test(&state, STUDIO, document_id).await;
-        let scope = DocumentScope::new(STUDIO, document_id);
-        let descriptor = state.directory.get_document_descriptor(&scope).await.expect("descriptor lookup").expect("descriptor");
+        let document_id = artifact_document_id_for_test("open-plan-issue");
+        let token = seed_author_token(&state).await;
+        let (descriptor, _) = publish_openable_document_for_test(&state, &token, STUDIO, &document_id).await;
+        let scope = DocumentScope::new(STUDIO, &document_id);
         state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
         state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
-        let token = seed_author_token(&state).await;
         let authorization = format!("Bearer {token}");
         let headers = [("Authorization", authorization.as_str()), ("Content-Type", "application/json")];
         let plan_route = format!("/spaces/{STUDIO}/documents/{document_id}/open-plan");
@@ -10399,7 +11392,8 @@ mod tests {
             authority.scope.document_id = format!("capacity-{index}");
             authority.descriptor.document_id = authority.scope.document_id.clone();
             authority.descriptor_digest_v1 = os_directory::hex_lower(&os_directory::descriptor_digest_v1(&authority.descriptor).expect("capacity digest").0);
-            authority.checkpoint = None;
+            authority.checkpoint.descriptor_digest_v1 = authority.descriptor_digest_v1.clone();
+            authority.checkpoint.baseline_frontier.document_id = authority.scope.document_id.clone();
             state.document_open_plans.issue_with_capability(authority, capacity_now, capacity_now + 10_000, DocumentOpenPlanCapabilityV1::from_secret(document_open_plan_secret(1_000 + index as u32))).expect("fill plan capacity");
         }
         let capacity_response = raw_http_request(addr, "POST", &plan_route, &headers, intent_body("surface.test.editor", "client:capacity").as_bytes()).await;
@@ -10407,12 +11401,12 @@ mod tests {
         assert_eq!(serde_json::from_slice::<serde_json::Value>(&capacity_response.body).expect("capacity JSON")["code"], "deadline-exceeded");
 
         let mut cancelled = test_state().await;
-        announce_document_for_test(&cancelled, STUDIO, "open-plan-cancelled").await;
-        let cancelled_scope = DocumentScope::new(STUDIO, "open-plan-cancelled");
-        let cancelled_descriptor = cancelled.directory.get_document_descriptor(&cancelled_scope).await.expect("cancel descriptor").expect("cancel document");
+        let cancelled_token = seed_author_token(&cancelled).await;
+        let cancelled_document_id = artifact_document_id_for_test("open-plan-cancelled");
+        let (cancelled_descriptor, _) = publish_openable_document_for_test(&cancelled, &cancelled_token, STUDIO, &cancelled_document_id).await;
+        let cancelled_scope = DocumentScope::new(STUDIO, cancelled_document_id);
         cancelled.openable_catalog = Some(document_open_catalog_for_descriptor(&cancelled_descriptor));
         cancelled.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
-        let cancelled_token = seed_author_token(&cancelled).await;
         let mut cancelled_headers = bearer_headers(&cancelled_token);
         cancelled_headers.insert(axum::http::header::CONTENT_TYPE, "application/json".parse().expect("content type"));
         let gate = Arc::new(TestDocumentOpenPlanIssueGate::default());
@@ -10435,13 +11429,12 @@ mod tests {
     #[tokio::test]
     async fn document_open_plan_socket_consume_revalidates_surface_descriptor_catalog_revision_and_checkpoint() {
         let mut state = test_state().await;
-        let document_id = "open-plan-consume";
-        announce_document_for_test(&state, STUDIO, document_id).await;
-        let scope = DocumentScope::new(STUDIO, document_id);
-        let descriptor = state.directory.get_document_descriptor(&scope).await.expect("descriptor lookup").expect("descriptor");
+        let document_id = artifact_document_id_for_test("open-plan-consume");
+        let token = seed_author_token(&state).await;
+        let (descriptor, _) = publish_openable_document_for_test(&state, &token, STUDIO, &document_id).await;
+        let scope = DocumentScope::new(STUDIO, &document_id);
         state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
         state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
-        let token = seed_author_token(&state).await;
 
         let (_, surface_grant) = issue_and_exchange_document_open_plan_for_test(&state, &token, &scope, "client:surface").await;
         let surface_capability = SocketGrantCapability::parse(&surface_grant.grant).expect("surface grant");
@@ -10454,7 +11447,7 @@ mod tests {
         let checkpoint_capability = SocketGrantCapability::parse(&checkpoint_grant.grant).expect("checkpoint grant");
         let mut checkpoint_headers = HeaderMap::new();
         checkpoint_headers.insert(axum::http::header::SEC_WEBSOCKET_PROTOCOL, format!("{SOCKET_PROTOCOL_V1}, {}", checkpoint_grant.grant).parse().expect("checkpoint protocol"));
-        publish_checkpoint_for_test(&state, STUDIO, document_id).await;
+        publish_checkpoint_for_test(&state, STUDIO, &document_id).await;
         assert!(matches!(consume_socket_grant(&state, &checkpoint_headers, SocketAudienceV1::Document(scope.clone()), Some("surface.test.editor")).await, Err(StatusCode::UNAUTHORIZED)));
         assert!(state.socket_grants.pending(&checkpoint_capability, &SocketAudienceV1::Document(scope.clone()), now_ms()).is_err(), "revision/checkpoint change terminally rejects the pending grant");
 
@@ -10478,7 +11471,7 @@ mod tests {
         Arc::make_mut(hostile_revision.document_plan.as_mut().expect("revision authority")).revalidation.directory_revision += 1;
         assert_eq!(document_plan_socket_validity(&state, &hostile_revision, Some("surface.test.editor")).await, SocketBindingValidityV1::Unauthorized);
         let mut hostile_checkpoint = pending.clone();
-        Arc::make_mut(hostile_checkpoint.document_plan.as_mut().expect("checkpoint authority")).checkpoint = None;
+        Arc::make_mut(hostile_checkpoint.document_plan.as_mut().expect("checkpoint authority")).checkpoint.descriptor_digest_v1 = "00".repeat(32);
         assert_eq!(document_plan_socket_validity(&state, &hostile_checkpoint, Some("surface.test.editor")).await, SocketBindingValidityV1::Unauthorized);
         for field in ["artifactKind", "standard", "subset"] {
             let mut hostile = pending.clone();
@@ -13789,7 +14782,7 @@ mod tests {
         fixture.state.directory.release_checkpoint_publication(&failed_claim.actor_user_id, &failed_claim.correlation_id, &failed_digest).await.expect("release test reclaim");
 
         let current = fixture.handle.checkpoint_publication_snapshot().await.expect("current publication snapshot");
-        let descriptor_command = checkpoint_publication_command("cccccccccccccccccccccccccccccccc", &descriptor, &current, CheckpointPublicationCurrentV1::None, &fixture.pack, &fixture.spr);
+        let descriptor_command = checkpoint_publication_command("cccccccccccccccccccccccccccccccc", &descriptor, &current, fixture.command.expected_current.clone(), &fixture.pack, &fixture.spr);
         let descriptor_body = directory::os_pack::json::to_json_string(&descriptor_command);
         let descriptor_swap = tokio::spawn({
             let route = route.clone();
@@ -13816,7 +14809,7 @@ mod tests {
             .await
             .expect("restore publication descriptor");
 
-        let mut cancellation = checkpoint_publication_command("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", &descriptor, &current, CheckpointPublicationCurrentV1::None, &fixture.pack, &fixture.spr);
+        let mut cancellation = checkpoint_publication_command("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", &descriptor, &current, fixture.command.expected_current.clone(), &fixture.pack, &fixture.spr);
         cancellation.schema = "semio.hub.checkpoint-publication-command/v1".into();
         let cancellation = directory::os_pack::json::to_json_string(&cancellation);
         let capability = SessionCapability::parse(&fixture.author.token).expect("publication session capability");

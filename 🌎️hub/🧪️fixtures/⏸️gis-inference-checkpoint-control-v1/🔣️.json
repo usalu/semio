@@ -1,0 +1,38 @@
+{
+  "schema": "semio.hub.gis-inference-checkpoint-control-fixture/v1",
+  "version": 1,
+  "descriptor": 4,
+  "frameMaximumBytes": 256,
+  "frames": [
+    {
+      "direction": "hub-to-runner",
+      "frame": {
+        "schema": "semio.hub.gis-inference-checkpoint-control/v1",
+        "version": 1,
+        "sequence": 1,
+        "kind": "entered",
+        "jobId": "11111111111111111111111111111111"
+      }
+    },
+    {
+      "direction": "runner-to-hub",
+      "frame": {
+        "schema": "semio.hub.gis-inference-checkpoint-control/v1",
+        "version": 1,
+        "sequence": 2,
+        "kind": "release",
+        "jobId": "11111111111111111111111111111111"
+      }
+    }
+  ],
+  "hostiles": [
+    "wrong-schema",
+    "wrong-version",
+    "wrong-sequence",
+    "wrong-kind",
+    "unknown-field",
+    "zero-length",
+    "oversized-frame",
+    "closed-before-release"
+  ]
+}

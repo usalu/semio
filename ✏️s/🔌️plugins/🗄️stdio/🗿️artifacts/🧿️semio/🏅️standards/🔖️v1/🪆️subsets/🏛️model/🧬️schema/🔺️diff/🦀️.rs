@@ -127,7 +127,7 @@ where
 /// 🧮️ Name/id-keyed absorb — identity is the KEY (not position): a `d2`-removal of a `d1`-added
 /// key annihilates the add; a `d2`-modify of a `d1`-added key patches into the carried payload.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
+fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -254,17 +254,17 @@ impl MutationDiff<SemioModelSnapshot> for SemioModelDiff {
         self.spatial = match (self.spatial.take(), other.spatial) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |n: &SpatialNode| n.id.clone(), absorb_spatial_diff, apply_spatial)),
+            (Some(a), Some(b)) => Some(absorb_named(a, &b, |n: &SpatialNode| n.id.clone(), absorb_spatial_diff, apply_spatial)),
         };
         self.elements = match (self.elements.take(), other.elements) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |e: &SemioModelElement| e.id.clone(), absorb_element_diff, apply_element)),
+            (Some(a), Some(b)) => Some(absorb_named(a, &b, |e: &SemioModelElement| e.id.clone(), absorb_element_diff, apply_element)),
         };
         self.relations = match (self.relations.take(), other.relations) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |r: &ModelRelation| r.id.clone(), absorb_relation_diff, apply_relation)),
+            (Some(a), Some(b)) => Some(absorb_named(a, &b, |r: &ModelRelation| r.id.clone(), absorb_relation_diff, apply_relation)),
         };
     }
 }
@@ -475,7 +475,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -510,11 +510,11 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
-    format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
+    format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 
 /// 🧪️ P2 pilot (model): real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::

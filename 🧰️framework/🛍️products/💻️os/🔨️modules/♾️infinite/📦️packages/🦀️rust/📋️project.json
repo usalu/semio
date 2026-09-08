@@ -1,0 +1,139 @@
+{
+  "name": "semio-framework-os-infinite",
+  "projectType": "library",
+  "tags": [
+    "language:cargo"
+  ],
+  "targets": {
+    "build": {
+      "cache": true,
+      "parallelism": false,
+      "outputs": [
+        "{projectRoot}/dist/build"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "options": {
+        "cwd": ".",
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\" native cargo build --manifest \"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml\""
+      }
+    },
+    "check": {
+      "cache": true,
+      "parallelism": false,
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "options": {
+        "cwd": ".",
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\" native cargo check --manifest \"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml\""
+      }
+    },
+    "test": {
+      "cache": true,
+      "parallelism": false,
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "options": {
+        "cwd": ".",
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\" native cargo test --manifest \"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml\""
+      }
+    },
+    "font-tool": {
+      "cache": true,
+      "parallelism": false,
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/font-tool"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts font-tool"
+      }
+    },
+    "fonts": {
+      "cache": true,
+      "inputs": [
+        "production",
+        {
+          "dependentTasksOutputFiles": "**/*"
+        }
+      ],
+      "dependsOn": [
+        "font-tool"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/fonts"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts fonts"
+      }
+    },
+    "test-quick": {
+      "cache": true,
+      "parallelism": false,
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "options": {
+        "cwd": ".",
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\" native cargo test --manifest \"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml\""
+      }
+    },
+    "test-long": {
+      "cache": true,
+      "parallelism": false,
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "options": {
+        "cwd": ".",
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\" native cargo test --manifest \"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml\""
+      }
+    },
+    "test-exhaustive": {
+      "cache": true,
+      "parallelism": false,
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "options": {
+        "cwd": ".",
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\" native cargo test --manifest \"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml\""
+      }
+    }
+  },
+  "namedInputs": {
+    "nativeAssets": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔣️icons/**/*.svg",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/**/*.svg",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/**/*.svg",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🤖️generated/**/*.svg",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔣️shortcodes.json"
+    ],
+    "default": [
+      "nativeAssets"
+    ],
+    "nativeSources": [
+      "nativeAssets"
+    ],
+    "nativeTestSources": [
+      "nativeAssets"
+    ]
+  }
+}

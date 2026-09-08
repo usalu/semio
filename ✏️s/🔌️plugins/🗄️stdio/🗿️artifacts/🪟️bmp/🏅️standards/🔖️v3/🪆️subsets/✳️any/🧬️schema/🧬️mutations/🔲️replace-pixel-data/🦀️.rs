@@ -47,7 +47,7 @@ impl protocol::MutationKind<BmpSnapshot, BmpMutation> for ReplacePixelDataMutati
 
 #[cfg(test)]
 pub(crate) fn test_case() -> BmpMutation {
-    serde_json::from_str(include_str!("🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed replace-pixel-data payload")
+    dsl::json::from_json_str(include_str!("🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed replace-pixel-data payload")
 }
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]

@@ -497,7 +497,7 @@ impl SurfaceReconciler {
         let mut credit = reserve_surface_reconcile(SurfaceReconcileLimits { max_bytes: 1024 * 1024, ..Default::default() });
         let mut surface = Some(self.surface.clone());
         let mut assembly = ui_contract::UiDocumentAssembly::default();
-        assert!(assembly.open_with_permit(&mut credit, &mut surface, oracle.revision.0.checked_add(1).unwrap(), oracle.revision, oracle.root, 0, 1, SURFACE_RECONCILE_PAGE_BYTES).unwrap().progressed);
+        assert!(assembly.open_with_permit(&mut credit, &mut surface, ui_contract::UiDocumentAssemblyIdentity { generation: oracle.revision.0.checked_add(1).unwrap(), revision: oracle.revision, root: oracle.root, layout_epoch: 0 }, 1, SURFACE_RECONCILE_PAGE_BYTES).unwrap().progressed);
         while let Some((id, record)) = oracle.retained.take_first() {
             let mut source = Some(record);
             let ordinal = self.ordinals.len();
@@ -563,6 +563,7 @@ pub(crate) enum SurfaceReconcileStage {
 }
 
 #[derive(Debug)]
+#[expect(clippy::large_enum_variant, reason = "Completion transfers the admitted reconciler and patch by value without allocating another owner.")]
 pub(crate) enum SurfaceReconcileStep {
     Yield { nodes: usize, bytes: usize },
     Complete { reconciler: SurfaceReconciler, patch: Option<ui_contract::UiPatch> },
@@ -639,6 +640,7 @@ struct RemovalFrame {
     next_child: usize,
 }
 
+#[expect(clippy::large_enum_variant, reason = "Each variant retains a bounded copy cursor in the already admitted record slot; boxing would allocate while copying.")]
 enum RecordOwnedCopy {
     Bindings(ui_contract::UiBindingsCopy),
     Component(ui_contract::UiComponentCopy),
@@ -665,6 +667,8 @@ impl ExistingComponentComparison {
 }
 
 impl RecordOwnedCopy {
+    #[cfg(test)]
+    fn bindings(&self) -> Option<&ui_contract::UiBindingsCopy> { if let Self::Bindings(value) = self { Some(value) } else { None } }
     fn bindings_mut(&mut self) -> Option<&mut ui_contract::UiBindingsCopy> { if let Self::Bindings(value) = self { Some(value) } else { None } }
     fn component(&self) -> Option<&ui_contract::UiComponentCopy> { if let Self::Component(value) = self { Some(value) } else { None } }
     fn component_mut(&mut self) -> Option<&mut ui_contract::UiComponentCopy> { if let Self::Component(value) = self { Some(value) } else { None } }
@@ -696,6 +700,7 @@ impl std::ops::DerefMut for RecordSource {
     fn deref_mut(&mut self) -> &mut Self::Target { self.0.as_mut().expect("unplaced record remains in its structural source slot") }
 }
 
+#[derive(Default)]
 struct FreshRecordClone {
     key: Option<ui_contract::UiText>,
     component: Option<ui_contract::Component>,
@@ -706,11 +711,6 @@ struct FreshRecordClone {
     menu: Option<Option<ui_contract::MenuRef>>,
 }
 
-impl Default for FreshRecordClone {
-    fn default() -> Self {
-        Self { key: None, component: None, layout: None, children: None, accessibility: None, bindings: None, menu: None }
-    }
-}
 
 const SURFACE_RECONCILE_VALUE_DEPTH: usize = 64;
 const SURFACE_RECONCILE_SEMANTIC_COPIES: usize = 3;
@@ -739,6 +739,7 @@ struct SurfaceSemanticMapPage {
     value: Option<ui_contract::UiValue>,
 }
 
+#[expect(clippy::large_enum_variant, reason = "The fixed traversal stack owns each map page and value within its admitted depth and byte budget.")]
 enum SurfaceSemanticValueFrame {
     Value(ui_contract::UiValue),
     List { cursor: ui_contract::UiListCursor },
@@ -785,12 +786,12 @@ impl SurfaceSemanticCensusCursor {
     }
 
     fn owner(&mut self, bytes: usize) -> SurfaceSemanticUsage {
-        self.string_byte = bytes.checked_mul(SURFACE_RECONCILE_SEMANTIC_COPIES).unwrap_or(usize::MAX);
+        self.string_byte = bytes.saturating_mul(SURFACE_RECONCILE_SEMANTIC_COPIES);
         SurfaceSemanticUsage { items: SURFACE_RECONCILE_SEMANTIC_COPIES, bytes: 0 }
     }
 
     fn backing<T>(&mut self, capacity: usize) -> SurfaceSemanticUsage {
-        self.owner(capacity.checked_mul(size_of::<T>()).unwrap_or(usize::MAX))
+        self.owner(capacity.saturating_mul(size_of::<T>()))
     }
 
     fn push_value(&mut self, value: &ui_contract::UiValue) -> Result<(), SurfaceReconcileFault> {
@@ -882,7 +883,7 @@ impl SurfaceSemanticCensusCursor {
                 }
                 SurfaceSemanticUsage::default()
             }
-            3 => binding.capability.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)),
+            3 => binding.capability.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(value)),
             _ => {
                 self.binding += 1;
                 self.action = 0;
@@ -905,7 +906,7 @@ impl SurfaceSemanticCensusCursor {
                 }
                 SurfaceSemanticUsage::default()
             }
-            3 => binding.capability.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)),
+            3 => binding.capability.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(value)),
             _ => {
                 self.action = 0;
                 return SurfaceSemanticCensusStep::Complete;
@@ -922,11 +923,11 @@ impl SurfaceSemanticCensusCursor {
             Container(props) => {
                 let usage = match self.container {
                     0 => props.label.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.0)),
-                    1 => props.description.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)),
-                    2 => props.error.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)),
+                    1 => props.description.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(value)),
+                    2 => props.error.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(value)),
                     3 => props.drop_overlay.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.title.0)),
                     4 => props.drop_overlay.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.hint.0)),
-                    5 => props.drop_overlay.as_ref().and_then(|value| value.accept.as_ref()).map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)),
+                    5 => props.drop_overlay.as_ref().and_then(|value| value.accept.as_ref()).map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(value)),
                     _ => return SurfaceSemanticCensusStep::Complete,
                 };
                 self.container += 1;
@@ -945,11 +946,11 @@ impl SurfaceSemanticCensusCursor {
                     let Some((key, value)) = props.data_attributes.as_ref().and_then(|values| values.get(self.entry)) else { return SurfaceSemanticCensusStep::Complete };
                     let usage = if self.data_attribute == 0 {
                         self.data_attribute = 1;
-                        self.inline_text(&key)
+                        self.inline_text(key)
                     } else {
                         self.data_attribute = 0;
                         self.entry += 1;
-                        self.inline_text(&value)
+                        self.inline_text(value)
                     };
                     progress(usage)
                 }
@@ -969,8 +970,8 @@ impl SurfaceSemanticCensusCursor {
                 let usage = match self.container {
                     0 => self.inline_text(&props.value),
                     1 => props.placeholder.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.0)),
-                    2 => props.commit.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)),
-                    3 => props.accept.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)),
+                    2 => props.commit.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(value)),
+                    3 => props.accept.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(value)),
                     _ => return SurfaceSemanticCensusStep::Complete,
                 };
                 self.container += 1;
@@ -1037,7 +1038,7 @@ impl SurfaceSemanticCensusCursor {
             Slider(props) => {
                 self.container += 1;
                 if self.container == 1 {
-                    progress(props.unit.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)))
+                    progress(props.unit.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(value)))
                 } else {
                     SurfaceSemanticCensusStep::Complete
                 }
@@ -1062,7 +1063,7 @@ impl SurfaceSemanticCensusCursor {
             Tree(props) => {
                 self.container += 1;
                 if self.container == 1 {
-                    progress(props.interaction_domain.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)))
+                    progress(props.interaction_domain.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(value)))
                 } else {
                     SurfaceSemanticCensusStep::Complete
                 }
@@ -1082,11 +1083,11 @@ impl SurfaceSemanticCensusCursor {
                 }
                 1 => {
                     self.container = 2;
-                    progress(props.description.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)))
+                    progress(props.description.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(value)))
                 }
                 2 => {
                     self.container = 3;
-                    progress(props.icon.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)))
+                    progress(props.icon.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(value)))
                 }
                 3 => {
                     self.container = 4;
@@ -1100,11 +1101,11 @@ impl SurfaceSemanticCensusCursor {
                     };
                     let usage = if self.data_attribute == 0 {
                         self.data_attribute = 1;
-                        self.inline_text(&key)
+                        self.inline_text(key)
                     } else {
                         self.data_attribute = 0;
                         self.entry += 1;
-                        self.inline_text(&value)
+                        self.inline_text(value)
                     };
                     progress(usage)
                 }
@@ -1183,7 +1184,7 @@ impl SurfaceSemanticCensusCursor {
         match self.field {
             0 => {
                 self.field = 1;
-                let bytes = size_of::<crate::TreeNode>().checked_mul(SURFACE_RECONCILE_SEMANTIC_COPIES).unwrap_or(usize::MAX);
+                let bytes = size_of::<crate::TreeNode>().saturating_mul(SURFACE_RECONCILE_SEMANTIC_COPIES);
                 SurfaceSemanticCensusStep::Progress(SurfaceSemanticUsage { items: SURFACE_RECONCILE_SEMANTIC_COPIES, bytes })
             }
             1 => {
@@ -1212,7 +1213,7 @@ impl SurfaceSemanticCensusCursor {
             }
             5 => {
                 self.field = 6;
-                SurfaceSemanticCensusStep::Progress(node.accessibility.shortcut.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)))
+                SurfaceSemanticCensusStep::Progress(node.accessibility.shortcut.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(value)))
             }
             6 => {
                 self.field = 7;
@@ -1388,7 +1389,7 @@ impl SurfaceReconcileCursor {
                         };
                         if self.postorder.try_push(complete.index).is_err() {
                             self.overflow_frame = Some(complete);
-                            let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
+                            let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.saturating_add(1), ..self.usage }, limits: self.limits };
                             self.fault = Some(fault.clone());
                             return SurfaceReconcileStep::Fault(fault);
                         }
@@ -1405,7 +1406,7 @@ impl SurfaceReconcileCursor {
                         return SurfaceReconcileStep::Fault(fault);
                     }
                     if self.flat.len() >= self.limits.max_nodes {
-                        let usage = SurfaceReconcileUsage { nodes: self.flat.len().checked_add(1).unwrap_or(usize::MAX), items: self.usage.items, bytes: self.usage.bytes };
+                        let usage = SurfaceReconcileUsage { nodes: self.flat.len().saturating_add(1), items: self.usage.items, bytes: self.usage.bytes };
                         let fault = SurfaceReconcileFault::Credits { usage, limits: self.limits };
                         self.fault = Some(fault.clone());
                         return SurfaceReconcileStep::Fault(fault);
@@ -1489,7 +1490,7 @@ impl SurfaceReconcileCursor {
                         }
                         Err(_) => {
                             self.held_node = Some((parent, node));
-                            let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
+                            let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.saturating_add(1), ..self.usage }, limits: self.limits };
                             self.fault = Some(fault.clone());
                             return SurfaceReconcileStep::Fault(fault);
                         }
@@ -1500,13 +1501,13 @@ impl SurfaceReconcileCursor {
                     if let Err(flat) = self.flat.try_push(flat) {
                         self.held_node = Some((parent, flat.node));
                         self.overflow_frame = Some(PresentationFrame { index, children });
-                        let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
+                        let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.saturating_add(1), ..self.usage }, limits: self.limits };
                         self.fault = Some(fault.clone());
                         return SurfaceReconcileStep::Fault(fault);
                     }
                     if let Err(frame) = self.traversal.try_push(PresentationFrame { index, children }) {
                         self.overflow_frame = Some(frame);
-                        let fault = SurfaceReconcileFault::ValueDepth { actual: SURFACE_RECONCILE_VALUE_DEPTH.checked_add(1).unwrap_or(usize::MAX), max: SURFACE_RECONCILE_VALUE_DEPTH };
+                        let fault = SurfaceReconcileFault::ValueDepth { actual: SURFACE_RECONCILE_VALUE_DEPTH.saturating_add(1), max: SURFACE_RECONCILE_VALUE_DEPTH };
                         self.fault = Some(fault.clone());
                         return SurfaceReconcileStep::Fault(fault);
                     }
@@ -1534,18 +1535,18 @@ impl SurfaceReconcileCursor {
                         }
                     };
                     if self.new_key_index.try_insert(identity, id).is_err() {
-                        let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
+                        let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.saturating_add(1), ..self.usage }, limits: self.limits };
                         self.fault = Some(fault.clone());
                         return SurfaceReconcileStep::Fault(fault);
                     }
                     if self.ids.try_push(id).is_err() {
-                        let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
+                        let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.saturating_add(1), ..self.usage }, limits: self.limits };
                         self.fault = Some(fault.clone());
                         return SurfaceReconcileStep::Fault(fault);
                     }
                     if let Some(parent) = parent_index {
                         if self.flat[parent].child_ids.try_push(id).is_err() {
-                            let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
+                            let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.saturating_add(1), ..self.usage }, limits: self.limits };
                             self.fault = Some(fault.clone());
                             return SurfaceReconcileStep::Fault(fault);
                         }
@@ -1759,7 +1760,7 @@ impl SurfaceReconcileCursor {
                     if self.new_ordinals.contains_key(&id) {
                         if self.removal.try_push(RemovalFrame { id, next_child: 0 }).is_err() {
                             self.remove_next = Some(id);
-                            let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
+                            let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.saturating_add(1), ..self.usage }, limits: self.limits };
                             self.fault = Some(fault.clone());
                             return SurfaceReconcileStep::Fault(fault);
                         }
@@ -1956,7 +1957,7 @@ impl SurfaceReconcileCursor {
         if !self.assembly_open {
             if self.assembly_credit.is_none() { return self.fail(SurfaceReconcileFault::Credits { usage: self.usage, limits: self.limits }); }
             let root = self.ids.first().copied().or_else(|| self.record_diff.as_ref().map(|record| record.id));
-            match self.assembly.open_with_permit(&mut self.assembly_credit, &mut self.assembly_surface, self.assembly_generation, self.base_revision, root, 0, 1, SURFACE_RECONCILE_PAGE_BYTES) {
+            match self.assembly.open_with_permit(&mut self.assembly_credit, &mut self.assembly_surface, ui_contract::UiDocumentAssemblyIdentity { generation: self.assembly_generation, revision: self.base_revision, root, layout_epoch: 0 }, 1, SURFACE_RECONCILE_PAGE_BYTES) {
                 Ok(progress) => { self.assembly_open = progress.progressed; return SurfaceReconcileStep::Yield { nodes: 0, bytes: progress.initialized_bytes + progress.moved_bytes }; }
                 Err(error) if error.kind == ui_contract::UiDocumentAssemblyErrorKind::Contended => return SurfaceReconcileStep::Yield { nodes: 0, bytes: 0 },
                 Err(_) => return self.fail(SurfaceReconcileFault::AliasCapacity),
@@ -2312,6 +2313,7 @@ struct SurfaceReconcileHandbackReservation {
     key: SurfaceReconcileHandbackKey,
 }
 
+#[derive(Default)]
 struct SurfaceReconcileHandbackSlot {
     epoch: u64,
     generation: u64,
@@ -2320,11 +2322,6 @@ struct SurfaceReconcileHandbackSlot {
     state: Option<Box<SurfaceReconcileRetained>>,
 }
 
-impl Default for SurfaceReconcileHandbackSlot {
-    fn default() -> Self {
-        Self { epoch: 0, generation: 0, reserved: false, queued: false, state: None }
-    }
-}
 
 struct SurfaceReconcileHandbackRegistry {
     slots: [SurfaceReconcileHandbackSlot; SURFACE_RECONCILE_HANDBACK_SLOTS],
@@ -2380,6 +2377,7 @@ fn try_reserve_surface_reconcile_handback(generation: u64) -> Option<SurfaceReco
     Some(SurfaceReconcileHandbackReservation { key: SurfaceReconcileHandbackKey { slot, epoch, generation } })
 }
 
+#[expect(clippy::needless_pass_by_value, reason = "Releasing a reservation consumes its unique slot authority so callers cannot reuse it.")]
 fn release_surface_reconcile_handback(reservation: SurfaceReconcileHandbackReservation) {
     let mut registry = SURFACE_RECONCILE_HANDBACKS.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
     let should_free = {
@@ -3228,6 +3226,7 @@ pub struct SurfaceReconcileTerminal {
 }
 
 impl SurfaceReconcileTerminal {
+    #[expect(clippy::result_large_err, reason = "Rejected admission returns the exact reconciler, tree and reservation without a fallible allocation.")]
     pub fn try_from_reserved_sources(mut current: SurfaceReconciler, tree: crate::ComponentTree, mut reservation: SurfaceReconcileReservation) -> Result<Self, (SurfaceReconciler, crate::ComponentTree, SurfaceReconcileReservation)> {
         let generation = reservation.generation;
         let Some(handback) = acquire_reserved_surface_reconcile_handback(&mut current.handback, &mut reservation.handback, generation) else {
@@ -3252,6 +3251,7 @@ impl SurfaceReconcileTerminal {
         })
     }
 
+    #[expect(clippy::result_large_err, reason = "Rejected admission preserves the caller's exact reconciler without allocating on failure.")]
     pub fn try_from_reconciler(mut reconciler: SurfaceReconciler, generation: u64) -> Result<Self, SurfaceReconciler> {
         let Some(handback) = acquire_surface_reconcile_handback(&mut reconciler.handback, generation) else {
             return Err(reconciler);

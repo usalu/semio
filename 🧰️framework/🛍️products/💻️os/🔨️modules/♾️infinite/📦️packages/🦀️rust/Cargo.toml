@@ -2,7 +2,7 @@
 name = "semio-framework-os-infinite"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "OS infinite family — world/canvas/board Shape V2 glue"
 build = "build.rs"
 
@@ -101,8 +101,8 @@ semio-framework-pixels = { path = "../../../../../../🔨️modules/🔲️pixel
 # `vello_svg` moved out of the `wasm32-wasip2` target table entirely below.
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu", "wgpu-engine"] }
-vello = { version = "0.7.0", features = ["wgpu", "wgpu_default"] }
-vello_svg = { version = "0.9.0", default-features = true, features = ["wgpu"] }
+vello = { version = "0.9.0", features = ["wgpu", "wgpu_default"] }
+vello_svg = { version = "0.10.0", default-features = true, features = ["wgpu"] }
 # 🎨️ Only the host-gated `SceneCommand::replay_into`/`Scene::vello_scene` rasterization boundary
 # (`🖼️canvas/🦀️.rs`) still names `kurbo::`/`peniko::` directly — every guest-reachable value type
 # is first-party now (`Cap`/`Join`/`Stroke`/`Color`/`FillRule`/`BlendMode`/`RasterImage`). Rust only

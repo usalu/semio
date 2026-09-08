@@ -71,12 +71,12 @@ mod surface_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn raster_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::raster::RasterViewer>();
+        assert_viewer_never_mutates::<crate::viewer::raster::RasterViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn raster_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::raster::RasterPlayApp, crate::viewer::raster::RasterViewer>();
+        assert_editor_and_viewer_share_dialect::<crate::editor::raster::RasterPlayApp, crate::viewer::raster::RasterViewer>().await;
     }
 }
 //#endregion 🧪️Tests

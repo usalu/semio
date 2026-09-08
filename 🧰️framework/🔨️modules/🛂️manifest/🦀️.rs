@@ -386,7 +386,7 @@ impl ActionArgDef {
     }
 
     /// @emoji 🎁️ Sets the default effective value used when nothing is staged.
-    pub fn default_value(mut self, value: impl ToValue) -> Self {
+    pub fn default_value(mut self, value: &impl ToValue) -> Self {
         self.default = Some(value.to_value());
         self
     }
@@ -1126,7 +1126,7 @@ pub fn set_history_command_filter_action_definition() -> ActionDefinition {
         LocalizedLabel::native("Filter", "Filter"),
         options,
     )
-    .default_value("all")])
+    .default_value(&"all")])
 }
 
 /// @emoji 🗒️ The framework-owned action id apps dispatch to note a shell effect (navigate, export,
@@ -1164,7 +1164,7 @@ pub fn clipboard_action_definitions() -> Vec<ActionDefinition> {
         ActionDefinition { keys: Some("mod+c".into()), ..ActionDefinition::resumable_framework_catalog("copy", LocalizedLabel::native("Copy", "Kopieren"), ActionKind::Clipboard) },
         ActionDefinition { keys: Some("mod+x".into()), ..ActionDefinition::resumable_framework_catalog("cut", LocalizedLabel::native("Cut", "Ausschneiden"), ActionKind::Clipboard) },
         ActionDefinition { keys: Some("mod+v".into()), ..ActionDefinition::resumable_framework_catalog("paste", LocalizedLabel::native("Paste", "Einfügen"), ActionKind::Clipboard) }.with_args([
-            ActionArgDef::select("anchor", LocalizedLabel::native("Anchoring", "Verankerung"), anchoring_options).default_value("original"),
+            ActionArgDef::select("anchor", LocalizedLabel::native("Anchoring", "Verankerung"), anchoring_options).default_value(&"original"),
             ActionArgDef::vec3("position", LocalizedLabel::native("Position", "Position")),
         ]),
     ]
@@ -5117,15 +5117,6 @@ pub enum OsMediaCapability {
 /// so one spec carries both the OS-catalog presentation shape and the `MediaType` a wire actually negotiates
 /// — see `crate::media_types_compatible`. `OsArtifactDescriptor` (`framework/product/os/core`) threads
 /// `media_type` through so registry lookups return it alongside the rest of the descriptor.
-/// 🌉️ `#[value(...)]` has no `skip_deserializing`-only equivalent (only bare `skip`, which also
-/// drops the field from encode) — this stands in for the retired `#[serde(default,
-/// skip_deserializing)]` on `export_stdio_kinds`/`import_stdio_kinds` below: still encoded (so
-/// downstream tooling sees the computed stdio kind ids) but never decoded (`&'static str` can't be
-/// hydrated from wire data anyway; it always resets to empty and gets recomputed).
-fn ignore_stdio_kinds_on_decode(_value: DslValue) -> Result<Vec<&'static str>, ValueError> {
-    Ok(Vec::new())
-}
-
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -5144,13 +5135,9 @@ pub struct ArtifactKindSpec {
     pub export_formats: Vec<String>,
     pub import_formats: Vec<String>,
     /// 🗄️ Stdio export target kind ids (e.g. `stdio.json`) — additive peer of `export_formats`.
-    #[serde(default, skip_deserializing)]
-    #[value(default, deserialize_with = "ignore_stdio_kinds_on_decode")]
-    pub export_stdio_kinds: Vec<&'static str>,
+    pub export_stdio_kinds: Vec<String>,
     /// 🗄️ Stdio import source kind ids — additive peer of `import_formats`.
-    #[serde(default, skip_deserializing)]
-    #[value(default, deserialize_with = "ignore_stdio_kinds_on_decode")]
-    pub import_stdio_kinds: Vec<&'static str>,
+    pub import_stdio_kinds: Vec<String>,
 }
 //#endregion ArtifactKind
 
@@ -5763,7 +5750,7 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn action_arg_def_builder_chain() {
-        let arg = ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).required().default_value(1.0).describe("scale factor");
+        let arg = ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).required().default_value(&1.0).describe("scale factor");
         assert_eq!(arg.id, "scale");
         assert!(arg.required);
         assert_eq!(arg.default, Some(dsl::to_dsl_value(&1.0f64).unwrap()));
@@ -5884,7 +5871,7 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn effective_args_prefer_staged_then_default() {
-        let defs = vec![ActionArgDef::text("a", LocalizedLabel::data("A")).default_value("da"), ActionArgDef::text("b", LocalizedLabel::data("B")).default_value("db"), ActionArgDef::text("c", LocalizedLabel::data("C"))];
+        let defs = vec![ActionArgDef::text("a", LocalizedLabel::data("A")).default_value(&"da"), ActionArgDef::text("b", LocalizedLabel::data("B")).default_value(&"db"), ActionArgDef::text("c", LocalizedLabel::data("C"))];
         let staged = dsl::os_pack::json::to_dsl_value(&dsl::json!({ "a": "staged-a" }));
         let effective = effective_action_args(&defs, &staged, None);
         assert_eq!(effective.get("a"), Some(&DslValue::String("staged-a".into())), "staged wins");
@@ -5897,7 +5884,7 @@ mod app_label_tests {
     /// it ever reached the dispatched descriptor, causing the hub to authorize against an empty id.
     #[semio_framework_async_macros::async_test]
     async fn effective_args_preserve_a_seeded_arg_not_declared_as_a_form_field() {
-        let defs = vec![ActionArgDef::text("email", LocalizedLabel::data("Email")), ActionArgDef::text("role", LocalizedLabel::data("Role")).default_value("author")];
+        let defs = vec![ActionArgDef::text("email", LocalizedLabel::data("Email")), ActionArgDef::text("role", LocalizedLabel::data("Role")).default_value(&"author")];
         let staged = dsl::os_pack::json::to_dsl_value(&dsl::json!({ "email": "user2@semio.dev" }));
         let seed = dsl::os_pack::json::to_dsl_value(&dsl::json!({ "spaceId": "sp-1" }));
         let effective = effective_action_args(&defs, &staged, Some(&seed));

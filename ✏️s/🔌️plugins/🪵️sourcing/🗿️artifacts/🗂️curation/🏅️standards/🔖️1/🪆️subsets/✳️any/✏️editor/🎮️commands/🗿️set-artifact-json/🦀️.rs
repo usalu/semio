@@ -82,7 +82,7 @@ mod tests {
     /// job), so this asserts on `requested_effects` rather than through `app.snapshot()`.
     #[semio_framework_async_macros::async_test]
     async fn curation_and_example_actions_survive_registry_enforcement() {
-        let mut app = crate::editor::sourcing::testkit::new_app().await;
+        let mut app = new_app().await;
         let result = app.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::testkit::meta("local")).await.expect("set example");
         let Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");

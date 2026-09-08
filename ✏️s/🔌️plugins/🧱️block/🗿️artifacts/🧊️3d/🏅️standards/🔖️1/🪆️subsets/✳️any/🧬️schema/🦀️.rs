@@ -9,9 +9,7 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema:
 //#region 🔖️Artifact
 /// 🧬️ Full block3d artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.block.block3d")]
 pub struct Block3dArtifact {
     #[state(artifact)]

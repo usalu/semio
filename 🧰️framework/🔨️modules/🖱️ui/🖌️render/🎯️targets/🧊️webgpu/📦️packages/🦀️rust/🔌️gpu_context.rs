@@ -99,8 +99,8 @@ impl GpuContext {
     /// adapter → device, all real round-trips to the browser's GPU process.
     // 🌐️async: genuinely async device/adapter construction — the one exception U1 itself carves out.
     pub(crate) async fn new(surface_id: SurfaceId) -> Result<Self, BackendError> {
-        let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor { backends: wgpu::Backends::BROWSER_WEBGPU, ..Default::default() });
-        let target = wgpu::SurfaceTargetUnsafe::RawHandle { raw_display_handle: wgpu::rwh::WebDisplayHandle::new().into(), raw_window_handle: wgpu::rwh::WebWindowHandle::new(surface_id.get()).into() };
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor { backends: wgpu::Backends::BROWSER_WEBGPU, ..wgpu::InstanceDescriptor::new_without_display_handle() });
+        let target = wgpu::SurfaceTargetUnsafe::RawHandle { raw_display_handle: Some(wgpu::rwh::WebDisplayHandle::new().into()), raw_window_handle: wgpu::rwh::WebWindowHandle::new(surface_id.get()).into() };
         let surface = unsafe { instance.create_surface_unsafe(target) }.map_err(|_| BackendError::CanvasReplaced)?;
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions { power_preference: wgpu::PowerPreference::HighPerformance, compatible_surface: Some(&surface), force_fallback_adapter: false })

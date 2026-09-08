@@ -94,12 +94,12 @@ pub fn inverse_semio_video_mutation(mutation: &SemioVideoMutation, base: &SemioV
 
 //#region 🔖️Helpers
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn stream_at<'a>(base: &'a SemioVideoSnapshot, index: usize) -> Option<&'a SemioVideoStream> {
+fn stream_at(base: &SemioVideoSnapshot, index: usize) -> Option<&SemioVideoStream> {
     base.streams.get(index)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn sample_at<'a>(base: &'a SemioVideoSnapshot, stream_index: usize, index: usize) -> Option<&'a SemioVideoSample> {
+fn sample_at(base: &SemioVideoSnapshot, stream_index: usize, index: usize) -> Option<&SemioVideoSample> {
     base.streams.get(stream_index)?.samples.get(index)
 }
 //#endregion 🔖️Helpers
@@ -661,6 +661,6 @@ mod tests {
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/⏱️retimes-the-track-and-promotes-a-sample-to-a-keyframe/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/⏱️retimes-the-track-aec820/🦀️.rs"]
 mod set_snapshot_retimes_the_track_and_promotes_a_sample_to_a_keyframe;
 //#endregion 🧪️FixtureCases

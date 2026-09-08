@@ -296,34 +296,34 @@ impl protocol::OpBinary for Din16798Mutation {
 mod tests {
     use super::*;
     #[semio_framework_async_macros::async_test]
-    fn op_text_round_trips_change_annex() {
+    async fn op_text_round_trips_change_annex() {
         store::os_store::test_support::assert_op_line_round_trip(&Din16798Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: AnnexChoice::En }));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn op_text_round_trips_change_t_op_c() {
+    async fn op_text_round_trips_change_t_op_c() {
         store::os_store::test_support::assert_op_line_round_trip(&Din16798Mutation::ChangeTOpC(change_t_op_c::ChangeTOpC { new_t_op_c: 21.5 }));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn op_text_round_trips_change_occupancy() {
+    async fn op_text_round_trips_change_occupancy() {
         store::os_store::test_support::assert_op_line_round_trip(&Din16798Mutation::ChangeOccupancy(change_occupancy::ChangeOccupancy { new_occupancy: "office".into() }));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn op_text_round_trips_change_persons() {
+    async fn op_text_round_trips_change_persons() {
         store::os_store::test_support::assert_op_line_round_trip(&Din16798Mutation::ChangePersons(change_persons::ChangePersons { new_persons: 6 }));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn op_text_round_trips_change_sfp_required_class() {
+    async fn op_text_round_trips_change_sfp_required_class() {
         store::os_store::test_support::assert_op_line_round_trip(&Din16798Mutation::ChangeSfpRequiredClass(change_sfp_required_class::ChangeSfpRequiredClass { new_sfp_required_class: 2 }));
     }
 
     /// ⚖️ Every variant, not just the five hand-picked above — full-coverage `OpText` round trip
     /// over the closed vocabulary, one sample value per field.
     #[semio_framework_async_macros::async_test]
-    fn every_variant_op_text_round_trips() {
+    async fn every_variant_op_text_round_trips() {
         for mutation in every_mutation() {
             store::os_store::test_support::assert_op_line_round_trip(&mutation);
         }

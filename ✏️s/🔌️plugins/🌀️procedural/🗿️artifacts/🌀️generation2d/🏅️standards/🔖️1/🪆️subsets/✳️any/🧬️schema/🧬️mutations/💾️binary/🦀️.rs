@@ -226,7 +226,7 @@ mod tests {
 
     #[test]
     fn op_text_round_trip_create_generation() {
-        let generation = flow::playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
+        let generation = flow::playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: Default::default() };
         test_support::assert_op_line_round_trip(&create_generation(generation));
     }
     //#endregion 🔖️OpTextTests
@@ -252,12 +252,12 @@ mod tests {
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
 
-    #[test]
-    fn document_text_round_trip_with_operation_applied() {
-        let mut store = store::ArtifactStore::<Generation2dSnapshot, Generation2dMutation>::new(create_document_envelope(GENERATION_2D_SCHEMA, "generation2d", Generation2dSnapshot::default(), None)).expect("valid artifact store fixture");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![create_widget(3, Widget::InputNote { id: "note-9".into(), text: String::new() })], description: None }).expect("apply");
-        test_support::assert_document_text_round_trip(&store);
-        test_support::assert_document_pack_round_trip(&store);
+    #[semio_framework_async_macros::async_test]
+    async fn document_text_round_trip_with_operation_applied() {
+        let mut store = store::ArtifactStore::<Generation2dSnapshot, Generation2dMutation>::new(create_document_envelope(GENERATION_2D_SCHEMA, "generation2d", Generation2dSnapshot::default(), None)).await.expect("valid artifact store fixture");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![create_widget(3, Widget::InputNote { id: "note-9".into(), text: String::new() })], description: None }).await.expect("apply");
+        test_support::assert_document_text_round_trip(&store).await;
+        test_support::assert_document_pack_round_trip(&store).await;
     }
 }
 //#endregion 🧪️Tests
@@ -431,7 +431,8 @@ pub fn generation2d_validate_atomic_publication_authority(operation: semio_frame
     let leases = generation2d_publication_leases().try_lock().map_err(|_| "generation2d-publication.contended")?;
     let lease = leases.get_operation(operation).map(|(_, lease)| *lease).ok_or("generation2d-publication.authority-missing")?;
     #[cfg(test)]
-    {
+    let lease = {
+        let mut lease = lease;
         let mut hostiles = generation2d_publication_hostiles().try_lock().map_err(|_| "generation2d-publication.hostile-contended")?;
         if let Some(hostile) = hostiles.iter_mut().flatten().find(|value| value.operation == operation.0) {
             hostile.observed = Some(match hostile.hostile {
@@ -449,7 +450,8 @@ pub fn generation2d_validate_atomic_publication_authority(operation: semio_frame
                 Generation2dPublicationHostile::WrongParent => lease.parent_revision = lease.parent_revision.wrapping_add(1),
             }
         }
-    }
+        lease
+    };
     generation2d_validate_atomic_lease(lease, operation, generation, live_generation)
 }
 
@@ -3419,8 +3421,8 @@ pub fn generation2d_document_store_initialization_job(
 pub fn generation2d_all_retained_mutation_fixtures_for_test() -> Vec<Generation2dMutation> {
     use crate::artifacts::generation2d::mutations::*;
     let synapse = flow::SynapseSpec { id: "retained-synapse".into(), from: "retained-a".into(), to: "retained-b".into(), from_port: "out".into(), to_port: "in".into() };
-    let mut values = serde_json::Map::new();
-    values.insert("nested".into(), serde_json::json!({"array": [true, null, 3.5], "text": "retained"}));
+    let mut values = flow::playbook::PlaybookValues::new();
+    values.insert("nested".into(), dsl::json::to_dsl_value(&dsl::json!({"array": [true, null, 3.5], "text": "retained"})));
     let params = flow::neural::Dictionary::new()
         .insert("integer", flow::neural::Value::Atom(flow::neural::Atom::Integer(7)))
         .insert("nested", flow::neural::Value::Dictionary(flow::neural::Dictionary::new().insert("text", flow::neural::Value::Atom(flow::neural::Atom::String("retained".into())))));
@@ -3438,7 +3440,7 @@ pub fn generation2d_all_retained_mutation_fixtures_for_test() -> Vec<Generation2
         create_generation(flow::playbook::FormGeneration { id: "retained-generation".into(), name: "Retained Generation".into(), values }),
         delete_generation("retained-generation".into()),
         rename_generation("retained-generation".into(), "Renamed Generation".into()),
-        change_generation_value("retained-generation".into(), "deep-answer".into(), serde_json::json!({"object": {"array": [1.0, false, "value"]}})),
+        change_generation_value("retained-generation".into(), "deep-answer".into(), dsl::json::to_dsl_value(&dsl::json!({"object": {"array": [1.0, false, "value"]}}))),
     ]
 }
 

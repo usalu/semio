@@ -17,7 +17,7 @@ async function bundleBrowserModule(write: boolean) {
   const browser = await Bun.build({
     entrypoints: [entry], outdir: CORE_PKG_DIR, write, target: "browser", format: "esm",
     plugins: [{ name: "flow-generated-owner", setup(build) {
-      build.onLoad({ filter: /.*/ }, (args) => args.path === entry ? { contents: source.replace(generated, 'import("../../🕸️bindings/flow_core.js")'), loader: "js" } : undefined);
+      build.onLoad({ filter: /.*/ }, (args) => args.path === entry ? { contents: source.replace(generated, 'import("./flow_core.js")'), loader: "js" } : undefined);
       build.onResolve({ filter: /.*/ }, (args) => ["./flow_core.js", "./🖥️flow-host.js"].includes(args.path) ? { path: args.path, external: true } : undefined);
     } }],
   });
@@ -119,7 +119,7 @@ class BrowserTestScript extends BundleScript {
     await import("../../../🕸️wasm/📦️packages/🟨️javascript/🧪️tests/🧪️flow-host.test.js");
     const outputs = await bundleBrowserModule(false);
     const module = await outputs[0]?.text();
-    if (outputs.length !== 1 || !module?.includes('import("../../🕸️bindings/flow_core.js")') || !module.includes('from "../../🕸️bindings/🖥️flow-host.js"') || module.includes("../../../🫀️core/🕸️bindings")) throw new Error("Flow browser package lost its exact sibling module bindings");
+    if (outputs.length !== 1 || !module?.includes('import("./flow_core.js")') || !module.includes('from "./🖥️flow-host.js"') || module.includes("../../../🫀️core/🕸️bindings")) throw new Error("Flow browser package lost its exact sibling module bindings");
     console.log("[DEBUG] Flow packaged browser entry preserves its generated initializer and owned host sibling without external source-tree paths");
   }
 }

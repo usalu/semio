@@ -270,7 +270,7 @@ const OPERATION_QUALITY: &[(&str, OpQuality)] = &[
 /// 🔎️ Looks up a `BrepKernel` method's current result fidelity by name; unknown names report
 /// [`OpQuality::Unsupported`].
 pub fn operation_quality(operation: &str) -> OpQuality {
-    OPERATION_QUALITY.iter().find(|(name, _)| *name == operation).map(|(_, quality)| *quality).unwrap_or(OpQuality::Unsupported)
+    OPERATION_QUALITY.iter().find(|(name, _)| *name == operation).map_or(OpQuality::Unsupported, |(_, quality)| *quality)
 }
 
 #[cfg(test)]

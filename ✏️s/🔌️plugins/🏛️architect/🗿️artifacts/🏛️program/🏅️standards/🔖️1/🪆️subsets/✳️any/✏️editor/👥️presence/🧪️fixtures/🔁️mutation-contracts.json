@@ -1,9 +1,9 @@
 {
   "base": {
     "activeRegister": "elements",
-    "graphCameraX": 0,
-    "graphCameraY": 0,
-    "graphCameraZoom": 1
+    "graphCameraX": 0.0,
+    "graphCameraY": 0.0,
+    "graphCameraZoom": 1.0
   },
   "cases": [
     {
@@ -12,18 +12,18 @@
         "ReplacePresence": {
           "presence": {
             "activeRegister": "risks",
-            "graphCameraX": 10,
-            "graphCameraY": -5,
-            "graphCameraZoom": 3,
+            "graphCameraX": 10.0,
+            "graphCameraY": -5.0,
+            "graphCameraZoom": 3.0,
             "adjacencyKindFilter": "prohibited"
           }
         }
       },
       "expected": {
         "activeRegister": "risks",
-        "graphCameraX": 10,
-        "graphCameraY": -5,
-        "graphCameraZoom": 3,
+        "graphCameraX": 10.0,
+        "graphCameraY": -5.0,
+        "graphCameraZoom": 3.0,
         "adjacencyKindFilter": "prohibited"
       }
     }

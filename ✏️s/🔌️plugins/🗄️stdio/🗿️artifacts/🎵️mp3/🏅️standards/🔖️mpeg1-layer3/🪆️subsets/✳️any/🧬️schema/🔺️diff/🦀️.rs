@@ -100,7 +100,7 @@ fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -299,13 +299,13 @@ fn dec_mp3_frames(s: &str) -> Result<Vec<Mp3Frame>, String> {
 fn print_mp3_diff(d: &Mp3Diff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.id3v2 {
-        tokens.push(format!("id3v2={}", encode_option(v, |t| enc_id3v2(t))));
+        tokens.push(format!("id3v2={}", encode_option(v, enc_id3v2)));
     }
     if let Some(v) = &d.frames {
         tokens.push(format!("frames={}", enc_mp3_frames(v)));
     }
     if let Some(v) = &d.id3v1 {
-        tokens.push(format!("id3v1={}", encode_option(v, |t| enc_id3v1(t))));
+        tokens.push(format!("id3v1={}", encode_option(v, enc_id3v1)));
     }
     tokens.join(" ")
 }

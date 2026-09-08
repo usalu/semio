@@ -657,7 +657,7 @@ async fn create_module_app() -> Result<App, PluginAssemblyError> {
 
 /// 🎛️ The shared `format` Select over the solid interchange formats, defaulting to OBJ (the handlers' default).
 fn solid_format_arg() -> ActionArgDef {
-    ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), SOLID_MEDIA_FORMATS.iter().map(|format| ActionArgOption::new(*format, LocalizedLabel::data(format.to_uppercase()))).collect()).default_value("obj")
+    ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), SOLID_MEDIA_FORMATS.iter().map(|format| ActionArgOption::new(*format, LocalizedLabel::data(format.to_uppercase()))).collect()).default_value(&"obj")
 }
 
 fn module_plugin_bundle() -> Result<Plugin<ProceduralModuleApps>, PluginAssemblyError> {
@@ -714,7 +714,7 @@ mod tests {
         __semio_install_plugin_bundle();
         let manifest = __SEMIO_PLUGIN_RUNTIME.with(|runtime| resolve_ready(semio_framework_plugin::plugin_runtime::plugin_manifest(runtime)));
         assert_eq!(manifest.plugin_id, MODULE_PLUGIN_ID, "bundle assembly: {}", manifest.label);
-        let bytes = __SEMIO_PLUGIN_RUNTIME.with(|runtime| semio_framework_plugin::app::resolve_ready(semio_framework_plugin::describe::describe_extension_with_apps(runtime)));
+        let bytes = __SEMIO_PLUGIN_RUNTIME.with(|runtime| resolve_ready(semio_framework_plugin::describe::describe_extension_with_apps(runtime)));
         let value = store::pack_rt::decode_wire_value(&bytes).expect("first-party wire decoder");
         let descriptor: serde_json::Value = value.into();
         assert_eq!(descriptor["role"], fixture["role"]);
@@ -766,7 +766,7 @@ mod tests {
 
     async fn new_app() -> VcsArtifactApp<ModuleApp> {
         let definition = create_module_app().await.expect("module definition").definition;
-        VcsArtifactApp::with_registry(ModuleApp, semio_framework_plugin::app::AppActionRegistry::from_definition(&definition)).await
+        VcsArtifactApp::with_registry(ModuleApp, AppActionRegistry::from_definition(&definition)).await
     }
 
     fn payload_json(params: Value) -> String {
@@ -808,7 +808,7 @@ mod tests {
         let mut app = new_app().await;
         let document = payload_json(pack::json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }));
         let node = app.render(BODY_PREVIEW, Some(&document), &ViewModel::default()).await.expect("render");
-        let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(node).expect("preview projection");
+        let json = testkit::project_and_retire_fixture_tree(node).expect("preview projection");
         assert!(json.contains("world-3d"));
     }
 
@@ -816,7 +816,7 @@ mod tests {
     async fn params_body_lists_flow_inputs() {
         let mut app = new_app().await;
         let node = app.render(BODY_PARAMS, None, &ViewModel::default()).await.expect("render");
-        let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(node).expect("params projection");
+        let json = testkit::project_and_retire_fixture_tree(node).expect("params projection");
         assert!(json.contains("stack"));
     }
 
@@ -824,7 +824,7 @@ mod tests {
     async fn params_body_includes_media_export_buttons() {
         let mut app = new_app().await;
         let node = app.render(BODY_PARAMS, None, &ViewModel::default()).await.expect("render");
-        let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(node).expect("params projection");
+        let json = testkit::project_and_retire_fixture_tree(node).expect("params projection");
         let tree: serde_json::Value = serde_json::from_str(&json).expect("independent JSON parser");
         let button_count = tree["children"].as_array().expect("column children").iter().filter(|child| child["type"] == "button").count();
         assert_eq!(button_count, SOLID_MEDIA_FORMATS.len() * 2);
@@ -892,7 +892,7 @@ mod tests {
         assert_eq!(labels.no_flow_inputs.as_str(), "No flow inputs.");
         assert_eq!(labels.no_procedural_parameters.as_str(), "No procedural parameters.");
         let node = text_node(labels.no_procedural_parameters.as_str()).expect("label node");
-        let rendered = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("label projection");
+        let rendered = testkit::project_and_retire_fixture_tree(built_to_component_tree(node)).expect("label projection");
         assert!(rendered.contains("No procedural parameters."));
     }
 
@@ -902,7 +902,7 @@ mod tests {
         assert_eq!(labels.no_flow_inputs.as_str(), "Keine Flow-Eingaben.");
         assert_eq!(labels.no_procedural_parameters.as_str(), "Keine prozeduralen Parameter.");
         let node = text_node(labels.no_procedural_parameters.as_str()).expect("label node");
-        let rendered = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("label projection");
+        let rendered = testkit::project_and_retire_fixture_tree(built_to_component_tree(node)).expect("label projection");
         assert!(rendered.contains("Keine prozeduralen Parameter."));
         assert!(!rendered.contains("No procedural parameters."));
     }
@@ -956,7 +956,7 @@ mod tests {
         payload.interactive = false;
         store.dispatch(ArtifactCommand::Apply { mutations: vec![ModulePayloadMutation::SetPayload(SetPayload { payload })], description: None }).await.expect("apply");
         let edit: &Edit<ModulePayloadMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::os_store::test_support::assert_command_envelope_round_trip::<ModuleRenderPayload, ModulePayloadMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store::os_store::test_support::assert_command_envelope_round_trip::<ModuleRenderPayload, ModulePayloadMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
     }
     //#endregion 🔖️CommandEnvelopeTests
     //#endregion 🔖️DslAndOpText

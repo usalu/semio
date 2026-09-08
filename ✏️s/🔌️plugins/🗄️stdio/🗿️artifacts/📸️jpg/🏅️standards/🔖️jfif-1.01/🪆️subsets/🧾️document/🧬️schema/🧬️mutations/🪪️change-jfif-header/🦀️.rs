@@ -66,8 +66,8 @@ pub fn contribute(base: &JpgSnapshot, version: (u8, u8), density_units: JfifDens
 
 #[cfg(test)]
 pub(crate) fn test_case() -> JpgMutation {
-    serde_json::from_str(include_str!("🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-jfif-header payload")
+    dsl::json::from_json_str(include_str!("🧪️tests/🎯️direct-behavior-cd6750/🦠️mutation/🔣️.json")).expect("committed change-jfif-header payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
+#[path = "🧪️tests/🎯️direct-behavior-cd6750/🦀️.rs"]
 mod tests_direct_behavior;

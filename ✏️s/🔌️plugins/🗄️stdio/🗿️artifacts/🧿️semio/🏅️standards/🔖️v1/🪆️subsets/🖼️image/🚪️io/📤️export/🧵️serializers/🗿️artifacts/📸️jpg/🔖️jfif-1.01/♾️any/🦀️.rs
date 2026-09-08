@@ -66,7 +66,7 @@ mod tests {
         assert_eq!(jpg.width, 2);
         assert_eq!(jpg.height, 1);
         assert_eq!(jpg.other_segments.len(), 1);
-        let bytes = crate::artifacts::jpg::engine::encode_jpg(jpg).expect("encode real jpg bytes");
+        let bytes = crate::artifacts::jpg::engine::encode_jpg(&jpg).expect("encode real jpg bytes");
         let decoded = crate::artifacts::jpg::engine::decode_jpg(&bytes).expect("decode real jpg bytes");
         assert_eq!(decoded.width, semio.width);
         assert_eq!(decoded.height, semio.height);

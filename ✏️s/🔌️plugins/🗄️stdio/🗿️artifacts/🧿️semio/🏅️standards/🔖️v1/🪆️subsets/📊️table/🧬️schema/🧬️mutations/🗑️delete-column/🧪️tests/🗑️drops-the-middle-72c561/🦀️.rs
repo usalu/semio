@@ -18,13 +18,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioTableSnapshot {
-    serde_json::from_str(BEFORE).expect("delete-column before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("delete-column before snapshot decodes")
 }
 fn expected_after() -> SemioTableSnapshot {
-    serde_json::from_str(AFTER).expect("delete-column after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("delete-column after snapshot decodes")
 }
 fn delete_column() -> SemioTableMutation {
-    serde_json::from_str(MUTATION).expect("delete-column mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("delete-column mutation decodes")
 }
 
 /// ▶️ `city` and every row's cell #1 disappear together; the surviving cells stay aligned.
@@ -60,12 +60,12 @@ async fn the_undo_recreates_the_column_and_restores_every_captured_cell() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioTableSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: SemioTableSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-column/drops-the-middle-column-and-cascades-into-every-row: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(delete_column()).expect("delete-column mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(delete_column()))).expect("delete-column mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("delete-column mutation reparses");
     assert_eq!(reencoded, original, "delete-column/drops-the-middle-column-and-cascades-into-every-row: committed mutation JSON is not canonical");
 }
@@ -89,7 +89,7 @@ async fn declared_outcome_holds_including_the_cascade_note() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioTableMutation as Mutation<SemioTableSnapshot>>::diff(&delete_column(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-column/drops-the-middle-column-and-cascades-into-every-row: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -97,10 +97,10 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is canonical and its rebuilt rows are already narrowed.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: SemioTableDiff = serde_json::from_str(DIFF).expect("committed delete-column diff decodes");
+    let decoded: SemioTableDiff = dsl::json::from_json_str(DIFF).expect("committed delete-column diff decodes");
     let rows = decoded.rows.as_ref().expect("delete-column must rebuild the row list, not only the column list");
     assert!(rows.values.iter().all(|row| row.cells.len() == 2), "every rebuilt row in the diff must already carry only two cells");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-column/drops-the-middle-column-and-cascades-into-every-row: committed diff JSON is not canonical");
 }
@@ -108,7 +108,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioTableDiff = serde_json::from_str(DIFF).expect("committed delete-column diff decodes");
+    let decoded: SemioTableDiff = dsl::json::from_json_str(DIFF).expect("committed delete-column diff decodes");
     let produced = decoded.apply(&before()).expect("committed delete-column diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-column/drops-the-middle-column-and-cascades-into-every-row: committed diff did not carry before to after");
 }

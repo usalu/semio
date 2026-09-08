@@ -27,6 +27,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<SourcingMutation, protocol::ProtocolErr
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
+    use crate::artifacts::curation::CurationSnapshot;
     use super::*;
 
     #[semio_framework_async_macros::async_test]

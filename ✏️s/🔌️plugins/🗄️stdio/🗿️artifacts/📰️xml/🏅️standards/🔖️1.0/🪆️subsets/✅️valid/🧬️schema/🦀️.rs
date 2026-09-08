@@ -168,11 +168,10 @@ pub mod derived_analysis {
                         out.push(hard(CODE_ROOT_NAME_MISMATCH, format!("doctype declares root name '{}' but the actual root element is '<{actual_root}>' -- §2.8 requires the DOCTYPE Name to match the document element", doctype.name)));
                     }
                 }
-                if doctype.external_id.is_some() {
-                    if snapshot.doc.declaration.as_ref().and_then(|d| d.standalone) == Some(true) {
+                if doctype.external_id.is_some()
+                    && snapshot.doc.declaration.as_ref().and_then(|d| d.standalone) == Some(true) {
                         out.push(soft(CODE_STANDALONE_EXTERNAL_SUBSET, "XML declaration says standalone=\"yes\" but the doctype references an external subset (SYSTEM/PUBLIC) -- suspicious per §2.9".into()));
                     }
-                }
             }
         }
         out.push(soft(

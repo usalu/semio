@@ -130,7 +130,7 @@ pub(crate) fn rejected(message: String) -> protocol::MutationOutcome<StepDiff> {
 pub(crate) fn edited(base: &StepSnapshot, edit: &ClassEdit) -> Result<StepSnapshot, String> {
     let mut doc = base.to_part21_document();
     ladder::apply_class_edit(&mut doc, CLASS, MAX_RUNG, edit)?;
-    Ok(StepSnapshot::from_part21_document(doc))
+    Ok(StepSnapshot::from_part21_document(&doc))
 }
 //#endregion 🔖️Apply
 
@@ -196,7 +196,7 @@ mod tests {
     /// (formation as the ISO 10303-41 SUBTYPE a real exporter writes) and the real rung-6 `#13`.
     /// Unlike every other class's, this base already CONFORMS.
     fn base() -> StepSnapshot {
-        StepSnapshot::from_part21_document(Part21Document {
+        StepSnapshot::from_part21_document(&Part21Document {
             header: Part21Header { file_schema: vec![Part21Value::List(vec![Part21Value::Str("AUTOMOTIVE_DESIGN".into())])], ..Part21Header::default() },
             instances: vec![
                 Part21Instance { id: 13, entities: vec![("ADVANCED_BREP_SHAPE_REPRESENTATION".into(), vec![Part21Value::Str("brep_rep_0".into()), Part21Value::List(vec![Part21Value::Ref(12), Part21Value::Ref(895)]), Part21Value::Ref(835)])] },

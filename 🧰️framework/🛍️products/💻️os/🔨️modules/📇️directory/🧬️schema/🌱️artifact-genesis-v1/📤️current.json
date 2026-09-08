@@ -1,0 +1,348 @@
+{
+  "schema": "semio.test.checkpoint-publication-current/v1",
+  "cases": [
+    {
+      "id": "explicit-none",
+      "accepted": false,
+      "command": {
+        "schema": "semio.hub.checkpoint-publication-command/v1",
+        "correlationId": "1029384756abcdef1029384756abcdef",
+        "descriptorDigestV1": "1111111111111111111111111111111111111111111111111111111111111111",
+        "expectedDocumentFrontier": {
+          "headSeq": 1,
+          "commitSeq": 1,
+          "epoch": 1
+        },
+        "expectedCurrent": {
+          "state": "none"
+        },
+        "baselineFrontier": {
+          "documentId": "map-a",
+          "headEditOrdinal": 1,
+          "headEditId": "edit-1",
+          "lastCommitSeq": 1,
+          "chainSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+        },
+        "pack": {
+          "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "byteLength": 128
+        },
+        "spr": {
+          "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "byteLength": 64
+        }
+      }
+    },
+    {
+      "id": "exact-active",
+      "accepted": true,
+      "command": {
+        "schema": "semio.hub.checkpoint-publication-command/v1",
+        "correlationId": "1029384756abcdef1029384756abcdef",
+        "descriptorDigestV1": "1111111111111111111111111111111111111111111111111111111111111111",
+        "expectedDocumentFrontier": {
+          "headSeq": 1,
+          "commitSeq": 1,
+          "epoch": 1
+        },
+        "expectedCurrent": {
+          "state": "active",
+          "checkpointId": "5555555555555555555555555555555555555555555555555555555555555555",
+          "baselineFrontier": {
+            "documentId": "map-a",
+            "headEditOrdinal": 1,
+            "headEditId": "edit-1",
+            "lastCommitSeq": 1,
+            "chainSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+          }
+        },
+        "baselineFrontier": {
+          "documentId": "map-a",
+          "headEditOrdinal": 1,
+          "headEditId": "edit-1",
+          "lastCommitSeq": 1,
+          "chainSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+        },
+        "pack": {
+          "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "byteLength": 128
+        },
+        "spr": {
+          "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "byteLength": 64
+        }
+      }
+    },
+    {
+      "id": "exact-genesis",
+      "accepted": true,
+      "command": {
+        "schema": "semio.hub.checkpoint-publication-command/v1",
+        "correlationId": "1029384756abcdef1029384756abcdef",
+        "descriptorDigestV1": "1111111111111111111111111111111111111111111111111111111111111111",
+        "expectedDocumentFrontier": {
+          "headSeq": 1,
+          "commitSeq": 1,
+          "epoch": 1
+        },
+        "expectedCurrent": {
+          "state": "genesis",
+          "checkpointId": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "baselineFrontier": {
+          "documentId": "map-a",
+          "headEditOrdinal": 1,
+          "headEditId": "edit-1",
+          "lastCommitSeq": 1,
+          "chainSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+        },
+        "pack": {
+          "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "byteLength": 128
+        },
+        "spr": {
+          "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "byteLength": 64
+        }
+      }
+    },
+    {
+      "id": "missing-genesis-id",
+      "accepted": false,
+      "command": {
+        "schema": "semio.hub.checkpoint-publication-command/v1",
+        "correlationId": "1029384756abcdef1029384756abcdef",
+        "descriptorDigestV1": "1111111111111111111111111111111111111111111111111111111111111111",
+        "expectedDocumentFrontier": {
+          "headSeq": 1,
+          "commitSeq": 1,
+          "epoch": 1
+        },
+        "expectedCurrent": {
+          "state": "genesis"
+        },
+        "baselineFrontier": {
+          "documentId": "map-a",
+          "headEditOrdinal": 1,
+          "headEditId": "edit-1",
+          "lastCommitSeq": 1,
+          "chainSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+        },
+        "pack": {
+          "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "byteLength": 128
+        },
+        "spr": {
+          "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "byteLength": 64
+        }
+      }
+    },
+    {
+      "id": "zero-genesis-id",
+      "accepted": false,
+      "command": {
+        "schema": "semio.hub.checkpoint-publication-command/v1",
+        "correlationId": "1029384756abcdef1029384756abcdef",
+        "descriptorDigestV1": "1111111111111111111111111111111111111111111111111111111111111111",
+        "expectedDocumentFrontier": {
+          "headSeq": 1,
+          "commitSeq": 1,
+          "epoch": 1
+        },
+        "expectedCurrent": {
+          "state": "genesis",
+          "checkpointId": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "baselineFrontier": {
+          "documentId": "map-a",
+          "headEditOrdinal": 1,
+          "headEditId": "edit-1",
+          "lastCommitSeq": 1,
+          "chainSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+        },
+        "pack": {
+          "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "byteLength": 128
+        },
+        "spr": {
+          "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "byteLength": 64
+        }
+      }
+    },
+    {
+      "id": "uppercase-genesis-id",
+      "accepted": false,
+      "command": {
+        "schema": "semio.hub.checkpoint-publication-command/v1",
+        "correlationId": "1029384756abcdef1029384756abcdef",
+        "descriptorDigestV1": "1111111111111111111111111111111111111111111111111111111111111111",
+        "expectedDocumentFrontier": {
+          "headSeq": 1,
+          "commitSeq": 1,
+          "epoch": 1
+        },
+        "expectedCurrent": {
+          "state": "genesis",
+          "checkpointId": "ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+        },
+        "baselineFrontier": {
+          "documentId": "map-a",
+          "headEditOrdinal": 1,
+          "headEditId": "edit-1",
+          "lastCommitSeq": 1,
+          "chainSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+        },
+        "pack": {
+          "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "byteLength": 128
+        },
+        "spr": {
+          "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "byteLength": 64
+        }
+      }
+    },
+    {
+      "id": "caller-genesis-frontier",
+      "accepted": false,
+      "command": {
+        "schema": "semio.hub.checkpoint-publication-command/v1",
+        "correlationId": "1029384756abcdef1029384756abcdef",
+        "descriptorDigestV1": "1111111111111111111111111111111111111111111111111111111111111111",
+        "expectedDocumentFrontier": {
+          "headSeq": 1,
+          "commitSeq": 1,
+          "epoch": 1
+        },
+        "expectedCurrent": {
+          "state": "genesis",
+          "checkpointId": "5555555555555555555555555555555555555555555555555555555555555555",
+          "baselineFrontier": {
+            "documentId": "map-a",
+            "headEditOrdinal": 1,
+            "headEditId": "edit-1",
+            "lastCommitSeq": 1,
+            "chainSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+          }
+        },
+        "baselineFrontier": {
+          "documentId": "map-a",
+          "headEditOrdinal": 1,
+          "headEditId": "edit-1",
+          "lastCommitSeq": 1,
+          "chainSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+        },
+        "pack": {
+          "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "byteLength": 128
+        },
+        "spr": {
+          "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "byteLength": 64
+        }
+      }
+    },
+    {
+      "id": "extra-genesis-scope",
+      "accepted": false,
+      "command": {
+        "schema": "semio.hub.checkpoint-publication-command/v1",
+        "correlationId": "1029384756abcdef1029384756abcdef",
+        "descriptorDigestV1": "1111111111111111111111111111111111111111111111111111111111111111",
+        "expectedDocumentFrontier": {
+          "headSeq": 1,
+          "commitSeq": 1,
+          "epoch": 1
+        },
+        "expectedCurrent": {
+          "state": "genesis",
+          "checkpointId": "5555555555555555555555555555555555555555555555555555555555555555",
+          "spaceId": "space"
+        },
+        "baselineFrontier": {
+          "documentId": "map-a",
+          "headEditOrdinal": 1,
+          "headEditId": "edit-1",
+          "lastCommitSeq": 1,
+          "chainSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+        },
+        "pack": {
+          "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "byteLength": 128
+        },
+        "spr": {
+          "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "byteLength": 64
+        }
+      }
+    },
+    {
+      "id": "unknown-current",
+      "accepted": false,
+      "command": {
+        "schema": "semio.hub.checkpoint-publication-command/v1",
+        "correlationId": "1029384756abcdef1029384756abcdef",
+        "descriptorDigestV1": "1111111111111111111111111111111111111111111111111111111111111111",
+        "expectedDocumentFrontier": {
+          "headSeq": 1,
+          "commitSeq": 1,
+          "epoch": 1
+        },
+        "expectedCurrent": {
+          "state": "unpublished",
+          "checkpointId": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "baselineFrontier": {
+          "documentId": "map-a",
+          "headEditOrdinal": 1,
+          "headEditId": "edit-1",
+          "lastCommitSeq": 1,
+          "chainSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+        },
+        "pack": {
+          "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "byteLength": 128
+        },
+        "spr": {
+          "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "byteLength": 64
+        }
+      }
+    },
+    {
+      "id": "genesis-cannot-publish-genesis",
+      "accepted": false,
+      "command": {
+        "schema": "semio.hub.checkpoint-publication-command/v1",
+        "correlationId": "1029384756abcdef1029384756abcdef",
+        "descriptorDigestV1": "1111111111111111111111111111111111111111111111111111111111111111",
+        "expectedDocumentFrontier": {
+          "headSeq": 1,
+          "commitSeq": 1,
+          "epoch": 1
+        },
+        "expectedCurrent": {
+          "state": "genesis",
+          "checkpointId": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        "baselineFrontier": {
+          "documentId": "map-a",
+          "headEditOrdinal": 0,
+          "headEditId": "",
+          "lastCommitSeq": 0,
+          "chainSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "pack": {
+          "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "byteLength": 128
+        },
+        "spr": {
+          "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "byteLength": 64
+        }
+      }
+    }
+  ]
+}

@@ -47,16 +47,6 @@ pub struct SemioFlowSnapshotDecode {
 pub enum SemioFlowSnapshotDecodeStep { Pending { consumed_bytes: usize }, Ready, Rejected(MemberOpenDiagnostic) }
 
 impl SemioFlowSnapshotDecode {
-    pub fn new(request: MemberOpenRequest) -> Result<Self, MemberOpenAdmissionError> {
-        let dialect = match request.admitted_expected() {
-            Ok(expected) => &expected.dialect,
-            Err(diagnostic) => return Err(MemberOpenAdmissionError { diagnostic, request }),
-        };
-        if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "flow" {
-            return Err(MemberOpenAdmissionError { diagnostic: MemberOpenDiagnostic::Identity, request });
-        }
-        Ok(Self { request: ManuallyDrop::new(Some(request)), snapshot: ManuallyDrop::new(Some(SemioFlowSnapshot { schema: String::new(), nodes: Vec::new(), edges: Vec::new() })), active: ManuallyDrop::new(None), state: State::Header, offset: 0, magnitude: 0, varint_bytes: 0, text_left: 0, string_bytes: 0, nodes_left: 0, parameters_left: 0, edges_left: 0, scalar: [0; 8], scalar_bytes: 0, utf8_bytes: 0, diagnostic: None, verified: false, terminal: false })
-    }
 
     pub fn consumed_bytes(&self) -> usize { self.offset }
     pub fn retained_input_bytes(&self) -> usize { self.request.as_ref().map_or(0, MemberOpenRequest::retained_input_bytes) }
@@ -276,7 +266,14 @@ impl MemberSnapshotOpenOperation for SemioFlowSnapshotDecode {
     type Snapshot = SemioFlowSnapshot;
 
     fn begin(request: MemberOpenRequest) -> Result<Self, MemberOpenAdmissionError> {
-        Self::new(request)
+        let dialect = match request.admitted_expected() {
+            Ok(expected) => &expected.dialect,
+            Err(diagnostic) => return Err(MemberOpenAdmissionError { diagnostic, request }),
+        };
+        if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "flow" {
+            return Err(MemberOpenAdmissionError { diagnostic: MemberOpenDiagnostic::Identity, request });
+        }
+        Ok(Self { request: ManuallyDrop::new(Some(request)), snapshot: ManuallyDrop::new(Some(SemioFlowSnapshot { schema: String::new(), nodes: Vec::new(), edges: Vec::new() })), active: ManuallyDrop::new(None), state: State::Header, offset: 0, magnitude: 0, varint_bytes: 0, text_left: 0, string_bytes: 0, nodes_left: 0, parameters_left: 0, edges_left: 0, scalar: [0; 8], scalar_bytes: 0, utf8_bytes: 0, diagnostic: None, verified: false, terminal: false })
     }
 
     fn step(&mut self, cx: &mut StepContext<'_>) -> MemberSnapshotOpenStep {

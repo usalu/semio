@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync, mkdtempSync, readdirSync, renameSy
 import { join, resolve } from "node:path";
 import { createHash } from "node:crypto";
 import Ajv2020 from "ajv/dist/2020.js";
-import { ExactCargoLawError, exactExecutableFingerprint, runExactCargoLawProcess, runExactCargoLaws, type ExactCargoLawPort } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot, ExactCargoLawError, exactExecutableFingerprint, runExactCargoLawProcess, runExactCargoLaws, type ExactCargoLawPort } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 const fixture = JSON.parse(readFileSync(new URL("./🧪️fixture/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("./🧬️schema.json", import.meta.url), "utf8"));
@@ -113,7 +113,7 @@ for (const row of fixture.cases) {
         else expect(options.budgetMs).toBeGreaterThan(0);
         expect(options.maxOutputBytes).toBeGreaterThan(0);
         expect(options.stdoutPath.startsWith(root)).toBe(true);
-        expect(options.env.CARGO_TARGET_DIR).toBe(join(root, "cargo-target"));
+        expect(options.env.CARGO_TARGET_DIR).toBe(resolve(getWorkspaceRoot(), fixture.compilerStorage.defaultDirectory));
         expect(options.env.SEMIO_STAGE_ENV_LAW).toBe(fixture.stageEnvironment.sharedValue);
         expect(options.env.RUST_MIN_STACK).toBe(command === "cargo" ? fixture.stageEnvironment.buildStack : fixture.stageEnvironment.nativeStack);
         if (command === "cargo") {
@@ -143,7 +143,7 @@ for (const row of fixture.cases) {
     let assertions = 0;
     let outcome = "denied";
     try {
-      const env = { ...process.env, RUST_MIN_STACK: fixture.stageEnvironment.buildStack, SEMIO_STAGE_ENV_LAW: fixture.stageEnvironment.sharedValue, CARGO_TARGET_DIR: row.mutation === "outside-cargo-target" ? resolve(root.slice(0, root.lastIndexOf("🗑️generated")), "outside-target") : undefined };
+      const env = { ...process.env, RUST_MIN_STACK: fixture.stageEnvironment.buildStack, SEMIO_STAGE_ENV_LAW: fixture.stageEnvironment.sharedValue, CARGO_TARGET_DIR: row.mutation === "source-cargo-target" ? root : undefined };
       const receipts = await runExactCargoLaws({ cwd: root, artifactDir: root, env, nativeEnv: { RUST_MIN_STACK: fixture.stageEnvironment.nativeStack }, groups: [{ package: fixture.package, target: fixture.target, laws: fixture.laws }], cancelled: () => cancelled }, port);
       assertions = receipts.reduce((sum, receipt) => sum + receipt.assertions, 0);
       expect(receipts[0]?.laws).toEqual(fixture.laws);
@@ -151,7 +151,7 @@ for (const row of fixture.cases) {
       if (row.mutation === "debug-output") expect(readFileSync(join(receipts[0]!.artifactDir, "law-0.stdout"), "utf8")).toContain(fixture.capturedOutput);
       outcome = "passed";
     } catch (error) {
-      if (row.mutation === "outside-cargo-target") expect(String(error)).toContain("absolute ticket-generated Cargo target");
+      if (row.mutation === "source-cargo-target") expect(String(error)).toContain("Cargo target must not contain the source workspace");
       else expect(error).toBeInstanceOf(ExactCargoLawError);
       if (row.mutation === "build-exit" || row.mutation === "native-exit") expect((error as ExactCargoLawError).status).toBe(101);
     }

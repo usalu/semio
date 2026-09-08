@@ -184,7 +184,7 @@ impl GpuContext {
         let size = window.inner_size();
         let css_width = size.width as f32 / dpr;
         let css_height = size.height as f32 / dpr;
-        let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor { backends: if cfg!(target_arch = "wasm32") { wgpu::Backends::BROWSER_WEBGPU } else { wgpu::Backends::PRIMARY }, ..Default::default() });
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor { backends: if cfg!(target_arch = "wasm32") { wgpu::Backends::BROWSER_WEBGPU } else { wgpu::Backends::PRIMARY }, ..wgpu::InstanceDescriptor::new_with_display_handle(Box::new(window.clone())) });
         let surface = instance.create_surface(wgpu::SurfaceTarget::Window(Box::new(window))).map_err(|err| format!("surface: {err:?}"))?;
         Self::from_surface(instance, surface, css_width, css_height, dpr).await
     }
@@ -192,7 +192,7 @@ impl GpuContext {
     /// 🧵️ Creates the browser GPU surface directly in a dedicated Worker from a transferred canvas.
     #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
     pub async fn from_offscreen_canvas(canvas: web_sys::OffscreenCanvas, css_width: f32, css_height: f32, dpr: f32) -> Result<Self, String> {
-        let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor { backends: wgpu::Backends::BROWSER_WEBGPU, ..Default::default() });
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor { backends: wgpu::Backends::BROWSER_WEBGPU, ..wgpu::InstanceDescriptor::new_without_display_handle() });
         let surface = instance.create_surface(wgpu::SurfaceTarget::OffscreenCanvas(canvas)).map_err(|err| format!("offscreen surface: {err:?}"))?;
         Self::from_surface(instance, surface, css_width, css_height, dpr).await
     }
@@ -444,7 +444,10 @@ impl GpuContext {
                 cursor.command = cursor.command.checked_add(1).ok_or_else(|| "prepared command cursor exhausted".to_string())?;
             }
             PreparedGpuPresentPhase::AcquireSurface => {
-                cursor.frame = Some(self.surface.get_current_texture().map_err(|error| format!("prepared surface acquisition: {error:?}"))?);
+                cursor.frame = Some(match self.surface.get_current_texture() {
+                    wgpu::CurrentSurfaceTexture::Success(frame) | wgpu::CurrentSurfaceTexture::Suboptimal(frame) => frame,
+                    outcome => return Err(format!("prepared surface acquisition: {outcome:?}")),
+                });
                 cursor.phase = PreparedGpuPresentPhase::CreateView;
             }
             PreparedGpuPresentPhase::CreateView => {

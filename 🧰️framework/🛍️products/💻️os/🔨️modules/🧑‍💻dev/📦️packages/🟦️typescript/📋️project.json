@@ -38,11 +38,7 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts dev",
-        "forwardAllArgs": true,
-        "env": {
-          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
-          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
-        }
+        "forwardAllArgs": true
       }
     },
     "build": {
@@ -50,11 +46,7 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts build",
-        "forwardAllArgs": true,
-        "env": {
-          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
-          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
-        }
+        "forwardAllArgs": true
       },
       "dependsOn": [
         "@semio-tech/assets:build"
@@ -65,11 +57,7 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
-        "forwardAllArgs": true,
-        "env": {
-          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
-          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
-        }
+        "forwardAllArgs": true
       }
     },
     "test-quick": {
@@ -77,11 +65,7 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test quick",
-        "forwardAllArgs": true,
-        "env": {
-          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
-          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
-        }
+        "forwardAllArgs": true
       }
     },
     "test-long": {
@@ -89,11 +73,7 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test long",
-        "forwardAllArgs": true,
-        "env": {
-          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
-          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
-        }
+        "forwardAllArgs": true
       }
     },
     "test-exhaustive": {
@@ -101,11 +81,7 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test exhaustive",
-        "forwardAllArgs": true,
-        "env": {
-          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
-          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
-        }
+        "forwardAllArgs": true
       }
     },
     "verify": {
@@ -113,11 +89,7 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify",
-        "forwardAllArgs": true,
-        "env": {
-          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
-          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
-        }
+        "forwardAllArgs": true
       }
     },
     "bench": {
@@ -127,11 +99,7 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts bench",
-        "forwardAllArgs": true,
-        "env": {
-          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
-          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
-        }
+        "forwardAllArgs": true
       }
     },
     "plugin": {
@@ -139,11 +107,7 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts plugin",
-        "forwardAllArgs": true,
-        "env": {
-          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
-          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
-        }
+        "forwardAllArgs": true
       }
     },
     "parity": {
@@ -151,11 +115,7 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts parity",
-        "forwardAllArgs": true,
-        "env": {
-          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
-          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
-        }
+        "forwardAllArgs": true
       }
     },
     "layer-lint": {
@@ -163,11 +123,7 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts layer-lint",
-        "forwardAllArgs": true,
-        "env": {
-          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
-          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
-        }
+        "forwardAllArgs": true
       }
     },
     "index-lint": {
@@ -175,11 +131,7 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts index-lint",
-        "forwardAllArgs": true,
-        "env": {
-          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
-          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
-        }
+        "forwardAllArgs": true
       }
     },
     "host-handle-lint": {
@@ -187,11 +139,7 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts host-handle-lint",
-        "forwardAllArgs": true,
-        "env": {
-          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
-          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
-        }
+        "forwardAllArgs": true
       }
     },
     "collab-e2e": {
@@ -200,11 +148,7 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify collab",
-        "forwardAllArgs": true,
-        "env": {
-          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
-          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
-        }
+        "forwardAllArgs": true
       }
     },
     "catalog-smoke": {
@@ -213,11 +157,7 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify catalog",
-        "forwardAllArgs": true,
-        "env": {
-          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
-          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
-        }
+        "forwardAllArgs": true
       }
     },
     "generate-distribution": {
@@ -249,11 +189,7 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts generate scale-fixture",
-        "forwardAllArgs": true,
-        "env": {
-          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
-          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
-        }
+        "forwardAllArgs": true
       }
     },
     "preview-generated": {
@@ -269,12 +205,51 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts scale-fixture check",
-        "forwardAllArgs": true,
-        "env": {
-          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
-          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
-        }
+        "forwardAllArgs": true
+      }
+    },
+    "bench-plugins-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "@semio-tech/framework-os-scale-fixture:build-wasm",
+        "@semio-tech/framework-renderer-wgpu:native-build"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts bench plugins native",
+        "forwardAllArgs": true
+      }
+    },
+    "bench-plugins-react": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "workspace:deps-browsers"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts bench plugins react",
+        "forwardAllArgs": true
+      }
+    },
+    "bench-plugins-wgpu": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "workspace:deps-browsers"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts bench plugins wgpu",
+        "forwardAllArgs": true
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "@semio-tech/framework-os-scale-fixture"
+  ]
 }

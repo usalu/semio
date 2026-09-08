@@ -499,7 +499,7 @@ where
 /// constant in a caller's own test, so a future unintended encoding change is caught by a one-line
 /// diff instead of a giant byte-literal.
 pub async fn golden_hash_hex(bytes: &[u8]) -> String {
-    semio_framework_hash::hash(bytes).to_hex().to_string()
+    semio_framework_hash::hash(bytes).to_hex()
 }
 //#endregion 🔖️Golden
 

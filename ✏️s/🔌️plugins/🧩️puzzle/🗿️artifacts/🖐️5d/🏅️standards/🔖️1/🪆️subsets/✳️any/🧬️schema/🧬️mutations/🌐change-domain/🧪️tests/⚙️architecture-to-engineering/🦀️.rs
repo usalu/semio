@@ -16,13 +16,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> Puzzle5dSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> Puzzle5dSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> Puzzle5dMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
@@ -51,8 +51,8 @@ fn inverse_restores_before() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: Puzzle5dSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: Puzzle5dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-domain/architecture-to-engineering: committed {label} JSON is not canonical");
     }
@@ -86,7 +86,7 @@ fn declared_outcome_holds() {
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Puzzle5dMutation as protocol::Mutation<Puzzle5dSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-domain/architecture-to-engineering: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -94,8 +94,8 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::puzzle5d::diff::Puzzle5dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let decoded: crate::artifacts::puzzle5d::diff::Puzzle5dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-domain/architecture-to-engineering: committed diff JSON is not canonical");
 }
@@ -104,7 +104,7 @@ fn committed_diff_is_canonical() {
 /// complete description of the change, not a summary of it.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::puzzle5d::diff::Puzzle5dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::artifacts::puzzle5d::diff::Puzzle5dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::puzzle5d::diff::Puzzle5dDiff as protocol::MutationDiff<Puzzle5dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-domain/architecture-to-engineering: committed diff did not carry before to after");
 }

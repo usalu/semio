@@ -6,6 +6,9 @@
 //! leaf pieces) are whole-value replaced, never sub-diffed further, per the recipe's strong/weak
 //! split.
 
+/// 🧩 Ordered removed keys, modified values, and inserted items.
+pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>);
+
 use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifRgb, GifSnapshot};
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::DiffCodec;
@@ -65,12 +68,12 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
     added2: Vec<(usize, T)>,
     mut absorb_diff: impl FnMut(&mut D, D),
     apply_diff_to_item: impl Fn(&D, &T) -> T,
-) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
-    let mut removed1_sorted = removed1.clone();
+) -> IndexedDiffParts<D, T> {
+    let mut removed1_sorted = removed1;
     removed1_sorted.sort_unstable();
     let mut added1_index_sorted: Vec<usize> = added1.iter().map(|(i, _)| *i).collect();
     added1_index_sorted.sort_unstable();
-    let mut removed2_sorted = removed2.clone();
+    let mut removed2_sorted = removed2;
     removed2_sorted.sort_unstable();
     let mut added2_index_sorted: Vec<usize> = added2.iter().map(|(i, _)| *i).collect();
     added2_index_sorted.sort_unstable();
@@ -143,7 +146,7 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
 /// recover values for re-inserting removed entries and to compute per-item inverses for modified
 /// entries). `diff_inverse` inverts one item's per-field diff against that item's base value.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
+fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> IndexedDiffParts<D, T> {
     let mut removed_sorted = removed.to_vec();
     removed_sorted.sort_unstable();
     let mut added_index_sorted: Vec<usize> = added.iter().map(|(i, _)| *i).collect();
@@ -418,7 +421,7 @@ pub struct GifDiff {
 impl GifDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty_diff(&self) -> bool {
-        self.width.is_none() && self.height.is_none() && self.gct.is_none() && self.background_color_index.is_none() && self.pixel_aspect_ratio.is_none() && self.images.as_ref().map(GifImagesDiff::is_empty).unwrap_or(true)
+        self.width.is_none() && self.height.is_none() && self.gct.is_none() && self.background_color_index.is_none() && self.pixel_aspect_ratio.is_none() && self.images.as_ref().is_none_or(GifImagesDiff::is_empty)
     }
 }
 
@@ -579,7 +582,7 @@ fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -740,7 +743,7 @@ fn enc_collection_triple(name: &str, removed: &[usize], modified: &[(usize, Stri
     format!("{name}{{[{removed}];[{modified}];[{added}]}}")
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_collection_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<(usize, String)>), String> {
+fn dec_collection_triple(body: &str) -> Result<IndexedDiffParts<String, String>, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("collection: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
@@ -885,7 +888,7 @@ fn read_bin_tri_flag<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mu
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
+fn diff_pack_err(e: &dsl::PackError) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "gif87a diff binary", offset: 0, detail: e.to_string() }
 }
 //#endregion 🔖️RealBinaryPrimitives
@@ -1030,17 +1033,17 @@ impl DiffCodec for GifDiff {
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut r = dsl::ByteReader::new(bytes);
-        let width = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
-        let height = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
+        let width = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(|error| diff_pack_err(&error))?;
+        let height = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(|error| diff_pack_err(&error))?;
         let gct = read_bin_tri_flag(&mut r, |r| {
             let blob = read_bin_blob(r)?;
             let mut inner = dsl::ByteReader::new(&blob);
             read_bin_color_table(&mut inner)
         })
-        .map_err(diff_pack_err)?;
-        let background_color_index = read_bin_option(&mut r, |r| r.read_u8()).map_err(diff_pack_err)?;
-        let pixel_aspect_ratio = read_bin_option(&mut r, |r| r.read_u8()).map_err(diff_pack_err)?;
-        let images = read_bin_option(&mut r, |r| dec_images_diff_bin(&read_bin_blob(r)?)).map_err(diff_pack_err)?;
+        .map_err(|error| diff_pack_err(&error))?;
+        let background_color_index = read_bin_option(&mut r, |r| r.read_u8()).map_err(|error| diff_pack_err(&error))?;
+        let pixel_aspect_ratio = read_bin_option(&mut r, |r| r.read_u8()).map_err(|error| diff_pack_err(&error))?;
+        let images = read_bin_option(&mut r, |r| dec_images_diff_bin(&read_bin_blob(r)?)).map_err(|error| diff_pack_err(&error))?;
         Ok(GifDiff { width, height, gct, background_color_index, pixel_aspect_ratio, images })
     }
 }

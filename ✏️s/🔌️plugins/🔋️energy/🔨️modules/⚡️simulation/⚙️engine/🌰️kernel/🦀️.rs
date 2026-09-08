@@ -1486,43 +1486,6 @@ impl SimulationKernel {
         state
     }
 
-    /// 🔄️ Run warmup until temperature and load convergence.
-    #[cfg(test)]
-    pub(crate) fn warmup(model: &Model, config: &SimulationConfig, pre: &PrecomputedModel, state: &mut SimulationModel, weather_records: &[WeatherRecord]) -> Result<(), Error> {
-        let warmup_hours = config.warmup_days * 24;
-        let dt_s = pre.zone_timestep_s;
-        let mut prev_temps = FixedTable::default();
-        let mut prev_loads = FixedTable::default();
-        prev_temps.admit(model.zones.len()).map_err(|_| Error::severe("test warmup temperature backing"))?;
-        prev_loads.admit(model.zones.len()).map_err(|_| Error::severe("test warmup load backing"))?;
-
-        for hour in 0..warmup_hours {
-            let widx = (hour as usize) % weather_records.len().max(1);
-            let weather = weather_records.get(widx).copied().unwrap_or_else(|| default_weather(hour));
-            let date = SimDate::new(weather.year, weather.month, weather.day);
-            Self::advance_timestep(model, config, pre, state, &weather, &date, hour as f64, dt_s)?;
-            if hour > 24 && hour % 24 == 0 {
-                let temp_ok = state.zones.iter().all(|(id, zs)| prev_temps.get(id).is_some_and(|prev| (zs.air.temp_c - prev).abs() <= config.tolerances.temperature_k));
-                let load_ok = state.zones.iter().all(|(id, zs)| {
-                    prev_loads.get(id).is_some_and(|prev| {
-                        let load = zs.heating_demand_w + zs.cooling_demand_w;
-                        (load - prev).abs() <= config.tolerances.energy_w
-                    })
-                });
-                if temp_ok && load_ok {
-                    state.warmup_complete = true;
-                    return Ok(());
-                }
-            }
-            for (id, zs) in state.zones.iter() {
-                let _ = prev_temps.insert(*id, zs.air.temp_c);
-                let _ = prev_loads.insert(*id, zs.heating_demand_w + zs.cooling_demand_w);
-            }
-        }
-        state.warmup_complete = true;
-        Ok(())
-    }
-
     /// 🔄️ Advance one zone timestep through the same bounded cursor machine used by EnergyJob.
     #[cfg(test)]
     pub(crate) fn advance_timestep(model: &Model, config: &SimulationConfig, pre: &PrecomputedModel, state: &mut SimulationModel, weather: &WeatherRecord, date: &SimDate, hour: f64, dt_s: f64) -> Result<(), Error> {

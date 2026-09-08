@@ -3,7 +3,7 @@
   "$id": "semio.hub.canonical-checkpoint-pair.fixture/v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "limits", "selection", "pack", "spr", "expected"],
+  "required": ["schema", "limits", "selection", "frontierCases", "pack", "spr", "expected"],
   "properties": {
     "schema": { "const": "semio.hub.canonical-checkpoint-pair.fixture/v1" },
     "limits": {
@@ -41,6 +41,12 @@
         }
       }
     },
+    "frontierCases": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": { "$ref": "#/$defs/frontierCase" }
+    },
     "pack": { "$ref": "#/$defs/part" },
     "spr": { "$ref": "#/$defs/part" },
     "expected": {
@@ -58,6 +64,20 @@
   },
   "$defs": {
     "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "frontierCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "documentId", "headEditOrdinal", "headEditId", "lastCommitSeq", "chainHash", "accepted"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "documentId": { "type": "string", "minLength": 1 },
+        "headEditOrdinal": { "type": "integer", "minimum": 0 },
+        "headEditId": { "type": "string" },
+        "lastCommitSeq": { "type": "integer", "minimum": 0 },
+        "chainHash": { "$ref": "#/$defs/hash" },
+        "accepted": { "type": "boolean" }
+      }
+    },
     "part": {
       "type": "object",
       "additionalProperties": false,

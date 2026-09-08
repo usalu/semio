@@ -248,24 +248,24 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    fn op_text_round_trips_change_seismic_zone() {
+    async fn op_text_round_trips_change_seismic_zone() {
         store::os_store::test_support::assert_op_line_round_trip(&En1998Mutation::ChangeSeismicZone(change_seismic_zone::ChangeSeismicZone { new_seismic_zone: 3 }));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn op_text_round_trips_change_ground_type() {
+    async fn op_text_round_trips_change_ground_type() {
         store::os_store::test_support::assert_op_line_round_trip(&En1998Mutation::ChangeGroundType(change_ground_type::ChangeGroundType { new_ground_type: "c".to_string() }));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn op_text_round_trips_change_multiple_resisting_systems() {
+    async fn op_text_round_trips_change_multiple_resisting_systems() {
         store::os_store::test_support::assert_op_line_round_trip(&En1998Mutation::ChangeMultipleResistingSystems(change_multiple_resisting_systems::ChangeMultipleResistingSystems { new_multiple_resisting_systems: false }));
     }
 
     /// ⚖️ Every variant, not just the hand-picked ones above — full-coverage `OpText` round trip
     /// over the closed vocabulary, one sample value per field.
     #[semio_framework_async_macros::async_test]
-    fn every_variant_op_text_round_trips() {
+    async fn every_variant_op_text_round_trips() {
         for mutation in every_mutation() {
             store::os_store::test_support::assert_op_line_round_trip(&mutation);
         }

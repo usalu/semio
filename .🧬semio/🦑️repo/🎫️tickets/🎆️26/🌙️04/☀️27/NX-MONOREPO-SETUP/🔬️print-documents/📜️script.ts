@@ -1,0 +1,30 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { createRequire } from "node:module";
+const root = process.cwd(), product = "🧰️framework/🛍️products/📓️print";
+const modulePath = join(product, "🔨️modules/🖨️tectonic-template-compilation/📇️catalog");
+const require = createRequire(import.meta.url), catalog = JSON.parse(readFileSync(join(modulePath, "🔣️.json"), "utf8"));
+const validate = new (require("ajv/dist/2020").default)().compile(JSON.parse(readFileSync(join(modulePath, "🧬️schema.json"), "utf8")));
+assert.ok(validate(catalog), JSON.stringify(validate.errors));
+const api = await import(join(root, modulePath, "🟦️.ts"));
+const plugin = await import(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs"));
+const gallery = JSON.parse(readFileSync(join(product, "🎮️commands/🧪️print-pipeline-verification/🧪️tests/🗺️gallery-identities.json"), "utf8"));
+const documents = api.printDocuments();
+assert.equal(documents.length, 87);
+assert.deepEqual(documents.filter((row: any) => row.collection === "visualizations").map((row: any) => row.id).sort(), Object.keys(gallery).sort());
+assert.equal(new Set(documents.map((row: any) => api.printDocumentOutputDirectory(row.id, root))).size, documents.length);
+assert.throws(() => api.printDocument("../report"), /Unknown/);
+const project = JSON.parse(readFileSync(join(product, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
+const targets = plugin.cacheInternals.printDocumentTargets(project, join(product, "📦️packages/🟦️typescript"), root);
+for (const document of documents) {
+  const target = targets[`build-${document.id}`];
+  assert.ok(target, document.id);
+    assert.equal(target.cache, true);
+  assert.deepEqual(target.outputs, [`{projectRoot}/dist/documents/${document.id}`]);
+  assert.match(target.options.command, /📜️script\.ts build [a-z0-9-]+$/);
+  assert.ok(target.dependsOn.includes("fonts"));
+  assert.ok(target.dependsOn.includes("deps-tectonic"));
+    assert.ok(target.dependsOn.includes("deps-tex"));
+}
+console.log("[DEBUG] Print catalog schema, independent gallery identities and 87 exclusive Nx document owners PASS");

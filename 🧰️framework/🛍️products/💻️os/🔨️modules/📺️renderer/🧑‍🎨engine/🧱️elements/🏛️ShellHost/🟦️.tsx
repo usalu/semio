@@ -7,6 +7,9 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellDialogSessionIsCurrentV1, shellEffectSourceIsCurrentV1, type ShellDialogOriginV1, type ShellDialogV1 } from "./🧬️contracts/🗨️dialog-origin/🟦️.ts";
+import { OwnedShellDialog } from "./🧬️contracts/🗨️dialog-origin/🌐️browser/🟦️.tsx";
+import { OwnedTutorialRunV1 } from "./🧬️contracts/🗨️dialog-origin/🎥️tutorial/🟦️.ts";
 import React, {
   createContext,
   type CSSProperties,
@@ -31,7 +34,9 @@ import {
   AppRouter,
   type AppRouterManifest,
   type ArtifactDialect,
+  type ArtifactKindChoice,
   dialectCoordinate,
+  decodeArtifactKindChoice,
   EMPTY_OPENING_PREFERENCES,
   foldOpeningPreferences,
   type OpeningConfigMutation,
@@ -52,6 +57,7 @@ import {
   type DockUiPanelState,
   DockUiStateStore,
   expandPluginRegistry,
+  encodeArtifactKindChoice,
   FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
   FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID,
   FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
@@ -127,6 +133,7 @@ import {
   type BackboneWorkerResponse,
   type BrowserBrokerPortRequestV1,
   type BrowserBrokerPortResponseV1,
+  type BrowserActorUiMountedV1,
   buildFileBackboneUri,
   buildFolderBackboneUri,
   buildFrameworkSyncUtilities,
@@ -154,6 +161,7 @@ import {
   type DocumentScope,
   type DirectoryStreamMessage,
   documentRuntimeKeyV1,
+  type GisMapApprovalHistoryStatusV1,
   resolveArtifactOpeningRelay,
   type ResolvedArtifactOpeningRelay,
 } from "@semio-tech/framework-os";
@@ -348,7 +356,6 @@ import {
   UI_MOBILE_MEDIA_QUERY,
   UI_TERMINOLOGY_NATIVE,
   type UiChromeLayout,
-  UIDialog,
   type UiDriver,
   UIIntroduction,
   UiKeybindingsProvider,
@@ -576,7 +583,8 @@ import { type WindowFault, type WindowFaultClass, windowFaultFromError } from ".
 import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts";
 import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
 import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { BootstrapStatusNotice, ExecutionTargetStatusNotice, InferencePortPanel, inferencePortStatusRuntimeKeyV1, reduceBootstrapUiState, reduceExecutionTargetUiState, resolveRequiredHostApps, retainInferencePortOwnerAfterCloseV1, type BootstrapUiState, type ExecutionTargetUiState, type InferencePortOwnerV1, type InferencePortUiAction } from "./🧬️contracts/🪪️host-bootstrap/🟦️.tsx";
+import { BootstrapStatusNotice, ExecutionTargetStatusNotice, InferencePortPanel, inferencePortStatusRuntimeKeyV1, reduceBootstrapUiState, reduceExecutionTargetUiState, resolveRequiredHostApps, retainInferencePortOwnerAfterCloseV1, shellHistoryUndoRouteV1, type BootstrapUiState, type ExecutionTargetUiState, type InferencePortOwnerV1, type InferencePortUiAction } from "./🧬️contracts/🪪️host-bootstrap/🟦️.tsx";
+import { ArtifactCreationCatalogNotice, ArtifactCreationProgressNotice, reduceArtifactCreationProgressUiV1, type ArtifactCreationProgressOwnerV1, type ArtifactCreationProgressUiStateV1 } from "./🧬️contracts/🌱️artifact-creation/🏦️.tsx";
 import {
   DirectoryBootstrapStatusNotice,
   applyDirectoryEventPageBootstrapV1,
@@ -638,6 +646,60 @@ export type ShellCatalogProbe = {
   readonly programs: readonly { readonly pluginId: string; readonly appId: string; readonly label: string }[];
   readonly spawned: readonly { readonly id: string; readonly pluginId: string; readonly appId: string }[];
 };
+
+type MountedBrowserActorUiV1 = Omit<BrowserActorUiMountedV1, "kind" | "instanceId"> & Readonly<{ sessionInstanceId: number; windowKindId: string; store: UiDocumentStore }>;
+
+export type MountedGisMapProbeV1 = Readonly<{
+  scope: DocumentScope;
+  clientInstanceId: string;
+  activationGeneration: string;
+  catalogGenerationId: string;
+  componentSha256: string;
+  descriptorSha256: string;
+  browserActorSha256: string;
+  uiRevision: number;
+  rootKind: "tiled-map";
+  regionIds: readonly string[];
+}>;
+
+/** 🔬️ Projects only public identity and GIS scene facts from the Shell's acknowledged retained
+ * store. It has no dispatch, credential, receipt, grant, proposal or undo-handle surface. */
+export function mountedGisMapProbeV1(source: MountedBrowserActorUiV1 | null): MountedGisMapProbeV1 | null {
+  if (source === null) return null;
+  const state = source.store.getState();
+  if (state.revision < 1 || state.revision !== source.uiRevision || state.root === null) return null;
+  const root = state.nodes.get(state.root);
+  if (root?.component.type !== "surface" || root.component.kind !== "tiled-map") return null;
+  let decoded: unknown;
+  try {
+    decoded = decodePackValue(new Uint8Array(root.component.doc.bytes));
+  } catch {
+    return null;
+  }
+  if (decoded === null || typeof decoded !== "object" || Array.isArray(decoded)) return null;
+  const regions = (decoded as Record<string, unknown>).regions;
+  if (!Array.isArray(regions) || regions.length > 4_096) return null;
+  const regionIds: string[] = [];
+  for (const region of regions) {
+    if (region === null || typeof region !== "object" || Array.isArray(region)) return null;
+    const id = (region as Record<string, unknown>).id;
+    if (typeof id !== "string" || id.length === 0 || new TextEncoder().encode(id).byteLength > 256 || /[\u0000-\u001f\u007f]/u.test(id) || regionIds.includes(id)) return null;
+    regionIds.push(id);
+  }
+  regionIds.sort();
+  return Object.freeze({
+    scope: Object.freeze({ ...source.scope }),
+    clientInstanceId: source.clientInstanceId,
+    activationGeneration: source.activationGeneration,
+    catalogGenerationId: source.catalogGenerationId,
+    componentSha256: source.componentSha256,
+    descriptorSha256: source.descriptorSha256,
+    browserActorSha256: source.browserActorSha256,
+    uiRevision: state.revision,
+    rootKind: "tiled-map",
+    regionIds: Object.freeze(regionIds),
+  });
+}
 
 /** 🔬️ One probe row per installed registry entry: its install status, plus the `surface.*` fault
  * that kept it out of {@link AppRouter} when there is one. Pure and total — a plugin excluded from
@@ -1113,6 +1175,48 @@ export function mintDirectoryCommandRequestId(): string {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+/** 🌱️ Converts the trusted-catalog presentation choice into the closed host creation request.
+ * The decoded schema/dialect/labels are deliberately discarded; Hub resolves `kindId` again. */
+export function spaceArtifactCreationRequestFromAction(
+  actionId: string,
+  args: Readonly<Record<string, unknown>> | undefined,
+  spaceId: string,
+  requestId: string,
+): Extract<BackboneWorkerRequest, { readonly kind: "space-artifact-create" }> | null {
+  if (actionId !== "os.create-space-artifact" || args === undefined || Object.keys(args).sort().join(",") !== "kindChoice,name" || typeof args.kindChoice !== "string" || typeof args.name !== "string") return null;
+  try {
+    const choice = decodeArtifactKindChoice(args.kindChoice);
+    if (encodeArtifactKindChoice(choice) !== args.kindChoice || choice.kindId !== choice.dialect.artifactKind) return null;
+    return { kind: "space-artifact-create", requestId, spaceId, kindId: choice.kindId, name: args.name };
+  } catch {
+    return null;
+  }
+}
+
+export type SpaceArtifactCreationOwnerV1 = ArtifactCreationProgressOwnerV1 & Readonly<{
+  opening: boolean;
+  cancelRequested: boolean;
+}>;
+
+export function spaceArtifactCreationOwnerAcceptsStatus(
+  owner: SpaceArtifactCreationOwnerV1,
+  message: Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }>,
+): boolean {
+  return owner.requestId === message.requestId && owner.spaceId === message.spaceId && (message.ready === undefined || message.ready.kindId === owner.kindId);
+}
+
+export function spaceArtifactCreationReadyOpening(
+  message: Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }>,
+): Readonly<Record<string, string>> | null {
+  if (message.phase !== "ready" || message.ready === undefined || message.ready.kindId !== message.ready.parentDialect.artifactKind) return null;
+  return {
+    artifactRef: `${message.ready.parentDialect.artifactKind}@${message.ready.parentDialect.standard}/${message.ready.parentDialect.subset}`,
+    documentId: message.ready.documentId,
+    spaceId: message.spaceId,
+    schema: message.ready.artifactSchema,
+  };
+}
+
 /** 📇️ Maps an `os.directory.<verb>` action id (contract §C6's 7 command ids) + its relayed JSON args
  * onto a {@link DirectoryCommand} — `share-link` has no directory-schema command kind of its own
  * (contract §C1), so it's client-side sugar for `create-invite` (see the new
@@ -1445,12 +1549,15 @@ function FrameworkOsShellInner({
   const ephemeral = isEphemeralShellBrand(brand);
   const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins, locks, defaults, storage: scope.storage }));
   const [historyProjection, setHistoryProjection] = useState<{ readonly cursor: number; readonly entries: Readonly<Record<number, HistoryEntry>>; readonly canUndo: boolean; readonly canRedo: boolean; readonly currentCheckpointId: string | undefined }>({ cursor: 0, entries: {}, canUndo: false, canRedo: false, currentCheckpointId: undefined });
+  const historyOrderRef = useRef(0);
+  const localHistoryOrderRef = useRef(0);
   const { loadedPlugins, pluginStatusById, pluginSupervisorById, session, error, sessionFault, instanceFault } = shellState.pluginRuntime;
   const boardSessionFactory = useMemo(() => resolveAppSurfaceSessionFactory(surfaceSessionFactories ?? [], session ? { pluginId: session.pluginId, appId: session.app.id, instanceId: session.instanceId } : null), [surfaceSessionFactories, session?.pluginId, session?.app.id, session?.instanceId]);
   const applyHistoryPatch = useCallback((patch: HistoryPatch | undefined, replace = false) => {
     if (!patch) return;
     setHistoryProjection((current) => {
       if (!replace && patch.cursor <= current.cursor) return current;
+      localHistoryOrderRef.current = ++historyOrderRef.current;
       const entries = replace ? {} as Record<number, HistoryEntry> : { ...current.entries };
       for (const entry of patch.upserts ?? []) entries[entry.seq] = entry;
       // 📌️ §C5 — `currentCheckpointId` used to be dropped here even though `HistoryPatch` always
@@ -1507,6 +1614,9 @@ function FrameworkOsShellInner({
   const { expandedCommandId, stagedArgsByCommandId: commandStagedArgsByCommandId } = shellState.commandPanel;
   const { panels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, mobilePanelVisible, extraWindowInstances, windowTitlesById, windowIconsById } = shellState.layout;
   const { searchOpen, findOpen, introductionStepIndex, introductionCompletedInteractions, dialog: overlayDialog, transientNotice, openWithFocusRole } = shellState.overlays;
+  const dialogOpeningRef = useRef(0);
+  const liveDialogRef = useRef(overlayDialog);
+  liveDialogRef.current = overlayDialog;
   const { activeTutorialId, playing: tutorialPlaying, rate: tutorialRate, muted: tutorialMuted, captionsOn: tutorialCaptionsOn, recording: tutorialRecording, deviated: tutorialDeviated } = shellState.tutorial;
   const { uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiDriverDraft, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft, uiKeybindingOverrides } = shellState.uiPrefs;
   const { syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId } = shellState.sync;
@@ -1664,8 +1774,29 @@ function FrameworkOsShellInner({
   type OpenDocumentSessionTarget = DocumentOpeningTarget<ActiveSession, PluginWasmHandle>;
   const openDocumentRef = useRef<(ref: DocumentOpeningReference, bindings?: readonly PersistenceBinding[], target?: OpenDocumentSessionTarget) => Promise<void>>(async () => {});
   const closeDocumentRef = useRef<(runtimeKey: string, clientInstanceId?: string) => void>(() => {});
-  const openArtifactWithAppRefRef = useRef<(target: AppRef, dialect: ArtifactDialect, role: AppRole) => Promise<OpenDocumentSessionTarget | null>>(async () => null);
+  const openArtifactWithAppRefRef = useRef<(target: AppRef, dialect: ArtifactDialect, role: AppRole, admit?: () => boolean) => Promise<OpenDocumentSessionTarget | null>>(async () => null);
   const resolveArtifactOpeningRelayRef = useRef<(actionId: string, args: unknown) => ResolvedArtifactOpeningRelay | null>(() => null);
+  const spaceArtifactCreationOwnersRef = useRef(new Map<string, SpaceArtifactCreationOwnerV1>());
+  const [spaceArtifactCreationUi, setSpaceArtifactCreationUi] = useState<ArtifactCreationProgressUiStateV1>({});
+  const [spaceArtifactCreationCatalog, setSpaceArtifactCreationCatalog] = useState<Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-catalog" }> | null>(null);
+  const [spaceArtifactCreationCatalogUi, setSpaceArtifactCreationCatalogUi] = useState<Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-catalog-status" }> | null>(null);
+  const cancelSpaceArtifactCreationsForRuntime = useCallback((runtimeKey: string, worker: Worker | null) => {
+    const cleared: string[] = [];
+    for (const [requestId, owner] of spaceArtifactCreationOwnersRef.current) {
+      if (owner.runtimeKey !== runtimeKey) continue;
+      spaceArtifactCreationOwnersRef.current.delete(requestId);
+      cleared.push(requestId);
+      worker?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "space-artifact-create-cancel", requestId, spaceId: owner.spaceId }) });
+    }
+    if (cleared.length > 0) setSpaceArtifactCreationUi((current) => cleared.reduce((next, requestId) => reduceArtifactCreationProgressUiV1(next, { kind: "cleared", requestId }), current));
+  }, []);
+  const cancelSpaceArtifactCreation = useCallback((requestId: string, spaceId: string) => {
+    const owner = spaceArtifactCreationOwnersRef.current.get(requestId);
+    if (owner === undefined || owner.spaceId !== spaceId || owner.cancelRequested || owner.opening) return;
+    spaceArtifactCreationOwnersRef.current.set(requestId, { ...owner, cancelRequested: true });
+    setSpaceArtifactCreationUi((current) => reduceArtifactCreationProgressUiV1(current, { kind: "cancel-requested", requestId, spaceId }));
+    backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "space-artifact-create-cancel", requestId, spaceId }) });
+  }, []);
   /** 📇️ Offline-queue depth surfaced by the worker's `directory-status` — not yet rendered by any
    * chrome this lane owns (2-F/3-A's "row shows 'pending'" territory); kept as local state so a
    * consumer can read it once that chrome lands, with zero further plumbing here. */
@@ -1688,6 +1819,10 @@ function FrameworkOsShellInner({
   const inferencePortEpochRef = useRef(0);
   /** 🗂️ Exact scope and runtime owner for the current inference epoch. */
   const inferencePortOwnerRef = useRef<InferencePortOwnerV1 | null>(null);
+  type MountedInferenceHistoryV1 = Readonly<{ historyEpoch: number; clientInstanceId: string; scope: DocumentScope; sessionInstanceId: number; status: GisMapApprovalHistoryStatusV1; order: number }>;
+  const [inferenceHistoryByRuntimeKey, setInferenceHistoryByRuntimeKey] = useState<Readonly<Record<string, MountedInferenceHistoryV1>>>({});
+  const inferenceHistoryByRuntimeKeyRef = useRef<Readonly<Record<string, MountedInferenceHistoryV1>>>({});
+  inferenceHistoryByRuntimeKeyRef.current = inferenceHistoryByRuntimeKey;
   /** 🪪️ Settled once by the identity bootstrap effect's very first `snapshotReplaced` for
    * `IDENTITY_CONFIG_SCHEMA` (a previously-persisted session) — see that effect for the bounded
    * timeout that resolves it to `null` when no such file exists (never blocks the UI thread). */
@@ -1711,7 +1846,34 @@ function FrameworkOsShellInner({
   /** 🗂️ Which session/plugin owns each exact document runtime, so equal document ids in different
    * spaces cannot share socket, bootstrap, presence or plugin-routing state. */
   const openDocumentSessionsRef = useRef<Map<string, { session: ActiveSession; plugin: PluginWasmHandle; documentId: string; clientInstanceId: string; scope?: DocumentScope }>>(new Map());
-  const browserActorUiByRuntimeKeyRef = useRef(new Map<string, { readonly clientInstanceId: string; readonly activationGeneration: string; readonly verifiedSurfaceId: string; readonly sessionInstanceId: number; readonly windowKindId: string; readonly store: UiDocumentStore }>());
+  const captureDialogOrigin = useCallback((target: ActiveSession | null): ShellDialogOriginV1 | null =>
+    shellDialogOriginV1(target, [...openDocumentSessionsRef.current].map(([runtimeKey, entry]) => ({ runtimeKey, ...entry }))), []);
+  const isCurrentDialogOrigin = useCallback((origin: ShellDialogOriginV1 | null): boolean =>
+    shellDialogOriginIsCurrentV1(origin, captureDialogOrigin(shellStateRef.current.pluginRuntime.session)), [captureDialogOrigin]);
+  const captureEffectOwner = useCallback((source: ActiveSession, presentation: ShellDialogOriginV1 | null) => ({
+    presentation,
+    source: captureDialogOrigin(source),
+    session: source,
+    plugin: loadedPluginsRef.current.find((entry) => entry.handle.pluginId === source.pluginId)?.handle ?? null,
+  }), [captureDialogOrigin]);
+  const isCurrentEffectOwner = useCallback((owner: ReturnType<typeof captureEffectOwner>): boolean => {
+    const primary = shellStateRef.current.pluginRuntime.session;
+    return isCurrentDialogOrigin(owner.presentation) && owner.plugin !== null
+      && loadedPluginsRef.current.find((entry) => entry.handle.pluginId === owner.session.pluginId)?.handle === owner.plugin
+      && shellEffectSourceIsCurrentV1(owner.source, captureDialogOrigin(owner.session), primary, primary === null ? [] : parsePanelState(primary.viewState)?.spawnedApps ?? []);
+  }, [captureDialogOrigin, isCurrentDialogOrigin]);
+  const closeOwnedDialog = useCallback((openingId: number): boolean => {
+    if (liveDialogRef.current?.openingId !== openingId) return false;
+    liveDialogRef.current = null;
+    dispatch({ type: "CLOSE_DIALOG", openingId });
+    return true;
+  }, []);
+  const makeOwnedDialog = useCallback((dialogId: string, origin: ShellDialogOriginV1 | null, seedArgs?: Readonly<Record<string, unknown>>): ShellDialogV1 | null => {
+    const active = shellStateRef.current.pluginRuntime.session;
+    if (origin === null || !isCurrentDialogOrigin(origin) || !active?.app.dialogs?.some((entry) => entry.id === dialogId)) return null;
+    return { openingId: ++dialogOpeningRef.current, dialogId, origin, ...(seedArgs === undefined ? {} : { seedArgs }) };
+  }, [isCurrentDialogOrigin]);
+  const browserActorUiByRuntimeKeyRef = useRef(new Map<string, { readonly clientInstanceId: string; readonly activationGeneration: string; readonly verifiedSurfaceId: string; readonly scope: DocumentScope; readonly sessionInstanceId: number; readonly windowKindId: string; readonly store: UiDocumentStore; readonly identity: BrowserActorUiMountedV1 | null }>());
   const [browserActorUiVersion, setBrowserActorUiVersion] = useState(0);
   const directoryScopedOwnersRef = useRef<Map<string, DocumentScope>>(new Map());
   const socketActorReadyRef = useRef<Map<string, { readonly clientInstanceId: string; resolve(actorId: string): void; reject(error: Error): void }>>(new Map());
@@ -1771,7 +1933,7 @@ function FrameworkOsShellInner({
         const revision = store.getRevisionSnapshot();
         if (applied.ok) {
           if (retained === undefined) {
-            browserActorUiByRuntimeKeyRef.current.set(runtimeKey, { clientInstanceId: message.clientInstanceId, activationGeneration: message.activationGeneration, verifiedSurfaceId: message.verifiedSurfaceId, sessionInstanceId: entry.session.instanceId, windowKindId: windowKind.id, store });
+            browserActorUiByRuntimeKeyRef.current.set(runtimeKey, { clientInstanceId: message.clientInstanceId, activationGeneration: message.activationGeneration, verifiedSurfaceId: message.verifiedSurfaceId, scope: { ...message.scope }, sessionInstanceId: entry.session.instanceId, windowKindId: windowKind.id, store, identity: null });
             setBrowserActorUiVersion((current) => current + 1);
           }
           worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "browser-actor-ui-patch-result", clientInstanceId: entry.clientInstanceId, scope: message.scope, verifiedSurfaceId: message.verifiedSurfaceId, activationGeneration: message.activationGeneration, instanceId: message.instanceId, receipt: message.receipt, outcome: "acknowledged", revision }) });
@@ -1779,6 +1941,27 @@ function FrameworkOsShellInner({
           const reason = applied.rejection.type;
           worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "browser-actor-ui-patch-result", clientInstanceId: entry.clientInstanceId, scope: message.scope, verifiedSurfaceId: message.verifiedSurfaceId, activationGeneration: message.activationGeneration, instanceId: message.instanceId, receipt: message.receipt, outcome: "rejected", revision, reason }) });
         }
+        return;
+      }
+      if (message.kind === "browser-actor-ui-mounted") {
+        const runtimeKey = documentRuntimeKeyV1({ kind: "hub", ...message.scope });
+        const entry = openDocumentSessionsRef.current.get(runtimeKey);
+        const retained = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
+        if (
+          entry === undefined
+          || retained === undefined
+          || entry.clientInstanceId !== message.clientInstanceId
+          || entry.scope?.spaceId !== message.scope.spaceId
+          || entry.scope.documentId !== message.scope.documentId
+          || retained.clientInstanceId !== message.clientInstanceId
+          || retained.activationGeneration !== message.activationGeneration
+          || retained.verifiedSurfaceId !== message.verifiedSurfaceId
+          || retained.sessionInstanceId !== entry.session.instanceId
+          || retained.store.getRevisionSnapshot() !== message.uiRevision
+          || message.instanceId !== 0
+        ) return;
+        browserActorUiByRuntimeKeyRef.current.set(runtimeKey, { ...retained, identity: message });
+        setBrowserActorUiVersion((current) => current + 1);
         return;
       }
       if (message.kind === "socket-actor") {
@@ -1797,6 +1980,18 @@ function FrameworkOsShellInner({
         dispatch({ type: "SET_INFERENCE_PORT_FOR_DOCUMENT", runtimeKey, status: message.status });
         return;
       }
+      if (message.kind === "inference-history-status") {
+        const runtimeKey = documentRuntimeKeyV1({ kind: "hub", ...message.scope });
+        const entry = openDocumentSessionsRef.current.get(runtimeKey);
+        if (entry === undefined || entry.clientInstanceId !== message.clientInstanceId || entry.scope?.spaceId !== message.scope.spaceId || entry.scope.documentId !== message.scope.documentId) return;
+        setInferenceHistoryByRuntimeKey((current) => {
+          const previous = current[runtimeKey];
+          if (previous !== undefined && (message.historyEpoch < previous.historyEpoch || previous.clientInstanceId !== message.clientInstanceId)) return current;
+          const order = previous?.historyEpoch === message.historyEpoch ? previous.order : ++historyOrderRef.current;
+          return { ...current, [runtimeKey]: { historyEpoch: message.historyEpoch, clientInstanceId: message.clientInstanceId, scope: message.scope, sessionInstanceId: entry.session.instanceId, status: message.status, order } };
+        });
+        return;
+      }
       if (message.kind === "execution-target-status") {
         const runtimeKey = scopeRuntimeKey(message);
         const entry = runtimeKey === null ? undefined : openDocumentSessionsRef.current.get(runtimeKey);
@@ -1812,6 +2007,73 @@ function FrameworkOsShellInner({
         if (entry?.clientInstanceId !== message.clientInstanceId || waiter?.clientInstanceId !== message.clientInstanceId) return;
         waiter.reject(new Error(`socket actor unavailable (${message.code})`));
         if (socketActorReadyRef.current.get(runtimeKey)?.clientInstanceId === message.clientInstanceId) socketActorReadyRef.current.delete(runtimeKey);
+        return;
+      }
+      if (message.kind === "space-artifact-creation-status") {
+        const owner = spaceArtifactCreationOwnersRef.current.get(message.requestId);
+        if (owner === undefined || !spaceArtifactCreationOwnerAcceptsStatus(owner, message)) return;
+        const entry = openDocumentSessionsRef.current.get(owner.runtimeKey);
+        if (
+          entry === undefined
+          || entry.clientInstanceId !== owner.clientInstanceId
+          || entry.session.instanceId !== owner.sessionInstanceId
+          || entry.scope?.spaceId !== owner.spaceId
+          || entry.scope.documentId !== S_SPACE_INDEX_DOCUMENT_ID
+        ) {
+          spaceArtifactCreationOwnersRef.current.delete(owner.requestId);
+          setSpaceArtifactCreationUi((current) => reduceArtifactCreationProgressUiV1(current, { kind: "cleared", requestId: owner.requestId }));
+          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "space-artifact-create-cancel", requestId: owner.requestId, spaceId: owner.spaceId }) });
+          return;
+        }
+        setSpaceArtifactCreationUi((current) => reduceArtifactCreationProgressUiV1(current, { kind: "status", message }));
+        if (message.phase === "failed" || message.phase === "cancelled" || message.phase === "indeterminate") {
+          spaceArtifactCreationOwnersRef.current.delete(owner.requestId);
+          return;
+        }
+        const openingArgs = spaceArtifactCreationReadyOpening(message);
+        if (openingArgs === null || owner.opening) return;
+        const openingOwner: SpaceArtifactCreationOwnerV1 = { ...owner, opening: true };
+        spaceArtifactCreationOwnersRef.current.set(owner.requestId, openingOwner);
+        void (async () => {
+          try {
+            const opening = resolveArtifactOpeningRelayRef.current("os.open-artifact", openingArgs);
+            if (opening === null) throw new Error("artifact router is not ready");
+            const admit = (): boolean => {
+              const currentOwner = spaceArtifactCreationOwnersRef.current.get(openingOwner.requestId);
+              const currentEntry = openDocumentSessionsRef.current.get(openingOwner.runtimeKey);
+              return currentOwner === openingOwner && currentEntry?.clientInstanceId === openingOwner.clientInstanceId
+                && shellDialogSessionIsCurrentV1(currentEntry.session, entry.session)
+                && currentEntry.scope?.spaceId === openingOwner.spaceId && currentEntry.scope.documentId === S_SPACE_INDEX_DOCUMENT_ID;
+            };
+            const target = await openArtifactWithAppRefRef.current(opening.app, opening.dialect, opening.role, admit);
+            if (!admit()) return;
+            if (target !== null && opening.documentId && opening.schema) {
+              await openDocumentRef.current({ documentId: opening.documentId, schema: opening.schema, spaceId: openingOwner.spaceId }, undefined, target);
+            }
+          } catch (openingError) {
+            console.warn("[os-shell] space artifact creation opening rejected", openingError);
+          } finally {
+            if (spaceArtifactCreationOwnersRef.current.get(openingOwner.requestId) === openingOwner) {
+              spaceArtifactCreationOwnersRef.current.delete(openingOwner.requestId);
+              setSpaceArtifactCreationUi((current) => reduceArtifactCreationProgressUiV1(current, { kind: "cleared", requestId: openingOwner.requestId }));
+            }
+          }
+        })();
+        return;
+      }
+      if (message.kind === "space-artifact-creation-catalog") {
+        const runtimeKey = documentRuntimeKeyV1({ kind: "hub", spaceId: message.spaceId, documentId: S_SPACE_INDEX_DOCUMENT_ID });
+        const entry = openDocumentSessionsRef.current.get(runtimeKey);
+        if (entry?.clientInstanceId !== message.clientInstanceId || entry.scope?.spaceId !== message.spaceId || entry.scope.documentId !== S_SPACE_INDEX_DOCUMENT_ID) return;
+        setSpaceArtifactCreationCatalog(message);
+        return;
+      }
+      if (message.kind === "space-artifact-creation-catalog-status") {
+        const runtimeKey = documentRuntimeKeyV1({ kind: "hub", spaceId: message.spaceId, documentId: S_SPACE_INDEX_DOCUMENT_ID });
+        const entry = openDocumentSessionsRef.current.get(runtimeKey);
+        if (entry?.clientInstanceId !== message.clientInstanceId || entry.scope?.spaceId !== message.spaceId || entry.scope.documentId !== S_SPACE_INDEX_DOCUMENT_ID) return;
+        if (message.phase !== "ready") setSpaceArtifactCreationCatalog(null);
+        setSpaceArtifactCreationCatalogUi(message);
         return;
       }
       // 📇️ §C6 directory lane — the worker's `directory-*` responses never carry a `documentId` this
@@ -1832,11 +2094,20 @@ function FrameworkOsShellInner({
       if (message.kind === "directory-scope-revoked") {
         const key = documentRuntimeKeyV1({ kind: "hub", spaceId: message.scope.spaceId, documentId: message.scope.documentId });
         if (!directoryScopedOwnersRef.current.delete(key)) return;
+        cancelSpaceArtifactCreationsForRuntime(key, worker);
+        setSpaceArtifactCreationCatalog((catalog) => catalog?.spaceId === message.scope.spaceId ? null : catalog);
+        setSpaceArtifactCreationCatalogUi((status) => status?.spaceId === message.scope.spaceId ? null : status);
         const entry = openDocumentSessionsRef.current.get(key);
         if (entry?.plugin.detachBackbone) void entry.plugin.detachBackbone(entry.session.instanceId);
         openDocumentSessionsRef.current.delete(key);
         if (browserActorUiByRuntimeKeyRef.current.delete(key)) setBrowserActorUiVersion((current) => current + 1);
         rebootstrapDiscardedSessionsRef.current.delete(key);
+        setInferenceHistoryByRuntimeKey((current) => {
+          if (!(key in current)) return current;
+          const next = { ...current };
+          delete next[key];
+          return next;
+        });
         setPresencePeersByRuntimeKey((current) => {
           if (!(key in current)) return current;
           const next = { ...current };
@@ -1905,9 +2176,10 @@ function FrameworkOsShellInner({
         if (!entry || entry.clientInstanceId !== message.clientInstanceId) return;
         setBootstrapUiByDocument((current) => reduceBootstrapUiState(current, message));
         if (message.kind === "artifact-rebootstrap-required") {
+          cancelSpaceArtifactCreationsForRuntime(runtimeKey, worker);
           if (browserActorUiByRuntimeKeyRef.current.delete(runtimeKey)) setBrowserActorUiVersion((current) => current + 1);
           const active = sessionRef.current;
-          if (active?.instanceId === entry.session.instanceId) {
+          if (shellDialogSessionIsCurrentV1(active, entry.session)) {
             rebootstrapDiscardedSessionsRef.current.set(runtimeKey, entry.session);
             dispatch({ type: "SET_SESSION", value: null });
           }
@@ -2014,7 +2286,7 @@ function FrameworkOsShellInner({
     };
     backboneWorkerRef.current = worker;
     return worker;
-  }, [hubEnv]);
+  }, [cancelSpaceArtifactCreationsForRuntime, hubEnv]);
 
   handleDirectoryEventPageRef.current = (message) => {
     const owner = directoryHomeOwnerRef.current;
@@ -2954,6 +3226,9 @@ function FrameworkOsShellInner({
   const tutorialRecorderStartingRef = useRef(false);
   const shellStateRef = useRef(shellState);
   shellStateRef.current = shellState;
+  useEffect(() => {
+    if (overlayDialog !== null && !isCurrentDialogOrigin(overlayDialog.origin)) closeOwnedDialog(overlayDialog.openingId);
+  }, [overlayDialog, session, closeOwnedDialog, isCurrentDialogOrigin]);
   const publishLocalInteraction = useCallback(async (plugin: PluginWasmHandle, instanceId: number): Promise<LocalInteractionState | null> => {
     const capture = await plugin.readLocalInteraction(instanceId);
     const active = sessionRef.current;
@@ -3098,8 +3373,15 @@ function FrameworkOsShellInner({
   }, []);
 
   useEffect(() => {
-    const worker = backboneWorkerRef.current;
-    return () => worker?.terminate();
+    return () => {
+      const worker = backboneWorkerRef.current;
+      for (const owner of spaceArtifactCreationOwnersRef.current.values()) {
+        worker?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "space-artifact-create-cancel", requestId: owner.requestId, spaceId: owner.spaceId }) });
+      }
+      spaceArtifactCreationOwnersRef.current.clear();
+      worker?.terminate();
+      backboneWorkerRef.current = null;
+    };
   }, []);
 
   useEffect(() => {
@@ -3247,6 +3529,7 @@ function FrameworkOsShellInner({
     // from React state, which wouldn't reflect the just-dispatched change until the next render.
     async (nextSession: ActiveSession, scopeArg: UiDirtyScope = { kind: "full" }, extraInstancesOverride?: readonly ExtraWindowInstance[]) => {
       if (scopeArg.kind === "none") return;
+      const refreshOwner = captureEffectOwner(nextSession, captureDialogOrigin(nextSession));
       const generation = ++refreshGenerationRef.current;
       // 🩹️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-E — reads `loadedPluginsRef`
       // (kept in sync every render, line ~1145), NOT the `loadedPlugins` array closed over by this
@@ -3354,7 +3637,7 @@ function FrameworkOsShellInner({
         if (generation !== refreshGenerationRef.current) return;
         applyUiRefreshResponseToCache(cache, { ...response, windows: resolvedWindows, panels: resolvedPanels });
         // ⏱️ See `DocumentApp::pending_effects` — e.g. resuming a `flowEvalTick` chain after this refresh.
-        if (response.requestedEffects?.length) await applyHostEffects(response.requestedEffects, nextSession);
+        if (response.requestedEffects?.length) await applyHostEffects(response.requestedEffects, nextSession, { kind: "full" }, refreshOwner);
       }
       // 🎯 Both push guards below are keyed on `${nextSession.instanceId}::${json}`, NOT on the json
       // content alone — the content is derived purely from `loadedPlugins`, which stabilizes right after
@@ -3655,7 +3938,8 @@ function FrameworkOsShellInner({
   }, []);
 
   const ensureSpawnedPlugin = useCallback(
-    async (program: SpaceProgramEntry, label?: string, osInstanceId?: string, documentJson?: string, sourceViewState?: ViewModel): Promise<SpacePanelState | null> => {
+    async (program: SpaceProgramEntry, isCurrent: () => boolean, label?: string, osInstanceId?: string, documentJson?: string, sourceViewState?: ViewModel): Promise<SpacePanelState | null> => {
+      if (!isCurrent()) return null;
       const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === program.pluginId);
       if (!pluginEntry || !session) return null;
       const app = pluginEntry.manifest.apps.find((candidate) => candidate.id === program.appId);
@@ -3665,11 +3949,16 @@ function FrameworkOsShellInner({
         if (documentJson && app) {
           await syncSpawnedPluginDocument(pluginEntry.handle, app, existing.instanceId, documentJson, sourceViewState ?? session.viewState);
         }
-        return studioPanelFocusingSpawned(currentPanel, existing);
+        return isCurrent() ? studioPanelFocusingSpawned(currentPanel, existing) : null;
       }
-      const instanceId = await pluginEntry.handle.createApp(program.appId);
+      const instanceId = await createAdmittedShellInstanceV1(isCurrent, () => pluginEntry.handle.createApp(program.appId), (id) => pluginEntry.handle.destroyApp(id));
+      if (instanceId === null) return null;
       if (documentJson && app) {
         await syncSpawnedPluginDocument(pluginEntry.handle, app, instanceId, documentJson, sourceViewState ?? session.viewState);
+      }
+      if (!isCurrent()) {
+        await pluginEntry.handle.destroyApp(instanceId);
+        return null;
       }
       const spawnedId = osInstanceId ?? `${program.pluginId}-${instanceId}`;
       return studioPanelFocusingSpawned(currentPanel, {
@@ -3691,9 +3980,11 @@ function FrameworkOsShellInner({
    * `openDocument`/`closeDocument`'s worker-backed `DocumentHost` lifecycle, not a per-operation JS mirror.
    */
   const applyHostEffects = useCallback(
-    async (effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope = { kind: "full" }) => {
+    async (effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope | undefined, effectOwner: ReturnType<typeof captureEffectOwner>) => {
+      const effectOrigin = effectOwner.presentation;
       let nextViewState = baseSession.viewState;
       for (const effect of effects) {
+        if (!isCurrentEffectOwner(effectOwner)) return;
         if (effect === "requestSync") continue;
         if ("setPanel" in effect) {
           nextViewState = { ...nextViewState, panelJson: effect.setPanel.panelJson };
@@ -3725,13 +4016,13 @@ function FrameworkOsShellInner({
           continue;
         }
         if ("openDialog" in effect) {
-          // 🗨️ Renders from the active `baseSession.app` — dialogs opened by spawned program
-          // instances are v1-out-of-scope, mirroring the introduction's active-session-only scope.
           const { dialogId, args } = effect.openDialog;
-          if (baseSession.app.dialogs?.some((entry) => entry.id === dialogId)) {
-            dispatch({ type: "SET_DIALOG", value: { dialogId, seedArgs: args as Record<string, unknown> | undefined } });
-          } else {
-            console.error(`[os-shell] openDialog: app ${baseSession.app.id} declares no dialog "${dialogId}"`);
+          if (shellDialogSessionIsCurrentV1(baseSession, shellStateRef.current.pluginRuntime.session)) {
+            const value = makeOwnedDialog(dialogId, effectOrigin, args as Record<string, unknown> | undefined);
+            if (value !== null) {
+              liveDialogRef.current = value;
+              dispatch({ type: "SET_DIALOG", value });
+            }
           }
           continue;
         }
@@ -3792,7 +4083,7 @@ function FrameworkOsShellInner({
               // 📤️ Single-file (multiple absent/false): identical to the pre-multi-select shape, one
               // `handleAction` call with `{payload, name}`. Multi-file: one sequential call per selected
               // file, each extending args with `{index, total}` so the plugin can stage/merge imports.
-              await dispatchOpenedFiles(opened, importAction, Boolean(multiple), makeEffectDispatchOne(pluginEntry, baseSession, applyHostEffects));
+              await dispatchOpenedFiles(opened, importAction, Boolean(multiple), makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner)));
             }
           }
           continue;
@@ -3806,7 +4097,7 @@ function FrameworkOsShellInner({
           const { action: dispatchActionId, args: dispatchArgs, delayMs } = effect.dispatchAction;
           const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
           if (pluginEntry) {
-            scheduleDispatchAction(dispatchActionId, dispatchArgs as Record<string, unknown> | undefined, delayMs, makeEffectDispatchOne(pluginEntry, baseSession, applyHostEffects));
+            scheduleDispatchAction(dispatchActionId, dispatchArgs as Record<string, unknown> | undefined, delayMs, makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner)));
           }
           continue;
         }
@@ -3852,6 +4143,42 @@ function FrameworkOsShellInner({
               setSpaceAdministration(opening.state);
               worker.postMessage({ wire: encodeBackboneWorkerRequest(opening.request) });
             }
+          } else if (actionId === "os.create-space-artifact") {
+            const origins = [...openDocumentSessionsRef.current.entries()].filter(
+              ([, entry]) => entry.session.pluginId === baseSession.pluginId
+                && entry.session.instanceId === baseSession.instanceId
+                && entry.scope?.documentId === S_SPACE_INDEX_DOCUMENT_ID,
+            );
+            const origin = origins.length === 1 ? origins[0] : undefined;
+            if (origin === undefined || origin[1].scope === undefined || effectOrigin?.document?.runtimeKey !== origin[0]
+              || effectOrigin.document.clientInstanceId !== origin[1].clientInstanceId
+              || !shellDialogSessionIsCurrentV1(baseSession, shellStateRef.current.pluginRuntime.session)) {
+              console.warn("[os-shell] replayShellCommand: space artifact creation requires one mounted Space index");
+            } else if (!identityRef.current) {
+              console.warn("[os-shell] replayShellCommand: space artifact creation dropped, no signed-in identity");
+            } else {
+              const requestId = mintDirectoryCommandRequestId();
+              const request = spaceArtifactCreationRequestFromAction(actionId, argsRecord, origin[1].scope.spaceId, requestId);
+              if (request === null) {
+                console.warn("[os-shell] replayShellCommand: invalid space artifact creation request");
+              } else {
+                const owner: SpaceArtifactCreationOwnerV1 = {
+                  requestId,
+                  spaceId: request.spaceId,
+                  kindId: request.kindId,
+                  name: request.name,
+                  runtimeKey: origin[0],
+                  clientInstanceId: origin[1].clientInstanceId,
+                  sessionInstanceId: origin[1].session.instanceId,
+                  opening: false,
+                  cancelRequested: false,
+                };
+                spaceArtifactCreationOwnersRef.current.set(requestId, owner);
+                setSpaceArtifactCreationUi((current) => reduceArtifactCreationProgressUiV1(current, { kind: "issued", owner }));
+                const worker = ensureBackboneWorker();
+                worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
+              }
+            }
           } else if (actionId.startsWith("os.directory.")) {
             const command = directoryCommandFromAction(actionId, argsRecord);
             if (!command) {
@@ -3870,7 +4197,7 @@ function FrameworkOsShellInner({
                 console.warn("[os-shell] replayShellCommand: artifact router is not ready", args);
                 continue;
               }
-              const target = await openArtifactWithAppRefRef.current(opening.app, opening.dialect, opening.role);
+              const target = await openArtifactWithAppRefRef.current(opening.app, opening.dialect, opening.role, () => isCurrentEffectOwner(effectOwner));
               if (target && opening.documentId && opening.schema) {
                 await openDocumentRef.current({ documentId: opening.documentId, schema: opening.schema, ...(opening.spaceId ? { spaceId: opening.spaceId } : {}) }, undefined, target);
               }
@@ -3901,13 +4228,14 @@ function FrameworkOsShellInner({
               },
               accept,
               payload,
-              makeEffectDispatchOne(pluginEntry, baseSession, applyHostEffects),
+              makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner)),
             );
           }
           continue;
         }
         if ("invokeExtension" in effect) {
           void dispatchInvokeExtensionEffect(loadedPlugins, baseSession, effect.invokeExtension, async (requestingPlugin, response) => {
+            if (!isCurrentEffectOwner(effectOwner)) throw new Error("extension.requester-retired");
             const current = sessionRef.current;
             const handle = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === baseSession.pluginId)?.handle;
             if (!current || handle !== requestingPlugin.handle) throw new Error("extension.requester-retired");
@@ -3915,7 +4243,7 @@ function FrameworkOsShellInner({
             const spawned = parsePanelState(current.viewState)?.spawnedApps.some((entry) => entry.pluginId === baseSession.pluginId && entry.instanceId === baseSession.instanceId);
             if (!primary && !spawned) throw new Error("extension.requester-retired");
             applyHistoryPatch(response.historyPatch);
-            await applyHostEffects(response.requestedEffects ?? [], primary ? current : { ...baseSession, viewState: current.viewState }, resolveUiDirtyScope(response.uiScope));
+            await applyHostEffects(response.requestedEffects ?? [], primary ? current : { ...baseSession, viewState: current.viewState }, resolveUiDirtyScope(response.uiScope), effectOwner);
           }).catch((error) => {
             const { extensionId, capability, req } = effect.invokeExtension;
             console.error("[DEBUG] invokeExtension dispatch failed", { extensionId, capability, req, error });
@@ -3931,7 +4259,8 @@ function FrameworkOsShellInner({
           if (program) {
             // 🪟️ Fold spawn into `nextViewState` — a separate SET_SESSION would be clobbered by the
             // final write below and leave the shell stuck on the studio surface.
-            const nextPanel = await ensureSpawnedPlugin(program, label, osInstanceId, documentJson, nextViewState);
+            const nextPanel = await ensureSpawnedPlugin(program, () => isCurrentEffectOwner(effectOwner), label, osInstanceId, documentJson, nextViewState);
+            if (!isCurrentEffectOwner(effectOwner)) return;
             if (nextPanel) nextViewState = viewStateWithSpacePanel(nextViewState, nextPanel);
           }
           continue;
@@ -3945,7 +4274,8 @@ function FrameworkOsShellInner({
           if (program) {
             // 🪟️ Fold focus into `nextViewState` so the final SET_SESSION keeps `activeSpawnedId`
             // (opening a workflow node depends on this — otherwise nothing appears to happen).
-            const nextPanel = await ensureSpawnedPlugin(program, undefined, osInstanceId, undefined, nextViewState);
+            const nextPanel = await ensureSpawnedPlugin(program, () => isCurrentEffectOwner(effectOwner), undefined, osInstanceId, undefined, nextViewState);
+            if (!isCurrentEffectOwner(effectOwner)) return;
             if (nextPanel) {
               nextViewState = viewStateWithSpacePanel(nextViewState, nextPanel);
               console.log("[DEBUG] openPluginInstance focused spawned app", {
@@ -3972,13 +4302,15 @@ function FrameworkOsShellInner({
         }
       }
       const nextSession = { ...baseSession, viewState: nextViewState };
-      const isSpawnedPluginSession = hostMode && session && baseSession.pluginId !== session.pluginId;
+      if (!isCurrentEffectOwner(effectOwner)) return;
+      const isSpawnedPluginSession = hostMode && !shellDialogSessionIsCurrentV1(baseSession, shellStateRef.current.pluginRuntime.session);
       dispatch({
         type: "SET_SESSION",
         value: (current) => {
-          if (!current) return nextSession;
+          if (!shellDialogOriginIsCurrentV1(effectOrigin, captureDialogOrigin(current))) return current;
+          if (!current) return current;
           if (isSpawnedPluginSession) return current.viewState === nextViewState ? current : { ...current, viewState: nextViewState };
-          if (current.instanceId !== nextSession.instanceId) return current;
+          if (!shellDialogSessionIsCurrentV1(current, nextSession)) return current;
           // 🐢️ Preserve `current`'s identity when the viewState didn't actually change — otherwise every
           // action mints a new `session` object, which cascades into a new `onAction` identity, which
           // busts every memo keyed on it (windows, panels, the boot-refresh effect below) even when
@@ -3989,11 +4321,11 @@ function FrameworkOsShellInner({
       if (isSpawnedPluginSession) {
         const spawned = parsePanelState(nextViewState)?.spawnedApps.find((entry) => entry.pluginId === baseSession.pluginId && entry.instanceId === baseSession.instanceId);
         if (spawned) await refreshSpawnedUi(spawned, nextViewState, uiScope);
-      } else if (session?.instanceId === nextSession.instanceId || baseSession.instanceId === nextSession.instanceId) {
+      } else if (shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, nextSession)) {
         await refreshUi(nextSession, uiScope);
       }
     },
-    [clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, session, setActiveUtilityForWindow, hostMode],
+    [captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, makeOwnedDialog, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, session, setActiveUtilityForWindow, hostMode],
   );
 
   const applyShellUri = useCallback(
@@ -4069,22 +4401,23 @@ function FrameworkOsShellInner({
         const studioSession = currentSession.app.id === hostAppId ? currentSession : await switchToManagedApp(hostAppId, preservedViewState);
         if (!studioSession) return;
         const studioControllerId = studioSession.app.controllerId;
+        const routeOwner = captureEffectOwner(studioSession, captureDialogOrigin(studioSession));
         if (studioChanged) {
           openInstanceIdRef.current = null;
           console.log("[DEBUG] applyShellUri openSpace", spaceId);
           const openResponse = await sPlugin.handleAction(studioSession.instanceId, encodeWindowActionInvocation(studioSession, { controllerId: studioControllerId, action: "openSpace", args: { spaceId } }), studioSession.viewState);
-          await applyHostEffects(openResponse.requestedEffects ?? [], studioSession, resolveUiDirtyScope(openResponse.uiScope));
+          await applyHostEffects(openResponse.requestedEffects ?? [], studioSession, resolveUiDirtyScope(openResponse.uiScope), routeOwner);
         }
         if (openInstanceIdRef.current === (instanceId ?? null)) return;
         openInstanceIdRef.current = instanceId ?? null;
         if (instanceId) {
           const response = await sPlugin.handleAction(studioSession.instanceId, encodeWindowActionInvocation(studioSession, { controllerId: studioControllerId, action: "openInstance", args: { instanceId } }), studioSession.viewState);
-          await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope));
+          await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope), routeOwner);
         } else {
           const response = await sPlugin.handleAction(studioSession.instanceId, encodeWindowActionInvocation(studioSession, { controllerId: studioControllerId, action: "closeFocusedInstance" }), studioSession.viewState);
           const currentPanel = parsePanelState(studioSession.viewState) ?? buildSpacePanelState([], []);
           updateSpacePanel(buildSpacePanelState(currentPanel.programs, currentPanel.spawnedApps, currentPanel.activePanelTab, undefined));
-          await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope));
+          await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope), routeOwner);
         }
       } finally {
         applyShellUriDepthRef.current -= 1;
@@ -4169,6 +4502,11 @@ function FrameworkOsShellInner({
       if (hubBinding && scope) {
         directoryScopedOwnersRef.current.set(runtimeKey, scope);
         worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-scope-open", baseUrl: hubBinding.baseUrl, scope, since: 0 }) });
+        if (scope.documentId === S_SPACE_INDEX_DOCUMENT_ID) {
+          setSpaceArtifactCreationCatalog(null);
+          setSpaceArtifactCreationCatalogUi({ kind: "space-artifact-creation-catalog-status", clientInstanceId, spaceId: scope.spaceId, phase: "loading" });
+          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "space-artifact-creation-catalog-open", clientInstanceId, spaceId: scope.spaceId }) });
+        }
       }
       const uri = `actor://${runtimeKey}`;
       if (plugin.attachBackbone) await plugin.attachBackbone(targetSession.instanceId, uri);
@@ -4184,6 +4522,11 @@ function FrameworkOsShellInner({
     const entry = openDocumentSessionsRef.current.get(runtimeKey);
     if (!entry) return;
     if (clientInstanceId !== undefined && entry.clientInstanceId !== clientInstanceId) return;
+    cancelSpaceArtifactCreationsForRuntime(runtimeKey, backboneWorkerRef.current);
+    if (entry.scope?.documentId === S_SPACE_INDEX_DOCUMENT_ID) {
+      setSpaceArtifactCreationCatalog((catalog) => catalog?.clientInstanceId === entry.clientInstanceId ? null : catalog);
+      setSpaceArtifactCreationCatalogUi((status) => status?.clientInstanceId === entry.clientInstanceId ? null : status);
+    }
     const waiter = socketActorReadyRef.current.get(runtimeKey);
     if (waiter?.clientInstanceId === entry.clientInstanceId) {
       waiter.reject(new Error("document closed"));
@@ -4199,8 +4542,23 @@ function FrameworkOsShellInner({
     }
     if (entry?.plugin.detachBackbone) void entry.plugin.detachBackbone(entry.session.instanceId);
     openDocumentSessionsRef.current.delete(runtimeKey);
+    const dialog = liveDialogRef.current;
+    if (dialog?.origin.document?.runtimeKey === runtimeKey && dialog.origin.document.clientInstanceId === entry?.clientInstanceId) closeOwnedDialog(dialog.openingId);
+    const tutorial = tutorialRunRef.current;
+    if (tutorial?.origin.document?.runtimeKey === runtimeKey && tutorial.origin.document.clientInstanceId === entry?.clientInstanceId) {
+      tutorialTransitionEpochRef.current += 1;
+      tutorialClockRef.current?.pause();
+      void tutorial.stop().catch((error) => console.error("[DEBUG] tutorial retirement failed", error));
+      dispatch({ type: "SET_TUTORIAL", value: null });
+    }
     if (browserActorUiByRuntimeKeyRef.current.delete(runtimeKey)) setBrowserActorUiVersion((current) => current + 1);
     rebootstrapDiscardedSessionsRef.current.delete(runtimeKey);
+    setInferenceHistoryByRuntimeKey((current) => {
+      if (!(runtimeKey in current)) return current;
+      const next = { ...current };
+      delete next[runtimeKey];
+      return next;
+    });
     setPresencePeersByRuntimeKey((current) => {
       if (!(runtimeKey in current)) return current;
       const next = { ...current };
@@ -4273,7 +4631,7 @@ function FrameworkOsShellInner({
   );
 
   const onAction = useCallback(
-    (action: ActionDescriptor) => {
+    (action: ActionDescriptor, submittedOrigin?: ShellDialogOriginV1) => {
       if (action.controllerId === "recovery") {
         const args = typeof action.args === "object" && action.args != null ? (action.args as { pluginId?: string }) : {};
         const pluginId = args.pluginId ?? primaryPluginId;
@@ -4295,6 +4653,9 @@ function FrameworkOsShellInner({
       }
 
       if (!session) return;
+      const actionOrigin = submittedOrigin ?? captureDialogOrigin(session);
+      if (!isCurrentDialogOrigin(actionOrigin)) return;
+      const primaryActionOwner = captureEffectOwner(session, actionOrigin);
 
       // 🎓️ First-run walkthrough (mirrors setActiveUtility below): fully shell-intercepted, resets
       // playback to the first step, never forwarded to the program.
@@ -4381,7 +4742,8 @@ function FrameworkOsShellInner({
             .handleAction(session.instanceId, encodeWindowActionInvocation({ ...session, viewState }, forwarded, extraWindowInstancesRef.current, windowId), viewState)
             .then((response) => {
               applyHistoryPatch(response.historyPatch);
-              return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope));
+              if (!isCurrentEffectOwner(primaryActionOwner)) return;
+              return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope), primaryActionOwner);
             })
             .catch((utilityError) => console.error("[DEBUG] setActiveUtility failed", utilityError));
         }
@@ -4408,7 +4770,8 @@ function FrameworkOsShellInner({
             .handleAction(session.instanceId, encodeWindowActionInvocation({ ...session, viewState }, forwarded, extraWindowInstancesRef.current, activeWindowIdRef.current ?? undefined), viewState)
             .then((response) => {
               applyHistoryPatch(response.historyPatch);
-              return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope));
+              if (!isCurrentEffectOwner(primaryActionOwner)) return;
+              return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope), primaryActionOwner);
             })
             .catch((toolError) => console.error("[DEBUG] setActiveTool failed", toolError));
         }
@@ -4492,8 +4855,24 @@ function FrameworkOsShellInner({
               return { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: session.viewState };
             })()
           : session;
+      if (action.action === "undo") {
+        const mounted = Object.entries(inferenceHistoryByRuntimeKeyRef.current).filter(([runtimeKey, history]) => {
+          const document = openDocumentSessionsRef.current.get(runtimeKey);
+          return document?.session.pluginId === targetSession.pluginId && document.session.instanceId === targetSession.instanceId && document.clientInstanceId === history.clientInstanceId && history.sessionInstanceId === targetSession.instanceId;
+        });
+        const remote = mounted.length === 1 ? mounted[0] : undefined;
+        const route = shellHistoryUndoRouteV1(remote?.[1] === undefined ? null : { ...remote[1].status, order: remote[1].order }, { canUndo: historyProjection.canUndo, order: localHistoryOrderRef.current });
+        if (route === "blocked") return;
+        if (route === "remote") {
+          const history = remote![1];
+          ensureBackboneWorker().postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-history-undo", historyEpoch: history.historyEpoch, clientInstanceId: history.clientInstanceId, scope: history.scope }) });
+          return;
+        }
+      }
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === targetSession.pluginId)?.handle;
       if (!plugin) return;
+      const actionOwner = captureEffectOwner(targetSession, actionOrigin);
+      if (!isCurrentEffectOwner(actionOwner)) return;
 
       // 🚫️ The old `setDocument` → `patchAppSource` mirror (spawned-instance content write-back on the
       // os document) is deleted — app content no longer embeds on the os document at all
@@ -4535,8 +4914,9 @@ function FrameworkOsShellInner({
       return plugin
         .handleAction(targetSession.instanceId, encodeWindowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, extraWindowInstancesRef.current, dispatchWindowId), dispatchViewState)
         .then(async (response) => {
+          if (!isCurrentEffectOwner(actionOwner)) return;
           applyHistoryPatch(response.historyPatch);
-          await applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope));
+          await applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope), actionOwner);
           if (OBSERVED_INTERACTION_ACTION_IDS.has(action.action)) observeLocalInteraction({ plugin, instanceId: targetSession.instanceId });
         })
         .catch((actionError) => {
@@ -4556,6 +4936,10 @@ function FrameworkOsShellInner({
     },
     [
       applyHostEffects,
+      captureDialogOrigin,
+      isCurrentDialogOrigin,
+      captureEffectOwner,
+      isCurrentEffectOwner,
       applyHistoryPatch,
       attachSyncBackbone,
       clearAllWindowUtilities,
@@ -4574,6 +4958,8 @@ function FrameworkOsShellInner({
       hostControllerId,
       landingControllerId,
       hostCatalogueTabId,
+      historyProjection.canUndo,
+      ensureBackboneWorker,
       completeIntroductionInteraction,
       primaryPluginId,
       reloadPlugin,
@@ -4632,11 +5018,18 @@ function FrameworkOsShellInner({
 
   const publishTutorialInteractionSelection = useCallback((selection: LocalInteractionState["selection"]) => {
     const active = sessionRef.current;
-    if (!active) return;
+    if (!active || !tutorialRunRef.current?.ready) return;
     for (const action of tutorialInteractionSelectionActions(active.app.controllerId, selection)) onActionRef.current(action);
   }, []);
+  const tutorialRunRef = useRef<OwnedTutorialRunV1 | null>(null);
+  const tutorialTransitionEpochRef = useRef(0);
+  const tutorialInitializingRunRef = useRef<OwnedTutorialRunV1 | null>(null);
   const uiBridgeCtxRef = useRef<TutorialUiBridgeContext>({
     session,
+    restoreDialog: (dialogId, seedArgs) => {
+      const run = tutorialRunRef.current;
+      return run?.ready ? makeOwnedDialog(dialogId, run.origin, seedArgs) : null;
+    },
     appLabelsOverlay,
     terminology: uiTerminology,
     locale: uiLocale,
@@ -4645,6 +5038,10 @@ function FrameworkOsShellInner({
   });
   uiBridgeCtxRef.current = {
     session,
+    restoreDialog: (dialogId, seedArgs) => {
+      const run = tutorialRunRef.current;
+      return run?.ready ? makeOwnedDialog(dialogId, run.origin, seedArgs) : null;
+    },
     appLabelsOverlay,
     terminology: uiTerminology,
     locale: uiLocale,
@@ -4655,58 +5052,44 @@ function FrameworkOsShellInner({
   /** ⏱️ Playhead (ms) the director/seek last applied document/UI tracks up to — the "from" side of the
    * next `tutorialSlice(def, from, to)` call. Reset to 0 on sandbox (re)start. */
   const tutorialLastAppliedMsRef = useRef(0);
-  /** 🎬️ Sandboxed-out live document (pack+spr `.spk` container), restored on stop/exit. */
-  const tutorialDocumentSnapshotRef = useRef<{ readonly pack: Uint8Array; readonly spr: Uint8Array } | null>(null);
-
-  // 🎬️ Sandbox start/stop (design point 3): on activation, snapshot the live document, load `base`, apply
-  // `base.ui`/`base.cameras`, and seek the clock to 0; on deactivation, restore the snapshot.
-  const prevActiveTutorialIdRef = useRef<string | null>(null);
   useEffect(() => {
-    const previousId = prevActiveTutorialIdRef.current;
-    prevActiveTutorialIdRef.current = activeTutorialId;
-    if (previousId === activeTutorialId || !session) return;
-    const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
-    if (!plugin) return;
-    if (activeTutorialId) {
-      const def = activeTutorials.find((tutorial) => tutorial.id === activeTutorialId);
-      if (!def) return;
-      tutorialDrivenRef.current = true;
-      void (async () => {
-        try {
-          if (plugin.readAppDocumentPack) tutorialDocumentSnapshotRef.current = await plugin.readAppDocumentPack(session.instanceId);
-        } catch (snapshotError) {
-          console.error("[DEBUG] tutorial sandbox snapshot failed", snapshotError);
-        }
-        try {
-          // 🚧️ `def.base.documentDsl` is authored DSL/JSON document TEXT — the channel only carries
-          // binary pack/spr containers (`AppCommand::LoadDocument`), and no TS-side text→pack encoder
-          // exists (a separate, much larger work package), so only the `exampleId` fallback can
-          // sandbox a base document today.
-          if (def.base.exampleId) dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: def.base.exampleId });
-        } catch (loadError) {
-          console.error("[DEBUG] tutorial base document load failed", loadError);
-        }
-        applyTutorialUiSnapshotToShell(dispatch, def.base.ui, uiBridgeCtxRef.current);
-        for (const cameraKeyframe of def.base.cameras) getTutorialCameraDriver(cameraKeyframe.windowId)?.set(cameraKeyframe.camera);
-        tutorialLastAppliedMsRef.current = 0;
-        tutorialClock.seek(0);
-        await refreshUi(session, { kind: "full" });
-        tutorialDrivenRef.current = false;
-      })();
-    } else if (previousId) {
-      tutorialDrivenRef.current = true;
-      void (async () => {
-        try {
-          const snapshot = tutorialDocumentSnapshotRef.current;
-          if (snapshot && plugin.loadAppDocumentPack) await plugin.loadAppDocumentPack(session.instanceId, snapshot.pack, snapshot.spr);
-        } catch (restoreError) {
-          console.error("[DEBUG] tutorial sandbox restore failed", restoreError);
-        }
-        tutorialDocumentSnapshotRef.current = null;
-        await refreshUi(session, { kind: "full" });
-        tutorialDrivenRef.current = false;
-      })();
+    const run = tutorialRunRef.current;
+    if (run === null) {
+      if (activeTutorialId !== null) dispatch({ type: "SET_TUTORIAL", value: null });
+      return;
     }
+    if (!run.isCurrent() || activeTutorialId !== run.tutorialId || session === null) {
+      tutorialClock.pause();
+      if (activeTutorialId !== null) dispatch({ type: "SET_TUTORIAL", value: null });
+      void run.stop().catch((error) => console.error("[DEBUG] tutorial sandbox restore failed", error)).finally(() => {
+        if (tutorialRunRef.current !== run) return;
+        tutorialRunRef.current = null;
+        tutorialDrivenRef.current = false;
+      });
+      return;
+    }
+    if (tutorialInitializingRunRef.current === run) return;
+    const def = activeTutorials.find((tutorial) => tutorial.id === run.tutorialId);
+    if (def === undefined) {
+      dispatch({ type: "SET_TUTORIAL", value: null });
+      return;
+    }
+    tutorialInitializingRunRef.current = run;
+    tutorialDrivenRef.current = true;
+    void (async () => {
+      if (!await run.start() || tutorialRunRef.current !== run || !run.isCurrent()) return;
+      if (def.base.exampleId) dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: def.base.exampleId });
+      applyTutorialUiSnapshotToShell(dispatch, def.base.ui, uiBridgeCtxRef.current);
+      for (const cameraKeyframe of def.base.cameras) getTutorialCameraDriver(cameraKeyframe.windowId)?.set(cameraKeyframe.camera);
+      tutorialLastAppliedMsRef.current = 0;
+      tutorialClock.seek(0);
+      await refreshUi(session, { kind: "full" });
+    })().catch((error) => {
+      console.error("[DEBUG] tutorial sandbox start failed", error);
+      if (tutorialRunRef.current === run) dispatch({ type: "SET_TUTORIAL", value: null });
+    }).finally(() => {
+      if (tutorialRunRef.current === run) tutorialDrivenRef.current = false;
+    });
   }, [activeTutorialId, activeTutorials, session, loadedPlugins, tutorialClock, refreshUi]);
 
   /** 🎬️ Applies every entry of one `TutorialSlice` (a director tick or a seek span) onto the live
@@ -4717,11 +5100,13 @@ function FrameworkOsShellInner({
    * `onAction` funnel the app's own undo/redo buttons dispatch through (never a bespoke channel) — then
    * pulses any annotational event's target element via the existing `celebrateElements` vocabulary. */
   const applyTutorialSliceToShell = useCallback(
-    async (slice: TutorialSlice, activeSession: ActiveSession) => {
+    async (slice: TutorialSlice, activeSession: ActiveSession, run: OwnedTutorialRunV1) => {
+      if (tutorialRunRef.current !== run || !run.ready || !shellDialogOriginIsCurrentV1(run.origin, captureDialogOrigin(activeSession))) return;
       for (const change of slice.uiChanges) applyTutorialUiChangeToShell(dispatch, change, uiBridgeCtxRef.current);
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === activeSession.pluginId)?.handle;
       let documentTouched = false;
       for (const documentEvent of slice.document) {
+        if (tutorialRunRef.current !== run || !run.ready) return;
         const kind: TutorialArtifactEventKind = documentEvent.kind;
         if (kind.kind === "edit") {
           documentTouched = true;
@@ -4746,11 +5131,12 @@ function FrameworkOsShellInner({
         }
       }
       for (const event of slice.events) {
+        if (tutorialRunRef.current !== run || !run.ready) return;
         const kind = event.kind;
         const targetId = kind.kind === "action" ? kind.action : kind.kind === "command" ? kind.command : undefined;
         if (targetId && scope.rootRef.current) celebrateElements(elementIdSelector(targetId), CELEBRATE_STAMP_DURATION_MS, scope.rootRef.current);
       }
-      if (documentTouched) await refreshUi(activeSession, { kind: "full" });
+      if (documentTouched && tutorialRunRef.current === run && run.ready) await refreshUi(activeSession, { kind: "full" });
     },
     [loadedPlugins, refreshUi],
   );
@@ -4760,9 +5146,12 @@ function FrameworkOsShellInner({
   useEffect(() => {
     const def = activeTutorial;
     if (!def || !session) return;
+    const run = tutorialRunRef.current;
+    if (run === null || run.tutorialId !== def.id) return;
     let lastHeavyTickAt = 0;
     const cameraWindowIds = new Set([...def.base.cameras, ...def.tracks.camera].map((keyframe) => keyframe.windowId));
     const unsubscribe = tutorialClock.subscribe(() => {
+      if (tutorialRunRef.current !== run || !run.ready) return;
       const t = tutorialClock.getTimeMs();
       for (const windowId of cameraWindowIds) {
         const pose = tutorialCameraAt(def, windowId, t);
@@ -4777,8 +5166,8 @@ function FrameworkOsShellInner({
       const slice = tutorialSlice(def, from, t);
       tutorialLastAppliedMsRef.current = t;
       tutorialDrivenRef.current = true;
-      void applyTutorialSliceToShell(slice, session).finally(() => {
-        tutorialDrivenRef.current = false;
+      void applyTutorialSliceToShell(slice, session, run).finally(() => {
+        if (tutorialRunRef.current === run) tutorialDrivenRef.current = false;
       });
     });
     return unsubscribe;
@@ -4792,6 +5181,8 @@ function FrameworkOsShellInner({
     (ms: number) => {
       const def = activeTutorial;
       if (!def || !session) return;
+      const run = tutorialRunRef.current;
+      if (run === null || run.tutorialId !== def.id || !run.ready) return;
       const clamped = Math.min(def.durationMs, Math.max(0, ms));
       const from = tutorialLastAppliedMsRef.current;
       tutorialDrivenRef.current = true;
@@ -4801,6 +5192,7 @@ function FrameworkOsShellInner({
         const slice = tutorialSlice(def, from, clamped);
         let documentTouched = false;
         for (const documentEvent of slice.document) {
+          if (tutorialRunRef.current !== run || !run.ready) return;
           const kind: TutorialArtifactEventKind = documentEvent.kind;
           if (kind.kind === "edit") {
             documentTouched = true;
@@ -4818,6 +5210,7 @@ function FrameworkOsShellInner({
           // ambiguous without more VCS-side infrastructure) — the director's per-tick forward playback
           // above still applies them correctly; only a large scrub jumping OVER one of these entries misses it.
         }
+        if (tutorialRunRef.current !== run || !run.ready) return;
         const cameraWindowIds = new Set([...def.base.cameras, ...def.tracks.camera].map((keyframe) => keyframe.windowId));
         for (const windowId of cameraWindowIds) {
           const pose = tutorialCameraAt(def, windowId, clamped);
@@ -4827,7 +5220,7 @@ function FrameworkOsShellInner({
         tutorialClock.seek(clamped);
         if (documentTouched) await refreshUi(session, { kind: "full" });
         console.log("[DEBUG] tutorial rebuild", { atMs: clamped });
-        tutorialDrivenRef.current = false;
+        if (tutorialRunRef.current === run) tutorialDrivenRef.current = false;
       })();
     },
     [activeTutorial, session, loadedPlugins, tutorialClock, refreshUi],
@@ -4838,6 +5231,8 @@ function FrameworkOsShellInner({
    * rate-independent) from each window's LIVE pose to its target pose, then resumes the clock. */
   const playPauseTutorial = useCallback(() => {
     if (!activeTutorial) return;
+    const run = tutorialRunRef.current;
+    if (run === null || run.tutorialId !== activeTutorial.id || !run.ready) return;
     if (tutorialPlaying) {
       dispatch({ type: "SET_TUTORIAL_PLAYING", value: false });
       return;
@@ -4855,6 +5250,7 @@ function FrameworkOsShellInner({
       }
       const startedAt = performance.now();
       const tween = (now: number) => {
+        if (tutorialRunRef.current !== run || !run.ready) return;
         const progress = Math.min(1, (now - startedAt) / TUTORIAL_CONVERGE_MS);
         for (const windowId of cameraWindowIds) {
           const targetPose = tutorialCameraAt(def, windowId, atMs);
@@ -4883,14 +5279,38 @@ function FrameworkOsShellInner({
 
   const startTutorial = useCallback(
     (tutorialId: string) => {
-      if (!activeTutorials.some((tutorial) => tutorial.id === tutorialId)) return;
-      dispatch({ type: "SET_TUTORIAL", value: tutorialId });
+      if (!session || !activeTutorials.some((tutorial) => tutorial.id === tutorialId)) return;
+      const origin = captureDialogOrigin(session);
+      const owner = captureEffectOwner(session, origin);
+      if (origin === null || !isCurrentEffectOwner(owner) || owner.plugin === null) return;
+      const plugin = owner.plugin;
+      const epoch = ++tutorialTransitionEpochRef.current;
+      tutorialClock.pause();
+      dispatch({ type: "SET_TUTORIAL", value: null });
+      void (async () => {
+        await tutorialRunRef.current?.stop();
+        if (epoch !== tutorialTransitionEpochRef.current || !isCurrentEffectOwner(owner)) return;
+        const run: OwnedTutorialRunV1 = new OwnedTutorialRunV1(tutorialId, origin, (): boolean => tutorialRunRef.current === run && isCurrentEffectOwner(owner), {
+          read: async () => plugin.readAppDocumentPack ? plugin.readAppDocumentPack(session.instanceId) : null,
+          restore: async (snapshot) => {
+            if (!isCurrentEffectOwner(owner)) return;
+            if (plugin.loadAppDocumentPack) await plugin.loadAppDocumentPack(session.instanceId, snapshot.pack, snapshot.spr);
+            if (isCurrentEffectOwner(owner)) await refreshUi(session, { kind: "full" });
+          },
+        });
+        tutorialRunRef.current = run;
+        tutorialInitializingRunRef.current = null;
+        dispatch({ type: "SET_TUTORIAL", value: tutorialId });
+      })().catch((error) => console.error("[DEBUG] tutorial transition failed", error));
     },
-    [activeTutorials],
+    [activeTutorials, session, captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, tutorialClock, refreshUi],
   );
   const stopTutorial = useCallback(() => {
+    tutorialTransitionEpochRef.current += 1;
+    tutorialClock.pause();
+    void tutorialRunRef.current?.stop().catch((error) => console.error("[DEBUG] tutorial sandbox restore failed", error));
     dispatch({ type: "SET_TUTORIAL", value: null });
-  }, []);
+  }, [tutorialClock]);
 
   /** ⏺️ Arms/disarms `TutorialRecorder` against the LIVE (never sandboxed) document — a recording IS the
    * user's work. On stop: light `validateTutorial` sanity check, then serialize + trigger a browser
@@ -5319,7 +5739,7 @@ function FrameworkOsShellInner({
     const byCoordinate = new Map<string, ArtifactDialect>();
     for (const entry of loadedPlugins) for (const app of entry.manifest.apps) if (app.dialect) byCoordinate.set(dialectCoordinate(app.dialect), app.dialect);
     return [...byCoordinate.values()];
-  }, [loadedPlugins]);
+  }, [cancelSpaceArtifactCreationsForRuntime, loadedPlugins]);
 
   /** 🎚️ Client-side fold of `os.config.opening` (contract freeze §4) — event-sourced the same way
    * the host materializes it (`foldOpeningPreferences`), never a mutated map. There is no host
@@ -5426,20 +5846,27 @@ function FrameworkOsShellInner({
    * best-effort notifies the host once `openArtifact` is wrapped (see `PendingAppChannelMethods`
    * above) using the canonical role-suffixed surface id. */
   const openArtifactWithAppRef = useCallback(
-    async (target: AppRef, dialect: ArtifactDialect, role: AppRole): Promise<OpenDocumentSessionTarget | null> => {
+    async (target: AppRef, dialect: ArtifactDialect, role: AppRole, admit?: () => boolean): Promise<OpenDocumentSessionTarget | null> => {
+      const current = shellStateRef.current.pluginRuntime.session;
+      const owner = current === null ? null : captureEffectOwner(current, captureDialogOrigin(current));
+      const canOpen = admit ?? (() => owner === null ? shellStateRef.current.pluginRuntime.session === null : isCurrentEffectOwner(owner));
+      if (!canOpen()) return null;
       let plugin = loadedPlugins.find((entry) => entry.handle.pluginId === target.pluginId);
       if (!plugin) {
         const outcome = await installPlugin(target.pluginId);
         if (outcome !== "loaded" && outcome !== "already-loaded") return null;
         plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === target.pluginId);
       }
+      if (!canOpen()) return null;
       const app = plugin?.manifest.apps.find((candidate) => candidate.id === target.appId);
       if (!plugin || !app) {
         console.error(`[DEBUG] openArtifactWithAppRef: ${target.pluginId}/${target.appId} not found after install`);
         return null;
       }
       void (plugin.handle as PendingAppChannelMethods).openArtifact?.(canonicalSurfaceId(dialect, role), role === "editor" ? 1 : 0, target.pluginId, target.appId)?.catch((commandError) => console.error("[DEBUG] openArtifact failed", commandError));
-      const instanceId = await plugin.handle.createApp(app.id);
+      const handle = plugin.handle;
+      const instanceId = await createAdmittedShellInstanceV1(canOpen, () => handle.createApp(app.id), (id) => handle.destroyApp(id));
+      if (instanceId === null) return null;
       const seeded = applyFrameworkLayoutSeed(app.defaultLayout, withLocalizedWindowKindLabels(app.windowKinds), EMPTY_APP_LABELS_OVERLAY, uiTerminology, uiLocale);
       extraWindowInstancesRef.current = seeded.extraInstances;
       extraWindowCounterRef.current = seeded.extraInstances.length;
@@ -5450,7 +5877,7 @@ function FrameworkOsShellInner({
       dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
       return { session: nextSession, plugin: plugin.handle };
     },
-    [loadedPlugins, installPlugin, uiTerminology, uiLocale],
+    [loadedPlugins, installPlugin, uiTerminology, uiLocale, captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner],
   );
   openArtifactWithAppRefRef.current = openArtifactWithAppRef;
 
@@ -6205,6 +6632,13 @@ function FrameworkOsShellInner({
     return null;
   })();
   const currentDocumentId = currentDocumentRuntimeKey === null ? null : (openDocumentSessionsRef.current.get(currentDocumentRuntimeKey)?.documentId ?? null);
+  const selectedSpaceArtifactKinds = useMemo((): readonly ArtifactKindChoice[] | undefined => {
+    if (currentDocumentRuntimeKey === null || currentDocumentId !== S_SPACE_INDEX_DOCUMENT_ID) return undefined;
+    if (spaceArtifactCreationCatalog === null) return [];
+    const entry = openDocumentSessionsRef.current.get(currentDocumentRuntimeKey);
+    if (entry?.clientInstanceId !== spaceArtifactCreationCatalog.clientInstanceId || entry.scope?.spaceId !== spaceArtifactCreationCatalog.spaceId) return [];
+    return spaceArtifactCreationCatalog.kinds;
+  }, [currentDocumentId, currentDocumentRuntimeKey, spaceArtifactCreationCatalog]);
   const currentBrowserActorUi = useMemo(
     () => currentDocumentRuntimeKey === null ? undefined : browserActorUiByRuntimeKeyRef.current.get(currentDocumentRuntimeKey),
     [browserActorUiVersion, currentDocumentRuntimeKey],
@@ -6404,6 +6838,16 @@ function FrameworkOsShellInner({
 
   //#region 🧰️FooterUtilityLeaves — bottom-right's History tab, sourced from the framework-injected
   // `framework.panel.history` panel tab (every app gets one — see `AppBuilder::build_definition`).
+  const mountedInferenceHistory = useMemo(() => {
+    if (!session) return null;
+    const matches = Object.entries(inferenceHistoryByRuntimeKey).filter(([runtimeKey, history]) => {
+      const document = openDocumentSessionsRef.current.get(runtimeKey);
+      return document?.session.pluginId === session.pluginId && document.session.instanceId === session.instanceId && document.clientInstanceId === history.clientInstanceId && history.sessionInstanceId === session.instanceId;
+    });
+    return matches.length === 1 ? matches[0]![1] : null;
+  }, [inferenceHistoryByRuntimeKey, session]);
+  const shellUndoRoute = shellHistoryUndoRouteV1(mountedInferenceHistory === null ? null : { ...mountedInferenceHistory.status, order: mountedInferenceHistory.order }, { canUndo: historyProjection.canUndo, order: localHistoryOrderRef.current });
+  const shellCanUndo = shellUndoRoute === "remote" || shellUndoRoute === "local";
   const frameworkUtilitiesHistoryTab = useMemo((): PanelTabNode | null => {
     if (!session) return null;
     const tab = session.app.panelTabs.find((candidate) => panelTabKindId(candidate.kind) === FRAMEWORK_PANEL_TAB_HISTORY_ID);
@@ -6425,7 +6869,7 @@ function FrameworkOsShellInner({
             id: "framework.history.actions",
             label: shellLabel("ui.panel.history"),
             items: [
-              { id: "framework.history.undo", label: "", control: <button type="button" disabled={isViewer || !historyProjection.canUndo} onClick={() => onAction({ controllerId: session.app.controllerId, action: "undo" })}>Undo</button> },
+              { id: "framework.history.undo", label: "", control: <button type="button" disabled={isViewer || !shellCanUndo} onClick={() => onAction({ controllerId: session.app.controllerId, action: "undo" })}>Undo</button> },
               { id: "framework.history.redo", label: "", control: <button type="button" disabled={isViewer || !historyProjection.canRedo} onClick={() => onAction({ controllerId: session.app.controllerId, action: "redo" })}>Redo</button> },
               // 📌️ §C5 items 3/5 — `#s-checkin` (explicit check-in, opens a message dialog) is a
               // SEPARATE affordance from the no-message quick "Checkpoint" button above; both are
@@ -6480,7 +6924,7 @@ function FrameworkOsShellInner({
         ],
       },
     });
-  }, [appLabelsOverlay, checkinDialog, historyProjection, onAction, session, submitCheckin, uiLocale, uiTerminology, uncommittedEditCount]);
+  }, [appLabelsOverlay, checkinDialog, historyProjection, onAction, session, shellCanUndo, submitCheckin, uiLocale, uiTerminology, uncommittedEditCount]);
   //#endregion 🧰️FooterUtilityLeaves
 
   //#region 🔄️SyncLeaf — bottom-left's sync tab, replacing the old floating footer SyncAttachCard.
@@ -6612,11 +7056,11 @@ function FrameworkOsShellInner({
   }, [session, activeModeId, applyModeChange, appLabelsOverlay, uiTerminology, uiLocale]);
 
   const resolvedCommands = useMemo(() => {
-    const resolved = resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale);
+    const resolved = resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale, loadedPlugins.map((entry) => entry.manifest), selectedSpaceArtifactKinds);
     // 👁️✏️ Hides every `Mutation`-kind command from a viewer session's palette (contract freeze §5) —
     // `resolveCommands` itself stays role-agnostic (os hosts/tests call it without a session at all).
     return session?.app.role === "viewer" ? resolved.filter((entry) => !isMutationKindDefinition(entry.definition)) : resolved;
-  }, [osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale]);
+  }, [osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale, loadedPlugins, selectedSpaceArtifactKinds]);
 
   const commandCategoryList = useMemo(() => commandCategories(resolvedCommands), [resolvedCommands, uiLocale]);
 
@@ -6675,11 +7119,16 @@ function FrameworkOsShellInner({
       }
       const dispatchViewState = injectActiveUtility(session.viewState);
       const invocation: CommandInvocation = { address, arguments: args ?? {} };
+      const commandOrigin = captureDialogOrigin(session);
+      if (!isCurrentDialogOrigin(commandOrigin)) return;
+      const commandOwner = captureEffectOwner(session, commandOrigin);
+      if (!isCurrentEffectOwner(commandOwner)) return;
       void plugin
         .handleCommand(session.instanceId, JSON.stringify(invocation), dispatchViewState)
         .then((response) => {
+          if (!isCurrentEffectOwner(commandOwner)) return;
           applyHistoryPatch(response.historyPatch);
-          return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope));
+          return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope), commandOwner);
         })
         .catch((error) => {
           if (isViewerReadOnlyFault(error)) {
@@ -6693,7 +7142,7 @@ function FrameworkOsShellInner({
           console.error("Command execution failed", error);
         });
     },
-    [applyHostEffects, dockLayoutStore, dockUiStateStore, injectActiveUtility, loadedPlugins, session, locks, resolvedCommands, noteShellCommand, showTransientNotice, isViewerReadOnlyFault, uiLocale],
+    [applyHostEffects, captureDialogOrigin, isCurrentDialogOrigin, captureEffectOwner, isCurrentEffectOwner, dockLayoutStore, dockUiStateStore, injectActiveUtility, loadedPlugins, session, locks, resolvedCommands, noteShellCommand, showTransientNotice, isViewerReadOnlyFault, uiLocale],
   );
 
   const handleCommandKeydown = useCallback(
@@ -7398,7 +7847,7 @@ function FrameworkOsShellInner({
             search: chrome?.search,
             utilityBar: spawnedApp && windowKind ? utilityBarNode(spawnedUtilities, spawned.id, onActionStable, introductionUtilityId, chrome?.utilityOptions) : undefined,
             utilityBarFolded: utilityBarFoldedFor(spawned.id, windowKind?.id ?? spawned.id),
-            actionPane: spawnedApp && windowKind ? windowActionPaneNode(spawnedApp, windowKind, spawned.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale) : undefined,
+            actionPane: spawnedApp && windowKind ? windowActionPaneNode(spawnedApp, windowKind, spawned.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale, loadedPlugins.map((entry) => entry.manifest), selectedSpaceArtifactKinds) : undefined,
             actionsFolded: actionsFoldedFor(spawned.id, windowKind?.id ?? spawned.id),
             onActionsFoldedChange: onActionsFoldedFor(spawned.id),
             children: (
@@ -7430,7 +7879,7 @@ function FrameworkOsShellInner({
         search: windowEngagementToSearchSpec(resolvedEngagement, onActionStable),
         utilityBar: utilityBarNode(utilities, kind.id, onActionStable, introductionUtilityId, chrome.utilityOptions),
         utilityBarFolded: utilityBarFoldedFor(kind.id, kind.id),
-        actionPane: windowActionPaneNode(session.app, kind, kind.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale),
+        actionPane: windowActionPaneNode(session.app, kind, kind.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale, loadedPlugins.map((entry) => entry.manifest), selectedSpaceArtifactKinds),
         actionsFolded: actionsFoldedFor(kind.id, kind.id),
         onActionsFoldedChange: onActionsFoldedFor(kind.id),
         status: browserActorStore?.getState().root === null ? windowUiByWindowId[kind.id]?.activity : browserActorStore?.getState().nodes.get(browserActorStore.getState().root!)?.activity ?? windowUiByWindowId[kind.id]?.activity,
@@ -7471,7 +7920,7 @@ function FrameworkOsShellInner({
           search: windowEngagementToSearchSpec(resolvedEngagement, onActionStable),
           utilityBar: utilityBarNode(utilities, instance.id, onActionStable, introductionUtilityId, chrome.utilityOptions),
           utilityBarFolded: utilityBarFoldedFor(instance.id, instance.windowKindId),
-          actionPane: windowActionPaneNode(session.app, kind, instance.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale),
+          actionPane: windowActionPaneNode(session.app, kind, instance.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale, loadedPlugins.map((entry) => entry.manifest), selectedSpaceArtifactKinds),
           actionsFolded: actionsFoldedFor(instance.id, instance.windowKindId),
           onActionsFoldedChange: onActionsFoldedFor(instance.id),
           status: windowUiByWindowId[instance.id]?.activity,
@@ -7870,6 +8319,29 @@ function FrameworkOsShellInner({
     };
   }, [session, error, pluginFilter, registry, pluginStatusById, panel, appRouter]);
 
+  /** 🔬️ Dev/test-only read seam over the actual acknowledged Shell store. The caller supplies only
+   * a scope; the returned closed projection contains no capability or mutation surface. */
+  useEffect(() => {
+    let dev = false;
+    try {
+      dev = Boolean((import.meta as unknown as { readonly env?: { readonly DEV?: boolean } }).env?.DEV);
+    } catch {
+      dev = false;
+    }
+    if (!dev || typeof window === "undefined") return;
+    const read = (spaceId: string, documentId: string): MountedGisMapProbeV1 | null => {
+      if (typeof spaceId !== "string" || typeof documentId !== "string" || spaceId.length === 0 || documentId.length === 0) return null;
+      const retained = browserActorUiByRuntimeKeyRef.current.get(documentRuntimeKeyV1({ kind: "hub", spaceId, documentId }));
+      if (retained?.identity === null || retained?.identity === undefined) return null;
+      return mountedGisMapProbeV1({ ...retained.identity, sessionInstanceId: retained.sessionInstanceId, windowKindId: retained.windowKindId, store: retained.store });
+    };
+    const host = window as unknown as { __semioMountedGisMapProbe?: typeof read };
+    host.__semioMountedGisMapProbe = read;
+    return () => {
+      if (host.__semioMountedGisMapProbe === read) delete host.__semioMountedGisMapProbe;
+    };
+  }, []);
+
   /** 🧯️ One console record per plugin the router excluded — permanent, not a `[DEBUG]` trace: an
    * excluded plugin installs cleanly, so this is the only signal outside the dev probe that its
    * surfaces are unroutable. */
@@ -7985,7 +8457,7 @@ function FrameworkOsShellInner({
     <ShellFaultBoundary boundaryId="shell-root" fallbackLabel={shellLabel("ui.common.renderError")}>
     <UIFindProvider>
       <LevelProvider level="base">
-        <div className="flex h-screen min-h-0 w-screen flex-col bg-transparent" data-level="base">
+        <div className="flex h-screen min-h-0 w-screen flex-col bg-transparent" data-level="base" data-semio-os-ready={session && !error ? "" : undefined}>
           {Object.values(bootstrapUiByDocument).length > 0 ? (
             <div className="pointer-events-auto absolute top-workbench left-1/2 z-50 flex -translate-x-1/2 flex-col gap-single rounded-sm border bg-base px-double py-single text-sm shadow-sm">
               {Object.entries(bootstrapUiByDocument).map(([runtimeKey, status]) => (
@@ -7997,6 +8469,14 @@ function FrameworkOsShellInner({
             <div className="pointer-events-auto absolute top-workbench left-1/2 z-50 mt-double flex -translate-x-1/2 flex-col gap-single rounded-sm border bg-base px-double py-single text-sm shadow-sm">
               {Object.entries(executionTargetUiByDocument).map(([runtimeKey, status]) => (
                 <ExecutionTargetStatusNotice key={runtimeKey} status={status} locale={uiLocale} />
+              ))}
+            </div>
+          ) : null}
+          {Object.values(spaceArtifactCreationUi).length > 0 || spaceArtifactCreationCatalogUi !== null ? (
+            <div className="pointer-events-auto absolute top-workbench left-double z-50 flex max-w-[28rem] flex-col gap-single rounded-sm border bg-base px-double py-single text-sm shadow-sm">
+              {spaceArtifactCreationCatalogUi === null ? null : <ArtifactCreationCatalogNotice status={spaceArtifactCreationCatalogUi} locale={uiLocale} />}
+              {Object.values(spaceArtifactCreationUi).map((status) => (
+                <ArtifactCreationProgressNotice key={status.requestId} state={status} locale={uiLocale} onCancel={cancelSpaceArtifactCreation} />
               ))}
             </div>
           ) : null}
@@ -8120,21 +8600,17 @@ function FrameworkOsShellInner({
         {session &&
           overlayDialog &&
           (() => {
+            if (!isCurrentDialogOrigin(overlayDialog.origin)) return null;
             const dialog = session.app.dialogs?.find((entry) => entry.id === overlayDialog.dialogId);
             if (!dialog) return null;
             return (
-              <UIDialog
-                dialog={resolveDialogDefinition(dialog, appLabelsOverlay, uiTerminology, uiLocale)}
-                seedArgs={overlayDialog.seedArgs}
+              <OwnedShellDialog
+                owner={overlayDialog}
+                dialog={resolveDialogDefinition(dialog, appLabelsOverlay, uiTerminology, uiLocale, loadedPlugins.map((entry) => entry.manifest), selectedSpaceArtifactKinds)}
                 renderField={(def, value, onChange) => renderStagedArgControl(def, value, onChange)}
-                onSubmit={(args) => {
-                  dispatch({ type: "SET_DIALOG", value: null });
-                  onAction({ controllerId: session.app.controllerId, action: dialog.submitAction, args });
-                }}
-                onCancel={() => {
-                  dispatch({ type: "SET_DIALOG", value: null });
-                  if (dialog.cancelAction) onAction({ controllerId: session.app.controllerId, action: dialog.cancelAction });
-                }}
+                isCurrent={isCurrentDialogOrigin}
+                close={closeOwnedDialog}
+                dispatch={(action, origin, args) => onAction({ controllerId: origin.controllerId, action, args }, origin)}
               />
             );
           })()}

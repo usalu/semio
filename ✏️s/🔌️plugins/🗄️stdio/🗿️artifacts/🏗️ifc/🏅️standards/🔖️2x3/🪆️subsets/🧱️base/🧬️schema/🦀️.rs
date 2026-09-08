@@ -304,8 +304,8 @@ pub fn demo_ifc2x3_snapshot() -> Ifc2x3Snapshot {
             Part21Instance { id: 2, entities: vec![("IFCOWNERHISTORY".into(), vec![Part21Value::Unset, Part21Value::Int(0)])] },
         ],
     };
-    let snapshot = Ifc2x3Snapshot { schema: crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA.into(), document, edm_preamble: None };
-    snapshot
+    
+    Ifc2x3Snapshot { schema: crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA.into(), document, edm_preamble: None }
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -330,9 +330,9 @@ pub fn register() {
     ::schema::register_artifact_schema_descriptor(ifc2x3_artifact_schema_descriptor());
     register_artifact_inferences();
     register_pilot_languages();
-    let _ = store::register_document_codec(store::ArtifactCodec::of::<Ifc2x3Snapshot, crate::artifacts::ifc::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(
+    store::register_document_codec(store::ArtifactCodec::of::<Ifc2x3Snapshot, crate::artifacts::ifc::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(
         crate::artifacts::ifc::standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA,
-    ));
+    )).expect("static Stdio registration must be available and conflict-free");
     // 🛡️ D5's generic validate-on-build hook: registers each real subset's `SubsetValidator` so
     // `io_dispatch`/`wire_artifact_compose` re-check them for free. Each subset's `ComposerEntry`
     // is registered separately via this standard's own `composer::entries()` aggregation.

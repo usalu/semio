@@ -2,7 +2,7 @@
 name = "semio-framework-os"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Plugin-based OS host: hot-swappable WASM plugins, workflow, document VCS"
 
 [package.metadata.semio]

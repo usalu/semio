@@ -133,8 +133,8 @@ pub use mutations::*;
 
 #[cfg(test)]
 fn required_nullable<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
-where D: serde::Deserializer<'de>, T: serde::Deserialize<'de> {
-    <Option<T> as serde::Deserialize>::deserialize(deserializer)
+where D: serde::Deserializer<'de>, T: Deserialize<'de> {
+    <Option<T> as Deserialize>::deserialize(deserializer)
 }
 
 //#region 🔖️OpCodec
@@ -171,7 +171,7 @@ impl protocol::OpBinary for Gis2dConfigMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::MutationDiff;
+    use protocol::{Mutation, MutationDiff};
 
     #[semio_framework_async_macros::async_test]
     async fn gis2d_config_default_matches_the_existing_action_arg_sticky_defaults() {

@@ -119,7 +119,7 @@ impl PdfSnapshot {
     /// 📝️ The first page's shown text, or the empty string when the snapshot carries no pages.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn first_page_text(&self) -> &str {
-        self.pages.first().map(|page| page.text.as_str()).unwrap_or("")
+        self.pages.first().map_or("", |page| page.text.as_str())
     }
 }
 //#endregion 🔖️Snapshot
@@ -136,7 +136,7 @@ impl store::ArtifactDsl for PdfSnapshot {
             Err(_) => text,
         };
         let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
-        if hex.len() % 2 != 0 {
+        if !hex.len().is_multiple_of(2) {
             return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
         }
         let mut bytes = Vec::with_capacity(hex.len() / 2);

@@ -36,28 +36,37 @@ export function homeDirectoryProjectionPersistenceOracle(repoRoot: string): numb
     assert(exactKeys(wire, ["spaces", "cursor", "users"]));
     assert(Number.isSafeInteger(wire.cursor) && wire.cursor >= 0);
     for (const space of Object.values(wire.spaces as Record<string, unknown>)) {
-      assert(exactKeys(space, ["view", "members", "documents"]));
+      assert(exactKeys(space, ["view", "members", "documents", "indexedDocuments"]));
       assert(Array.isArray((space as { documents?: unknown }).documents));
+      assert(Array.isArray((space as { indexedDocuments?: unknown }).indexedDocuments));
     }
     return wire;
   };
   const canonical = JSON.stringify(fixture.wire);
   assert.deepEqual(decode(canonical), fixture.wire);
   assert.deepEqual(Object.values(fixture.wire.spaces).flatMap((space: any) => space.documents.map((document: any) => document.documentId)), fixture.expectedDocumentIds);
+  assert.deepEqual(Object.values(fixture.wire.spaces).flatMap((space: any) => space.indexedDocuments.map((document: any) => document.descriptor.documentId)), fixture.expectedIndexedDocumentIds);
   for (const malformed of fixture.malformed) assert.throws(() => decode(malformed));
   const hostileFixture = structuredClone(fixture);
   delete hostileFixture.wire.spaces["space-α"].documents;
   assert.equal(validate(hostileFixture), false);
+  const missingIndexFixture = structuredClone(fixture);
+  delete missingIndexFixture.wire.spaces["space-α"].indexedDocuments;
+  assert.equal(validate(missingIndexFixture), false);
   const source = readFileSync(join(base, "🦀️.rs"), "utf8");
   const exactSource = (text: string): boolean => text.includes("documents: Vec<store::os_directory::DocumentDescriptor>")
+    && text.includes("indexed_documents: Vec<store::os_directory::DirectoryIndexedDocumentViewV1>")
     && text.includes("documents: space.documents.clone()")
+    && text.includes("indexed_documents: space.indexed_documents.clone()")
     && text.includes("documents: space.documents")
+    && text.includes("indexed_documents: space.indexed_documents")
     && text.includes("fn directory_from_json(json: &str) -> Result<store::os_directory::DirectoryReadModel, Fault>")
     && !text.includes("pack::from_json_str(json).unwrap_or_default()")
     && text.includes("pub fn directory(&self) -> Result<store::os_directory::DirectoryReadModel, Fault>");
   assert(exactSource(source), "Home projection persistence still drops documents or defaults corruption");
   for (const hostile of [
     source.replace("documents: Vec<store::os_directory::DocumentDescriptor>", "documents_removed: Vec<store::os_directory::DocumentDescriptor>"),
+    source.replace("indexed_documents: Vec<store::os_directory::DirectoryIndexedDocumentViewV1>", "indexed_documents_removed: Vec<store::os_directory::DirectoryIndexedDocumentViewV1>"),
     source.replace("documents: space.documents.clone()", "documents: Vec::new()"),
     source.replace("documents: space.documents", "documents: Vec::new()"),
     source.replace("-> Result<store::os_directory::DirectoryReadModel, Fault>", "-> store::os_directory::DirectoryReadModel"),

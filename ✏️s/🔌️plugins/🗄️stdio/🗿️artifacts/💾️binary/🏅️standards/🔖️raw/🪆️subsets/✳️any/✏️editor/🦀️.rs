@@ -98,7 +98,7 @@ impl protocol::OpBinary for BinaryEditorCommand {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_hex_dump(text: &str) -> Option<Vec<u8>> {
     let hex: String = text.lines().filter(|line| !line.trim_start().starts_with('#')).collect::<Vec<_>>().join("").chars().filter(|c| !c.is_whitespace()).collect();
-    if hex.len() % 2 != 0 {
+    if !hex.len().is_multiple_of(2) {
         return None;
     }
     let mut bytes = Vec::with_capacity(hex.len() / 2);
@@ -155,7 +155,7 @@ impl ArtifactEditor for BinaryEditor {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }

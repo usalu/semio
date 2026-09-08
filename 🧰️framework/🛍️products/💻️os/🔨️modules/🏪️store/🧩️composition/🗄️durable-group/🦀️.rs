@@ -227,6 +227,7 @@ pub(super) struct DurableOwnedThreeStoreBoundV1<ParentP, ParentMutation, Drawing
     pub(super) value: DurableStoreBoundOutcomeV1<ValueP, ValueMutation>,
 }
 
+#[expect(clippy::large_enum_variant, reason = "Recovery hands back all three exact preadmitted store outcomes without allocating at the ownership transition.")]
 pub(super) enum DurableOwnedThreeStoreRecoveryV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
     Apply(DurableOwnedThreeStoreBoundV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>),
     AlreadyApplied,
@@ -538,7 +539,7 @@ where
             Ok(values) => values,
             Err(error) => return reject(error, outcome),
         },
-        checkpoint_id: (&*store.current_checkpoint_id).clone(),
+        checkpoint_id: (*store.current_checkpoint_id).clone(),
     };
     let mut revision_accumulator = CursorRevisionAccumulator {
         identity_digest: store.revision_accumulator.identity_digest,
@@ -566,7 +567,7 @@ where
     };
     let history_reservation = match store.envelope.vcs.edits.reserve_group_one(visibility) {
         Ok(reservation) => reservation,
-        Err(()) => {
+        Err(_) => {
             store.displaced_retirements.release_owner_slots(displaced_reservation).expect("unconsumed durable group retirement reservation remains exact");
             return reject(DurableOwnedGroupDecisionError::InvalidFrontier, outcome);
         }
@@ -611,8 +612,8 @@ where
     if !Arc::ptr_eq(&root.visibility, visibility) || root.adopted || visibility.pending() || visibility.committed() {
         return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
     }
-    let mutation_factory = (&*store.mutation_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    let snapshot_factory = (&*store.snapshot_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+    let mutation_factory = (*store.mutation_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+    let snapshot_factory = (*store.snapshot_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
     let edit = store.envelope.vcs.edits.abort_group_one(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?.ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
     if store.envelope.vcs.edits.abort_group_one(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?.is_some() {
         return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
@@ -659,7 +660,7 @@ where
     if !Arc::ptr_eq(&root.visibility, visibility) || root.adopted || !visibility.committed() {
         return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
     }
-    let snapshot_factory = (&*store.snapshot_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+    let snapshot_factory = (*store.snapshot_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
     store.envelope.vcs.edits.adopt_group(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?;
     let displaced_cursor = store.envelope.cursor.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?.adopt_group_owned(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?;
     let mut root = store.durable_group_root.take().expect("validated committed durable group root remains owned");
@@ -743,8 +744,8 @@ where
     P: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
-    let mutation_factory = (&*store.mutation_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    let snapshot_factory = (&*store.snapshot_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+    let mutation_factory = (*store.mutation_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+    let snapshot_factory = (*store.snapshot_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
     let mut reservation = store.displaced_retirements.reserve_owner_slots(6).map_err(|_| DurableOwnedGroupDecisionError::InvalidFrontier)?;
     let DurableStoreBoundOutcomeV1 { prepared, .. } = outcome;
     let ArtifactStoreOneItemPrepared { edit, post_snapshot, next_clock: _, edit_digest: _, local_actor, applied_edit_id, tail_edit_id, seal } = prepared;
@@ -998,6 +999,7 @@ where
 }
 
 /// 🔀 Either the exact committed decision still needs Store publication or all three Stores already match its post-frontier.
+#[expect(clippy::large_enum_variant, reason = "Recovery transfers the exact admitted operation or original store owners without allocating during handoff.")]
 pub enum DurableOwnedMapRecoveryStartV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: Clone + ValueToValue + ValueFromValue,
@@ -1703,7 +1705,7 @@ where
         parent_store: &mut ArtifactStore<ParentP, ParentMutation>,
         drawing_store: &mut ArtifactStore<DrawingP, DrawingMutation>,
         value_store: &mut ArtifactStore<ValueP, ValueMutation>,
-        mut sink: Option<&mut dyn DurableOwnedGroupJournalSinkV1>,
+        sink: Option<&mut dyn DurableOwnedGroupJournalSinkV1>,
         grant: super::ArtifactStoreOneItemGrant,
     ) -> Result<DurableOwnedThreeStoreCommitAdvanceV1, DurableOwnedGroupDecisionError> {
         if self.phase == DurableOwnedThreeStoreCommitPhaseV1::Complete {
@@ -1774,7 +1776,7 @@ where
                         return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Blocked);
                     }
                     let decision_pack = self.decision_pack.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                    self.journal = Some(sink.as_deref_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?.begin_commit(decision_pack, self.decision_sha256.clone()));
+                    self.journal = Some(sink.ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?.begin_commit(decision_pack, self.decision_sha256.clone()));
                     self.phase = DurableOwnedThreeStoreCommitPhaseV1::Journal;
                 }
             }

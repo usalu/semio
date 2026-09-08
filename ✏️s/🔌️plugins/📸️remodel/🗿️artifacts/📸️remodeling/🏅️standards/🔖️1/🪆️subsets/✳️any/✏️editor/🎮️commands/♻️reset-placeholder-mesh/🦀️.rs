@@ -74,7 +74,7 @@ mod tests {
         let mut app = app().await;
         let placeholder_vertex_count = mesh_vertex_count(&app.snapshot().expect("materialize projection"));
         assert!(placeholder_vertex_count > 0, "the seeded placeholder box must have vertices");
-        testkit::assert_undo_redo_round_trip(&mut app, RemodelingCommand::ClearResult(clear_result::ClearResult {}), |app| mesh_vertex_count(&app.snapshot().expect("materialize projection")), placeholder_vertex_count, 0);
+        testkit::assert_undo_redo_round_trip(&mut app, RemodelingCommand::ClearResult(clear_result::ClearResult {}), |app| mesh_vertex_count(&app.snapshot().expect("materialize projection")), placeholder_vertex_count, 0).await;
     }
 
     #[semio_framework_async_macros::async_test]

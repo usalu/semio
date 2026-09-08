@@ -1424,6 +1424,29 @@ struct DecCtx<'a> {
     verification: crate::os_pack::format::VerificationLevel,
     preserve_unknown: bool,
     unknown_field_ids: Vec<u16>,
+    materialization: Option<ValueMaterialization>,
+}
+
+/// 🧮️ Logical owned storage: UTF-8 bytes, 32-byte symbol slots, and 64-byte value/map slots.
+struct ValueMaterialization {
+    used: std::cell::Cell<u64>,
+    maximum: u64,
+}
+
+impl ValueMaterialization {
+    fn charge(&self, bytes: u64) -> Result<(), PackError> {
+        let used = self.used.get().checked_add(bytes).filter(|used| *used <= self.maximum).ok_or(PackError::LimitExceeded("wire value materialization exceeds max_total_alloc"))?;
+        self.used.set(used);
+        Ok(())
+    }
+}
+
+fn copy_decoded_string(value: &str, materialization: Option<&ValueMaterialization>) -> Result<String, PackError> {
+    if let Some(budget) = materialization { budget.charge(value.len() as u64)?; }
+    let mut owned = String::new();
+    owned.try_reserve_exact(value.len()).map_err(|_| PackError::LimitExceeded("decoded string allocation"))?;
+    owned.push_str(value);
+    Ok(owned)
 }
 
 impl DecCtx<'_> {
@@ -1433,13 +1456,26 @@ impl DecCtx<'_> {
         }
         Ok(())
     }
+
+    fn value_slots<T>(&self, count: u64) -> Result<Vec<T>, PackError> {
+        self.check_items(count)?;
+        let capacity = if let Some(budget) = &self.materialization {
+            if size_of::<T>() > 64 { return Err(PackError::LimitExceeded("wire value slot representation")); }
+            budget.charge(count.checked_mul(64).ok_or(PackError::LimitExceeded("wire value slot overflow"))?)?;
+            usize::try_from(count).map_err(|_| PackError::LimitExceeded("wire value slot count"))?
+        } else { count.min(4096) as usize };
+        let mut slots = Vec::new();
+        slots.try_reserve_exact(capacity).map_err(|_| PackError::LimitExceeded("wire value slot allocation"))?;
+        Ok(slots)
+    }
 }
 
 fn resolve_symref(ctx: &DecCtx<'_>, symref: u64) -> Result<String, PackError> {
-    match &ctx.source {
-        DecSource::File(pack_file) => pack_file.symbol(symref).map(str::to_string),
-        DecSource::Inline { symbols } => symbols.get(symref as usize).cloned().ok_or_else(|| PackError::Malformed { what: "symref", offset: 0, detail: format!("symref {symref} out of range for inline table of {}", symbols.len()) }),
-    }
+    let value = match &ctx.source {
+        DecSource::File(pack_file) => pack_file.symbol(symref)?,
+        DecSource::Inline { symbols } => symbols.get(usize::try_from(symref).map_err(|_| PackError::LimitExceeded("symbol reference index"))?).map(String::as_str).ok_or_else(|| PackError::Malformed { what: "symref", offset: 0, detail: format!("symref {symref} out of range for inline table of {}", symbols.len()) })?,
+    };
+    copy_decoded_string(value, ctx.materialization.as_ref())
 }
 
 /// @emoji 📏️ Reads a `varint` length then that many raw bytes, rejecting an oversized length
@@ -1449,7 +1485,7 @@ fn read_len_prefixed_bytes<'b>(reader: &mut ByteReader<'b>, limits: &PackLimits)
     if len > limits.max_segment_len {
         return Err(PackError::LimitExceeded("inline blob length exceeds max_segment_len"));
     }
-    reader.read_bytes(len as usize)
+    reader.read_bytes(usize::try_from(len).map_err(|_| PackError::LimitExceeded("inline blob byte length"))?)
 }
 
 fn read_inline_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<String, PackError> {
@@ -1457,7 +1493,8 @@ fn read_inline_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<S
     // 🔁️ `reader.position()` is async now; `map_err`'s closure is sync (R10 residue shape 1), so
     // the position is read up front rather than awaited inside the closure.
     let offset = reader.position() as u64;
-    std::str::from_utf8(bytes).map(str::to_string).map_err(|_| PackError::Malformed { what: "text", offset, detail: "invalid utf8".to_string() })
+    let value = std::str::from_utf8(bytes).map_err(|_| PackError::Malformed { what: "text", offset, detail: "invalid utf8".to_string() })?;
+    copy_decoded_string(value, ctx.materialization.as_ref())
 }
 
 fn read_inline_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<Vec<u8>, PackError> {
@@ -1691,8 +1728,7 @@ fn decode_dsl_value(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>, depth: u1
         TAG_STR_INLINE => Ok(DslValue::String(read_inline_string(reader, ctx)?)),
         TAG_LIST => {
             let count = reader.read_varint_u64()?;
-            ctx.check_items(count)?;
-            let mut items = Vec::with_capacity(count.min(4096) as usize);
+            let mut items = ctx.value_slots(count)?;
             for _ in 0..count {
                 items.push(decode_dsl_value(reader, ctx, depth + 1)?);
             }
@@ -1700,8 +1736,7 @@ fn decode_dsl_value(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>, depth: u1
         }
         TAG_MAP => {
             let count = reader.read_varint_u64()?;
-            ctx.check_items(count)?;
-            let mut entries = Vec::with_capacity(count.min(4096) as usize);
+            let mut entries = ctx.value_slots(count)?;
             for _ in 0..count {
                 let key = decode_string(reader, ctx)?;
                 let value = decode_dsl_value(reader, ctx, depth + 1)?;
@@ -2148,7 +2183,7 @@ pub fn decode_document(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions)
     let body = crate::os_io::resolve_ready(pack_file.body_bytes(options.verification))?;
 
     let mut reader = ByteReader::new(&body);
-    let mut dec_ctx = DecCtx { source: DecSource::File(&pack_file), limits: options.limits.clone(), verification: options.verification, preserve_unknown: options.preserve_unknown, unknown_field_ids: Vec::new() };
+    let mut dec_ctx = DecCtx { source: DecSource::File(&pack_file), limits: options.limits.clone(), verification: options.verification, preserve_unknown: options.preserve_unknown, unknown_field_ids: Vec::new(), materialization: None };
     let record = decode_record_fields(&mut reader, Some(spec), &mut dec_ctx, 0)?;
 
     let report = DecodeReport { unknown_field_ids: dec_ctx.unknown_field_ids, unknown_segments: Vec::new(), schema_drift, verified: options.verification };
@@ -2196,24 +2231,52 @@ pub fn decode_record_body_exact(bytes: &[u8], spec: &RecordSpec, options: &Decod
     decode_record_body_inner(bytes, spec, options, true).map(|(record, _)| record)
 }
 
-fn decode_record_body_inner(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions, exact: bool) -> Result<(RecordValue, DecodeReport), PackError> {
-    let mut reader = ByteReader::new(bytes);
+fn decode_inline_symbols(reader: &mut ByteReader<'_>, limits: &PackLimits, materialization: Option<&ValueMaterialization>) -> Result<Vec<String>, PackError> {
     let symbol_count = reader.read_varint_u64()?;
-    if symbol_count > u64::from(options.limits.max_symbols) {
+    if symbol_count > u64::from(limits.max_symbols) {
         return Err(PackError::LimitExceeded("record-body symbol count exceeds max_symbols"));
     }
-    let mut symbols = Vec::with_capacity(symbol_count as usize);
+    if let Some(budget) = materialization {
+        if size_of::<String>() > 32 { return Err(PackError::LimitExceeded("wire symbol slot representation")); }
+        budget.charge(symbol_count.checked_mul(32).ok_or(PackError::LimitExceeded("wire symbol slot overflow"))?)?;
+    }
+    let count = usize::try_from(symbol_count).map_err(|_| PackError::LimitExceeded("wire symbol slot count"))?;
+    let mut symbols = Vec::new();
+    symbols.try_reserve_exact(count).map_err(|_| PackError::LimitExceeded("wire symbol slot allocation"))?;
     for _ in 0..symbol_count {
         let len = reader.read_varint_u64()?;
-        if len > options.limits.max_segment_len {
+        if len > limits.max_segment_len {
             return Err(PackError::LimitExceeded("record-body symbol length exceeds max_segment_len"));
         }
-        let raw = reader.read_bytes(len as usize)?;
+        let raw = reader.read_bytes(usize::try_from(len).map_err(|_| PackError::LimitExceeded("wire symbol byte length"))?)?;
         let symbol_offset = reader.position() as u64;
         let s = std::str::from_utf8(raw).map_err(|_| PackError::Malformed { what: "symbol", offset: symbol_offset, detail: "invalid utf8".to_string() })?;
-        symbols.push(s.to_string());
+        symbols.push(copy_decoded_string(s, materialization)?);
     }
-    let mut dec_ctx = DecCtx { source: DecSource::Inline { symbols }, limits: options.limits.clone(), verification: options.verification, preserve_unknown: options.preserve_unknown, unknown_field_ids: Vec::new() };
+    Ok(symbols)
+}
+
+/// 🛡️ Decodes one exact DslValue field with cumulative pre-allocation storage credits.
+/// Credits cover owned UTF-8 bytes, 32 bytes per symbol slot and 64 per list/map slot;
+/// allocator bookkeeping and generic record, expression, table and chunk decoding are excluded.
+pub fn decode_value_record_body_exact(bytes: &[u8], field_id: u16, limits: &PackLimits) -> Result<DslValue, PackError> {
+    if bytes.len() as u64 > limits.max_file_len { return Err(PackError::LimitExceeded("wire value exceeds max_file_len")); }
+    let mut reader = ByteReader::new(bytes);
+    let budget = ValueMaterialization { used: std::cell::Cell::new(0), maximum: limits.max_total_alloc };
+    let symbols = decode_inline_symbols(&mut reader, limits, Some(&budget))?;
+    if reader.read_varint_u64()? != 1 || reader.read_varint_u64()? != u64::from(field_id) || reader.read_u8()? != TAG_VALUE {
+        return Err(PackError::Malformed { what: "wire value", offset: reader.position() as u64, detail: "expected exactly one declared Value field".into() });
+    }
+    let mut ctx = DecCtx { source: DecSource::Inline { symbols }, limits: limits.clone(), verification: crate::os_pack::format::VerificationLevel::Standard, preserve_unknown: false, unknown_field_ids: Vec::new(), materialization: Some(budget) };
+    let value = decode_dsl_value(&mut reader, &mut ctx, 0)?;
+    if reader.position() != bytes.len() { return Err(PackError::Malformed { what: "wire value", offset: reader.position() as u64, detail: "trailing bytes after the terminal value".into() }); }
+    Ok(value)
+}
+
+fn decode_record_body_inner(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions, exact: bool) -> Result<(RecordValue, DecodeReport), PackError> {
+    let mut reader = ByteReader::new(bytes);
+    let symbols = decode_inline_symbols(&mut reader, &options.limits, None)?;
+    let mut dec_ctx = DecCtx { source: DecSource::Inline { symbols }, limits: options.limits.clone(), verification: options.verification, preserve_unknown: options.preserve_unknown, unknown_field_ids: Vec::new(), materialization: None };
     let record = decode_record_fields(&mut reader, Some(spec), &mut dec_ctx, 0)?;
     if exact && reader.position() != bytes.len() {
         return Err(PackError::Malformed { what: "record body", offset: reader.position() as u64, detail: "trailing bytes after the terminal record".into() });

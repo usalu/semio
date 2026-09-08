@@ -4,39 +4,46 @@
   "profile": "debug",
   "pathCases": [
     {
-      "name": "posix workspace default",
+      "name": "posix staged default",
       "platform": "linux",
       "repoRoot": "/workspace/semio",
       "environment": {},
-      "expected": "/workspace/semio/target/debug/semio-os-mcp"
+      "expected": "/workspace/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build/semio-os-mcp"
     },
     {
-      "name": "posix relative cargo target",
+      "name": "posix staging ignores compiler target",
       "platform": "darwin",
       "repoRoot": "/workspace/semio",
-      "environment": { "CARGO_TARGET_DIR": "scratch/cargo" },
-      "expected": "/workspace/semio/scratch/cargo/debug/semio-os-mcp"
+      "environment": {
+        "CARGO_TARGET_DIR": "scratch/cargo"
+      },
+      "expected": "/workspace/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build/semio-os-mcp"
     },
     {
       "name": "posix relative explicit binary",
       "platform": "linux",
       "repoRoot": "/workspace/semio",
-      "environment": { "SEMIO_OS_MCP_BIN": "artifacts/semio-os-mcp" },
+      "environment": {
+        "SEMIO_OS_MCP_BIN": "artifacts/semio-os-mcp"
+      },
       "expected": "/workspace/semio/artifacts/semio-os-mcp"
     },
     {
-      "name": "windows workspace default",
+      "name": "windows staged default",
       "platform": "win32",
       "repoRoot": "C:\\workspace\\semio",
       "environment": {},
-      "expected": "C:\\workspace\\semio\\target\\debug\\semio-os-mcp.exe"
+      "expected": "C:\\workspace\\semio\\🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🌉️mcp\\📦️packages\\🦀️rust\\dist\\build\\semio-os-mcp.exe"
     },
     {
-      "name": "windows relative cargo target",
+      "name": "windows staging ignores compiler target",
       "platform": "win32",
       "repoRoot": "C:\\workspace\\semio",
-      "environment": { "CARGO_TARGET_DIR": "scratch\\cargo" },
-      "expected": "C:\\workspace\\semio\\scratch\\cargo\\debug\\semio-os-mcp.exe"
+      "environment": {
+        "CARGO_TARGET_DIR": "scratch\\cargo"
+      },
+      "expected": "C:\\workspace\\semio\\🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🌉️mcp\\📦️packages\\🦀️rust\\dist\\build\\semio-os-mcp.exe"
     }
-  ]
+  ],
+  "artifactRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build"
 }

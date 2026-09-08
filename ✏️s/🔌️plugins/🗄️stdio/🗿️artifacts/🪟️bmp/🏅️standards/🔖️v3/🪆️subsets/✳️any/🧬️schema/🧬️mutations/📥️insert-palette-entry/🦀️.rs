@@ -49,7 +49,7 @@ impl protocol::MutationKind<BmpSnapshot, BmpMutation> for InsertPaletteEntryMuta
 
 #[cfg(test)]
 pub(crate) fn test_case() -> BmpMutation {
-    serde_json::from_str(include_str!("🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed insert-palette-entry payload")
+    dsl::json::from_json_str(include_str!("🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed insert-palette-entry payload")
 }
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]

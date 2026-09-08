@@ -20,6 +20,7 @@ pub struct NativeVcsCodecIdentityV1 {
     pub extension: &'static str,
     pub capability: &'static str,
     pub pack_schema_hash: [u8; 32],
+    pub protocol_sha256: [u8; 32],
 }
 
 /// 🔒️ One package-owned closed factory, constructible only by the exact one-codec preview.
@@ -36,7 +37,20 @@ impl NativeVcsCodecReceiptV1 {
                 include_bytes!("../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/📡️.protocol.semio").as_slice(),
             ),
         };
-        NativeVcsCodecIdentityV1 { plugin_id: "vcs", package_id: "semio:vcs", package_version: env!("CARGO_PKG_VERSION"), factory_id, artifact_kind, schema, extension, capability, pack_schema_hash: Sha256::digest(protocol) }
+        NativeVcsCodecIdentityV1 { plugin_id: "vcs", package_id: "semio:vcs", package_version: env!("CARGO_PKG_VERSION"), factory_id, artifact_kind, schema, extension, capability, pack_schema_hash: self.codec().pack_schema_hash, protocol_sha256: Sha256::digest(protocol) }
+    }
+
+    fn codec(&self) -> store::ArtifactCodec {
+        match self.artifact {
+            VcsCodecV1::Vcs => store::ArtifactCodec::of::<crate::artifacts::vcs::VcsSnapshot, crate::artifacts::vcs::VcsDemoMutation>("vcs.vcs"),
+        }
+    }
+
+    /// 🌱️ Returns the exact package-owned editor genesis selected by this receipt.
+    fn genesis_factory(&self) -> semio_framework_plugin::NativeArtifactGenesisFactoryV1 {
+        match self.artifact {
+            VcsCodecV1::Vcs => semio_framework_plugin::native_artifact_genesis_for_editor::<crate::editor::vcs::VcsPlayApp>,
+        }
     }
 
     fn validate(&self) -> Result<(), PluginAssemblyError> {
@@ -67,18 +81,17 @@ impl NativeVcsCodecReceiptV1 {
     pub fn into_codec(self) -> Result<store::ArtifactCodec, PluginAssemblyError> {
         self.validate()?;
         let identity = self.identity();
-        let (mut codec, extension) = match self.artifact {
-            VcsCodecV1::Vcs => (
-                store::ArtifactCodec::of::<crate::artifacts::vcs::VcsSnapshot, crate::artifacts::vcs::VcsDemoMutation>(identity.schema),
-                <crate::artifacts::vcs::VcsSnapshot as store::ArtifactDsl>::EXTENSION,
-            ),
-        };
-        if codec.schema != identity.schema || extension != identity.extension {
+        let codec = self.codec();
+        if codec.schema != identity.schema || codec.extension != identity.extension || codec.pack_schema_hash != identity.pack_schema_hash {
             return Err(invalid("VCS typed codec differs from its private receipt"));
         }
-        codec.extension = extension;
-        codec.pack_schema_hash = identity.pack_schema_hash;
         Ok(codec)
+    }
+
+    /// 🌱️ Consumes the validated private receipt into its inseparable codec and editor genesis pair.
+    pub fn into_codec_and_genesis(self) -> Result<(store::ArtifactCodec, semio_framework_plugin::NativeArtifactGenesisFactoryV1), PluginAssemblyError> {
+        let genesis = self.genesis_factory();
+        Ok((self.into_codec()?, genesis))
     }
 }
 

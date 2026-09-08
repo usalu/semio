@@ -8,8 +8,6 @@
 //! survives into the document either.
 
 use crate::artifacts::writer::WriterCamera;
-#[cfg(test)]
-use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 pub use crate::artifacts::writer::{WriterEditorSelection, WriterEditorSettings};

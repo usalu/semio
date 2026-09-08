@@ -1,5 +1,8 @@
 //! 🚪️ IO stdio.gif (87a/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
+/// 🎨 Palette, indexed pixels, and optional transparency index.
+pub type QuantizedImage = (Vec<Rgb>, Vec<u8>, Option<u8>);
+
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
@@ -351,8 +354,8 @@ pub fn min_code_size_for(palette_len: usize) -> u8 {
 /// happens to share that RGB (e.g. opaque black colliding with a transparent pixel's undefined
 /// placeholder color).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn quantize_rgba(rgba: &[u8]) -> Result<(Vec<Rgb>, Vec<u8>, Option<u8>), String> {
-    let has_transparent = rgba.chunks_exact(4).any(|px| px[3] == 0);
+pub fn quantize_rgba(rgba: &[u8]) -> Result<QuantizedImage, String> {
+    let has_transparent = rgba.as_chunks::<4>().0.iter().any(|px| px[3] == 0);
     let mut palette: Vec<Rgb> = Vec::new();
     let mut lookup: HashMap<Rgb, u8> = HashMap::new();
     let transparent_index = if has_transparent {
@@ -362,7 +365,7 @@ pub fn quantize_rgba(rgba: &[u8]) -> Result<(Vec<Rgb>, Vec<u8>, Option<u8>), Str
         None
     };
     let mut indices = Vec::with_capacity(rgba.len() / 4);
-    for px in rgba.chunks_exact(4) {
+    for px in rgba.as_chunks::<4>().0 {
         if px[3] == 0 {
             indices.push(transparent_index.expect("has_transparent implies Some"));
             continue;
@@ -486,7 +489,7 @@ pub fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
     match &gct_bytes {
         Some(colors) => {
             let size_field = validated_color_table_size_field(colors.len(), "gif87a: global")?;
-            let sorted = snap.gct.as_ref().map(|t| t.sorted).unwrap_or(false);
+            let sorted = snap.gct.as_ref().is_some_and(|t| t.sorted);
             out.push(0x80 | (sorted as u8) << 3 | size_field);
         }
         None => out.push(0),
@@ -522,7 +525,7 @@ pub fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
         let min_code_size;
         if let Some(colors) = &local_bytes {
             let size_field = validated_color_table_size_field(colors.len(), &format!("gif87a: image {index} local"))?;
-            let sorted = image.lct.as_ref().map(|t| t.sorted).unwrap_or(false);
+            let sorted = image.lct.as_ref().is_some_and(|t| t.sorted);
             ipacked |= 0x80 | (sorted as u8) << 5 | size_field;
             min_code_size = min_code_size_for(colors.len());
         } else {
@@ -673,7 +676,7 @@ pub fn register() {
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
-    let _ = store::register_document_codec(store::ArtifactCodec::of::<GifSnapshot, GifMutation>(STDIO_GIF_DOCUMENT_SCHEMA));
+    store::register_document_codec(store::ArtifactCodec::of::<GifSnapshot, GifMutation>(STDIO_GIF_DOCUMENT_SCHEMA)).expect("static Stdio registration must be available and conflict-free");
 }
 
 /// 💡️ Registers `s.stdio.gif.inference`'s facet leaves into the OS-wide inference catalog —

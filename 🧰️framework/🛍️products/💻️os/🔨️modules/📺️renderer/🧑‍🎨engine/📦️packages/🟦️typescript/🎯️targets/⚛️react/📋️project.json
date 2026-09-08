@@ -92,6 +92,14 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"
       }
     },
+    "artifact-creation-progress-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts artifact-creation-progress-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"
+      }
+    },
     "document-opening-scope-check": {
       "executor": "nx:run-commands",
       "cache": false,

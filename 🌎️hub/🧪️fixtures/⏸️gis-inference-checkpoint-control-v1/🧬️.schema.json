@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:hub:gis-inference-checkpoint-control-fixture:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "version", "descriptor", "frameMaximumBytes", "frames", "hostiles"],
+  "properties": {
+    "schema": { "const": "semio.hub.gis-inference-checkpoint-control-fixture/v1" },
+    "version": { "const": 1 },
+    "descriptor": { "const": 4 },
+    "frameMaximumBytes": { "const": 256 },
+    "frames": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        { "$ref": "#/$defs/entered" },
+        { "$ref": "#/$defs/release" }
+      ],
+      "items": false
+    },
+    "hostiles": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": { "enum": ["wrong-schema", "wrong-version", "wrong-sequence", "wrong-kind", "unknown-field", "zero-length", "oversized-frame", "closed-before-release"] }
+    }
+  },
+  "$defs": {
+    "frame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "version", "sequence", "kind", "jobId"],
+      "properties": {
+        "schema": { "const": "semio.hub.gis-inference-checkpoint-control/v1" },
+        "version": { "const": 1 },
+        "sequence": { "type": "integer", "minimum": 1, "maximum": 2 },
+        "kind": { "enum": ["entered", "release"] },
+        "jobId": { "type": "string", "pattern": "^[0-9a-f]{32}$" }
+      }
+    },
+    "entered": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["direction", "frame"],
+      "properties": {
+        "direction": { "const": "hub-to-runner" },
+        "frame": { "allOf": [{ "$ref": "#/$defs/frame" }, { "type": "object", "properties": { "sequence": { "const": 1 }, "kind": { "const": "entered" } } }] }
+      }
+    },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["direction", "frame"],
+      "properties": {
+        "direction": { "const": "runner-to-hub" },
+        "frame": { "allOf": [{ "$ref": "#/$defs/frame" }, { "type": "object", "properties": { "sequence": { "const": 2 }, "kind": { "const": "release" } } }] }
+      }
+    }
+  }
+}

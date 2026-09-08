@@ -767,9 +767,9 @@ fn nurbs_isocurve(u_knots: &KnotVector, v_knots: &KnotVector, controls: &[Vec<Pn
             let mut new_weights = Vec::with_capacity(nv);
             for j in 0..nv {
                 let (mut hx, mut hy, mut hz, mut hw) = (0.0, 0.0, 0.0, 0.0);
-                for k in 0..=degree {
+                for (k, &weight) in basis[..=degree].iter().enumerate() {
                     let i = span - degree + k;
-                    let b = basis[k] * weights[i][j];
+                    let b = weight * weights[i][j];
                     hx += b * controls[i][j].x;
                     hy += b * controls[i][j].y;
                     hz += b * controls[i][j].z;
@@ -789,9 +789,9 @@ fn nurbs_isocurve(u_knots: &KnotVector, v_knots: &KnotVector, controls: &[Vec<Pn
             let mut new_weights = Vec::with_capacity(nu);
             for i in 0..nu {
                 let (mut hx, mut hy, mut hz, mut hw) = (0.0, 0.0, 0.0, 0.0);
-                for k in 0..=degree {
+                for (k, &weight) in basis[..=degree].iter().enumerate() {
                     let j = span - degree + k;
-                    let b = basis[k] * weights[i][j];
+                    let b = weight * weights[i][j];
                     hx += b * controls[i][j].x;
                     hy += b * controls[i][j].y;
                     hz += b * controls[i][j].z;

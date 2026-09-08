@@ -373,7 +373,7 @@ fn enc_hex_snapshot(snapshot: &SemioSnapshot) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_hex_snapshot(hex: &str) -> Result<SemioSnapshot, String> {
-    if hex.len() % 2 != 0 {
+    if !hex.len().is_multiple_of(2) {
         return Err("setSnapshot: odd hex length".to_string());
     }
     let mut bytes = Vec::with_capacity(hex.len() / 2);
@@ -975,6 +975,6 @@ mod tests {
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/✉️replaces-the-envelope-wrapping-a-value-subset/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/✉️replaces-the-a60559/🦀️.rs"]
 mod set_snapshot_replaces_the_envelope_wrapping_a_value_subset;
 //#endregion 🧪️FixtureCases

@@ -888,16 +888,8 @@ impl ArtifactEditor for SourcingCurationApp {
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
         };
-        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            request.context,
-            operation_context,
-            request.completion,
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
             SourcingCurationCommand::command_id,
             SOURCING_CURATION_RETAINED_RAW_BYTES,
             SOURCING_CURATION_RETAINED_WORK_ITEMS,
@@ -1139,7 +1131,7 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
                     LocalizedLabel::native("Example", "Beispiel"),
                     vec![ActionArgOption::new(DEMO_STOCK_EXAMPLE_ID, LocalizedLabel::native("Demo Stock", "Beispielbestand")), ActionArgOption::new(EMPTY_EXAMPLE_ID, LocalizedLabel::native("Empty Curation", "Leere Kuratierung"))],
                 )
-                .default_value(DEMO_STOCK_EXAMPLE_ID)],
+                .default_value(&DEMO_STOCK_EXAMPLE_ID)],
             )
             // 🎯️ Typed channel surface — this app's typed commands are dispatched via
             // `SourcingCurationCommand`'s `OpBinary` codec directly (`setLocale` deliberately left
@@ -1252,9 +1244,9 @@ mod tests {
     //#region 🧪️RetainedConfigOracle
     #[semio_framework_async_macros::async_test]
     async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners() {
-        let oracle: Vec<crate::artifacts::curation::ObjectKind> = serde_json::from_str(include_str!("../📚️examples/🎬️demo/📦️expected-stock.json")).unwrap();
+        let oracle: Vec<crate::artifacts::curation::ObjectKind> = dsl::json::from_json_str(include_str!("../📚️examples/🎬️demo/📦️expected-stock.json")).unwrap();
         for example_id in [DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID] {
-            let mut app = crate::editor::sourcing::testkit::new_app().await;
+            let mut app = new_app().await;
             app.bind_instance_id(7).await;
             app.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: 7 }).await.unwrap();
             let mut document = None;
@@ -1297,10 +1289,10 @@ mod tests {
     #[test]
     fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_one() {
         let base = SourcingCurationConfig::default();
-        let mut expected = serde_json::to_value(&base).expect("JSON oracle base");
+        let mut expected = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&base)).expect("JSON oracle base");
         expected["filters"]["query"] = serde_json::json!("timber");
         let (post, inverse, _) = prepare_sourcing_curation_config(&base, SourcingCurationConfigMutation::SetFilterQuery { value: "timber".into() }).expect("bounded config candidate");
-        assert_eq!(serde_json::to_value(post).expect("JSON oracle post"), expected);
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&post)).expect("JSON oracle post"), expected);
         assert!(matches!(&inverse[0], SourcingCurationConfigMutation::SetFilterQuery { value } if value == &base.filters.query));
         assert!(sourcing_curation_config_mutation_footprint(&SourcingCurationConfigMutation::SetFilterQuery { value: "x".repeat(SOURCING_CURATION_CONFIG_TEXT_BYTES) }).is_ok());
         assert!(sourcing_curation_config_mutation_footprint(&SourcingCurationConfigMutation::SetFilterQuery { value: "x".repeat(SOURCING_CURATION_CONFIG_TEXT_BYTES + 1) }).is_err());
@@ -1515,7 +1507,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn sourcing_curation_io_and_catalog_export_round_trip() {
-        let mut app = crate::editor::sourcing::testkit::new_app().await;
+        let mut app = new_app().await;
         let media = semio_framework_plugin::resolve_ready(app.export_media("catalog:out")).expect("catalog export");
         assert_eq!(media.media_type.class, MediaClass::Kit);
         assert_eq!(media.media_type.form, MediaForm::Type);

@@ -159,7 +159,7 @@ fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
-    removed.iter().copied().chain(modified_indices).chain(added_indices).max().map(|m| m + 1).unwrap_or(0)
+    removed.iter().copied().chain(modified_indices).chain(added_indices).max().map_or(0, |m| m + 1)
 }
 //#endregion 🔖️IndexTransport
 
@@ -294,7 +294,7 @@ fn absorb_records(d1: TsvRowsDiff, d2: TsvRowsDiff) -> TsvRowsDiff {
         r.dedup();
         r.len()
     };
-    let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map(|m| m + 1).unwrap_or(0);
+    let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map_or(0, |m| m + 1);
     let base_len = base_len_hint(&d1.removed, d1.modified.iter().map(|m| m.index), d1_added_indices.iter().copied()).max((needed_mid_len + removed_count).saturating_sub(d1.added.len()));
     let mid_slots = simulate_slots(base_len, &d1.removed, &d1_added_indices);
 
@@ -345,7 +345,7 @@ fn absorb_records(d1: TsvRowsDiff, d2: TsvRowsDiff) -> TsvRowsDiff {
         })
         .collect();
     let d2_added_indices: Vec<usize> = d2.added.iter().map(|a| a.index).collect();
-    let mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map(|m| m + 1).unwrap_or(0);
+    let mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map_or(0, |m| m + 1);
     let after_slots = simulate_slots(mid_len, &d2.removed, &d2_added_indices);
     let mut mid_to_after: HashMap<usize, usize> = HashMap::new();
     for (pos, slot) in after_slots.iter().enumerate() {
@@ -413,7 +413,7 @@ impl DiffAlgebra<TsvSnapshot> for TsvDiff {
     }
 
     fn is_empty(&self) -> bool {
-        self.trailing_newline.is_none() && self.line_ending.is_none() && self.records.as_ref().map_or(true, TsvRowsDiff::is_empty)
+        self.trailing_newline.is_none() && self.line_ending.is_none() && self.records.as_ref().is_none_or(TsvRowsDiff::is_empty)
     }
 }
 
@@ -438,7 +438,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()

@@ -2,7 +2,7 @@
 name = "semio-framework-ui-scene"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Product scene payloads (World3dScene/TableScene/...) and their pack-encoded SurfaceDoc bridge, plus generic 3D scene math — wasm-safe, depends on ui-contract and serde only"
 
 [package.metadata.semio]

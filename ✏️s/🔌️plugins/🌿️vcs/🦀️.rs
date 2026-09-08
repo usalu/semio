@@ -26,10 +26,14 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// `.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining,
 /// `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s shape.
 pub fn plugin() -> Result<Plugin<VcsApps>, PluginAssemblyError> {
+    let dependency = semio_s_plugin_stdio::registry::native_artifact_catalog_dependency()?;
+    let catalog = semio_s_plugin_stdio::registry::native_artifact_catalog_contribution()?;
     Plugin::<VcsApps>::builder("vcs")
         .label("VCS")
         .version("0.1.0")
         .package_id("semio:vcs")
+        .depends_on(dependency.plugin_id, dependency.version)
+        .contributes_topic(catalog)
         .declare_artifact(crate::artifacts::vcs::artifact())
         .editor_mutation_roster::<crate::editor::vcs::VcsPlayApp>()
         .viewer_mutation_roster::<crate::viewer::vcs::VcsViewer>()
@@ -50,12 +54,12 @@ mod surface_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn vcs_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::vcs::VcsViewer>();
+        assert_viewer_never_mutates::<crate::viewer::vcs::VcsViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn vcs_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::vcs::VcsPlayApp, crate::viewer::vcs::VcsViewer>();
+        assert_editor_and_viewer_share_dialect::<crate::editor::vcs::VcsPlayApp, crate::viewer::vcs::VcsViewer>().await;
     }
 }
 //#endregion 🧪️SurfaceTests

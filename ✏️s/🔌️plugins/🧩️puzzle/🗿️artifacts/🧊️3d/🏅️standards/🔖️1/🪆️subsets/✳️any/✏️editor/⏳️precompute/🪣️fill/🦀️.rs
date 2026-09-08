@@ -4296,8 +4296,8 @@ mod tests {
         StepContext::new(builder.operation.operation, builder.operation.generation, StepBudget::new(100, 10), cancel, now, sequence)
     }
 
-    #[derive(value_derive::ToValue)]
-    #[value(rename_all = "camelCase")]
+    #[derive(serde::Serialize)]
+    #[serde(rename_all = "camelCase")]
     struct OracleGhost<'a> {
         target_vortex_full_id: &'a str,
         object_kind_id: &'a str,
@@ -4307,8 +4307,8 @@ mod tests {
         orientation: [f64; 4],
     }
 
-    #[derive(value_derive::ToValue)]
-    #[value(rename_all = "camelCase")]
+    #[derive(serde::Serialize)]
+    #[serde(rename_all = "camelCase")]
     struct OracleDiagnostic<'a> {
         operation: u64,
         base_revision: u64,
@@ -4336,8 +4336,8 @@ mod tests {
         rejected_count: u64,
     }
 
-    #[derive(value_derive::ToValue)]
-    #[value(rename_all = "camelCase")]
+    #[derive(serde::Serialize)]
+    #[serde(rename_all = "camelCase")]
     struct OracleRoot<'a> {
         target_vortex_full_id: &'a str,
         object_kind_id: &'a str,

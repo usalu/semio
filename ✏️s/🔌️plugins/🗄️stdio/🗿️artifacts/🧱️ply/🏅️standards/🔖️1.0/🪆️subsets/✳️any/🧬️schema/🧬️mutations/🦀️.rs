@@ -150,7 +150,7 @@ pub(crate) fn agg_inverse(this: &PlyMutation, base: &PlySnapshot) -> Vec<PlyMuta
             None => Vec::new(),
         },
         PlyMutation::InsertRow(insert_row::InsertRow { element_name, index, .. }) => {
-            let at = base.elements.iter().find(|e| &e.name == element_name).map(|e| (*index).min(e.rows.len())).unwrap_or(*index);
+            let at = base.elements.iter().find(|e| &e.name == element_name).map_or(*index, |e| (*index).min(e.rows.len()));
             vec![PlyMutation::RemoveRow(remove_row::RemoveRow { element_name: element_name.clone(), index: at })]
         }
         PlyMutation::RemoveRow(remove_row::RemoveRow { element_name, index }) => match base.elements.iter().find(|e| &e.name == element_name).and_then(|e| e.rows.get(*index)) {
@@ -263,7 +263,7 @@ fn op_tag(m: &PlyMutation) -> u8 {
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn op_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
+fn op_pack_err(e: &dsl::PackError) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "ply op binary", offset: 0, detail: e.to_string() }
 }
 
@@ -308,39 +308,39 @@ impl OpBinary for PlyMutation {
 
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut r = dsl::ByteReader::new(bytes);
-        let _format = r.read_u8().map_err(op_pack_err)?;
-        let tag = r.read_u8().map_err(op_pack_err)?;
+        let _format = r.read_u8().map_err(|error| op_pack_err(&error))?;
+        let tag = r.read_u8().map_err(|error| op_pack_err(&error))?;
         match tag {
-            0 => Ok(PlyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: read_bin_snapshot(&mut r).map_err(op_pack_err)? })),
-            1 => Ok(PlyMutation::SetFormat(set_format::SetFormat { format: crate::artifacts::ply::schema::diff::read_bin_format(&mut r).map_err(op_pack_err)? })),
+            0 => Ok(PlyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: read_bin_snapshot(&mut r).map_err(|error| op_pack_err(&error))? })),
+            1 => Ok(PlyMutation::SetFormat(set_format::SetFormat { format: crate::artifacts::ply::schema::diff::read_bin_format(&mut r).map_err(|error| op_pack_err(&error))? })),
             2 => {
-                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
-                let comment = read_bin_str(&mut r).map_err(op_pack_err)?;
+                let index = r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize;
+                let comment = read_bin_str(&mut r).map_err(|error| op_pack_err(&error))?;
                 Ok(PlyMutation::InsertComment(insert_comment::InsertComment { index, comment }))
             }
-            3 => Ok(PlyMutation::RemoveComment(remove_comment::RemoveComment { index: r.read_varint_u64().map_err(op_pack_err)? as usize })),
+            3 => Ok(PlyMutation::RemoveComment(remove_comment::RemoveComment { index: r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize })),
             4 => {
-                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
-                let element = read_bin_element(&mut r).map_err(op_pack_err)?;
+                let index = r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize;
+                let element = read_bin_element(&mut r).map_err(|error| op_pack_err(&error))?;
                 Ok(PlyMutation::AddElement(add_element::AddElement { index, element }))
             }
-            5 => Ok(PlyMutation::RemoveElement(remove_element::RemoveElement { name: read_bin_str(&mut r).map_err(op_pack_err)? })),
+            5 => Ok(PlyMutation::RemoveElement(remove_element::RemoveElement { name: read_bin_str(&mut r).map_err(|error| op_pack_err(&error))? })),
             6 => {
-                let element_name = read_bin_str(&mut r).map_err(op_pack_err)?;
-                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
-                let row = read_bin_row(&mut r).map_err(op_pack_err)?;
+                let element_name = read_bin_str(&mut r).map_err(|error| op_pack_err(&error))?;
+                let index = r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize;
+                let row = read_bin_row(&mut r).map_err(|error| op_pack_err(&error))?;
                 Ok(PlyMutation::InsertRow(insert_row::InsertRow { element_name, index, row }))
             }
             7 => {
-                let element_name = read_bin_str(&mut r).map_err(op_pack_err)?;
-                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
+                let element_name = read_bin_str(&mut r).map_err(|error| op_pack_err(&error))?;
+                let index = r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize;
                 Ok(PlyMutation::RemoveRow(remove_row::RemoveRow { element_name, index }))
             }
             8 => {
-                let element_name = read_bin_str(&mut r).map_err(op_pack_err)?;
-                let row_index = r.read_varint_u64().map_err(op_pack_err)? as usize;
-                let property_name = read_bin_str(&mut r).map_err(op_pack_err)?;
-                let value = read_bin_value(&mut r).map_err(op_pack_err)?;
+                let element_name = read_bin_str(&mut r).map_err(|error| op_pack_err(&error))?;
+                let row_index = r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize;
+                let property_name = read_bin_str(&mut r).map_err(|error| op_pack_err(&error))?;
+                let value = read_bin_value(&mut r).map_err(|error| op_pack_err(&error))?;
                 Ok(PlyMutation::SetRowProperty(set_row_property::SetRowProperty { element_name, row_index, property_name, value }))
             }
             other => Err(protocol::ProtocolError::Malformed { what: "ply op tag", offset: 1, detail: format!("unknown tag {other}") }),
@@ -460,7 +460,7 @@ mod codec_tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📸️set-snapshot/🧪️tests/🏗️lifts-the-second-vertex-and-appends-a-comment/🦀️.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/🏗️lifts-the-second-6636ec/🦀️.rs"]
     mod tests_set_snapshot_lifts_the_second_vertex_and_appends_a_comment;
 }
 //#endregion 🧪️FixtureTests

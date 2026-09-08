@@ -1,0 +1,20 @@
+[
+  {
+    "family": "Anta",
+    "directory": "🅰️anta",
+    "filename": "🅰️Anta-Regular.ttf",
+    "texFilename": "Anta-Regular.ttf"
+  },
+  {
+    "family": "Share Tech Mono",
+    "directory": "🖥️share-tech-mono",
+    "filename": "💻️ShareTechMono-Regular.ttf",
+    "texFilename": "ShareTechMono-Regular.ttf"
+  },
+  {
+    "family": "Noto Emoji",
+    "directory": "😀️noto-emoji",
+    "filename": "😀️NotoEmoji-Regular.ttf",
+    "texFilename": "NotoEmoji-Regular.ttf"
+  }
+]

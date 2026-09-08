@@ -74,13 +74,13 @@ mod tests {
     use protocol::Inference;
 
     #[semio_framework_async_macros::async_test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = En1990Snapshot::default();
         assert_eq!(En1990Inference::infer(&snapshot), En1990Inference::infer(&snapshot));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(En1990Inference::infer(&En1990Snapshot::default()), En1990Inference::default());
     }
 }
@@ -125,7 +125,7 @@ mod compliance_report_tests {
     use crate::artifacts::en1990::standards::v1::subsets::any::schema::{check_combination_set, combination_uls, CombinationRule};
 
     #[semio_framework_async_macros::async_test]
-    fn evaluate_accidental_situation_numeric() {
+    async fn evaluate_accidental_situation_numeric() {
         let doc = En1990Snapshot::default();
         let actions = action_set_from_document(&doc);
         let accidental_ed = combination_uls(&NaDe, DesignSituation::Accidental, CombinationRule::Uls610a, &actions, 0);
@@ -138,7 +138,7 @@ mod compliance_report_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn evaluate_seismic_situation_numeric() {
+    async fn evaluate_seismic_situation_numeric() {
         let doc = En1990Snapshot::default();
         let report = evaluate(&doc);
         let seismic = report.checks.iter().find(|c| c.clause.section == "6.12b").expect("seismic 6.12b check present");

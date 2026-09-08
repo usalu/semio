@@ -88,7 +88,7 @@ mod tests {
     #[test]
     fn render_produces_a_scene_node_for_the_default_document() {
         let document = crate::artifacts::generation2d::schema::default_snapshot();
-        let json = serde_json::to_string(&render(&document)).expect("render json");
+        let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render(&document).expect("viewer fixture") }).expect("render json");
         assert!(json.contains("canvas-2d"));
     }
 }

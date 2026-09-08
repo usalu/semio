@@ -33,7 +33,7 @@ impl ArtifactSerializer for SemioAnimationToMp4 {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let keyframes = from.timelines.first().and_then(|t| t.channels.first()).map(|c| c.keyframes.as_slice()).unwrap_or(&[]);
+        let keyframes = from.timelines.first().and_then(|t| t.channels.first()).map_or(&[][..], |c| c.keyframes.as_slice());
         let samples: Vec<Mp4Sample> = keyframes
             .iter()
             .enumerate()

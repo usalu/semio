@@ -8,17 +8,17 @@
 //! 🎨️ Embeds GraphHost, FlowHost, and EditorHost via vello offscreen compositing.
 
 use crate::interpreter::FrameworkWidgetContext;
-use flow::{dag::dag_screen_to_world, FlowFixture, FlowHost};
+use flow::{dag::dag_screen_to_world, FlowHost};
 use framework_editor::EditorHost;
 use framework_surface_node_graph::node_graph::GraphHost;
 use framework_surface_tiled_map::tiled_map::{tiles::VisibleTileCursor, MapHost, MapInteractionIntent};
 use infinite_canvas as canvas;
-use infinite_world::world::{WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind, WORLD_ASSET_URL_BYTE_CAPACITY};
+use infinite_world::world::{WorldAssetFault, WorldAssetRequestKind, WORLD_ASSET_URL_BYTE_CAPACITY};
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
 use std::mem::ManuallyDrop;
 use std::sync::{Mutex, MutexGuard, OnceLock};
-use ui_wgpu::wgpu::{draw_text_overlay, FontAtlas, GpuContext, HitKind, HitTarget, KeyAction, PointerModifiers, RasterTextureStageFault, Rect, Rgba, Theme};
+use ui_wgpu::wgpu::{draw_text_overlay, FontAtlas, GpuContext, KeyAction, PointerModifiers, RasterTextureStageFault, Rect, Rgba, Theme};
 use ui_wgpu::wgpu::{ActionDescriptor, UiComponentSceneNode};
 use vello::peniko::Color;
 use vello::wgpu;
@@ -27,10 +27,6 @@ use vello::{AaConfig, AaSupport, RenderParams, Renderer, RendererOptions};
 #[cfg(target_arch = "wasm32")]
 use js_sys;
 
-fn vello_clear(theme: &Theme) -> Color {
-    let c = theme.canvas_clear;
-    Color::new([c.r, c.g, c.b, c.a])
-}
 
 //#region Registry
 enum NodeGraphEngine {
@@ -53,18 +49,7 @@ struct NodeGraphSyncCache {
     scene_pack: Option<Vec<u8>>,
 }
 
-fn sync_eq_field<T: Clone + PartialEq>(cache: &mut Option<T>, value: &T) -> bool {
-    if cache.as_ref() == Some(value) {
-        false
-    } else {
-        *cache = Some(value.clone());
-        true
-    }
-}
 
-fn flow_fixture_semantic_eq(left: &FlowFixture, right: &FlowFixture) -> bool {
-    left.schema == right.schema && left.widgets == right.widgets && left.synapses == right.synapses && left.layout == right.layout
-}
 
 struct EngineSurface {
     node_graph: Option<NodeGraphEngine>,
@@ -99,6 +84,7 @@ struct EngineSurfaceId {
 }
 
 impl EngineSurfaceId {
+    #[cfg(test)]
     fn try_from_str(id: &str) -> Result<Self, ()> {
         if id.is_empty() || id.len() > ENGINE_SURFACE_ID_BYTE_CAPACITY {
             return Err(());
@@ -144,6 +130,7 @@ struct EngineSurfaceIdentity {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(test)]
 struct EngineSurfaceSnapshot {
     identity: EngineSurfaceIdentity,
     metrics_generation: u64,
@@ -181,6 +168,7 @@ impl EngineSurfaceRegistry {
         self.slots.iter().position(|slot| slot.id.as_ref().is_some_and(|stored| stored.as_str() == id))
     }
 
+    #[cfg(test)]
     fn contains_key(&self, id: &str) -> bool {
         self.slot_index(id).is_some()
     }
@@ -194,22 +182,21 @@ impl EngineSurfaceRegistry {
         self.slots[index].value.as_mut()
     }
 
+    #[cfg(test)]
     fn token(&self, id: &str) -> Option<EngineSurfaceToken> {
         let index = self.slot_index(id)?;
         Some(EngineSurfaceToken { slot: index as u16, generation: self.slots[index].generation })
     }
 
+    #[cfg(test)]
     fn identity(&self, id: &str) -> Option<EngineSurfaceIdentity> {
         let index = self.slot_index(id)?;
         Some(EngineSurfaceIdentity { token: EngineSurfaceToken { slot: index as u16, generation: self.slots[index].generation }, id: self.slots[index].id? })
     }
 
-    fn get_token_mut(&mut self, token: EngineSurfaceToken) -> Option<&mut EngineSurface> {
-        let slot = self.slots.get_mut(usize::from(token.slot))?;
-        (slot.generation == token.generation).then_some(())?;
-        slot.value.as_mut()
-    }
 
+
+    #[cfg(test)]
     fn reserve(&mut self, id: &str) -> Option<EngineSurfaceToken> {
         let Ok(id) = EngineSurfaceId::try_from_str(id) else {
             self.faulted = true;
@@ -234,6 +221,7 @@ impl EngineSurfaceRegistry {
         Some(EngineSurfaceToken { slot: index as u16, generation: slot.generation })
     }
 
+    #[cfg(test)]
     fn publish_reserved(&mut self, token: EngineSurfaceToken, value: EngineSurface) -> Result<(), EngineSurface> {
         let Some(slot) = self.slots.get_mut(usize::from(token.slot)) else {
             return Err(value);
@@ -698,13 +686,14 @@ impl Drop for EngineSurfaceRetirement {
 /// 📦️ An owned vector scene produced during worker-side product traversal. Device, queue, texture,
 /// and window handles are deliberately absent; the UI presenter realizes this packet only after its
 /// enclosing frame generation has passed the prepared-render gate.
-#[derive(Clone)]
 pub(crate) struct EngineCanvasPacket {
     surface: EngineSurfaceIdentity,
     document_generation: u64,
     scene_revision: u64,
     metrics_generation: u64,
     scene: canvas::Scene,
+    scene_retirement: Option<canvas::OpaqueSceneRetirementToken>,
+    scene_retirement_faulted: bool,
     clear: Color,
     width: u32,
     height: u32,
@@ -716,31 +705,47 @@ impl EngineCanvasPacket {
             self.surface.id.close_step();
             return false;
         }
+        if let Some(token) = self.scene_retirement {
+            return match canvas::advance_opaque_scene_retirement(token, 1, 4096) {
+                canvas::OpaqueSceneRetirementStep::Blocked | canvas::OpaqueSceneRetirementStep::Pending { .. } => false,
+                canvas::OpaqueSceneRetirementStep::Complete { .. } => {
+                    self.scene_retirement = None;
+                    false
+                }
+                canvas::OpaqueSceneRetirementStep::Fault => {
+                    self.scene_retirement_faulted = true;
+                    false
+                }
+            };
+        }
         if self.scene.retirement_is_empty() {
-            return true;
+            return !self.scene_retirement_faulted;
         }
         let Some(token) = canvas::reserve_opaque_scene_retirement() else {
             return false;
         };
         let scene = std::mem::take(&mut self.scene);
         canvas::publish_opaque_scene_retirement(token, scene);
-        true
+        self.scene_retirement = Some(token);
+        false
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.surface.id.terminal_is_empty() && self.scene.retirement_is_empty()
+        self.surface.id.terminal_is_empty() && self.scene.retirement_is_empty() && self.scene_retirement.is_none() && !self.scene_retirement_faulted
     }
 }
 
 const ENGINE_CANVAS_FRAME_PACKET_CAPACITY: usize = 256;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(test)]
 enum EngineCanvasPacketDestination {
     Ready(usize),
     Rejected(usize),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(test)]
 struct EngineCanvasPacketReservation {
     generation: u64,
     sequence: u64,
@@ -804,13 +809,9 @@ impl EngineCanvasBuildContext {
         self.len == 0 && self.rejected_len == 0 && self.reservation_sequence == self.published_reservation_sequence && self.outstanding_reservations == 0 && self.packets.iter().all(Option::is_none) && self.rejected.iter().all(Option::is_none)
     }
 
-    fn try_reserve_packet(&mut self, surface: EngineSurfaceSnapshot) -> Result<EngineCanvasPacketReservation, EngineSurfaceSnapshot> {
-        if !observe_engine_surface_packet_freshness(surface, self.document_generation, self.scene_revision) {
-            return Err(surface);
-        }
-        self.try_reserve_fresh_packet(surface)
-    }
 
+
+    #[cfg(test)]
     fn try_reserve_fresh_packet(&mut self, surface: EngineSurfaceSnapshot) -> Result<EngineCanvasPacketReservation, EngineSurfaceSnapshot> {
         let destination = if self.len < ENGINE_CANVAS_FRAME_PACKET_CAPACITY {
             let index = self.len;
@@ -842,10 +843,21 @@ impl EngineCanvasBuildContext {
         Ok(EngineCanvasPacketReservation { generation: self.document_generation, sequence, destination, surface })
     }
 
+    #[cfg(test)]
     fn publish_reserved(&mut self, reservation: EngineCanvasPacketReservation, scene: canvas::Scene, clear: Color, width: u32, height: u32) {
         self.published_reservation_sequence = reservation.sequence;
-        let packet =
-            EngineCanvasPacket { surface: reservation.surface.identity, document_generation: reservation.generation, scene_revision: self.scene_revision, metrics_generation: reservation.surface.metrics_generation, scene, clear, width, height };
+        let packet = EngineCanvasPacket {
+            surface: reservation.surface.identity,
+            document_generation: reservation.generation,
+            scene_revision: self.scene_revision,
+            metrics_generation: reservation.surface.metrics_generation,
+            scene,
+            scene_retirement: None,
+            scene_retirement_faulted: false,
+            clear,
+            width,
+            height,
+        };
         match reservation.destination {
             EngineCanvasPacketDestination::Ready(index) => self.packets[index] = Some(packet),
             EngineCanvasPacketDestination::Rejected(index) => self.rejected[index] = Some(packet),
@@ -1495,44 +1507,19 @@ impl<T: Default> WorkerCell<T> {
 
 static MAP_TILE_ASSET_FAULT: WorkerCell<Option<WorldAssetFault>> = WorkerCell::new();
 
-fn sync_field(cache: &mut Option<String>, value: &str) -> bool {
-    if cache.as_deref() == Some(value) {
-        false
-    } else {
-        *cache = Some(value.to_string());
-        true
-    }
-}
 
-fn sync_bytes_field(cache: &mut Option<Vec<u8>>, value: &[u8]) -> bool {
-    if cache.as_deref() == Some(value) {
-        false
-    } else {
-        *cache = Some(value.to_vec());
-        true
-    }
-}
 
-fn effective_json_field(field: &str) -> String {
-    store::pack_rt::scene_field_json_text(field).unwrap_or_else(|_| field.to_string())
-}
 
-fn graph_scene_pack(graph: &ui_wgpu::wgpu::NodeGraphScene) -> Vec<u8> {
-    let dsl = semio_framework::to_dsl_value(graph).expect("node graph scene pack");
-    store::pack_rt::encode_pack_value(&dsl)
-}
 
-fn editor_scene_pack(editor: &ui_wgpu::wgpu::TextEditorScene) -> Vec<u8> {
-    let dsl = semio_framework::to_dsl_value(editor).expect("text editor scene pack");
-    store::pack_rt::encode_pack_value(&dsl)
-}
 
+#[cfg(test)]
 pub(crate) fn theme_is_dark(theme: &Theme) -> bool {
     let c = theme.canvas_clear;
     let lum = f64::from(linear_to_rgba8_channel(c.r)) * 0.299 + f64::from(linear_to_rgba8_channel(c.g)) * 0.587 + f64::from(linear_to_rgba8_channel(c.b)) * 0.114;
     lum < 128.0
 }
 
+#[cfg(test)]
 fn linear_to_rgba8_channel(linear: f32) -> u8 {
     if linear <= 0.0031308 {
         (linear * 12.92 * 255.0).round() as u8
@@ -1541,13 +1528,7 @@ fn linear_to_rgba8_channel(linear: f32) -> u8 {
     }
 }
 
-fn sync_canvas_theme_dark(_cache: &mut NodeGraphSyncCache, dark: bool, flow: &mut FlowHost) {
-    flow.set_canvas_theme_dark(dark);
-}
 
-fn sync_graph_canvas_theme_dark(_cache: &mut NodeGraphSyncCache, dark: bool, graph: &mut GraphHost) {
-    graph.set_canvas_theme_dark(dark);
-}
 
 static ENGINE_SURFACES: WorkerCell<EngineSurfaceRegistry> = WorkerCell::new();
 
@@ -1611,6 +1592,29 @@ fn engine_packet_capacity_plus_one_returns_the_exact_snapshot_before_scene_trans
     assert_eq!(context.try_reserve_fresh_packet(snapshot), Err(snapshot));
     assert_eq!(context.len, ENGINE_CANVAS_FRAME_PACKET_CAPACITY);
     assert_eq!(context.rejected_len, ENGINE_CANVAS_FRAME_PACKET_CAPACITY);
+}
+
+#[cfg(test)]
+#[test]
+fn engine_packet_close_retains_opaque_scene_until_exact_terminal_release() {
+    let id = EngineSurfaceId::try_from_str("packet-retirement").expect("bounded packet identity");
+    let snapshot = EngineSurfaceSnapshot { identity: EngineSurfaceIdentity { token: EngineSurfaceToken { slot: 5, generation: 7 }, id }, metrics_generation: 11 };
+    let mut context = EngineCanvasBuildContext::new(1.0, 13, 17);
+    let reservation = context.try_reserve_fresh_packet(snapshot).expect("fixed packet retirement authority");
+    let mut scene = canvas::Scene::new();
+    for _ in 0..128 {
+        scene.pop_layer();
+    }
+    context.publish_reserved(reservation, scene, Color::new([0.0, 0.0, 0.0, 1.0]), 640, 480);
+    let mut packet = context.take_packet_step().unwrap_or_else(|_| panic!("ready packet destination")).expect("published packet");
+    assert!(!packet.close_step());
+    let mut turns = 1usize;
+    while !packet.close_step() {
+        turns += 1;
+        assert!(turns < 512, "packet-retained scene reaches exact terminal release");
+    }
+    assert!(turns > 128);
+    assert!(packet.terminal_is_empty());
 }
 
 #[cfg(test)]
@@ -1735,16 +1739,7 @@ fn populated_flow_surface_closes_history_and_cache_before_slot_reuse() {
     assert_ne!(token.generation, next.generation);
 }
 
-fn raster_key(surface_id: &str) -> String {
-    format!("engine:{surface_id}")
-}
 
-fn is_flow_graph(graph: &ui_wgpu::wgpu::NodeGraphScene) -> bool {
-    if graph.fixture_json.as_ref().is_some_and(|json| !json.trim().is_empty()) {
-        return true;
-    }
-    graph.capabilities_json.as_deref().and_then(|json| serde_json::from_str::<Value>(json).ok()).and_then(|value| value.get("engine").and_then(|engine| engine.as_str()).map(|id| id == "flow")).unwrap_or(false)
-}
 
 fn scene_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> ActionDescriptor {
     ActionDescriptor { controller_id: scene.controller_id.clone(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) }
@@ -1775,107 +1770,9 @@ fn empty_engine_surface(pw: u32, ph: u32) -> EngineSurface {
     }
 }
 
+
+
 #[cfg(test)]
-fn graph_action(controller_id: &str, _surface_id: &str, action: &str, args: Value) -> ActionDescriptor {
-    ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) }
-}
-
-fn sync_flow_host(host: &mut FlowHost, graph: &ui_wgpu::wgpu::NodeGraphScene, cache: &mut NodeGraphSyncCache) {
-    if sync_eq_field(&mut cache.operators, &graph.operators) {
-        host.set_neuron_kind_infos(&graph.operators);
-    }
-    let mut fixture_semantic_changed = false;
-    if let Some(fixture_json) = &graph.fixture_json {
-        let fixture_json = effective_json_field(fixture_json);
-        if sync_field(&mut cache.fixture_json, &fixture_json) {
-            if let Ok(fixture) = FlowHost::parse_fixture_json(&fixture_json) {
-                if flow_fixture_semantic_eq(&host.fixture, &fixture) {
-                    host.set_camera(fixture.camera.x, fixture.camera.y, fixture.camera.zoom);
-                } else {
-                    host.replace_fixture(fixture);
-                    fixture_semantic_changed = true;
-                }
-            }
-        }
-    }
-    let mut status_or_computing_applied = false;
-    // 🧵️ Never evaluates: `eval_json` comes from the plugin worker's off-main-thread `flowEvalTick`
-    // chain (see `FlowEvalDriver`) — this host is a pure view, mirroring the React canvas session.
-    if let Some(json) = &graph.eval_json {
-        let json = effective_json_field(json);
-        if sync_field(&mut cache.eval_json, &json) {
-            host.apply_eval_outputs_json(&json);
-        }
-    }
-    if let Some(json) = &graph.catalogue_json {
-        let json = effective_json_field(json);
-        if sync_field(&mut cache.catalogue_json, &json) {
-            host.set_host_catalogue_json(&json);
-        }
-    }
-    if sync_eq_field(&mut cache.selection, &graph.selection) {
-        host.set_selection(&graph.selection);
-    }
-    if let Some(json) = &graph.preview_off_json {
-        let json = effective_json_field(json);
-        if sync_field(&mut cache.preview_off_json, &json) {
-            host.set_preview_off_json(&json);
-        }
-    }
-    if let Some(json) = &graph.status_json {
-        let json = effective_json_field(json);
-        if sync_field(&mut cache.status_json, &json) {
-            host.set_node_statuses_from_json(&json);
-            status_or_computing_applied = true;
-        }
-    } else if let Some(json) = &graph.computing_json {
-        let json = effective_json_field(json);
-        if sync_field(&mut cache.computing_json, &json) {
-            if let Ok(value) = serde_json::from_str::<Value>(&json) {
-                let active = value.get("active").and_then(|v| v.as_str()).map(str::to_string);
-                let stale: Vec<String> = value.get("stale").and_then(|v| v.as_array()).map(|items| items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect()).unwrap_or_default();
-                host.set_computing_progress(active.as_deref(), &stale);
-            }
-            status_or_computing_applied = true;
-        }
-    }
-    if fixture_semantic_changed && !status_or_computing_applied {
-        host.refresh_computing_chrome_from_pending();
-    }
-    if let Some(json) = &graph.lod_json {
-        let json = effective_json_field(json);
-        if sync_field(&mut cache.lod_json, &json) {
-            if let Ok(value) = serde_json::from_str::<Value>(&json) {
-                if let Some(automatic) = value.get("automatic").and_then(|v| v.as_bool()) {
-                    host.set_automatic_lod(automatic);
-                }
-                if let Some(label) = value.get("forcedLabel").and_then(|v| v.as_str()) {
-                    host.set_forced_draw_lod_label(label);
-                }
-                if let Some(distance) = value.get("proximityDistance").and_then(|v| v.as_f64()) {
-                    host.set_proximity_distance(distance);
-                }
-                if let Some(visible) = value.get("gridVisible").and_then(|v| v.as_bool()) {
-                    host.set_grid_visible(visible);
-                }
-                if let Some(enabled) = value.get("gridSnapEnabled").and_then(|v| v.as_bool()) {
-                    host.set_grid_snap_enabled(enabled);
-                }
-                if let Some(factor) = value.get("gridFactor").and_then(|v| v.as_f64()) {
-                    let _ = host.set_grid_factor(factor);
-                }
-            }
-        }
-    }
-    if let Some(viewport) = &graph.viewport {
-        if sync_eq_field(&mut cache.viewport, viewport) {
-            host.set_camera(viewport.x, viewport.y, viewport.zoom);
-        }
-    }
-    // 🧵️ `hover` is a `NodeGraphHover { nodeId }`-only record today (see `ui_wgpu::wgpu::NodeGraphHover`) —
-    // flow-backed scenes don't currently emit it, so there is nothing to sync here yet.
-}
-
 fn ensure_surface(surface_id: &str, pw: u32, ph: u32) -> Option<EngineSurfaceSnapshot> {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
@@ -1910,28 +1807,7 @@ fn ensure_surface(surface_id: &str, pw: u32, ph: u32) -> Option<EngineSurfaceSna
     })
 }
 
-fn observe_engine_surface_packet_freshness(surface: EngineSurfaceSnapshot, document_generation: u64, scene_revision: u64) -> bool {
-    ENGINE_SURFACES.with(|cell| {
-        let Some(mut registry) = cell.try_borrow_mut() else {
-            return false;
-        };
-        let Some(slot) = registry.slots.get_mut(usize::from(surface.identity.token.slot)) else {
-            return false;
-        };
-        if slot.generation != surface.identity.token.generation || slot.id != Some(surface.identity.id) {
-            return false;
-        }
-        let Some(value) = slot.value.as_mut() else {
-            return false;
-        };
-        if value.metrics_generation != surface.metrics_generation || document_generation < value.document_generation || scene_revision < value.scene_revision {
-            return false;
-        }
-        value.document_generation = document_generation;
-        value.scene_revision = scene_revision;
-        true
-    })
-}
+
 
 fn engine_surface_live_freshness(token: EngineSurfaceToken) -> Result<Option<EngineSurfaceLiveFreshness>, ()> {
     ENGINE_SURFACES.with(|cell| {
@@ -1971,9 +1847,6 @@ pub(crate) fn engine_surface_terminal_nonopaque_is_empty(token: EngineSurfaceTok
     ENGINE_SURFACES.with(|cell| cell.try_borrow_mut().map(|registry| registry.terminal_nonopaque_is_empty(token)).ok_or(()))
 }
 
-pub(crate) fn opaque_scene_quarantine_status() -> (usize, bool) {
-    canvas::opaque_scene_retirement_status()
-}
 
 fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> wgpu::Texture {
     device.create_texture(&wgpu::TextureDescriptor {
@@ -1988,80 +1861,10 @@ fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> wgpu
     })
 }
 
-fn render_vello_scene(resources: &mut EngineCanvasBuildContext, reservation: EngineCanvasPacketReservation, scene: canvas::Scene, clear: Color, width: u32, height: u32) {
-    resources.publish_reserved(reservation, scene, clear, width, height);
-}
 //#endregion Registry
 
 //#region NodeGraph
-pub(crate) fn paint_node_graph(resources: &mut EngineCanvasBuildContext, ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
-    let Some(graph) = &scene.node_graph else {
-        return;
-    };
-    let pw = inner.w.max(1.0) as u32;
-    let ph = inner.h.max(1.0) as u32;
-    let dpr = resources.dpr();
-    let flow = is_flow_graph(graph);
-    let Some(surface) = ensure_surface(&scene.surface_id, pw, ph) else {
-        return;
-    };
-    let Ok(reservation) = resources.try_reserve_packet(surface) else {
-        return;
-    };
-    let clear = vello_clear(ctx.theme);
-    let scene_pack = graph_scene_pack(graph);
-    let dark = theme_is_dark(ctx.theme);
-    let mut canvas_scene = canvas::Scene::new();
-    ENGINE_SURFACES.with(|cell| {
-        let mut map = cell.borrow_mut();
-        let Some(entry) = map.get_mut(&scene.surface_id) else { return };
-        if flow {
-            let engine = match entry.node_graph.as_mut() {
-                Some(NodeGraphEngine::Flow(host)) => host,
-                _ => {
-                    entry.node_graph = Some(NodeGraphEngine::Flow(FlowHost::default()));
-                    entry.sync_cache = NodeGraphSyncCache::default();
-                    match entry.node_graph.as_mut() {
-                        Some(NodeGraphEngine::Flow(host)) => host,
-                        _ => return,
-                    }
-                }
-            };
-            sync_flow_host(engine, graph, &mut entry.sync_cache);
-            sync_canvas_theme_dark(&mut entry.sync_cache, dark, engine);
-            engine.set_viewport(pw, ph, dpr);
-            engine.paint_scene(&mut canvas_scene, pw, ph, dpr);
-        } else {
-            let engine = match entry.node_graph.as_mut() {
-                Some(NodeGraphEngine::Dag(host)) => host,
-                _ => {
-                    entry.node_graph = Some(NodeGraphEngine::Dag(GraphHost::default()));
-                    entry.sync_cache = NodeGraphSyncCache::default();
-                    match entry.node_graph.as_mut() {
-                        Some(NodeGraphEngine::Dag(host)) => host,
-                        _ => return,
-                    }
-                }
-            };
-            if sync_bytes_field(&mut entry.sync_cache.scene_pack, &scene_pack) {
-                let _ = engine.sync_from_scene_pack(&scene_pack);
-            }
-            sync_graph_canvas_theme_dark(&mut entry.sync_cache, dark, engine);
-            engine.set_viewport(pw, ph, dpr);
-            engine.paint_scene(&mut canvas_scene, pw, ph, dpr);
-        }
-    });
-    render_vello_scene(resources, reservation, canvas_scene, clear, pw, ph);
-    ctx.draw.push_raster_quad(&raster_key(&scene.surface_id), [inner.x, inner.y, inner.w, inner.h], [0.0, 0.0, 1.0, 1.0], 1.0);
-    ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(format!("{}.pane", scene.surface_id)), kind: HitKind::ScrollRegion, drag_axis: Some(ui_wgpu::wgpu::input::DragAxis::Both), drag_data: None });
-}
 
-fn note_widget_hit_at_screen(host: &FlowHost, sx: f64, sy: f64) -> Option<(String, f64, f64)> {
-    use flow::dag::DagNodeKind;
-    let (world_x, world_y) = dag_screen_to_world(&host.dag, sx, sy);
-    let node = host.dag.fixture.nodes.iter().find(|node| matches!(node.kind, DagNodeKind::Note { .. }) && world_x >= node.x && world_x <= node.x + node.width && world_y >= node.y && world_y <= node.y + node.height)?;
-    Some((node.id.clone(), world_x, world_y))
-}
 
 #[cfg(target_arch = "wasm32")]
 fn engine_now_ms() -> f64 {
@@ -2419,28 +2222,28 @@ pub fn node_graph_pointer_up_into(surface_id: &str, controller_id: &str, inner: 
 pub fn node_graph_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, ctrl: bool) -> Vec<ActionDescriptor> {
     let mut input = ui_wgpu::wgpu::InputState::default();
     let _ = node_graph_wheel_into(surface_id, controller_id, inner, x, y, delta, ctrl, &mut input);
-    input.drain_events()
+    crate::collect_fixture_actions(&mut input)
 }
 
 #[cfg(test)]
 pub fn node_graph_pointer_down(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl: bool, alt: bool, space_pressed: bool) -> Vec<ActionDescriptor> {
     let mut input = ui_wgpu::wgpu::InputState::default();
     let _ = node_graph_pointer_down_into(surface_id, controller_id, inner, x, y, button, shift, ctrl, alt, space_pressed, &mut input);
-    input.drain_events()
+    crate::collect_fixture_actions(&mut input)
 }
 
 #[cfg(test)]
 pub fn node_graph_pointer_move(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl: bool, alt: bool) -> Vec<ActionDescriptor> {
     let mut input = ui_wgpu::wgpu::InputState::default();
     let _ = node_graph_pointer_move_into(surface_id, controller_id, inner, x, y, shift, ctrl, alt, &mut input);
-    input.drain_events()
+    crate::collect_fixture_actions(&mut input)
 }
 
 #[cfg(test)]
 pub fn node_graph_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl: bool, alt: bool) -> Vec<ActionDescriptor> {
     let mut input = ui_wgpu::wgpu::InputState::default();
     let _ = node_graph_pointer_up_into(surface_id, controller_id, inner, x, y, shift, ctrl, alt, &mut input);
-    input.drain_events()
+    crate::collect_fixture_actions(&mut input)
 }
 
 struct GraphInteractionSnapshot {
@@ -2494,12 +2297,12 @@ fn plan_node_graph_pointer(surface_id: &str, intent: flow::dag::DagPointerIntent
         match engine {
             NodeGraphEngine::Flow(host) => {
                 let plan = host.plan_pointer(intent).map_err(graph_plan_fault)?;
-                let (node_ids, hovered_id, camera) = host.pointer_projection_snapshot(&plan).map_err(graph_plan_fault)?;
+                let flow::dag::DagPointerSnapshot { node_ids, hovered_id, camera } = host.pointer_projection_snapshot(&plan).map_err(graph_plan_fault)?;
                 Ok(Some((NodeGraphPointerPlan::Flow(plan), graph_projection_snapshot(node_ids, hovered_id, camera)?)))
             }
             NodeGraphEngine::Dag(host) => {
                 let plan = host.plan_pointer(intent).map_err(graph_plan_fault)?;
-                let (node_ids, hovered_id, camera) = host.pointer_projection_snapshot(&plan).map_err(graph_plan_fault)?;
+                let flow::dag::DagPointerSnapshot { node_ids, hovered_id, camera } = host.pointer_projection_snapshot(&plan).map_err(graph_plan_fault)?;
                 Ok(Some((NodeGraphPointerPlan::Dag(plan), graph_projection_snapshot(node_ids, hovered_id, camera)?)))
             }
         }
@@ -2586,27 +2389,6 @@ fn write_graph_interaction_actions(batch: &mut ui_wgpu::wgpu::BoundedActionBatch
     Ok(())
 }
 
-#[cfg(test)]
-fn graph_interaction_actions(surface_id: &str, controller_id: &str, entry: &EngineSurface) -> Vec<ActionDescriptor> {
-    let (node_ids, hovered_id, viewport_json) = match entry.node_graph.as_ref() {
-        Some(NodeGraphEngine::Flow(host)) => {
-            let ids: Vec<String> = serde_json::from_str(&host.selected_widget_ids_json()).unwrap_or_default();
-            (ids, host.hovered_widget_id(), serde_json::to_string(&host.dag.fixture.camera).unwrap_or_else(|_| "{}".into()))
-        }
-        Some(NodeGraphEngine::Dag(host)) => {
-            let ids: Vec<String> = serde_json::from_str(&host.selected_node_ids_json()).unwrap_or_default();
-            (ids, host.hovered_node_id(), host.camera_json())
-        }
-        None => return Vec::new(),
-    };
-    let select_targets = serde_json::to_string(&node_ids.iter().map(|id| json!({ "granularity": "node", "id": id })).collect::<Vec<_>>()).unwrap_or_else(|_| "[]".into());
-    let hover_targets = serde_json::to_string(&hovered_id.iter().map(|id| json!({ "granularity": "node", "id": id })).collect::<Vec<_>>()).unwrap_or_else(|_| "[]".into());
-    vec![
-        graph_action(controller_id, surface_id, "interactionSelect", json!({ "domainId": "graph", "targets": select_targets, "merge": "replace", "method": "pick" })),
-        graph_action(controller_id, surface_id, "interactionHover", json!({ "domainId": "graph", "channel": "pointer", "targets": hover_targets })),
-        graph_action(controller_id, surface_id, "nodeGraphViewport", json!({ "surfaceId": surface_id, "viewportJson": viewport_json })),
-    ]
-}
 
 fn world_to_screen_inner(inner: Rect, cam_x: f64, cam_y: f64, zoom: f64, wx: f64, wy: f64) -> (f32, f32) {
     let zoom = zoom.max(0.05) as f32;
@@ -2855,96 +2637,13 @@ pub fn paint_node_graph_overlays(ctx: &mut FrameworkWidgetContext<'_>, scene: &U
 //#endregion NodeGraph
 
 //#region TiledMap
-fn map_tile_url(template: &str, z: u32, x: u32, y: u32) -> String {
-    template.replace("{z}", &z.to_string()).replace("{x}", &x.to_string()).replace("{y}", &y.to_string())
-}
 
-fn reserve_map_tile_fetch(surface_id: &str, key: &str, template: &str, vector: bool, z: u32, x: u32, y: u32) -> Result<(), WorldAssetFault> {
-    if template.len().checked_add(30).is_none_or(|bytes| bytes > WORLD_ASSET_URL_BYTE_CAPACITY) {
-        return Err(WorldAssetFault::UrlCapacity);
-    }
-    let surface = WorldAssetMetadataId::try_from_str(surface_id)?;
-    let key = WorldAssetMetadataId::try_from_str(key)?;
-    let url = map_tile_url(template, z, x, y);
-    crate::reserve_renderer_asset_request(WorldAssetRequestKind::MapTile { surface, key, vector, z, x, y }, &url).map(|_| ())
-}
 
 pub fn take_map_tile_asset_fault() -> Option<WorldAssetFault> {
     MAP_TILE_ASSET_FAULT.with(|cell| cell.borrow_mut().take())
 }
 
-fn map_theme_json_from_ui_theme(theme: &Theme) -> String {
-    let rgba = |color: Rgba| {
-        let r = (color.r.clamp(0.0, 1.0) * 255.0).round() as u8;
-        let g = (color.g.clamp(0.0, 1.0) * 255.0).round() as u8;
-        let b = (color.b.clamp(0.0, 1.0) * 255.0).round() as u8;
-        let a = (color.a.clamp(0.0, 1.0) * 255.0).round() as u8;
-        [r, g, b, a]
-    };
-    json!({
-        "surfaceClear": rgba(theme.canvas_clear),
-        "landFill": rgba(theme.panel),
-        "landStroke": [rgba(theme.separator)[0], rgba(theme.separator)[1], rgba(theme.separator)[2], 0],
-        "labelFill": rgba(theme.text),
-        "labelHalo": rgba(theme.canvas_clear),
-        "regionFill": rgba(theme.selected.with_alpha(0.22)),
-        "regionStroke": rgba(theme.accent),
-        "routeStroke": rgba(theme.accent_hover),
-        "positionFill": rgba(theme.accent),
-        "positionStroke": rgba(theme.active_foreground),
-        "selectionStroke": rgba(theme.accent),
-        "hoverStroke": rgba(theme.accent_hover),
-    })
-    .to_string()
-}
 
-fn sync_map_host(host: &mut MapHost, scene: &ui_wgpu::wgpu::TiledMapScene, cache: &mut MapSyncCache, pw: u32, ph: u32, dpr: f64, theme_json: &str) {
-    let size_key = format!("{pw}x{ph}@{dpr}");
-    if sync_field(&mut cache.size_key, &size_key) {
-        host.set_size(pw, ph, dpr);
-    }
-    if sync_field(&mut cache.map_fixture_json, &scene.map_fixture_json) {
-        let _ = host.sync_map_json(&scene.map_fixture_json);
-    }
-    if sync_field(&mut cache.camera_json, &scene.camera_json) {
-        if let Ok(camera) = serde_json::from_str::<Value>(&scene.camera_json) {
-            let x = camera.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0);
-            let y = camera.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0);
-            let zoom = camera.get("zoom").and_then(|value| value.as_f64()).unwrap_or(1.0);
-            host.set_camera(x, y, zoom);
-        }
-    }
-    if sync_field(&mut cache.render_mode, &scene.render_mode) {
-        host.set_render_mode(&scene.render_mode);
-    }
-    if sync_field(&mut cache.vector_style, &scene.vector_style) {
-        host.set_vector_style(&scene.vector_style);
-    }
-    if sync_field(&mut cache.lod_mode, &scene.lod_mode) {
-        host.set_lod_mode(&scene.lod_mode);
-    }
-    if sync_field(&mut cache.layer_visibility_json, &scene.layer_visibility_json) {
-        let _ = host.set_layer_visibility_from_json(&scene.layer_visibility_json);
-    }
-    if sync_field(&mut cache.layer_stroke_scale_json, &scene.layer_stroke_scale_json) {
-        let _ = host.set_layer_stroke_scale_from_json(&scene.layer_stroke_scale_json);
-    }
-    let selection_changed = sync_field(&mut cache.selection_json, &scene.selection_json);
-    let hover_changed = sync_field(&mut cache.hover_json, &scene.hover_json);
-    if selection_changed || hover_changed {
-        let selection = serde_json::from_str::<Value>(&scene.selection_json).unwrap_or_default();
-        let hover = serde_json::from_str::<Value>(&scene.hover_json).unwrap_or_default();
-        let hover_kind = hover.get("kind").and_then(Value::as_str);
-        let granularity = hover_kind.unwrap_or_else(|| if selection.get("routes").and_then(Value::as_array).is_some_and(|ids| !ids.is_empty()) { "route" } else { "position" });
-        let selection_key = if granularity == "route" { "routes" } else { "positions" };
-        let selected_ids = selection.get(selection_key).and_then(Value::as_array).into_iter().flatten().filter_map(Value::as_str).map(str::to_string).collect::<Vec<_>>();
-        let hovered_id = hover.get("id").and_then(Value::as_str);
-        host.sync_interaction(granularity, &selected_ids, hovered_id);
-    }
-    if sync_field(&mut cache.theme_json, theme_json) {
-        let _ = host.set_map_theme_from_json(theme_json);
-    }
-}
 
 #[derive(Clone, Copy)]
 enum MapTileRequestPhase {
@@ -3015,32 +2714,6 @@ impl MapTileRequestCursor {
     }
 }
 
-fn queue_map_tile_fetch_step(surface_id: &str, scene: &ui_wgpu::wgpu::TiledMapScene, host: &MapHost, slot: &mut Option<MapTileRequestCursor>) {
-    if slot.as_ref().is_none_or(|cursor| !cursor.matches(scene, host)) {
-        match MapTileRequestCursor::new(scene, host) {
-            Ok(next) => *slot = Some(next),
-            Err(fault) => {
-                MAP_TILE_ASSET_FAULT.with(|cell| *cell.borrow_mut() = Some(fault));
-                return;
-            }
-        }
-    }
-    let Some(cursor) = slot.as_mut() else { return };
-    let Some((vector, tile)) = cursor.current() else {
-        *slot = MapTileRequestCursor::new(scene, host).ok();
-        return;
-    };
-    let key = format!("{}/{}/{}", tile.z, tile.x, tile.y);
-    if if vector { host.has_vector_tile(&key) } else { host.has_tile(&key) } {
-        cursor.advance();
-        return;
-    }
-    let template = if vector { &scene.vector_tile_url_template } else { &scene.tile_url_template };
-    match reserve_map_tile_fetch(surface_id, &key, template, vector, tile.z, tile.x, tile.y) {
-        Ok(()) => cursor.advance(),
-        Err(fault) => MAP_TILE_ASSET_FAULT.with(|cell| *cell.borrow_mut() = Some(fault)),
-    }
-}
 
 pub fn apply_map_tile_bytes(kind: WorldAssetRequestKind, bytes: &[u8]) {
     let WorldAssetRequestKind::MapTile { surface, key: _, vector, z, x, y } = kind else { return };
@@ -3056,38 +2729,6 @@ pub fn apply_map_tile_bytes(kind: WorldAssetRequestKind, bytes: &[u8]) {
     });
 }
 
-pub(crate) fn paint_tiled_map(resources: &mut EngineCanvasBuildContext, ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
-    let Some(map_scene) = &scene.tiled_map else {
-        return;
-    };
-    let pw = inner.w.max(1.0) as u32;
-    let ph = inner.h.max(1.0) as u32;
-    let dpr = resources.dpr();
-    let Some(surface) = ensure_surface(&scene.surface_id, pw, ph) else {
-        return;
-    };
-    let Ok(reservation) = resources.try_reserve_packet(surface) else {
-        return;
-    };
-    let theme_json = map_theme_json_from_ui_theme(ctx.theme);
-    let clear = vello_clear(ctx.theme);
-    let canvas_scene = ENGINE_SURFACES.with(|cell| {
-        let mut map = cell.borrow_mut();
-        let Some(entry) = map.get_mut(&scene.surface_id) else { return canvas::Scene::new() };
-        if entry.map_host.is_none() {
-            entry.map_host = Some(MapHost::new());
-            entry.map_sync_cache = MapSyncCache::default();
-        }
-        let EngineSurface { map_host, map_sync_cache, map_tile_requests, .. } = entry;
-        let Some(host) = map_host.as_mut() else { return canvas::Scene::new() };
-        sync_map_host(host, map_scene, map_sync_cache, pw, ph, dpr, &theme_json);
-        queue_map_tile_fetch_step(&scene.surface_id, map_scene, host, map_tile_requests);
-        host.build_render_scene()
-    });
-    render_vello_scene(resources, reservation, canvas_scene, clear, pw, ph);
-    ctx.draw.push_raster_quad(&raster_key(&scene.surface_id), [inner.x, inner.y, inner.w, inner.h], [0.0, 0.0, 1.0, 1.0], 1.0);
-    ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(format!("{}.map", scene.surface_id)), kind: HitKind::ScrollRegion, drag_axis: Some(ui_wgpu::wgpu::input::DragAxis::Both), drag_data: None });
-}
 
 pub fn with_map_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut MapHost) -> R) -> Option<R> {
     ENGINE_SURFACES.with(|cell| {
@@ -3306,7 +2947,7 @@ pub fn tiled_map_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, 
 pub fn tiled_map_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, ctrl: bool) -> Vec<ActionDescriptor> {
     let mut input = ui_wgpu::wgpu::InputState::default();
     let _ = tiled_map_wheel_into(surface_id, controller_id, inner, x, y, delta, ctrl, &mut input);
-    input.drain_events()
+    crate::collect_fixture_actions(&mut input)
 }
 
 #[cfg(test)]
@@ -3460,114 +3101,9 @@ pub fn coalesce_board2d_events(rows: &[BoardEventRow]) -> CoalescedBoardEvents {
     CoalescedBoardEvents { flush_now, events_json: serde_json::to_string(&coalesced).unwrap_or_else(|_| "[]".into()) }
 }
 
-fn parse_board_camera(json: &str) -> Option<(f64, f64, f64)> {
-    let value: Value = serde_json::from_str(json).ok()?;
-    Some((value.get("x")?.as_f64()?, value.get("y")?.as_f64()?, value.get("zoom")?.as_f64()?))
-}
 
-fn parse_board_selection_ids(json: &str) -> Vec<String> {
-    serde_json::from_str::<Vec<String>>(json).unwrap_or_default()
-}
 
-/// @emoji 🔁️ Applies scene fields onto `host`, diffing against `cache` so only changed fields re-sync. Mirrors `applyFixtureToSession` plus the independent per-field effects in the React host: reparsing the fixture resets selection/camera, so both are silently re-applied right after. Skips fixture/selection/camera sync entirely while `host` defers descriptor sync (mid-gesture), matching `pendingFixtureSceneRef`.
-fn sync_board_host(host: &mut puzzle::editor::puzzle2d::engine::BoardHost, scene: &ui_wgpu::wgpu::Board2dScene, cache: &mut BoardSyncCache, pw: u32, ph: u32, dpr: f64) {
-    let size_key = format!("{pw}x{ph}@{dpr}");
-    if sync_field(&mut cache.size_key, &size_key) {
-        host.set_size(pw, ph, dpr);
-    }
-    let deferred = host.defers_descriptor_sync_from_js();
-    if !deferred && sync_field(&mut cache.fixture_json, &scene.fixture_json) {
-        host.parse_fixture_json(&scene.fixture_json);
-        host.set_selection_options(&scene.selection_method, "replace", true, true, true);
-        host.set_selection_ids_silent(&parse_board_selection_ids(&scene.selection_json));
-        cache.selection_json = Some(scene.selection_json.clone());
-        if let Some((x, y, zoom)) = parse_board_camera(&scene.camera_json) {
-            host.set_camera_silent(x, y, zoom);
-        }
-        cache.camera_json = Some(scene.camera_json.clone());
-    }
-    if sync_field(&mut cache.glyph_catalogs_json, &scene.glyph_catalogs_json) {
-        let _ = host.set_board_kind_catalogs_from_json(&scene.glyph_catalogs_json);
-    }
-    if sync_field(&mut cache.placement_compatibility_json, &scene.placement_compatibility_json) {
-        let _ = host.set_handle_link_compat_from_json(&scene.placement_compatibility_json);
-    }
-    if !deferred && sync_field(&mut cache.selection_json, &scene.selection_json) {
-        host.set_selection_ids_silent(&parse_board_selection_ids(&scene.selection_json));
-    }
-    if !deferred && sync_field(&mut cache.camera_json, &scene.camera_json) {
-        if let Some((x, y, zoom)) = parse_board_camera(&scene.camera_json) {
-            host.set_camera_silent(x, y, zoom);
-        }
-    }
-    if cache.hovered_id != scene.hovered_id {
-        cache.hovered_id = scene.hovered_id.clone();
-        host.set_hovered_id_silent(scene.hovered_id.clone());
-    }
-    let active_utility = scene.active_utility.as_deref().unwrap_or("select");
-    if cache.active_utility.as_deref() != Some(active_utility) {
-        cache.active_utility = Some(active_utility.to_string());
-        host.set_active_utility(active_utility);
-    }
-    if sync_field(&mut cache.selection_method, &scene.selection_method) {
-        host.set_selection_options(&scene.selection_method, "replace", true, true, true);
-    }
-    if cache.grid_snap_enabled != Some(scene.grid_snap_enabled) {
-        cache.grid_snap_enabled = Some(scene.grid_snap_enabled);
-        host.set_grid_snap_enabled(scene.grid_snap_enabled);
-    }
-    if cache.grid_factor != Some(scene.grid_factor) {
-        cache.grid_factor = Some(scene.grid_factor);
-        let _ = host.set_grid_factor(scene.grid_factor);
-    }
-    if scene.suggestion_offset > 0.0 && cache.suggestion_offset != Some(scene.suggestion_offset) {
-        cache.suggestion_offset = Some(scene.suggestion_offset);
-        host.set_suggestion_offset(scene.suggestion_offset);
-    }
-    if sync_field(&mut cache.brush_weights_json, &scene.brush_weights_json) {
-        host.set_brush_kind_weights(&scene.brush_weights_json);
-    }
-    if sync_field(&mut cache.lod_mode, &scene.lod_mode) {
-        if scene.lod_mode == "automatic" {
-            host.set_automatic_lod(true);
-        } else {
-            host.set_automatic_lod(false);
-            host.set_forced_draw_lod_label(&scene.lod_mode);
-        }
-    }
-}
 
-pub(crate) fn paint_puzzle_board(resources: &mut EngineCanvasBuildContext, ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
-    let Some(board_scene) = &scene.board2d else {
-        return;
-    };
-    let pw = inner.w.max(1.0) as u32;
-    let ph = inner.h.max(1.0) as u32;
-    let dpr = resources.dpr();
-    let Some(surface) = ensure_surface(&scene.surface_id, pw, ph) else {
-        return;
-    };
-    let Ok(reservation) = resources.try_reserve_packet(surface) else {
-        return;
-    };
-    let clear = vello_clear(ctx.theme);
-    let canvas_scene = ENGINE_SURFACES.with(|cell| {
-        let mut map = cell.borrow_mut();
-        let Some(entry) = map.get_mut(&scene.surface_id) else { return canvas::Scene::new() };
-        if entry.board_host.is_none() {
-            entry.board_host = Some(ManuallyDrop::new(puzzle::editor::puzzle2d::engine::board_host::puzzle_board_host()));
-            entry.board_sync_cache = BoardSyncCache::default();
-        }
-        let Some(host) = entry.board_host.as_mut() else { return canvas::Scene::new() };
-        sync_board_host(host, board_scene, &mut entry.board_sync_cache, pw, ph, dpr);
-        host.build_vector_scene()
-    });
-    render_vello_scene(resources, reservation, canvas_scene, clear, pw, ph);
-    ctx.draw.push_raster_quad(&raster_key(&scene.surface_id), [inner.x, inner.y, inner.w, inner.h], [0.0, 0.0, 1.0, 1.0], 1.0);
-    if board_scene.interactive {
-        ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(format!("{}.board", scene.surface_id)), kind: HitKind::ScrollRegion, drag_axis: Some(ui_wgpu::wgpu::input::DragAxis::Both), drag_data: None });
-    }
-}
 
 pub fn with_board_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut puzzle::editor::puzzle2d::engine::BoardHost) -> R) -> Option<R> {
     ENGINE_SURFACES.with(|cell| {
@@ -3694,6 +3230,7 @@ fn board_drain_into_buffer(surface_id: &str) -> bool {
     })
 }
 
+#[cfg(test)]
 fn board_take_buffer_coalesced(surface_id: &str) -> Option<String> {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
@@ -4092,7 +3629,7 @@ pub fn puzzle_board_wheel_into(surface_id: &str, controller_id: &str, inner: Rec
         write_board_events_flat(&mut reservation, controller_id, events_json)?;
     }
     reservation.publish_partial_with_checked(|| {
-        let committed = with_board_host_mut(surface_id, |host| host.commit_wheel(plan)).unwrap_or(false);
+        let committed = with_board_host_mut(surface_id, |host| host.commit_wheel(&plan)).unwrap_or(false);
         if committed && retire_events {
             ENGINE_SURFACES.with(|cell| {
                 if let Some(entry) = cell.borrow_mut().get_mut(surface_id) {
@@ -4260,39 +3797,6 @@ pub fn text_editor_apply_key(scene: &UiComponentSceneNode, key: KeyAction, modif
     })
 }
 
-pub(crate) fn paint_text_editor(resources: &mut EngineCanvasBuildContext, ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
-    let Some(editor) = &scene.text_editor else {
-        return;
-    };
-    let pw = inner.w.max(1.0) as u32;
-    let ph = inner.h.max(1.0) as u32;
-    let dpr = resources.dpr();
-    let Some(surface) = ensure_surface(&scene.surface_id, pw, ph) else {
-        return;
-    };
-    let Ok(reservation) = resources.try_reserve_packet(surface) else {
-        return;
-    };
-    let clear = vello_clear(ctx.theme);
-    let scene_pack = editor_scene_pack(editor);
-    let canvas_scene = ENGINE_SURFACES.with(|cell| {
-        let mut map = cell.borrow_mut();
-        let Some(entry) = map.get_mut(&scene.surface_id) else { return canvas::Scene::new() };
-        if entry.editor.is_none() {
-            entry.editor = Some(EditorHost::new());
-        }
-        let Some(host) = entry.editor.as_mut() else { return canvas::Scene::new() };
-        if sync_bytes_field(&mut entry.editor_scene_pack, &scene_pack) {
-            let _ = host.sync_from_scene_pack(&scene_pack);
-        }
-        host.set_size(pw, ph, dpr);
-        host.build_scene()
-    });
-    render_vello_scene(resources, reservation, canvas_scene, clear, pw, ph);
-    ctx.draw.push_raster_quad(&raster_key(&scene.surface_id), [inner.x, inner.y, inner.w, inner.h], [0.0, 0.0, 1.0, 1.0], 1.0);
-    let editor_id = format!("{}.editor", scene.surface_id);
-    ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(editor_id), kind: HitKind::Input, drag_axis: None, drag_data: None });
-}
 
 #[cfg(test)]
 pub fn text_editor_wheel(scene: &UiComponentSceneNode, delta: f32) -> Vec<ActionDescriptor> {

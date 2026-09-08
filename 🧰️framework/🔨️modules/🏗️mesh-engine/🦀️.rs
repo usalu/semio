@@ -860,16 +860,14 @@ fn gltf_node_vec3(node: &json::Value, key: &str, default: [f32; 3]) -> [f32; 3] 
     node.get(key)
         .and_then(json::Value::as_array)
         .filter(|values| values.len() == 3)
-        .map(|values| [values[0].as_f64().unwrap_or(default[0] as f64) as f32, values[1].as_f64().unwrap_or(default[1] as f64) as f32, values[2].as_f64().unwrap_or(default[2] as f64) as f32])
-        .unwrap_or(default)
+        .map_or(default, |values| [values[0].as_f64().unwrap_or(default[0] as f64) as f32, values[1].as_f64().unwrap_or(default[1] as f64) as f32, values[2].as_f64().unwrap_or(default[2] as f64) as f32])
 }
 
 fn gltf_node_quat(node: &json::Value) -> [f32; 4] {
     node.get("rotation")
         .and_then(json::Value::as_array)
         .filter(|values| values.len() == 4)
-        .map(|values| [values[0].as_f64().unwrap_or(0.0) as f32, values[1].as_f64().unwrap_or(0.0) as f32, values[2].as_f64().unwrap_or(0.0) as f32, values[3].as_f64().unwrap_or(1.0) as f32])
-        .unwrap_or([0.0, 0.0, 0.0, 1.0])
+        .map_or([0.0, 0.0, 0.0, 1.0], |values| [values[0].as_f64().unwrap_or(0.0) as f32, values[1].as_f64().unwrap_or(0.0) as f32, values[2].as_f64().unwrap_or(0.0) as f32, values[3].as_f64().unwrap_or(1.0) as f32])
 }
 
 /// 🧮️ `T * R * S` node transform per glTF 2.0 §5.25 — quaternion-to-rotation composed with
@@ -909,12 +907,12 @@ fn gltf_triangle_indices(mode: u64, source: Vec<u32>) -> Vec<u32> {
 
 fn gltf_append_primitive(mesh: &mut MeshData, document: &json::Value, primitive: &json::Value, buffers: &[Vec<u8>], matrix: GlbMatrix) -> Result<(), String> {
     let mode = primitive.get("mode").and_then(json::Value::as_u64).unwrap_or(4);
-    if !matches!(mode, 4 | 5 | 6) {
+    if !matches!(mode, 4..=6) {
         return Ok(());
     }
     let attributes = primitive.get("attributes").ok_or_else(|| "gltf: primitive missing attributes".to_string())?;
     let position_accessor = attributes.get("POSITION").and_then(json::Value::as_u64).ok_or_else(|| "glb triangle primitive missing POSITION".to_string())? as usize;
-    let positions: Vec<[f32; 3]> = gltf_decode_accessor(document, buffers, position_accessor)?.chunks_exact(3).map(|c| [c[0] as f32, c[1] as f32, c[2] as f32]).collect();
+    let positions: Vec<[f32; 3]> = gltf_decode_accessor(document, buffers, position_accessor)?.as_chunks::<3>().0.iter().map(|c| [c[0] as f32, c[1] as f32, c[2] as f32]).collect();
 
     let source_indices: Vec<u32> = if let Some(indices_accessor) = primitive.get("indices").and_then(json::Value::as_u64) {
         gltf_decode_accessor(document, buffers, indices_accessor as usize)?.into_iter().map(|value| value as u32).collect()
@@ -926,7 +924,7 @@ fn gltf_append_primitive(mesh: &mut MeshData, document: &json::Value, primitive:
         return Err("glb triangle index outside POSITION accessor".into());
     }
     let normals: Vec<[f32; 3]> = if let Some(normal_accessor) = attributes.get("NORMAL").and_then(json::Value::as_u64) {
-        gltf_decode_accessor(document, buffers, normal_accessor as usize)?.chunks_exact(3).map(|c| [c[0] as f32, c[1] as f32, c[2] as f32]).collect()
+        gltf_decode_accessor(document, buffers, normal_accessor as usize)?.as_chunks::<3>().0.iter().map(|c| [c[0] as f32, c[1] as f32, c[2] as f32]).collect()
     } else {
         let mut local = MeshData { positions: positions.iter().flatten().copied().collect(), indices: indices.clone(), ..Default::default() };
         local.compute_normals();

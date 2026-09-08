@@ -46,9 +46,9 @@ pub mod derived_composition {
     pub async fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mp4_artifact_schema_descriptor());
         register_artifact_inferences().await;
-        let _ = store::register_document_codec(store::ArtifactCodec::of::<Mp4Snapshot, crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mutations::Mp4Mutation>(
+        store::register_document_codec(store::ArtifactCodec::of::<Mp4Snapshot, crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mutations::Mp4Mutation>(
             crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA,
-        ));
+        )).expect("static Stdio registration must be available and conflict-free");
     }
 
     /// 💡️ Registers `s.stdio.mp4.inference`'s facet leaves into the OS-wide inference
@@ -642,7 +642,7 @@ fn build_stbl(track: &Mp4Track, chunk_offsets: &[u32]) -> Vec<u8> {
     let Mp4Codec { sps, pps, nal_length_size, extension } = &track.codec;
     let mut extra = h264::build_avcc_extended(sps, pps, *nal_length_size, extension.as_ref());
     extra.extend(build_codec_extensions(track));
-    let codec_fourcc = [b'a', b'v', b'c', b'1'];
+    let codec_fourcc = *b"avc1";
     let mut stsd_payload = vec![0u8; 4];
     stsd_payload.extend_from_slice(&1u32.to_be_bytes());
     stsd_payload.extend(mp4_visual_sample_entry(&codec_fourcc, track.width as u16, track.height as u16, &track.metadata.visual, &extra));

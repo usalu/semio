@@ -20,15 +20,11 @@ pub fn handle(payload: &RenameArtifact, _doc: &ArtifactView<'_, SSpaceSnapshot>,
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::space_index::commands::create_artifact;
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
 
     #[semio_framework_async_macros::async_test]
     async fn rename_artifact_updates_the_name() {
-        let mut app = testkit::new_app().await;
-        app.dispatch_typed(SpaceIndexCommand::CreateArtifact(create_artifact::CreateArtifact { name: "First".into(), kind_id: "draw".into(), now_ms: 1, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local"))
-            .await.expect("create artifact");
-        let id = app.snapshot().unwrap().artifacts[0].id.clone();
+        let (mut app, id) = testkit::new_app_with_artifact().await;
         app.dispatch_typed(SpaceIndexCommand::RenameArtifact(RenameArtifact { id: id.clone(), new_name: "Renamed".into() }), &semio_framework_plugin::testkit::meta("local")).await.expect("rename artifact");
         let snapshot = app.snapshot().expect("projection");
         assert_eq!(snapshot.artifacts.iter().find(|row| row.id == id).map(|row| row.name.clone()), Some("Renamed".into()));

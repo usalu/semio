@@ -214,7 +214,7 @@ impl RetainedNodePaintCursor {
     }
 }
 
-fn retained_fixed_output(draw: &mut DrawList, paint: impl FnOnce(&mut DrawList)) -> Result<(), ()> {
+fn retained_fixed_output(draw: &mut DrawList, paint: impl FnOnce(&mut DrawList)) -> Result<(), crate::wgpu::draw::RetainedOutputError> {
     draw.begin_retained_output(RETAINED_NODE_FIXED_OUTPUT_ITEMS, RETAINED_NODE_FIXED_OUTPUT_BYTES)?;
     paint(draw);
     draw.finish_retained_output().map(|_| ())

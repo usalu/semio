@@ -247,12 +247,13 @@
     "package": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["pluginId", "packageId", "version", "role", "componentSha256", "componentBlake3", "descriptorSha256", "executionProtocol", "browserActor", "codecCount", "targetCount"],
+      "required": ["pluginId", "packageId", "version", "role", "dependencies", "componentSha256", "componentBlake3", "descriptorSha256", "executionProtocol", "browserActor", "codecCount", "targetCount"],
       "properties": {
         "pluginId": { "enum": ["gis", "stdio"] },
         "packageId": { "enum": ["semio:gis", "semio:stdio"] },
         "version": { "type": "string", "minLength": 1, "maxLength": 256 },
         "role": { "const": "plugin" },
+        "dependencies": { "type": "array", "maxItems": 1, "items": { "$ref": "#/$defs/stdioIdentity" } },
         "componentSha256": { "$ref": "#/$defs/digest" },
         "componentBlake3": { "$ref": "#/$defs/digest" },
         "descriptorSha256": { "$ref": "#/$defs/digest" },

@@ -14,27 +14,27 @@
 //! the always-ready rows once `WidgetState` grows an `open`-like field to gate *showing*/hit-testing
 //! them — no further reconcile-side change should be needed at that point.
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use crate::wgpu::Label;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use crate::wgpu::UiTreeActionPlacement;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use dsl::DslValue;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use std::borrow::Cow;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use std::collections::{HashMap, HashSet};
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use crate::wgpu::arena::NodeId;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use crate::wgpu::component::layout::ActionDescriptor;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use crate::wgpu::component::ui::{ui_control_to_node, UiButtonNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
 use crate::wgpu::tree::{UiDocumentPageRejection, UiDocumentTree, UiDocumentTreeFault};
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use crate::wgpu::tree::{Node, NodeFlags, NodeKey, UiTree, WidgetSpec};
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use crate::wgpu::IconName;
 use ui_contract::UiDocumentNodePage;
 
@@ -64,7 +64,7 @@ impl UiDocumentTree {
 }
 //#endregion 📄️DocumentPageReconcile
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn variant_discriminant(node: &UiNode) -> u32 {
     match node {
         UiNode::Stack(_) => 0,
@@ -89,7 +89,7 @@ fn variant_discriminant(node: &UiNode) -> u32 {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn explicit_id(node: &UiNode) -> Option<&str> {
     match node {
         UiNode::Stack(n) => n.id.as_deref(),
@@ -111,7 +111,7 @@ fn explicit_id(node: &UiNode) -> Option<&str> {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn node_key(node: &UiNode, ordinal: u32) -> NodeKey {
     match explicit_id(node) {
         Some(id) if !id.is_empty() => NodeKey::Explicit(id.to_string()),
@@ -125,7 +125,7 @@ fn node_key(node: &UiNode, ordinal: u32) -> NodeKey {
 /// Everything else has no nested `UiNode` payload to recurse into. `presence.state == Hidden`
 /// children are dropped here — hidden means not rendered at all, so they get no retained node, no
 /// layout, no paint, no hit-test; this is the one choke point every caller goes through.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn children_of(node: &UiNode) -> Vec<Cow<'_, UiNode>> {
     let children = match node {
         UiNode::Stack(n) => n.children.iter().map(Cow::Borrowed).collect(),
@@ -145,7 +145,7 @@ fn children_of(node: &UiNode) -> Vec<Cow<'_, UiNode>> {
 /// identity (it's what `UiSelectNode.value` itself holds to name the current choice), so reusing it as
 /// the row's key needs no extra bookkeeping. See this module's doc comment for the open/closed
 /// `WidgetState` wiring request this groundwork is waiting on.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn select_item_row(select: &UiSelectNode, item: &UiSelectItem) -> UiNode {
     UiNode::Button(UiButtonNode { id: Some(item.value.clone()), icon_id: IconName::CircleDot, label: item.label.clone(), action: with_item_value_arg(&select.on_change, &item.value), style: None, presence: UiPresence::default(), menu: None })
 }
@@ -154,7 +154,7 @@ fn select_item_row(select: &UiSelectNode, item: &UiSelectItem) -> UiNode {
 /// so a click on one synthesized `Select` row is distinguishable from any other row once a later
 /// events milestone dispatches it — `on_change.clone()` alone would fire an identical, valueless
 /// action for every row.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn with_item_value_arg(action: &ActionDescriptor, value: &str) -> ActionDescriptor {
     let mut merged = action.clone();
     let mut entries = match merged.args.take() {
@@ -168,7 +168,7 @@ fn with_item_value_arg(action: &ActionDescriptor, value: &str) -> ActionDescript
 
 /// 🌳️ Synthesizes one retained `Stack` row per `Tree` section, keyed by `section.id`, wrapping its
 /// `items` (recursively expanded by `tree_item_row`) as retained children.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn tree_section_row(tree_node: &UiTreeNode, section: &UiTreeSectionNode) -> UiNode {
     UiNode::Stack(UiStackNode {
         direction: "vertical".into(),
@@ -195,7 +195,7 @@ fn tree_section_row(tree_node: &UiTreeNode, section: &UiTreeSectionNode) -> UiNo
 /// fields, only clones them into `WidgetSpec`). ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-
 /// MECHANISM W3a: `hover_action`/`unhover_action` are deleted — hover is now framework-owned per
 /// `UiTreeNode.interaction_domain`, never a per-item action.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn tree_item_row(tree_node: &UiTreeNode, item: &UiTreeItemNode) -> UiNode {
     let mut children: Vec<UiNode> = Vec::new();
     if let Some(control) = &item.control {
@@ -229,7 +229,7 @@ fn tree_item_row(tree_node: &UiTreeNode, item: &UiTreeItemNode) -> UiNode {
 /// sections), so this leaves `UiButtonNode.id` unset — `node_key`'s positional fallback (keyed by the
 /// action's ordinal within its parent row's `actions` list) is already stable across re-renders for a
 /// fixed action set, matching every other id-less synthesized/leaf child in this module.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn tree_item_action_row(action: &UiTreeItemAction) -> UiNode {
     UiNode::Button(UiButtonNode { id: None, icon_id: action.icon_id.clone(), label: action.label.clone().unwrap_or_else(|| Label::data("")), action: action.action.clone(), style: None, presence: UiPresence::default(), menu: None })
 }
@@ -237,7 +237,7 @@ fn tree_item_action_row(action: &UiTreeItemAction) -> UiNode {
 
 /// ⚖️ Whether the two nodes' *own* scalar fields (excluding nested `UiNode` children, which are
 /// reconciled and dirtied independently) are equal.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn own_fields_equal(previous: &UiNode, next: &UiNode) -> bool {
     match (previous, next) {
         (UiNode::Stack(p), UiNode::Stack(n)) => {
@@ -254,7 +254,7 @@ fn own_fields_equal(previous: &UiNode, next: &UiNode) -> bool {
 /// (i.e. `state` crossing into/out of `Hidden`) always counts — a hidden element occupies no layout
 /// space at all, so becoming hidden/unhidden must re-run layout for its parent, unlike every other
 /// `presence` change (selected/status/hover/previewed/disabled), which is paint-only.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn layout_affecting_change(previous: &UiNode, next: &UiNode) -> bool {
     if previous.presence().visible() != next.presence().visible() {
         return true;
@@ -268,7 +268,7 @@ fn layout_affecting_change(previous: &UiNode, next: &UiNode) -> bool {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl UiTree {
     /// 🔁️ Applies an incoming declarative `UiNode` tree to this retained tree: keyed single-pass
     /// child matching, minimal-dirty-flag diffing of matched nodes, insertion of unmatched incoming

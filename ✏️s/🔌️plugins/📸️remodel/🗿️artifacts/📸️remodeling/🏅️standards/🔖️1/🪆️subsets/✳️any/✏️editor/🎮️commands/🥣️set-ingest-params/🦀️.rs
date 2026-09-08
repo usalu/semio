@@ -24,6 +24,7 @@ pub fn handle(payload: &SetIngestParams, _doc: &ArtifactView<'_, RemodelingSnaps
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::remodeling::{RobustLossKind, FeatureDetector, MatcherKind, DenseResolution};
     use crate::editor::remodeling::commands::{set_dense_params, set_feature_params, set_geo_params, set_match_params, set_mesh_params, set_motion_params, set_sfm_params};
     use crate::editor::remodeling::testkit::{app, dispatch};
     use crate::editor::remodeling::RemodelingCommand;

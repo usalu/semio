@@ -24,7 +24,7 @@ impl protocol::MutationKind<StepSnapshot, StepCc6Mutation> for SetSnapshot {
         vec![StepCc6Mutation::SetSnapshot(SetSnapshot { snapshot: base.clone() })]
     }
     fn label(&self) -> String {
-        format!("Set the whole CC6 snapshot")
+        "Set the whole CC6 snapshot".to_string()
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

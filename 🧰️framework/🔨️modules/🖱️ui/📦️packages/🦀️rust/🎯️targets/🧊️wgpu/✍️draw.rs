@@ -105,7 +105,7 @@ impl SceneColorTarget {
                 })
             })
             .collect();
-        let sampler = device.create_sampler(&wgpu::SamplerDescriptor { label: Some("scene_color_sampler"), mag_filter: wgpu::FilterMode::Linear, min_filter: wgpu::FilterMode::Linear, mipmap_filter: wgpu::FilterMode::Linear, ..Default::default() });
+        let sampler = device.create_sampler(&wgpu::SamplerDescriptor { label: Some("scene_color_sampler"), mag_filter: wgpu::FilterMode::Linear, min_filter: wgpu::FilterMode::Linear, mipmap_filter: wgpu::MipmapFilterMode::Linear, ..Default::default() });
         *target = Some(Self { texture, blur_scratch, blur_scratch_mip_views, sample_view, mip_views, sampler, width, height });
     }
 
@@ -2157,9 +2157,9 @@ impl UiPipelines {
         let world_lines_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor { label: Some("world3d_lines_shader"), source: wgpu::ShaderSource::Wgsl(WORLD3D_LINES_SHADER.into()) });
 
         let depth_state =
-            Some(wgpu::DepthStencilState { format: wgpu::TextureFormat::Depth24PlusStencil8, depth_write_enabled: true, depth_compare: wgpu::CompareFunction::Less, stencil: content_stencil_state(), bias: wgpu::DepthBiasState::default() });
+            Some(wgpu::DepthStencilState { format: wgpu::TextureFormat::Depth24PlusStencil8, depth_write_enabled: Some(true), depth_compare: Some(wgpu::CompareFunction::Less), stencil: content_stencil_state(), bias: wgpu::DepthBiasState::default() });
         let overlay_depth_state =
-            Some(wgpu::DepthStencilState { format: wgpu::TextureFormat::Depth24PlusStencil8, depth_write_enabled: false, depth_compare: wgpu::CompareFunction::Always, stencil: content_stencil_state(), bias: wgpu::DepthBiasState::default() });
+            Some(wgpu::DepthStencilState { format: wgpu::TextureFormat::Depth24PlusStencil8, depth_write_enabled: Some(false), depth_compare: Some(wgpu::CompareFunction::Always), stencil: content_stencil_state(), bias: wgpu::DepthBiasState::default() });
 
         let quad_vertices: &[f32] = &[0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0];
         let quad_vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor { label: Some("ui_quad_vertices"), contents: bytemuck::cast_slice(quad_vertices), usage: wgpu::BufferUsages::VERTEX });
@@ -2205,7 +2205,7 @@ impl UiPipelines {
                 wgpu::BindGroupEntry { binding: 4, resource: wgpu::BindingResource::Sampler(&icon_sampler) },
             ],
         });
-        let ui_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("ui_pipeline_layout"), bind_group_layouts: &[&globals_bind_group_layout], push_constant_ranges: &[] });
+        let ui_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("ui_pipeline_layout"), bind_group_layouts: &[Some(&globals_bind_group_layout)], immediate_size: 0 });
         #[cfg(test)]
         let mask_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("silhouette_mask_pipeline"),
@@ -2232,13 +2232,13 @@ impl UiPipelines {
             primitive: wgpu::PrimitiveState::default(),
             depth_stencil: Some(wgpu::DepthStencilState {
                 format: wgpu::TextureFormat::Depth24PlusStencil8,
-                depth_write_enabled: false,
-                depth_compare: wgpu::CompareFunction::Always,
+                depth_write_enabled: Some(false),
+                depth_compare: Some(wgpu::CompareFunction::Always),
                 stencil: mask_stencil_state(),
                 bias: wgpu::DepthBiasState::default(),
             }),
             multisample: wgpu::MultisampleState::default(),
-            multiview: None,
+            multiview_mask: None,
             cache: None,
         });
         let ui_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -2271,11 +2271,11 @@ impl UiPipelines {
             primitive: wgpu::PrimitiveState::default(),
             depth_stencil: overlay_depth_state.clone(),
             multisample: wgpu::MultisampleState::default(),
-            multiview: None,
+            multiview_mask: None,
             cache: None,
         });
 
-        let vector_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("vector_pipeline_layout"), bind_group_layouts: &[&globals_bind_group_layout], push_constant_ranges: &[] });
+        let vector_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("vector_pipeline_layout"), bind_group_layouts: &[Some(&globals_bind_group_layout)], immediate_size: 0 });
         let vector_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("vector_pipeline"),
             layout: Some(&vector_pipeline_layout),
@@ -2298,7 +2298,7 @@ impl UiPipelines {
             primitive: wgpu::PrimitiveState::default(),
             depth_stencil: overlay_depth_state,
             multisample: wgpu::MultisampleState::default(),
-            multiview: None,
+            multiview_mask: None,
             cache: None,
         });
 
@@ -2314,7 +2314,7 @@ impl UiPipelines {
 
         let world_globals_ring = WorldGlobalsRing::new(device, &world_bind_group_layout, 8);
 
-        let world_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("world3d_pipeline_layout"), bind_group_layouts: &[&world_bind_group_layout], push_constant_ranges: &[] });
+        let world_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("world3d_pipeline_layout"), bind_group_layouts: &[Some(&world_bind_group_layout)], immediate_size: 0 });
         let world_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("world3d_pipeline"),
             layout: Some(&world_pipeline_layout),
@@ -2351,18 +2351,18 @@ impl UiPipelines {
             primitive: wgpu::PrimitiveState { cull_mode: None, ..Default::default() },
             depth_stencil: depth_state,
             multisample: wgpu::MultisampleState::default(),
-            multiview: None,
+            multiview_mask: None,
             cache: None,
         });
         let translucent_depth_state = Some(wgpu::DepthStencilState {
             format: wgpu::TextureFormat::Depth24PlusStencil8,
-            depth_write_enabled: false,
-            depth_compare: wgpu::CompareFunction::LessEqual,
+            depth_write_enabled: Some(false),
+            depth_compare: Some(wgpu::CompareFunction::LessEqual),
             stencil: content_stencil_state(),
             bias: wgpu::DepthBiasState { constant: -2, slope_scale: -1.0, clamp: 0.0 },
         });
         let world_line_depth_state =
-            Some(wgpu::DepthStencilState { format: wgpu::TextureFormat::Depth24PlusStencil8, depth_write_enabled: false, depth_compare: wgpu::CompareFunction::LessEqual, stencil: content_stencil_state(), bias: wgpu::DepthBiasState::default() });
+            Some(wgpu::DepthStencilState { format: wgpu::TextureFormat::Depth24PlusStencil8, depth_write_enabled: Some(false), depth_compare: Some(wgpu::CompareFunction::LessEqual), stencil: content_stencil_state(), bias: wgpu::DepthBiasState::default() });
         let world_pipeline_translucent = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("world3d_pipeline_translucent"),
             layout: Some(&world_pipeline_layout),
@@ -2399,7 +2399,7 @@ impl UiPipelines {
             primitive: wgpu::PrimitiveState { cull_mode: Some(wgpu::Face::Back), ..Default::default() },
             depth_stencil: translucent_depth_state,
             multisample: wgpu::MultisampleState::default(),
-            multiview: None,
+            multiview_mask: None,
             cache: None,
         });
         let world_line_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -2424,7 +2424,7 @@ impl UiPipelines {
             primitive: wgpu::PrimitiveState { topology: wgpu::PrimitiveTopology::LineList, ..Default::default() },
             depth_stencil: world_line_depth_state,
             multisample: wgpu::MultisampleState::default(),
-            multiview: None,
+            multiview_mask: None,
             cache: None,
         });
 
@@ -2467,7 +2467,7 @@ impl UiPipelines {
         let blur_globals_buffer =
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor { label: Some("blur_globals"), contents: bytemuck::bytes_of(&BlurGlobals { src_mip: 0.0, _pad: [0.0; 7] }), usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST });
 
-        let blur_downsample_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("blur_downsample_pipeline_layout"), bind_group_layouts: &[&blur_bind_group_layout], push_constant_ranges: &[] });
+        let blur_downsample_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("blur_downsample_pipeline_layout"), bind_group_layouts: &[Some(&blur_bind_group_layout)], immediate_size: 0 });
         let blur_downsample_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("blur_downsample_pipeline"),
             layout: Some(&blur_downsample_pipeline_layout),
@@ -2481,11 +2481,11 @@ impl UiPipelines {
             primitive: wgpu::PrimitiveState::default(),
             depth_stencil: None,
             multisample: wgpu::MultisampleState::default(),
-            multiview: None,
+            multiview_mask: None,
             cache: None,
         });
 
-        let scene_blit_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("scene_blit_pipeline_layout"), bind_group_layouts: &[&scene_bind_group_layout], push_constant_ranges: &[] });
+        let scene_blit_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("scene_blit_pipeline_layout"), bind_group_layouts: &[Some(&scene_bind_group_layout)], immediate_size: 0 });
         let scene_blit_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("scene_blit_pipeline"),
             layout: Some(&scene_blit_pipeline_layout),
@@ -2499,11 +2499,11 @@ impl UiPipelines {
             primitive: wgpu::PrimitiveState::default(),
             depth_stencil: None,
             multisample: wgpu::MultisampleState::default(),
-            multiview: None,
+            multiview_mask: None,
             cache: None,
         });
 
-        let glass_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("glass_pipeline_layout"), bind_group_layouts: &[&globals_bind_group_layout, &scene_bind_group_layout], push_constant_ranges: &[] });
+        let glass_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("glass_pipeline_layout"), bind_group_layouts: &[Some(&globals_bind_group_layout), Some(&scene_bind_group_layout)], immediate_size: 0 });
         let glass_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("glass_pipeline"),
             layout: Some(&glass_pipeline_layout),
@@ -2533,7 +2533,7 @@ impl UiPipelines {
             primitive: wgpu::PrimitiveState::default(),
             depth_stencil: None,
             multisample: wgpu::MultisampleState::default(),
-            multiview: None,
+            multiview_mask: None,
             cache: None,
         });
 
@@ -2981,6 +2981,7 @@ impl UiPipelines {
             depth_stencil_attachment: depth_view.map(|depth| stencil_attachment(depth, wgpu::LoadOp::Clear(1.0), wgpu::LoadOp::Clear(0))),
             timestamp_writes: None,
             occlusion_query_set: None,
+            multiview_mask: None,
         });
         drop(pass);
     }
@@ -3017,6 +3018,7 @@ impl UiPipelines {
             depth_stencil_attachment: Some(stencil_attachment(depth_view, wgpu::LoadOp::Load, wgpu::LoadOp::Load)),
             timestamp_writes: None,
             occlusion_query_set: None,
+            multiview_mask: None,
         });
         set_pass_scissor(&mut pass, scissor, width, height);
         pass.set_pipeline(&self.ui_pipeline);
@@ -3056,6 +3058,7 @@ impl UiPipelines {
             depth_stencil_attachment: Some(stencil_attachment(depth_view, wgpu::LoadOp::Load, wgpu::LoadOp::Load)),
             timestamp_writes: None,
             occlusion_query_set: None,
+            multiview_mask: None,
         });
         set_pass_scissor(&mut pass, scissor, width, height);
         pass.set_pipeline(&self.vector_pipeline);
@@ -3103,6 +3106,7 @@ impl UiPipelines {
             depth_stencil_attachment: Some(stencil_attachment(depth_view, wgpu::LoadOp::Load, wgpu::LoadOp::Load)),
             timestamp_writes: None,
             occlusion_query_set: None,
+            multiview_mask: None,
         });
         pass.set_viewport(viewport[0], viewport[1], viewport[2], viewport[3], 0.0, 1.0);
         pass.set_scissor_rect(scene_scissor.x, scene_scissor.y, scene_scissor.w, scene_scissor.h);
@@ -3150,6 +3154,7 @@ impl UiPipelines {
             depth_stencil_attachment: Some(stencil_attachment(depth_view, wgpu::LoadOp::Load, wgpu::LoadOp::Load)),
             timestamp_writes: None,
             occlusion_query_set: None,
+            multiview_mask: None,
         });
         pass.set_viewport(viewport[0], viewport[1], viewport[2], viewport[3], 0.0, 1.0);
         pass.set_scissor_rect(scene_scissor.x, scene_scissor.y, scene_scissor.w, scene_scissor.h);
@@ -3191,6 +3196,7 @@ impl UiPipelines {
             depth_stencil_attachment: None,
             timestamp_writes: None,
             occlusion_query_set: None,
+            multiview_mask: None,
         });
         pass.set_pipeline(&self.blur_downsample_pipeline);
         pass.set_bind_group(0, &bind_group, &[]);
@@ -3227,6 +3233,7 @@ impl UiPipelines {
             depth_stencil_attachment: None,
             timestamp_writes: None,
             occlusion_query_set: None,
+            multiview_mask: None,
         });
         pass.set_pipeline(&self.glass_pipeline);
         pass.set_bind_group(0, &self.glyph_bind_group, &[]);
@@ -3285,6 +3292,7 @@ impl UiPipelines {
             depth_stencil_attachment: depth_view.map(|depth| stencil_attachment(depth, wgpu::LoadOp::Clear(1.0), wgpu::LoadOp::Clear(0))),
             timestamp_writes: None,
             occlusion_query_set: None,
+            multiview_mask: None,
         });
         self.render_interleaved_layers(
             &mut pass,
@@ -3311,6 +3319,7 @@ impl UiPipelines {
                 depth_stencil_attachment: depth_view.map(|depth| stencil_attachment(depth, wgpu::LoadOp::Load, wgpu::LoadOp::Clear(0))),
                 timestamp_writes: None,
                 occlusion_query_set: None,
+                multiview_mask: None,
             });
             self.draw_raster_layers(&mut raster_pass, raster_store, draw, frame_buffers, device, queue, width, height, LayerBatchFilter::Backdrop);
         }
@@ -3326,6 +3335,7 @@ impl UiPipelines {
                 depth_stencil_attachment: depth_view.map(|depth| stencil_attachment(depth, wgpu::LoadOp::Load, wgpu::LoadOp::Clear(0))),
                 timestamp_writes: None,
                 occlusion_query_set: None,
+                multiview_mask: None,
             });
             self.render_interleaved_layers(
                 &mut overlay_pass,
@@ -3395,6 +3405,7 @@ impl UiPipelines {
             depth_stencil_attachment: depth_view.map(|depth| stencil_attachment(depth, wgpu::LoadOp::Load, wgpu::LoadOp::Clear(0))),
             timestamp_writes: None,
             occlusion_query_set: None,
+            multiview_mask: None,
         });
         self.render_interleaved_layers(
             &mut pass,
@@ -3421,6 +3432,7 @@ impl UiPipelines {
                 depth_stencil_attachment: depth_view.map(|depth| stencil_attachment(depth, wgpu::LoadOp::Load, wgpu::LoadOp::Clear(0))),
                 timestamp_writes: None,
                 occlusion_query_set: None,
+                multiview_mask: None,
             });
             self.draw_raster_layers(&mut raster_pass, raster_store, draw, frame_buffers, device, queue, width, height, LayerBatchFilter::Foreground);
         }
@@ -3437,6 +3449,7 @@ impl UiPipelines {
                 depth_stencil_attachment: depth_view.map(|depth| stencil_attachment(depth, wgpu::LoadOp::Load, wgpu::LoadOp::Clear(0))),
                 timestamp_writes: None,
                 occlusion_query_set: None,
+                multiview_mask: None,
             });
             self.render_interleaved_layers(
                 &mut overlay_pass,
@@ -3492,6 +3505,7 @@ impl UiPipelines {
                 depth_stencil_attachment: depth_view.map(|depth| stencil_attachment(depth, wgpu::LoadOp::Load, wgpu::LoadOp::Clear(0))),
                 timestamp_writes: None,
                 occlusion_query_set: None,
+                multiview_mask: None,
             });
             self.render_overlay(device, queue, &mut overlay_pass, overlay, frame_buffers, width, height);
         }
@@ -3550,6 +3564,7 @@ impl UiPipelines {
                 depth_stencil_attachment: None,
                 timestamp_writes: None,
                 occlusion_query_set: None,
+                multiview_mask: None,
             });
             pass.set_pipeline(&self.blur_downsample_pipeline);
             pass.set_bind_group(0, &blur_bind_group, &[]);
@@ -3576,6 +3591,7 @@ impl UiPipelines {
             depth_stencil_attachment: None,
             timestamp_writes: None,
             occlusion_query_set: None,
+            multiview_mask: None,
         });
         pass.set_pipeline(&self.scene_blit_pipeline);
         pass.set_bind_group(0, &scene_bind_group, &[]);
@@ -3619,6 +3635,7 @@ impl UiPipelines {
             depth_stencil_attachment: None,
             timestamp_writes: None,
             occlusion_query_set: None,
+            multiview_mask: None,
         });
         pass.set_pipeline(&self.glass_pipeline);
         pass.set_bind_group(0, &self.glyph_bind_group, &[]);

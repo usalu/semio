@@ -2,7 +2,7 @@
 name = "semio-framework-server"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Authoritative application server product: CQRS command/query contracts, the actor turn protocol, policy vocabulary and the server-instance framework that hub and zentrale compose. Speaks the replication contract; never depends on the os product."
 
 [package.metadata.semio]

@@ -19,11 +19,11 @@ const ABSENT: &str = include_str!("🔺️diff/🚫️.absent");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> ProgramSnapshot {
-    serde_json::from_str(BEFORE).expect("rename-benchmark-record/rejects-renaming-absent-benchmark-record-a: before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("rename-benchmark-record/rejects-renaming-absent-benchmark-record-a: before snapshot decodes")
 }
 
 fn expected_after() -> ProgramSnapshot {
-    serde_json::from_str(AFTER).expect("rename-benchmark-record/rejects-renaming-absent-benchmark-record-a: after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("rename-benchmark-record/rejects-renaming-absent-benchmark-record-a: after snapshot decodes")
 }
 
 fn mutation() -> ProgramMutation {
@@ -50,8 +50,8 @@ async fn rename_benchmark_record_has_an_empty_inverse() {
 #[semio_framework_async_macros::async_test]
 async fn rename_benchmark_record_committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: ProgramSnapshot = serde_json::from_str(text).expect("rename-benchmark-record/rejects-renaming-absent-benchmark-record-a: snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("rename-benchmark-record/rejects-renaming-absent-benchmark-record-a: snapshot re-encodes");
+        let decoded: ProgramSnapshot = dsl::json::from_json_str(text).expect("rename-benchmark-record/rejects-renaming-absent-benchmark-record-a: snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("rename-benchmark-record/rejects-renaming-absent-benchmark-record-a: snapshot re-encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("rename-benchmark-record/rejects-renaming-absent-benchmark-record-a: snapshot reparses");
         assert_eq!(reencoded, original, "rename-benchmark-record/rejects-renaming-absent-benchmark-record-a: committed {side} snapshot JSON is not canonical");
     }

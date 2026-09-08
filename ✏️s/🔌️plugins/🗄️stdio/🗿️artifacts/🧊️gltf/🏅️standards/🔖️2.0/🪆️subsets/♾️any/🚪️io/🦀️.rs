@@ -163,9 +163,10 @@ pub enum GltfAccessorType {
     Mat4,
 }
 
-impl GltfAccessorType {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn from_str(s: &str) -> Result<Self, String> {
+impl std::str::FromStr for GltfAccessorType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(match s {
             "SCALAR" => Self::Scalar,
             "VEC2" => Self::Vec2,
@@ -177,6 +178,9 @@ impl GltfAccessorType {
             other => return Err(format!("unsupported accessor.type {other:?}")),
         })
     }
+}
+
+impl GltfAccessorType {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_str(self) -> &'static str {
@@ -236,7 +240,7 @@ impl Serialize for GltfAccessorType {
 impl<'de> Deserialize<'de> for GltfAccessorType {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let s = String::deserialize(deserializer)?;
-        Self::from_str(&s).map_err(serde::de::Error::custom)
+        s.parse::<Self>().map_err(serde::de::Error::custom)
     }
 }
 
@@ -266,7 +270,7 @@ impl dsl::ToValue for GltfAccessorType {
 impl dsl::FromValue for GltfAccessorType {
     fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
         let s = <String as dsl::FromValue>::from_value(value)?;
-        Self::from_str(&s).map_err(dsl::ValueError::new)
+        s.parse::<Self>().map_err(dsl::ValueError::new)
     }
 }
 //#endregion 🔖️AccessorModelSerde
@@ -471,7 +475,7 @@ fn align4(len: usize) -> usize {
 pub fn encode_glb(snapshot: &GltfSnapshot) -> Result<Vec<u8>, String> {
     validate_document(&snapshot.document)?;
     let mut document = snapshot.document.clone();
-    let embed_bin = document.buffers.first().map(|b| b.uri.is_none()).unwrap_or(false);
+    let embed_bin = document.buffers.first().is_some_and(|b| b.uri.is_none());
     let bin: Option<&[u8]> = if embed_bin { snapshot.buffers.first().map(|v| v.as_slice()) } else { None };
 
     // A buffer embedded via the BIN chunk must NOT carry a `byteLength` mismatch with what we're
@@ -493,14 +497,14 @@ pub fn encode_glb(snapshot: &GltfSnapshot) -> Result<Vec<u8>, String> {
     out.extend_from_slice(&(json_padded_len as u32).to_le_bytes());
     out.extend_from_slice(CHUNK_TYPE_JSON);
     out.extend_from_slice(&json);
-    out.extend(std::iter::repeat(0x20u8).take(json_padded_len - json.len()));
+    out.extend(std::iter::repeat_n(0x20u8, json_padded_len - json.len()));
 
     if let Some(bin_bytes) = bin {
         let bin_padded_len = align4(bin_bytes.len());
         out.extend_from_slice(&(bin_padded_len as u32).to_le_bytes());
         out.extend_from_slice(CHUNK_TYPE_BIN);
         out.extend_from_slice(bin_bytes);
-        out.extend(std::iter::repeat(0x00u8).take(bin_padded_len - bin_bytes.len()));
+        out.extend(std::iter::repeat_n(0x00u8, bin_padded_len - bin_bytes.len()));
     }
 
     let total = out.len() as u32;
@@ -552,7 +556,7 @@ pub fn decode_glb(bytes: &[u8]) -> Result<GltfSnapshot, String> {
     // The BIN chunk's declared length is 4-byte-padded; the true buffer content length is
     // `document.buffers[0].byteLength` (padding is trailing filler, never real payload).
     let bin_content: Option<Vec<u8>> = bin_chunk.map(|chunk| {
-        let declared_len = document.buffers.first().map(|b| b.byte_length).unwrap_or(chunk.len());
+        let declared_len = document.buffers.first().map_or(chunk.len(), |b| b.byte_length);
         chunk[..declared_len.min(chunk.len())].to_vec()
     });
 

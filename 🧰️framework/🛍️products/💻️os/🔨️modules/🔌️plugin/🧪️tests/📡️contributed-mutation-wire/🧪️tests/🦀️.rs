@@ -2,7 +2,7 @@
 //! 🧪️ Direct contributed-wire mutation laws and codec provenance.
 
 use super::*;
-use protocol::{CompositeMutationKind, Mutation, MutationDiff, MutationKind, MutationLeaf, OpBinary};
+use protocol::{CompositeMutationKind, Mutation, MutationDiff, MutationLeaf, OpBinary};
 
 fn cases() -> serde_json::Value {
     serde_json::from_str(include_str!("../🔣️.json")).expect("contributed wire neutral cases")

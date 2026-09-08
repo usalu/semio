@@ -150,6 +150,7 @@ impl AppKernelSeam {
 
     /// 🧪️ Test/host seam for inspecting queue depth without draining it.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    #[cfg(test)]
     pub fn pending_len(&self) -> usize {
         self.outcomes.lock().expect("kernel outcome mailbox lock").ready.len()
     }
@@ -227,17 +228,17 @@ mod tests {
     use ui_contract::{ActionId, SurfaceId, Trigger, UiNodeId, UiRevision};
 
     fn fake_intent(surface: &str) -> UiIntent {
-        UiIntent { surface: SurfaceId(surface.to_string()), revision: UiRevision(1), seq: 1, node: UiNodeId(1), node_key: "root".to_string(), trigger: Trigger::Activate, action: ActionId::default(), args: None, input: None }
+        UiIntent { surface: SurfaceId::try_from(surface).expect("bounded fixture surface"), revision: UiRevision(1), seq: 1, node: UiNodeId(1), node_key: ui_contract::UiText::try_from_str("root").expect("bounded fixture node key"), trigger: Trigger::Activate, action: ActionId::default(), args: None, input: None }
     }
 
     #[cfg(not(target_arch = "wasm32"))]
     fn echo_exchange(intent: UiIntent) -> Pin<Box<dyn Future<Output = KernelOutcome> + Send>> {
-        Box::pin(async move { KernelOutcome { surface: intent.surface.0, detail: Box::new(intent.node_key) } })
+        Box::pin(async move { KernelOutcome { surface: intent.surface.0.to_string(), detail: Box::new(intent.node_key) } })
     }
 
     #[cfg(target_arch = "wasm32")]
     fn echo_exchange(intent: UiIntent) -> Pin<Box<dyn Future<Output = KernelOutcome>>> {
-        Box::pin(async move { KernelOutcome { surface: intent.surface.0, detail: Box::new(intent.node_key) } })
+        Box::pin(async move { KernelOutcome { surface: intent.surface.0.to_string(), detail: Box::new(intent.node_key) } })
     }
 
     #[test]

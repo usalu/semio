@@ -169,6 +169,20 @@ export function retainInferencePortOwnerAfterCloseV1(owner: InferencePortOwnerV1
   return owner?.runtimeKey === runtimeKey ? null : owner;
 }
 
+export type ShellHistoryUndoRouteV1 = "remote" | "local" | "blocked" | "none";
+
+/** ↩️ Chooses the newest exact history owner without folding a Hub durable inverse into guest-local
+ * history. A submitting remote member blocks only when it is at least as new as local history. */
+export function shellHistoryUndoRouteV1(
+  remote: Readonly<{ phase: "unavailable" | "available" | "submitting" | "applied" | "failed"; canUndo: boolean; order: number }> | null,
+  local: Readonly<{ canUndo: boolean; order: number }>,
+): ShellHistoryUndoRouteV1 {
+  if (remote?.phase === "submitting" && remote.order >= local.order) return "blocked";
+  if (remote?.canUndo && (!local.canUndo || remote.order >= local.order)) return "remote";
+  if (local.canUndo) return "local";
+  return remote?.canUndo ? "remote" : "none";
+}
+
 export type InferencePortUiAction =
   | { readonly kind: "propose" }
   | { readonly kind: "cancel" }

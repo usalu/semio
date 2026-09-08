@@ -78,7 +78,7 @@ pub fn evaluate_request_json(kind_id: &str, input_json: &str) -> String {
 pub fn evaluate_invoke(registry: &Registry, request: &[u8]) -> Result<Vec<u8>, String> {
     let body: serde_json::Value = serde_json::from_slice(request).map_err(|err| err.to_string())?;
     let kind_id = body.get("kindId").and_then(|v| v.as_str()).ok_or_else(|| "missing kindId".to_string())?;
-    let input_json = body.get("input").map(|v| v.to_string()).unwrap_or_else(|| "{}".to_string());
+    let input_json = body.get("input").map_or_else(|| "{}".to_string(), |v| v.to_string());
     Ok(evaluate_json(registry, kind_id, &input_json).into_bytes())
 }
 // #endregion 🔖️Evaluate
@@ -93,8 +93,8 @@ pub const IMPERATIVE_MODULE_EVALUATE_CAPABILITY: &str = "imperative.module/evalu
 /// 🧩️ Builds one `ProgramContributionEntry` carrying the `"imperative.module"` topic contribution.
 // 🚫️async: E1 pure — struct literal over `imperative_module_topic_contribution` (sync); every one of
 // the 5 imperative-* extensions' own wrapper fns consumes this synchronously (unawaited) — see R9.
-pub fn imperative_module_contribution(extension_id: &str, module_id: &str, label: &str, icon_id: &str, manifest_id: &str, manifest_name: &str, version: &str, registry: &Registry, catalogue_json: Option<&str>) -> ProgramContributionEntry {
-    ProgramContributionEntry { plugin_id: extension_id.into(), topic_contribution: Some(imperative_module_topic_contribution(module_id, label, icon_id, manifest_id, manifest_name, version, registry, catalogue_json)) }
+pub fn imperative_module_contribution(extension_id: &str, module_id: &str, label: &str, icon_id: &str, manifest_json: String) -> ProgramContributionEntry {
+    ProgramContributionEntry { plugin_id: extension_id.into(), topic_contribution: Some(imperative_module_topic_contribution(module_id, label, icon_id, manifest_json)) }
 }
 // #endregion 🔖️Constants
 
@@ -102,8 +102,7 @@ pub fn imperative_module_contribution(extension_id: &str, module_id: &str, label
 /// 🗺️ Builds the `"imperative.module"` `TopicContribution` payload consumed by
 /// [`imperative_module_contribution`] — see
 /// `🧰️framework/🔨️modules/🛂️manifest/🦀️.rs::TopicContribution`.
-pub fn imperative_module_topic_contribution(module_id: &str, label: &str, icon_id: &str, manifest_id: &str, manifest_name: &str, version: &str, registry: &Registry, catalogue_json: Option<&str>) -> TopicContribution {
-    let manifest_json = build_manifest_json(manifest_id, manifest_name, version, registry, catalogue_json);
+pub fn imperative_module_topic_contribution(module_id: &str, label: &str, icon_id: &str, manifest_json: String) -> TopicContribution {
     TopicContribution::new(
         "imperative.module",
         DslValue::object([

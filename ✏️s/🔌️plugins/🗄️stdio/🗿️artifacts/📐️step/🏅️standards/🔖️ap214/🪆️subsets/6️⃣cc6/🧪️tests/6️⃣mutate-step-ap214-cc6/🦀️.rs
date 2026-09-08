@@ -212,7 +212,7 @@ mod subject {
                 if let Some(identity) = params.get("productIdentity").filter(|value| !matches!(value, Json::Null)) {
                     semio_s_plugin_stdio::artifacts::step::engine::ladder::set_product_identity(&mut document, Some(&identity_from(identity)?));
                 }
-                snapshot = StepSnapshot::from_part21_document(document);
+                snapshot = StepSnapshot::from_part21_document(&document);
                 let _ = base;
                 StepCc6Mutation::SetSnapshot(semio_s_plugin_stdio::artifacts::step::standards::v_ap214::subsets::cc6::schema::mutations::set_snapshot::SetSnapshot { snapshot })
             }
@@ -247,7 +247,7 @@ mod subject {
     fn apply_and_encode(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
         let text = std::str::from_utf8(input).map_err(|error| format!("input is not UTF-8: {error}"))?;
         let document = parse_part21(text).map_err(|error| format!("parse_part21 failed: {error}"))?;
-        let mut snapshot = StepSnapshot::from_part21_document(document);
+        let mut snapshot = StepSnapshot::from_part21_document(&document);
         let mutation = mutation_from_spec(spec, &snapshot.clone())?;
         apply_step_cc6_mutation_checked(&mut snapshot, &mutation)?;
         Ok(write_part21(&snapshot.to_part21_document()).into_bytes())
@@ -273,10 +273,10 @@ mod subject {
         let kind = spec.str("kind");
         let baseline = project_step_ap214_cc6(&apply_and_encode(&input, &no_mutation())?)?;
         let text = std::str::from_utf8(&input).map_err(|error| format!("input is not UTF-8: {error}"))?;
-        let base = StepSnapshot::from_part21_document(parse_part21(text).map_err(|error| format!("parse_part21 failed: {error}"))?);
+        let base = StepSnapshot::from_part21_document(&parse_part21(text).map_err(|error| format!("parse_part21 failed: {error}"))?);
         let mutated = apply_and_encode(&input, &spec)?;
         let mutated_text = std::str::from_utf8(&mutated).map_err(|error| format!("output is not UTF-8: {error}"))?;
-        let mut snapshot = StepSnapshot::from_part21_document(parse_part21(mutated_text).map_err(|error| format!("parse_part21 failed: {error}"))?);
+        let mut snapshot = StepSnapshot::from_part21_document(&parse_part21(mutated_text).map_err(|error| format!("parse_part21 failed: {error}"))?);
         for step in inverse_step_cc6_mutation(&base, &mutation_from_spec(&spec, &base)?) {
             apply_step_cc6_mutation_checked(&mut snapshot, &step)?;
         }

@@ -340,8 +340,8 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "cad.scene".into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["dwg", "glb", "gltf", "ifc", "json", "obj", "png", "step", "stl"],
-        import_stdio_kinds: vec!["dwg", "glb", "gltf", "ifc", "json", "obj", "png", "step", "stl"],
+        export_stdio_kinds: vec!["dwg".into(), "glb".into(), "gltf".into(), "ifc".into(), "json".into(), "obj".into(), "png".into(), "step".into(), "stl".into()],
+        import_stdio_kinds: vec!["dwg".into(), "glb".into(), "gltf".into(), "ifc".into(), "json".into(), "obj".into(), "png".into(), "step".into(), "stl".into()],
     }
 }
 

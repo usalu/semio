@@ -25,7 +25,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `JsonSnapshot -> BuiltNode` read: same shape as the editor's own render, no mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &JsonSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    TreeWindowKit::render(&TreeView { roots: vec![node_view(Vec::new(), None, &document.value)] })
+    TreeWindowKit::render(&TreeView { roots: vec![node_view(&[], None, &document.value)] })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -40,7 +40,7 @@ fn scalar_label(value: &JsonValue) -> Option<String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn node_view(path: Vec<String>, key_label: Option<&str>, value: &JsonValue) -> TreeNodeView {
+fn node_view(path: &[String], key_label: Option<&str>, value: &JsonValue) -> TreeNodeView {
     let id = path.join("/");
     let prefix = key_label.map(|key| format!("{key}: ")).unwrap_or_default();
     match value {
@@ -48,9 +48,9 @@ fn node_view(path: Vec<String>, key_label: Option<&str>, value: &JsonValue) -> T
             let children = members
                 .iter()
                 .map(|member: &JsonMember| {
-                    let mut child_path = path.clone();
+                    let mut child_path = path.to_vec();
                     child_path.push(format!("k={}", member.key));
-                    node_view(child_path, Some(&member.key), &member.value)
+                    node_view(&child_path, Some(&member.key), &member.value)
                 })
                 .collect();
             TreeNodeView { id, label: format!("{prefix}{{{}}}", members.len()), children }
@@ -60,9 +60,9 @@ fn node_view(path: Vec<String>, key_label: Option<&str>, value: &JsonValue) -> T
                 .iter()
                 .enumerate()
                 .map(|(index, item)| {
-                    let mut child_path = path.clone();
+                    let mut child_path = path.to_vec();
                     child_path.push(format!("i={index}"));
-                    node_view(child_path, Some(&index.to_string()), item)
+                    node_view(&child_path, Some(&index.to_string()), item)
                 })
                 .collect();
             TreeNodeView { id, label: format!("{prefix}[{}]", items.len()), children }

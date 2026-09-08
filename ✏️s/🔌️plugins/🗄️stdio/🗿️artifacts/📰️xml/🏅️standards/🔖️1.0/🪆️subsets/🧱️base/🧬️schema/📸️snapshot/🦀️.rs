@@ -432,7 +432,7 @@ fn parse_xml_declaration_prolog(s: &str, pos: &mut usize) -> Result<Option<XmlDe
         }
         let name = parse_name(s, pos)?;
         skip_ws(s, pos);
-        if s[*pos..].chars().next() != Some('=') {
+        if !s[*pos..].starts_with('=') {
             return Err("expected = in xml declaration".into());
         }
         *pos += 1;
@@ -624,7 +624,7 @@ fn parse_attrs(s: &str, pos: &mut usize) -> Result<Vec<XmlAttr>, String> {
         }
         let name = parse_name(s, pos)?;
         skip_ws(s, pos);
-        if s[*pos..].chars().next() != Some('=') {
+        if !s[*pos..].starts_with('=') {
             return Err("expected = in attribute".into());
         }
         *pos += 1;

@@ -1,7 +1,7 @@
 //! 🗂️ Immutable trusted-catalog bundle verification for headless hub authority startup.
 
 use super::adapters::{bounded_message, AUTHORITY_MAX_CODEC_TEXT_BYTES, TRUSTED_CATALOG_MAX_CODECS, TRUSTED_CATALOG_MAX_PACKAGES};
-use super::{AcceptedArtifactOperation, ArtifactPair, ArtifactValidationStage, AuthorityError, AuthorityProgress, AuthorityProgressStage, OperationContext, TrustedArtifactCatalog, TrustedArtifactCodec, TrustedArtifactIdentity};
+use super::{AcceptedArtifactOperation, ArtifactPair, ArtifactValidationStage, AuthorityError, AuthorityProgress, AuthorityProgressStage, OperationContext, TrustedArtifactCatalog, TrustedArtifactCodec, TrustedArtifactGenesisCodec, TrustedArtifactIdentity};
 use directory::os_directory::{hex_lower, DocumentDescriptor, DocumentExecutionProtocolV1, DocumentOpenArtifactV1, DocumentOpenGrantV1, DocumentOpenPackageV1, DocumentOpenRendererTargetV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1};
 use directory::os_store::{self, ArtifactCodec};
 use semio_framework::{from_dsl_value, to_dsl_value, DslValue, PackageDescriptor, PackageRole, Version};
@@ -26,6 +26,8 @@ use directory::os_directory::schema::{DocumentBrowserActorSourceV1, DocumentOpen
 pub const TRUSTED_BUNDLE_MAX_BYTES: u64 = 4 * 1024 * 1024;
 /// 🧯️ Maximum accepted committed package-descriptor bytes.
 pub const TRUSTED_DESCRIPTOR_MAX_BYTES: u64 = 4 * 1024 * 1024;
+/// 🧮️ Maximum logical owned storage admitted before descriptor schema/canonical projection.
+pub const TRUSTED_DESCRIPTOR_MAX_MATERIALIZATION: u64 = 32 * 1024 * 1024;
 /// 🧯️ Maximum accepted bytes for one retained component.
 pub const TRUSTED_COMPONENT_MAX_BYTES: u64 = 64 * 1024 * 1024;
 /// 🧯️ Maximum retained component bytes across one selected closure.
@@ -304,12 +306,24 @@ pub struct NativeCodecBinding {
     package_id: String,
     artifact_kind: String,
     codec: ArtifactCodec,
+    genesis: Option<semio_framework_plugin::NativeArtifactGenesisFactoryV1>,
 }
 
 impl NativeCodecBinding {
     /// 🪢️ Binds a native executable without deriving package identity from plugin identity.
     pub fn new(plugin_id: impl Into<String>, package_id: impl Into<String>, artifact_kind: impl Into<String>, codec: ArtifactCodec) -> Self {
-        Self { plugin_id: plugin_id.into(), package_id: package_id.into(), artifact_kind: artifact_kind.into(), codec }
+        Self { plugin_id: plugin_id.into(), package_id: package_id.into(), artifact_kind: artifact_kind.into(), codec, genesis: None }
+    }
+
+    /// 🌱️ Binds an exact package-owned editor genesis factory to the same native codec identity.
+    pub fn with_genesis(
+        plugin_id: impl Into<String>,
+        package_id: impl Into<String>,
+        artifact_kind: impl Into<String>,
+        codec: ArtifactCodec,
+        genesis: semio_framework_plugin::NativeArtifactGenesisFactoryV1,
+    ) -> Self {
+        Self { plugin_id: plugin_id.into(), package_id: package_id.into(), artifact_kind: artifact_kind.into(), codec, genesis: Some(genesis) }
     }
 
     pub(super) fn plugin_id(&self) -> &str {
@@ -326,6 +340,11 @@ impl NativeCodecBinding {
 
     pub(super) fn codec(&self) -> &ArtifactCodec {
         &self.codec
+    }
+
+    /// 🌱️ Reports whether this exact native binding also carries package-owned creation authority.
+    pub(super) fn has_genesis(&self) -> bool {
+        self.genesis.is_some()
     }
 }
 
@@ -416,6 +435,7 @@ impl VerifiedTrustedPackage {
 pub struct VerifiedNativeArtifactCodec {
     identity: TrustedArtifactIdentity,
     codec: ArtifactCodec,
+    genesis: Option<semio_framework_plugin::NativeArtifactGenesisFactoryV1>,
 }
 
 impl TrustedArtifactCodec for VerifiedNativeArtifactCodec {
@@ -441,6 +461,16 @@ impl TrustedArtifactCodec for VerifiedNativeArtifactCodec {
         }
         context.checkpoint()?;
         Ok(ArtifactPair { pack, spr })
+    }
+}
+
+impl TrustedArtifactGenesisCodec for VerifiedNativeArtifactCodec {
+    async fn initial_pair(&self, document_id: &str, dialect: &directory::os_io::ArtifactDialect, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
+        context.checkpoint()?;
+        let genesis = self.genesis.ok_or_else(|| AuthorityError::Catalog("selected native artifact codec has no package-owned genesis factory".into()))?;
+        let files = genesis(document_id, dialect).await.map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Input, message: bounded_message(error) })?;
+        context.checkpoint()?;
+        Ok(ArtifactPair { pack: files.pack, spr: files.spr })
     }
 }
 
@@ -497,6 +527,61 @@ impl VerifiedTrustedCatalog {
     /// 🎯 Returns the profile's sole completely verified document-open choice without reconstructing it from public plan bytes.
     pub fn selected_document_open(&self) -> Option<&VerifiedDocumentOpenSelectionV1> {
         (self.open_targets.len() == 1).then(|| &self.open_targets[0])
+    }
+
+    /// 🌱️ Creation resolves one unambiguous writable target in this exact admitted generation.
+    pub(crate) fn artifact_creation_selection(&self, kind_id: &str) -> Option<&VerifiedDocumentOpenSelectionV1> {
+        let mut matches = self.open_targets.iter().filter(|selection| {
+            selection.artifact.kind == kind_id
+                && selection.surface.role == DocumentOpenSurfaceRoleV1::Editor
+                && self.codecs.iter().any(|codec| {
+                    codec.genesis.is_some()
+                        && codec.identity.plugin_id == selection.package.plugin_id
+                        && codec.identity.package_id == selection.package.package_id
+                        && codec.identity.version == selection.package.version
+                        && codec.identity.package_hash == selection.package.component_sha256
+                        && codec.identity.artifact_kind == selection.artifact.kind
+                        && codec.identity.artifact_schema == selection.artifact.schema
+                        && codec.identity.pack_schema_hash == selection.artifact.pack_schema_hash
+                })
+        });
+        let selected = matches.next()?;
+        matches.next().is_none().then_some(selected)
+    }
+
+    /// 🗣️ Projects only unambiguous factory-backed choices from retained compiled descriptors.
+    pub(crate) fn artifact_creation_catalog(&self, space_id: &str) -> Option<directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationCatalogV1> {
+        use directory::os_directory::schema::space_artifact_creation::{
+            SpaceArtifactCreationCatalogV1, SpaceArtifactCreationDialectV1, SpaceArtifactCreationKindV1, SpaceArtifactCreationLabelV1,
+        };
+        let kind_ids = self.open_targets.iter().map(|selection| selection.artifact.kind.as_str()).collect::<BTreeSet<_>>();
+        let mut kinds = Vec::new();
+        for kind_id in kind_ids {
+            let Some(selection) = self.artifact_creation_selection(kind_id) else { continue };
+            let retained = self.packages.iter().find(|package| {
+                package.plugin_id == selection.package.plugin_id
+                    && package.package.package.0 == selection.package.package_id
+                    && package.version == selection.package.version
+                    && hex_lower(&package.component_sha256) == selection.package.component_sha256
+            })?;
+            let app = retained.descriptor.manifest.apps.iter().find(|app| app.id == selection.surface.app_id && app.dialect == selection.parent_dialect)?;
+            kinds.push(SpaceArtifactCreationKindV1 {
+                kind_id: selection.artifact.kind.clone(),
+                schema: selection.artifact.schema.clone(),
+                dialect: SpaceArtifactCreationDialectV1 {
+                    artifact_kind: selection.parent_dialect.artifact_kind.clone(),
+                    standard: selection.parent_dialect.standard.clone(),
+                    subset: selection.parent_dialect.subset.clone(),
+                },
+                label: SpaceArtifactCreationLabelV1 {
+                    en: app.label.resolve(semio_framework::Terminology::Native, semio_framework::Locale::En).to_string(),
+                    de: app.label.resolve(semio_framework::Terminology::Native, semio_framework::Locale::De).to_string(),
+                },
+            });
+        }
+        kinds.sort_by(|left, right| left.kind_id.cmp(&right.kind_id));
+        let catalog = SpaceArtifactCreationCatalogV1 { schema: "semio.hub.space-artifact-creation-catalog/v1".into(), space_id: space_id.into(), catalog_generation_id: self.generation_id.clone(), kinds };
+        catalog.validate().then_some(catalog)
     }
 
     /// 🧱 Returns the verified bytes of the current selection only. It is deliberately not a package
@@ -722,7 +807,7 @@ impl TrustedCatalogLoader {
                     return Err(catalog("duplicate exact trusted artifact identity"));
                 }
                 registration_codecs.push(binding.codec.clone());
-                codecs.push(VerifiedNativeArtifactCodec { identity, codec: binding.codec.clone() });
+                codecs.push(VerifiedNativeArtifactCodec { identity, codec: binding.codec.clone(), genesis: binding.genesis });
             }
             if consumed_bindings.len() != binding_map.len() {
                 return Err(catalog("selected provider returned a binding outside its exact declared package closure"));
@@ -914,6 +999,19 @@ fn package_actor_renderer(package: &BundlePackage) -> &'static str {
     }
 }
 
+/// 🧮️ Frames resolved dependency identities in native tuple order for every profile generation.
+fn append_trusted_profile_dependencies(encoded: &mut Vec<u8>, dependencies: &[BundleIdentity]) -> Result<(), AuthorityError> {
+    let mut dependencies = dependencies.iter().collect::<Vec<_>>();
+    dependencies.sort();
+    encoded.extend_from_slice(&u32::try_from(dependencies.len()).map_err(catalog_error)?.to_be_bytes());
+    for dependency in dependencies {
+        for value in [dependency.plugin_id.as_bytes(), dependency.package_id.as_bytes(), dependency.version.as_bytes()] {
+            append_document_open_catalog_field(encoded, value)?;
+        }
+    }
+    Ok(())
+}
+
 fn trusted_profile_generation(bundle: &Bundle, profile: &BundleProfile) -> Result<String, AuthorityError> {
     let mut encoded = Vec::new();
     encoded.extend_from_slice(b"semio/hub/trusted-profile-generation/v1\0");
@@ -943,14 +1041,7 @@ fn trusted_profile_generation(bundle: &Bundle, profile: &BundleProfile) -> Resul
         }
         package.browser_actor.validate(DocumentBrowserActorSourceV1 { component_sha256: &package.component.sha256, descriptor_byte_sha256: &package.descriptor.sha256 }, package_actor_renderer(package))?;
         package.browser_actor.append_generation(&mut encoded)?;
-        let mut dependencies = package.dependencies.iter().collect::<Vec<_>>();
-        dependencies.sort();
-        encoded.extend_from_slice(&u32::try_from(dependencies.len()).map_err(catalog_error)?.to_be_bytes());
-        for dependency in dependencies {
-            for value in [dependency.plugin_id.as_bytes(), dependency.package_id.as_bytes(), dependency.version.as_bytes()] {
-                append_document_open_catalog_field(&mut encoded, value)?;
-            }
-        }
+        append_trusted_profile_dependencies(&mut encoded, &package.dependencies)?;
         let mut codecs = package.native_codecs.iter().collect::<Vec<_>>();
         codecs.sort_by(|left, right| (&left.artifact_kind, &left.artifact_schema, &left.pack_schema_hash).cmp(&(&right.artifact_kind, &right.artifact_schema, &right.pack_schema_hash)));
         encoded.extend_from_slice(&u32::try_from(codecs.len()).map_err(catalog_error)?.to_be_bytes());
@@ -1154,11 +1245,12 @@ fn validate_bundle(bundle: &Bundle, profile_id: &str) -> Result<SelectedTrustedB
                 || target_count != 1
                 || gis.is_none_or(|package| {
                     package.native_codecs.len() != 2
+                        || package.dependencies.as_slice() != std::slice::from_ref(&profile.selected_closure[1])
                         || package.open_targets.len() != 1
                         || !package.native_codecs.iter().any(|codec| codec.artifact_kind == "s.gis.gismap" && codec.artifact_schema == "gis.map")
                         || !package.native_codecs.iter().any(|codec| codec.artifact_kind == "s.gis.gisterrain" && codec.artifact_schema == "gis.terrain")
                 })
-                || stdio.is_none_or(|package| package.native_codecs.len() != 26 || !package.open_targets.is_empty())
+                || stdio.is_none_or(|package| package.native_codecs.len() != 26 || !package.open_targets.is_empty() || !package.dependencies.is_empty())
                 || profile.open_target.package.plugin_id != "gis"
                 || target.artifact_kind != "s.gis.gismap"
                 || target.artifact_schema != "gis.map"
@@ -1294,14 +1386,22 @@ async fn sha256(bytes: &[u8], context: &OperationContext<'_>) -> Result<[u8; 32]
 }
 
 fn decode_package_descriptor(bytes: &[u8]) -> Result<PackageDescriptor, AuthorityError> {
-    let value = directory::os_store::pack_rt::decode_wire_value(bytes).map_err(catalog_error)?;
+    let mut options = os_store::PackDecodeOptions::default();
+    options.limits.max_file_len = TRUSTED_DESCRIPTOR_MAX_BYTES;
+    options.limits.max_segment_len = TRUSTED_DESCRIPTOR_MAX_BYTES;
+    options.limits.max_symbols = 131_072;
+    options.limits.max_items = 262_144;
+    options.limits.max_depth = 64;
+    options.limits.max_total_alloc = TRUSTED_DESCRIPTOR_MAX_MATERIALIZATION;
+    let value = os_store::pack_rt::decode_wire_value_with_options(bytes, &options).map_err(catalog_error)?;
     reject_duplicate_descriptor_fields(&value)?;
-    let descriptor: PackageDescriptor = from_dsl_value(value.clone()).map_err(catalog_error)?;
-    let projection = to_dsl_value(&descriptor).map_err(catalog_error)?;
     let canonical = directory::os_store::pack_rt::encode_wire_value(&value);
-    if canonical != bytes || directory::os_store::pack_rt::encode_wire_value(&projection) != canonical {
+    if canonical != bytes {
         return Err(catalog("package descriptor is not its exact canonical schema projection"));
     }
+    let descriptor: PackageDescriptor = from_dsl_value(value).map_err(catalog_error)?;
+    let projection = to_dsl_value(&descriptor).map_err(catalog_error)?;
+    if directory::os_store::pack_rt::encode_wire_value(&projection) != bytes { return Err(catalog("package descriptor is not its exact canonical schema projection")); }
     Ok(descriptor)
 }
 
@@ -1358,6 +1458,48 @@ fn report_package_progress(context: &OperationContext<'_>, package_position: usi
     context.report(AuthorityProgress { stage: AuthorityProgressStage::CatalogLoading, completed_units, total_units })
 }
 
+/// 🧫️ Shares headless Stdio metadata between native GIS fixtures; synthetic bytes are never executed.
+#[cfg(all(feature = "native-artifact-execution", any(test, feature = "test-support")))]
+fn headless_stdio_fixture_package(root: &Path) -> Result<(serde_json::Value, serde_json::Value), AuthorityError> {
+    let dependency = semio_s_plugin_stdio::registry::native_artifact_catalog_dependency().map_err(catalog_error)?;
+    let semio_framework::VersionReq::Exact(version) = dependency.version else { return Err(catalog("compiled Stdio fixture dependency is not exact")); };
+    let version = version.to_string();
+    let receipts = semio_s_plugin_stdio::registry::native_codec_factory_receipts().map_err(catalog_error)?;
+    let mut builder = semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("Stdio Fixture").version(version.clone()).package_id("semio:stdio");
+    for kind in semio_s_plugin_stdio::registry::native_codec_artifact_kinds() {
+        builder = builder.artifact_kind(kind);
+    }
+    let plugin = builder.contributes_topic(semio_s_plugin_stdio::registry::native_artifact_catalog_contribution().map_err(catalog_error)?).try_library().map_err(catalog_error)?;
+    let component = b"synthetic-stdio-component-for-linked-catalog-test";
+    let component_sha256 = hex_lower(&Sha256::digest(component));
+    let mut component_blake3 = Hasher::new();
+    component_blake3.update(component);
+    let mut descriptor = semio_framework::PackageDescriptor {
+        descriptor_version: 1, package_id: "semio:stdio".into(), role: semio_framework::PackageRole::Plugin,
+        manifest: plugin.manifest, activation_events: Vec::new(), capability_requests: Vec::new(), extension_points: Vec::new(),
+        execution: semio_framework::ExecutionMode::Isolated,
+        execution_protocol: semio_framework::ExecutionProtocol { app_channel_version: directory::os_spr::CHANNEL_VERSION },
+        quotas: semio_framework::kernel::QuotaSchema::default(), contributions: semio_framework::ContributionSet::default(), assets: Vec::new(),
+        hashes: semio_framework::PackageHashes { wasm_sha256: component_sha256.clone(), core_wasm_sha256: component_sha256.clone(), descriptor_sha256: String::new() },
+    };
+    descriptor.hashes.descriptor_sha256 = hex_lower(&Sha256::digest(&os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).map_err(catalog_error)?)));
+    let bytes = os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).map_err(catalog_error)?);
+    decode_package_descriptor(&bytes)?;
+    std::fs::write(root.join("stdio-component.wasm"), component).map_err(catalog_error)?;
+    std::fs::write(root.join("stdio-descriptor.semio"), &bytes).map_err(catalog_error)?;
+    let identity = serde_json::json!({ "pluginId": "stdio", "packageId": "semio:stdio", "version": version });
+    let codecs: Vec<_> = receipts.into_iter().map(|receipt| serde_json::json!({ "artifactKind": receipt.artifact_kind, "artifactSchema": receipt.schema, "packSchemaHash": hex_lower(&receipt.pack_schema_hash) })).collect();
+    let record = serde_json::json!({
+        "pluginId": "stdio", "packageId": "semio:stdio", "version": version, "role": "plugin", "dependencies": [],
+        "executionProtocol": { "appChannelVersion": descriptor.execution_protocol.app_channel_version },
+        "component": { "path": "stdio-component.wasm", "byteLength": component.len(), "sha256": component_sha256, "blake3": hex_lower(component_blake3.finalize().as_bytes()) },
+        "descriptor": { "path": "stdio-descriptor.semio", "byteLength": bytes.len(), "sha256": hex_lower(&Sha256::digest(&bytes)) },
+        "browserActor": { "kind": "none" }, "nativeCodecs": codecs, "openTargets": [],
+    });
+    serde_json::from_value::<BundlePackage>(record.clone()).map_err(catalog_error)?;
+    Ok((identity, record))
+}
+
 /// 🏗️ Feature-gated real GIS Map profile builder, reachable from every crate target (see its module doc).
 #[cfg(all(feature = "test-support", feature = "native-artifact-execution"))]
 #[path = "🏗️test-support/🦀️.rs"]
@@ -1376,6 +1518,43 @@ mod tests {
     use std::sync::Mutex;
 
     static FIXTURE_SEQUENCE: AtomicUsize = AtomicUsize::new(0);
+
+    #[test]
+    fn trusted_descriptor_wire_materialization_matches_neutral_boundaries() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🧪️fixtures/🧮️wire-materialization/🔣️.json")).unwrap();
+        for row in fixture["cases"].as_array().unwrap() {
+            let encoded = row["rawHex"].as_str().unwrap();
+            let bytes: Vec<_> = (0..encoded.len()).step_by(2).map(|index| u8::from_str_radix(&encoded[index..index + 2], 16).unwrap()).collect();
+            let limits = &row["limits"];
+            let mut options = os_store::PackDecodeOptions::default();
+            options.limits.max_file_len = limits["maxFileLen"].as_u64().unwrap();
+            options.limits.max_segment_len = limits["maxSegmentLen"].as_u64().unwrap();
+            options.limits.max_symbols = u32::try_from(limits["maxSymbols"].as_u64().unwrap()).unwrap();
+            options.limits.max_depth = u16::try_from(limits["maxDepth"].as_u64().unwrap()).unwrap();
+            options.limits.max_items = limits["maxItems"].as_u64().unwrap();
+            options.limits.max_total_alloc = limits["maxTotalAlloc"].as_u64().unwrap();
+            let decoded = os_store::pack_rt::decode_wire_value_with_options(&bytes, &options);
+            match row["expect"]["outcome"].as_str().unwrap() {
+                "accepted" => assert_eq!(serde_json::to_value(decoded.expect("admitted bounded value")).unwrap(), row["expect"]["value"], "{}", row["id"]),
+                "limit" => assert!(matches!(decoded, Err(os_store::PackError::LimitExceeded(_))), "{}: {decoded:?}", row["id"]),
+                "malformed" => {
+                    assert!(matches!(decoded, Err(os_store::PackError::Malformed { .. })), "{}: {decoded:?}", row["id"]);
+                    assert!(matches!(os_store::pack_rt::decode_wire_value(&bytes), Err(os_store::PackError::Malformed { .. })), "default wire facade: {}", row["id"]);
+                },
+                outcome => panic!("unknown bounded wire outcome {outcome}"),
+            }
+            eprintln!("[DEBUG] bounded-descriptor-wire case={}", row["id"]);
+        }
+        let mut amplified = Vec::new();
+        os_store::pack_rt::write_varint_u64(&mut amplified, 1);
+        os_store::pack_rt::write_varint_u64(&mut amplified, 2 * 1024 * 1024);
+        amplified.resize(amplified.len() + 2 * 1024 * 1024, b'x');
+        amplified.extend_from_slice(&[1, 1, 0x11, 0x0c, 32]);
+        for _ in 0..32 { amplified.extend_from_slice(&[0x06, 0]); }
+        assert!((amplified.len() as u64) < TRUSTED_DESCRIPTOR_MAX_BYTES);
+        let result = decode_package_descriptor(&amplified);
+        assert!(matches!(&result, Err(AuthorityError::Catalog(message)) if message.contains("max_total_alloc")), "actual Hub materialization fence: {result:?}");
+    }
 
     include!("🧪️tests/📤️publication/🦀️.rs");
 
@@ -1563,7 +1742,7 @@ mod tests {
                 version: version.clone(),
                 role: BundleRole::Plugin,
                 execution_protocol: semio_framework::ExecutionProtocol { app_channel_version: directory::os_spr::CHANNEL_VERSION },
-                dependencies: vec![],
+                dependencies: vec![stdio_identity.clone()],
                 component: BundleComponent { path: "packages/gis/component.wasm".into(), byte_length: 1, sha256: "11".repeat(32), blake3: "12".repeat(32) },
                 descriptor: BundleFile { path: "packages/gis/descriptor.semio".into(), byte_length: 1, sha256: "13".repeat(32) },
                 browser_actor: serde_json::from_value(synthetic_browser_actor(&"11".repeat(32), &"13".repeat(32), "packages/gis/browser/closed-actor.mjs")).unwrap(),
@@ -1610,7 +1789,9 @@ mod tests {
                 "mediaType": { "class": "data", "form": "value" },
                 "schema": schema,
                 "exportFormats": [],
-                "importFormats": []
+                "importFormats": [],
+                "exportStdioKinds": [],
+                "importStdioKinds": []
             })]
         });
         let apps = schema.map_or_else(Vec::new, |_| {
@@ -1779,7 +1960,8 @@ mod tests {
         semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_s_plugin_gis::plugin().expect("GIS assembly"));
         let emitted = semio_framework_plugin::describe::describe_plugin(&runtime).await;
         let mut descriptor = decode_package_descriptor(&emitted).expect("actual native GIS descriptor");
-        assert!(descriptor.manifest.dependencies.is_empty());
+        semio_s_plugin_stdio::registry::validate_native_artifact_catalog_dependency(&descriptor.manifest.dependencies).expect("actual GIS compiled Stdio dependency");
+        semio_s_plugin_stdio::registry::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).expect("actual GIS compiled Stdio catalog");
         let component = b"synthetic-gis-component-for-catalog-binding-test";
         let component_sha256 = hex_lower(&Sha256::digest(component));
         let mut component_blake3 = Hasher::new();
@@ -1824,20 +2006,123 @@ mod tests {
         std::fs::write(root.join("component.wasm"), component).expect("write synthetic GIS component");
         std::fs::write(root.join("descriptor.semio"), &bytes).expect("write actual GIS descriptor");
         std::fs::write(root.join("closed-actor.mjs"), b"abc").expect("synthetic actor, never executed");
+        let (stdio_identity, stdio_record) = headless_stdio_fixture_package(&root).expect("headless Stdio dependency package");
         let bundle = serde_json::json!({
             "schemaVersion": 2,
-            "profiles": [{ "id": "frozen-gis-test", "selectedClosure": [package.clone()], "selectedClosureSha256": "01".repeat(32),
+            "profiles": [{ "id": "frozen-gis-test", "selectedClosure": [package.clone(), stdio_identity.clone()], "selectedClosureSha256": "01".repeat(32),
                 "openTarget": { "package": package.clone(), "target": target.clone() }, "generationId": "02".repeat(32) }],
-            "packages": [{ "pluginId": package["pluginId"], "packageId": package["packageId"], "version": package["version"], "role": "plugin", "dependencies": [],
+            "packages": [{ "pluginId": package["pluginId"], "packageId": package["packageId"], "version": package["version"], "role": "plugin", "dependencies": [stdio_identity],
+                "executionProtocol": { "appChannelVersion": descriptor.execution_protocol.app_channel_version },
                 "component": { "path": "component.wasm", "byteLength": component.len(), "sha256": component_sha256, "blake3": hex_lower(component_blake3.finalize().as_bytes()) },
                 "descriptor": { "path": "descriptor.semio", "byteLength": bytes.len(), "sha256": hex_lower(&Sha256::digest(&bytes)) },
                 "browserActor": synthetic_browser_actor(&component_sha256, &hex_lower(&Sha256::digest(&bytes)), "closed-actor.mjs"),
-                "nativeCodecs": native_codecs, "openTargets": [target] }]
+                "nativeCodecs": native_codecs, "openTargets": [target] }, stdio_record]
         });
         let mut fixture = FixtureDirectory { bundle_path: root.join("trusted-catalog.json"), root, bundle, schema: "gis.map".into() };
         fixture.refresh_profile_generation();
         fixture.persist_bundle();
         fixture
+    }
+
+    #[cfg(feature = "native-artifact-execution")]
+    struct RecordingLinkedProvider {
+        previews: Mutex<Vec<String>>,
+        fail_gis: bool,
+    }
+
+    #[cfg(feature = "native-artifact-execution")]
+    impl NativeCodecProviderSourceV1 for RecordingLinkedProvider {
+        fn preview(&self, package: NativeCodecProviderPackageV1<'_>, descriptor: &PackageDescriptor, context: &OperationContext<'_>) -> Result<Vec<NativeCodecBinding>, AuthorityError> {
+            if self.fail_gis && package.plugin_id == "gis" {
+                return Err(catalog("selected GIS provider fixture failure"));
+            }
+            let bindings = NativeCodecProviderSourceV1::preview(&NativeCodecProviderSetV1::linked(), package, descriptor, context)?;
+            self.previews.lock().expect("successful private previews").push(package.plugin_id.to_owned());
+            Ok(bindings)
+        }
+    }
+
+    #[cfg(feature = "native-artifact-execution")]
+    #[tokio::test]
+    async fn linked_stdio_gis_descriptor_failures_never_publish_a_partial_codec_closure() {
+        let corpus: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
+        let mut fixture = prepared_gis_binding_fixture(false, false).await;
+        for receipt in semio_s_plugin_gis::native_codecs::native_codec_factory_receipts().unwrap() {
+            let native = receipt.into_codec().unwrap();
+            let declared = document_codec(&native.schema).await.unwrap().expect("actual assembled GIS declaration owns its codec");
+            assert_eq!(native.schema, declared.schema);
+            assert_eq!(native.extension, declared.extension);
+            assert_eq!(native.pack_schema_hash, declared.pack_schema_hash);
+            assert!(std::ptr::fn_addr_eq(native.compile_dsl, declared.compile_dsl));
+            assert!(std::ptr::fn_addr_eq(native.print_mirror, declared.print_mirror));
+            assert!(std::ptr::fn_addr_eq(native.edit_text_from_envelope, declared.edit_text_from_envelope));
+            assert!(std::ptr::fn_addr_eq(native.apply_ops_binary, declared.apply_ops_binary));
+        }
+        let baseline = fixture.bundle.clone();
+        let originals: Vec<_> = baseline["packages"].as_array().unwrap().iter().map(|record| {
+            let path = fixture.root.join(record["descriptor"]["path"].as_str().unwrap());
+            (path.clone(), std::fs::read(path).expect("original full descriptor"))
+        }).collect();
+        let schemas: Vec<_> = baseline["packages"].as_array().unwrap().iter().flat_map(|record| record["nativeCodecs"].as_array().unwrap().iter().map(|codec| codec["artifactSchema"].as_str().unwrap().to_owned())).collect();
+        assert_eq!(schemas.len(), 28);
+        let mut before = Vec::with_capacity(schemas.len());
+        for schema in &schemas {
+            before.push(document_codec(schema).await.unwrap().map(|codec| (codec.schema, codec.extension, codec.pack_schema_hash)));
+        }
+        eprintln!("[DEBUG] linked-catalog initial-public-codecs={}", before.iter().filter(|codec| codec.is_some()).count());
+        for row in corpus["atomicCases"].as_array().unwrap() {
+            fixture.bundle = baseline.clone();
+            for (path, bytes) in &originals { std::fs::write(path, bytes).expect("restore exact descriptor bytes"); }
+            let change = row["change"].as_str().unwrap();
+            let package = if change == "stdio-catalog" { "stdio" } else { "gis" };
+            let index = fixture.bundle["packages"].as_array().unwrap().iter().position(|record| record["pluginId"] == package).unwrap();
+            if !matches!(change, "exact" | "gis-provider") {
+                let mut descriptor = decode_package_descriptor(&originals[index].1).expect("original authoritative descriptor");
+                match change {
+                    "stdio-catalog" | "gis-catalog" => descriptor.manifest.topic_contributions.retain(|entry| entry.topic != "stdio.artifact-catalog.v1"),
+                    "gis-dependency" => descriptor.manifest.dependencies.clear(),
+                    "gis-trailing-byte" | "gis-duplicate-field" => {},
+                    _ => panic!("unknown atomic fixture change {change}"),
+                }
+                descriptor.hashes.descriptor_sha256.clear();
+                descriptor.hashes.descriptor_sha256 = hex_lower(&Sha256::digest(&os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).unwrap())));
+                let mut value = to_dsl_value(&descriptor).unwrap();
+                if change == "gis-duplicate-field" {
+                    let DslValue::Object(fields) = &mut value else { panic!("full descriptor object") };
+                    let duplicate = fields.iter().find(|(key, _)| key == "manifest").unwrap().clone();
+                    fields.push(duplicate);
+                }
+                let mut bytes = os_store::pack_rt::encode_wire_value(&value);
+                if change == "gis-trailing-byte" { bytes.push(0); }
+                let raw_invalid = matches!(change, "gis-trailing-byte" | "gis-duplicate-field");
+                assert_eq!(decode_package_descriptor(&bytes).is_err(), raw_invalid, "full descriptor raw gate: {change}");
+                let record = &mut fixture.bundle["packages"][index];
+                record["descriptor"]["byteLength"] = bytes.len().into();
+                record["descriptor"]["sha256"] = hex_lower(&Sha256::digest(&bytes)).into();
+                if record["browserActor"]["kind"] == "closed-browser-actor" { record["browserActor"]["sourceDescriptorByteSha256"] = record["descriptor"]["sha256"].clone(); }
+                std::fs::write(&originals[index].0, bytes).expect("write resealed complete candidate descriptor");
+            }
+            fixture.refresh_profile_generation();
+            fixture.persist_bundle();
+            let providers = RecordingLinkedProvider { previews: Mutex::new(Vec::new()), fail_gis: change == "gis-provider" };
+            let control = TestControl::new();
+            let result = TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "frozen-gis-test", &providers, &control.context()).await;
+            assert_eq!(result.is_ok(), row["accepted"].as_bool().unwrap(), "loader result: {change}: {:?}", result.as_ref().err());
+            let previews: Vec<String> = serde_json::from_value(row["previews"].clone()).unwrap();
+            assert_eq!(*providers.previews.lock().unwrap(), previews, "successful private preview frontier: {change}");
+            if let Ok(catalog) = result {
+                assert_eq!(catalog.codec_count(), 28);
+                assert_eq!(catalog.packages().iter().map(VerifiedTrustedPackage::plugin_id).collect::<Vec<_>>(), vec!["stdio", "gis"]);
+                assert_eq!(catalog.open_target_count(), 1);
+                assert_eq!(catalog.selected_document_open().unwrap().package.plugin_id, "gis");
+                for schema in &schemas { assert!(document_codec(schema).await.unwrap().is_some(), "complete public codec: {schema}"); }
+            } else {
+                for (schema, prior) in schemas.iter().zip(&before) {
+                    assert_eq!(&document_codec(schema).await.unwrap().map(|codec| (codec.schema, codec.extension, codec.pack_schema_hash)), prior, "partial public codec after {change}: {schema}");
+                }
+            }
+            eprintln!("[DEBUG] linked-catalog atomic-case={change} successful-private-previews={}", previews.len());
+        }
     }
 
     #[cfg(feature = "native-artifact-execution")]
@@ -1857,12 +2142,12 @@ mod tests {
                 assert!(Arc::ptr_eq(binding.catalog(), &catalog));
                 assert_eq!(binding.selection(), catalog.selected_document_open().expect("sole selection"));
                 assert_eq!(binding.service().executable_identity(), semio_s_plugin_gis::artifacts::gismap::gis_map_inference_service().executable_identity());
-                let retained = catalog.packages()[0].component_bytes().to_vec();
+                let retained = catalog.packages().iter().find(|package| package.plugin_id() == "gis").expect("verified GIS package").component_bytes().to_vec();
                 let digest = binding.digest().to_owned();
                 std::fs::write(fixture.component_path(0), b"tampered").expect("mutate fixture backing component");
                 assert!(TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "frozen-gis-test", &NativeCodecProviderSetV1::linked(), &control.context()).await.is_err());
                 drop(catalog);
-                assert_eq!(binding.catalog().packages()[0].component_bytes(), retained);
+                assert_eq!(binding.catalog().packages().iter().find(|package| package.plugin_id() == "gis").expect("retained GIS package").component_bytes(), retained);
                 assert_eq!(binding.digest(), digest);
             }
         }
@@ -1959,7 +2244,9 @@ mod tests {
                     assert_eq!(binding.artifact_kind, row["kind"]);
                     assert_eq!(binding.codec.schema, row["schema"]);
                     assert_eq!(binding.codec.extension, row["extension"]);
-                    assert_eq!(hex_lower(&binding.codec.pack_schema_hash), row["protocolSha256"]);
+                    let receipt = semio_s_plugin_gis::native_codecs::native_codec_factory_receipts().unwrap().into_iter().find(|receipt| receipt.identity().schema == binding.codec.schema).unwrap();
+                    assert_eq!(hex_lower(&receipt.identity().protocol_sha256), row["protocolSha256"]);
+                    assert_eq!(binding.codec.pack_schema_hash, receipt.into_codec().unwrap().pack_schema_hash);
                 }
             }
             for row in expected["receipts"].as_array().unwrap() {
@@ -1978,7 +2265,7 @@ mod tests {
                 source.failure = Some("semio:fixture-editor");
             }
             if hostile == "registry-conflict" {
-                os_store::register_document_codec(fixture_codec(&fixture.schema, [0x22; 32])).await.expect("prior immutable owner");
+                os_store::register_document_codec(fixture_codec(&fixture.schema, [0x22; 32])).expect("prior immutable owner");
             }
             assert!(TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "fixture", &source, &TestControl::new().context()).await.is_err(), "{hostile}");
             assert_eq!(*source.calls.lock().expect("calls"), ["semio:fixture-base", "semio:fixture-editor"], "{hostile}");
@@ -2000,15 +2287,18 @@ mod tests {
 
     #[tokio::test]
     async fn selected_native_provider_descriptor_and_cancellation_fences_precede_publication() {
-        let mut invalid = prepared_fixture();
-        invalid.bundle["packages"][0]["dependencies"] = serde_json::json!([]);
-        invalid.rewrite_descriptor(0, Some(&invalid.schema.clone()), None);
-        let descriptor_path = invalid.root.join(invalid.bundle["packages"][0]["descriptor"]["path"].as_str().expect("descriptor path"));
-        std::fs::write(descriptor_path, b"invalid descriptor").expect("hostile descriptor bytes");
-        let source = FixtureProviderSource::new(vec![invalid.binding()]);
-        assert!(TrustedCatalogLoader::load_fixture(&invalid.bundle_path, "fixture", &source, &TestControl::new().context()).await.is_err());
-        assert!(source.calls.lock().expect("calls").is_empty());
-        assert!(document_codec(&invalid.schema).await.expect("registry").is_none());
+        let cases: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
+        for case in cases["descriptorPreviewCases"].as_array().unwrap() {
+            let mut invalid = prepared_fixture();
+            let source = FixtureProviderSource::new(invalid.make_two_codec_bindings());
+            let index = case["packageIndex"].as_u64().unwrap() as usize;
+            let descriptor_path = invalid.root.join(invalid.bundle["packages"][index]["descriptor"]["path"].as_str().expect("descriptor path"));
+            std::fs::write(descriptor_path, b"invalid descriptor").expect("hostile descriptor bytes");
+            assert!(TrustedCatalogLoader::load_fixture(&invalid.bundle_path, "fixture", &source, &TestControl::new().context()).await.is_err());
+            assert_eq!(serde_json::to_value(source.calls.lock().expect("calls").clone()).unwrap(), case["previews"], "{}", case["id"]);
+            assert!(document_codec(&invalid.schema).await.expect("registry").is_none());
+            assert!(document_codec(&format!("{}.base", invalid.schema)).await.expect("registry").is_none());
+        }
 
         for before in [true, false] {
             let mut fixture = prepared_fixture();
@@ -2519,6 +2809,13 @@ mod tests {
 
     #[test]
     fn trusted_profile_generation_binds_zero_target_package_and_every_codec_row() {
+        let dependency_fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
+        for row in dependency_fixture["encodingCases"].as_array().unwrap() {
+            let identities: Vec<BundleIdentity> = serde_json::from_value(row["identities"].clone()).unwrap();
+            let mut encoded = Vec::new();
+            append_trusted_profile_dependencies(&mut encoded, &identities).unwrap();
+            assert_eq!(hex_lower(&encoded), row["hex"].as_str().unwrap(), "{}", row["name"]);
+        }
         let fixture = fixture_json();
         let bundle: Bundle = serde_json::from_value(fixture["bundle"].clone()).expect("bundle");
         let original = trusted_profile_generation(&bundle, &bundle.profiles[0]).expect("generation");
@@ -2541,8 +2838,13 @@ mod tests {
         let bundle = local_stdio_gis_profile_bundle();
         let selected = validate_bundle(&bundle, "local-stdio-gis-open-v1").expect("closed stdio+GIS profile");
         assert_eq!(selected.package_indices.len(), 2);
+        assert_eq!(selected.package_indices, vec![1, 0]);
         assert_eq!(bundle.packages.iter().map(|package| package.native_codecs.len()).sum::<usize>(), 28);
         assert_eq!(bundle.packages.iter().map(|package| package.open_targets.len()).sum::<usize>(), 1);
+        let mut missing_dependency = local_stdio_gis_profile_bundle();
+        missing_dependency.packages[0].dependencies.clear();
+        assert!(validate_bundle(&missing_dependency, "local-stdio-gis-open-v1").expect_err("missing compiled Stdio dependency").to_string().contains("exact closed"));
+        assert_ne!(trusted_profile_generation(&missing_dependency, &missing_dependency.profiles[0]).unwrap(), bundle.profiles[0].generation_id);
 
         let mut missing_terrain = local_stdio_gis_profile_bundle();
         missing_terrain.packages[0].native_codecs.pop();

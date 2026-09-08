@@ -114,6 +114,7 @@ pub struct GifPlainText {
 /// verbatim — typed raw-retention for a spec-real-but-semantically-opaque region.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
+#[derive(Default)]
 pub struct GifAppExtension {
     pub identifier: [u8; 8],
     pub auth_code: [u8; 3],
@@ -122,11 +123,6 @@ pub struct GifAppExtension {
     pub data: Vec<u8>,
 }
 
-impl Default for GifAppExtension {
-    fn default() -> Self {
-        Self { identifier: [0; 8], auth_code: [0; 3], data: Vec::new() }
-    }
-}
 //#endregion AppExtension
 
 //#region FrameModel
@@ -247,7 +243,7 @@ impl store::ArtifactDsl for GifSnapshot {
             Err(_) => text,
         };
         let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
-        if hex.len() % 2 != 0 {
+        if !hex.len().is_multiple_of(2) {
             return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
         }
         let mut bytes = Vec::with_capacity(hex.len() / 2);

@@ -466,10 +466,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn flow_content_round_trips_every_step_field_losslessly() {
         let steps = sample_steps();
-        let content = crate::artifacts::playbook::flow_content_snapshot_from_steps(&steps);
+        let content = flow_content_snapshot_from_steps(&steps);
         assert_eq!(content.nodes.len(), steps.len());
         assert_eq!(content.edges.len(), steps.len() - 1, "sequential steps chain via one edge per adjacent pair");
-        let restored = crate::artifacts::playbook::steps_from_flow_content(&content);
+        let restored = steps_from_flow_content(&content);
         assert_eq!(restored, steps);
     }
 
@@ -479,8 +479,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn document_projection_round_trips_titles_and_descriptions_only() {
         let steps = sample_steps();
-        let content = crate::artifacts::playbook::document_snapshot_from_steps(Some("My Playbook"), &steps);
-        let (title, restored) = crate::artifacts::playbook::steps_from_document(&content);
+        let content = document_snapshot_from_steps(Some("My Playbook"), &steps);
+        let (title, restored) = steps_from_document(&content);
         assert_eq!(title.as_deref(), Some("My Playbook"));
         assert_eq!(restored.len(), steps.len());
         for (original, projected) in steps.iter().zip(restored.iter()) {

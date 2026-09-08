@@ -14,8 +14,6 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::Sem
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
 use schema::ArtifactSchema;
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Ids
 pub const STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA: &str = "stdio.semio.object";
@@ -29,8 +27,6 @@ pub const STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA: &str = "stdio.semio.object";
 /// independently owned); `properties` is one owned `value` tree for arbitrary property-set data
 /// (materials, IFC property sets, custom metadata).
 #[derive(Clone, Debug, PartialEq, ArtifactSchema)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.stdio.semio.object")]
 pub struct SemioObjectSnapshot {
     #[state(artifact)]
@@ -39,15 +35,12 @@ pub struct SemioObjectSnapshot {
     pub transform: SemioTransform,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.brep")]
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub brep: Option<store::ArtifactChild<SemioBrepSnapshot>>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.mesh")]
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.value")]
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub properties: Option<store::ArtifactChild<SemioValueSnapshot>>,
 }
 
@@ -59,11 +52,7 @@ impl Default for SemioObjectSnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️ValueCodec
-/// 🔀️ Hand-written, not derived: `brep`/`mesh`/`properties` are `store::ArtifactChild<S>`
-/// composed-artifact handles, bridged per-field through `to_dsl_value`/`from_dsl_value`
-/// (`🌱️value/🔀️serde`) rather than widening the derive macro — same pattern (and same reasoning)
-/// as this subset's own `🧬️schema/🦀️.rs` (`SemioObjectArtifact`) and the fan-out
-/// playbook's `PlaybookArtifact` reference.
+/// 🔀️ Encodes composite child and link fields through their first-party value contracts.
 impl dsl::ToValue for SemioObjectSnapshot {
     fn to_value(&self) -> dsl::DslValue {
         dsl::DslValue::object([
@@ -101,7 +90,7 @@ fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()

@@ -626,7 +626,7 @@ impl FaceBvh {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn closest_face(&self, body: &Body, point: Pnt3) -> Option<(FaceId, Pnt3, f64)> {
         let target = point.to_array();
-        let face = *self.bvh.query_nearest_exact(target, |f: &FaceId| closest_point_on_face(body, *f, point).map(|(_, d)| d).unwrap_or(f64::INFINITY))?;
+        let face = *self.bvh.query_nearest_exact(target, |f: &FaceId| closest_point_on_face(body, *f, point).map_or(f64::INFINITY, |(_, d)| d))?;
         let (p, d) = closest_point_on_face(body, face, point).ok()?;
         Some((face, p, d))
     }

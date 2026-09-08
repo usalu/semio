@@ -83,6 +83,6 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn demo_subset_integrated_roundtrip() {
         let asset = ExampleAsset { bytes: NATIVE_BYTES, text: None, provenance: "✳️any/📚️examples/🎬️demo/🖼️assets/📜️example.docx" };
-        test_support::assert_subset_roundtrip::<DocxAnyRoundtrip>(&asset, None);
+        test_support::assert_subset_roundtrip::<DocxAnyRoundtrip>(&asset, None).await;
     }
 }

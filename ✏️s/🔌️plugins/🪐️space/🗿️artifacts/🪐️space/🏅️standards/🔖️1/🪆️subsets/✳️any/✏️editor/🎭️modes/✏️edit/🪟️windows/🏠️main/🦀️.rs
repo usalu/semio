@@ -30,9 +30,9 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 🕹️ `open`/`delete` are the only row buttons wired: both are immediately dispatchable from just the
-/// row's own id through the EXISTING, unmodified relays (`openArtifact`, `requestDeleteArtifact` — the
-/// latter already opens the `deleteArtifact` confirm dialog, never mutates directly). `rename-artifact`
+/// 🕹️ `open` is the only row button wired: it is immediately dispatchable from the Directory-owned
+/// row id through the existing `openArtifact` relay. The former delete action targeted the retired
+/// whole-vector `SSpaceSnapshot.artifacts` lane and must not be exposed for Directory-owned rows. `rename-artifact`
 /// mutates unconditionally on any non-empty `newName` (no "empty argument opens a dialog" two-phase
 /// safety the way `os.home`'s `renameSpace` has) and `open-artifact-with` needs a role/plugin/app
 /// chooser — neither has a dialog registered on this app (2-B's own dialog list: `createArtifact`,
@@ -56,8 +56,8 @@ fn artifact_row_action(icon: IconName, label: &'static str, action: &'static str
     Ok(TableRowAction::new(fixed_text(icon.as_str(), "ui.table.action-icon")?, fixed_label(label, "ui.table.action-label")?, space_index_action(action, Some(args))?))
 }
 
-fn row_actions(row: &SpaceArtifactRow) -> semio_framework_plugin::UiAssemblyResult<[TableRowAction; 2]> {
-    Ok([artifact_row_action(IconName::FolderOpen, "Open", "openArtifact", row)?, artifact_row_action(IconName::Trash2, "Delete", "requestDeleteArtifact", row)?])
+fn row_actions(row: &SpaceArtifactRow) -> semio_framework_plugin::UiAssemblyResult<[TableRowAction; 1]> {
+    Ok([artifact_row_action(IconName::FolderOpen, "Open", "openArtifact", row)?])
 }
 
 /// 📊️ `config` supplies the live presence fold (`presence-heartbeat`/`fold-directory-events`); the ID
@@ -65,13 +65,13 @@ fn row_actions(row: &SpaceArtifactRow) -> semio_framework_plugin::UiAssemblyResu
 /// separately carries the `artifact:<id>` grammar contract §C0 needs. Split out from `render` (lane
 /// 4-F) so the pure table structure stays unit-testable in isolation, same rationale as Home's own
 /// `render_rows`/`render` split.
-fn render_table(document: &SSpaceSnapshot, config: &SpaceIndexConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn render_table(config: &SpaceIndexConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut view = TableRowsView::new(fixed_text("Actions", "ui.table.actions-label")?);
     for column in SPACE_INDEX_TABLE_COLUMNS {
         let column = fixed_text(column, "ui.table.column")?;
         view.try_push_column(column).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.columns", "fixed table column admission failed"))?;
     }
-    for row in &document.artifacts {
+    for row in &config.indexed_artifacts {
         let row_id = semio_framework_plugin::UiText::try_format(format_args!("artifact:{}", row.id)).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.table.row-id", "fixed table row id admission failed"))?;
         let mut table_row = TableRow::new(row_id);
         for cell in space_index_table_row(row, &config.presence_for(&row.id).join(", ")) {
@@ -118,9 +118,9 @@ fn create_artifact_button() -> semio_framework_plugin::UiAssemblyResult<semio_fr
     builder.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.create", "create button admission failed"))
 }
 
-pub fn render(document: &SSpaceSnapshot, config: &SpaceIndexConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(_document: &SSpaceSnapshot, config: &SpaceIndexConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut children = semio_framework_plugin::UiFixedList::<semio_framework_plugin::BuiltNode>::default();
-    for child in [window_content_dead_line_spacer()?, window_content_dead_line_spacer()?, create_artifact_button()?, render_table(document, config)?] {
+    for child in [window_content_dead_line_spacer()?, window_content_dead_line_spacer()?, create_artifact_button()?, render_table(config)?] {
         children.try_push(child).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.children", "fixed window child admission failed"))?;
     }
     semio_framework_ui_contract::column()
@@ -174,9 +174,12 @@ mod tests {
     async fn render_reflects_live_presence_for_a_row() {
         use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
         use crate::editor::space_index::config::SpaceIndexArtifactPresence;
-        let mut document = SSpaceSnapshot::default();
-        document.artifacts.push(SpaceArtifactRow { id: "artifact-1".into(), name: "First".into(), dialect: SpaceArtifactDialect { artifact_kind: "s.draw.draw".into(), standard: "1".into(), subset: "*".into() }, ..Default::default() });
-        let config = SpaceIndexConfig { presence: vec![SpaceIndexArtifactPresence { artifact_id: "artifact-1".into(), actors_csv: "user:1,user:2".into() }], ..Default::default() };
+        let document = SSpaceSnapshot::default();
+        let config = SpaceIndexConfig {
+            indexed_artifacts: vec![SpaceArtifactRow { id: "artifact-1".into(), name: "First".into(), dialect: SpaceArtifactDialect { artifact_kind: "s.draw.draw".into(), standard: "1".into(), subset: "*".into() }, ..Default::default() }],
+            presence: vec![SpaceIndexArtifactPresence { artifact_id: "artifact-1".into(), actors_csv: "user:1,user:2".into() }],
+            ..Default::default()
+        };
         let json = project(render(&document, &config).expect("Space rows with presence"));
         assert!(json.contains("user:1, user:2"), "presence must reach the table cell: {json}");
     }
@@ -185,18 +188,18 @@ mod tests {
     /// row's open/delete buttons must be real, dispatchable `ActionDescriptor`s carrying the row's own
     /// id — per ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 3-F.
     #[semio_framework_async_macros::async_test]
-    async fn a_row_stamps_the_artifact_row_id_and_carries_dispatchable_open_and_delete_buttons() {
+    async fn a_directory_row_stamps_the_artifact_row_id_and_carries_only_the_safe_open_button() {
         use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
-        let mut document = SSpaceSnapshot::default();
-        document.artifacts.push(SpaceArtifactRow { id: "artifact-1".into(), name: "First".into(), dialect: SpaceArtifactDialect { artifact_kind: "s.draw.draw".into(), standard: "1".into(), subset: "*".into() }, ..Default::default() });
-        observe(render_table(&document, &SpaceIndexConfig::default()).expect("Space artifact rows"), |root| {
+        let config = SpaceIndexConfig {
+            indexed_artifacts: vec![SpaceArtifactRow { id: "artifact-1".into(), name: "First".into(), dialect: SpaceArtifactDialect { artifact_kind: "s.draw.draw".into(), standard: "1".into(), subset: "*".into() }, ..Default::default() }],
+            ..Default::default()
+        };
+        observe(render_table(&config).expect("Space artifact rows"), |root| {
             let row = root.children.iter().find(|node| node.key.as_str() == "artifact:artifact-1").expect("Space artifact row id");
             let buttons = buttons(row);
-            assert_eq!(buttons.len(), 2, "open + delete");
+            assert_eq!(buttons.len(), 1, "Directory-owned rows expose only the authority-safe open action");
             let open_button = buttons.iter().find(|button| button.action.name.as_str() == "openArtifact").expect("open button present");
             assert_eq!(text_arg(open_button, "id"), "artifact-1");
-            let delete_button = buttons.iter().find(|button| button.action.name.as_str() == "requestDeleteArtifact").expect("delete button present");
-            assert_eq!(text_arg(delete_button, "id"), "artifact-1");
         });
     }
 

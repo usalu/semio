@@ -10,6 +10,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import type { ShellDialogV1 } from "../🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🟦️.ts";
 import React, {
   type KeyboardEvent,
   type ReactElement,
@@ -28,6 +29,8 @@ import {
   // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema, D6:
   // `ActionArgDef.control` is gone (derived, not stored) — every reader below now calls this instead.
   argControl,
+  artifactKindChoices,
+  encodeArtifactKindChoice,
   actionSemanticsForKind,
   type ActionDefinition,
   type ActionDescriptor,
@@ -39,6 +42,7 @@ import {
   type AppRole,
   type AppRouter,
   type AppWindowKindDefinition,
+  type ArtifactKindChoice,
   type ArtifactDialect,
   type BuiltNode,
   dialectCoordinate,
@@ -487,13 +491,15 @@ export function makeEffectDispatchOne(
   pluginEntry: LoadedProgramState,
   baseSession: ActiveSession,
   applyEffects: (effects: readonly Effect[], baseSession: ActiveSession, uiScope?: UiDirtyScope) => Promise<void>,
+  isCurrent: () => boolean,
 ): EffectDispatchOne {
   return async (action, args) => {
+    if (!isCurrent()) return;
     const isAppCommand = (baseSession.app.commands ?? []).some((command) => command.id === action);
     const response = isAppCommand && pluginEntry.handle.handleCommand
       ? await pluginEntry.handle.handleCommand(baseSession.instanceId, encodeEffectCommandInvocation(baseSession, action, args), baseSession.viewState)
       : await pluginEntry.handle.handleAction(baseSession.instanceId, encodeEffectActionInvocation(baseSession, action, args), baseSession.viewState);
-    await applyEffects(response.requestedEffects ?? [], baseSession, resolveUiDirtyScope(response.uiScope));
+    if (isCurrent()) await applyEffects(response.requestedEffects ?? [], baseSession, resolveUiDirtyScope(response.uiScope));
   };
 }
 
@@ -2077,22 +2083,33 @@ function actionArgStringOptions<T>(schema: { readonly options?: readonly T[] }):
   return schema.options ?? [];
 }
 
-function resolveActionArgDef(def: ActionArgDef, scopeId: string, overlay: PluginAppLabelsOverlay, terminology: string, locale: string): ResolvedActionArgDef {
+function resolveArtifactKindChoiceLabel(choice: { readonly kindId: string; readonly label: { readonly en: string; readonly de: string } }, locale: string): string {
+  if (locale === "en") return choice.label.en;
+  if (locale === "de") return choice.label.de;
+  return choice.kindId;
+}
+
+function resolveActionArgDef(def: ActionArgDef, scopeId: string, overlay: PluginAppLabelsOverlay, terminology: string, locale: string, manifests: readonly { readonly apps: readonly unknown[] }[], selectedArtifactKinds?: readonly ArtifactKindChoice[]): ResolvedActionArgDef {
   const label = resolveAppLabel(overlay, "actionArg", `${scopeId}.${def.id}`, resolveManifestLabel(def.label, terminology, locale));
   if (def.schema.kind !== "string") return { ...def, label, schema: def.schema };
+  if (def.schema.format?.kind === "artifactKind") {
+    const choices = selectedArtifactKinds ?? artifactKindChoices(manifests, def.schema.format.roles);
+    const options = choices.map((choice) => ({ value: encodeArtifactKindChoice(choice), label: resolveArtifactKindChoiceLabel(choice, locale) }));
+    return { ...def, label, schema: { ...def.schema, options } };
+  }
   const options = actionArgStringOptions(def.schema).map((option) => ({ ...option, label: resolveAppLabel(overlay, "actionArg", `${scopeId}.${def.id}.option.${option.value}`, resolveManifestLabel(option.label, terminology, locale)) }));
   return { ...def, label, schema: { ...def.schema, options } };
 }
 
 /** @emoji 🗣️ Resolves a `DialogDefinition`'s title/body/submitLabel/cancelLabel/args from the overlay's `dialogLabels`/`actionArgLabels` maps, keyed by the dialog's own id. `title`/`body`/`submitLabel`/`cancelLabel` are all manifest `LocalizedLabel` fields. */
-export function resolveDialogDefinition(dialog: DialogDefinition, overlay: PluginAppLabelsOverlay, terminology: string, locale: string): Omit<DialogDefinition, "args"> & { readonly args: ResolvedActionArgDef[] } {
+export function resolveDialogDefinition(dialog: DialogDefinition, overlay: PluginAppLabelsOverlay, terminology: string, locale: string, manifests: readonly { readonly apps: readonly unknown[] }[] = [], selectedArtifactKinds?: readonly ArtifactKindChoice[]): Omit<DialogDefinition, "args"> & { readonly args: ResolvedActionArgDef[] } {
   return {
     ...dialog,
     title: resolveAppLabel(overlay, "dialog", `${dialog.id}.title`, resolveManifestLabel(dialog.title, terminology, locale)),
     body: dialog.body ? resolveAppLabel(overlay, "dialog", `${dialog.id}.body`, resolveManifestLabel(dialog.body, terminology, locale)) : dialog.body,
     submitLabel: resolveAppLabel(overlay, "dialog", `${dialog.id}.submit`, resolveManifestLabel(dialog.submitLabel, terminology, locale)),
     cancelLabel: dialog.cancelLabel ? resolveAppLabel(overlay, "dialog", `${dialog.id}.cancel`, resolveManifestLabel(dialog.cancelLabel, terminology, locale)) : dialog.cancelLabel,
-    args: dialog.args.map((def) => resolveActionArgDef(def, dialog.id, overlay, terminology, locale)),
+    args: dialog.args.map((def) => resolveActionArgDef(def, dialog.id, overlay, terminology, locale, manifests, selectedArtifactKinds)),
   };
 }
 
@@ -2170,6 +2187,7 @@ export function captureTutorialUiSnapshot(state: ShellState, session: ActiveSess
 /** @emoji 🎥️ Context every `applyTutorialUiSnapshotToShell`/`applyTutorialUiChangeToShell` call needs beyond `dispatch` itself — resolved once per render by the caller (the director/seek/deviation-converge paths all share it). */
 export type TutorialUiBridgeContext = {
   readonly session: ActiveSession | null;
+  readonly restoreDialog: (dialogId: string, seedArgs?: Readonly<Record<string, unknown>>) => ShellDialogV1 | null;
   readonly appLabelsOverlay: PluginAppLabelsOverlay;
   readonly terminology: string;
   readonly locale: string;
@@ -2202,7 +2220,7 @@ export function applyTutorialUiSnapshotToShell(dispatch: (action: ShellAction) =
       treeOpenStates,
       activeUtilityByWindowId,
       activeToolId: snapshot.activeToolId ?? null,
-      openDialogId: snapshot.openDialogId ?? null,
+      dialog: snapshot.openDialogId === undefined ? null : ctx.restoreDialog(snapshot.openDialogId),
       commandPanelOpen: snapshot.commandPanelOpen,
     },
   });
@@ -2267,7 +2285,7 @@ export function applyTutorialUiChangeToShell(dispatch: (action: ShellAction) => 
       return;
     }
     case "dialog":
-      dispatch({ type: "SET_DIALOG", value: change.id ? { dialogId: change.id, seedArgs: change.args as Record<string, unknown> | undefined } : null });
+      dispatch({ type: "SET_DIALOG", value: change.id ? ctx.restoreDialog(change.id, change.args as Record<string, unknown> | undefined) : null });
       return;
     case "treeExpansion":
       dispatch({ type: "SET_TREE_OPEN_STATE", id: change.id, open: change.expanded });
@@ -3119,13 +3137,15 @@ export function windowActionPaneNode(
   appLabelsOverlay: PluginAppLabelsOverlay = EMPTY_APP_LABELS_OVERLAY,
   terminology: string = UI_TERMINOLOGY_NATIVE,
   locale: string = SHELL_LOCALES[0],
+  manifests: readonly { readonly apps: readonly unknown[] }[] = [],
+  selectedArtifactKinds?: readonly ArtifactKindChoice[],
 ): ReactNode {
   const resolvedActions = resolveWindowActions(app, windowKind);
   if (resolvedActions.length === 0) return undefined;
   const actions = resolvedActions.map((action) => ({
     ...action,
     label: resolveAppLabel(appLabelsOverlay, "action", action.id, resolveManifestLabel(action.label, terminology, locale)),
-    args: action.args.map((def) => resolveActionArgDef(def, action.id, appLabelsOverlay, terminology, locale)),
+    args: action.args.map((def) => resolveActionArgDef(def, action.id, appLabelsOverlay, terminology, locale, manifests, selectedArtifactKinds)),
   }));
   const activeUtilityId = actionPane.activeUtilityByWindowId[windowId] ?? null;
   const activeUtility = activeUtilityId ? (app.utilities ?? []).find((utility) => utility.id === activeUtilityId) : undefined;
@@ -3209,6 +3229,8 @@ export function resolveCommands(
   overlay: PluginAppLabelsOverlay = EMPTY_APP_LABELS_OVERLAY,
   terminology: string = UI_TERMINOLOGY_NATIVE,
   locale: string = SHELL_LOCALES[0],
+  manifests: readonly { readonly apps: readonly unknown[] }[] = [],
+  selectedArtifactKinds?: readonly ArtifactKindChoice[],
 ): ResolvedCommand[] {
   // 🗺️ `CommandDefinition.label`/`.args[].label` are manifest `LocalizedLabel` fields — there is no
   // "command"/"commandArg" overlay category (commands never went through `AppLabelsOverlay`), so this is
@@ -3218,7 +3240,7 @@ export function resolveCommands(
   const resolveDefinition = (definition: CommandDefinition): ResolvedCommand["definition"] => ({
     ...definition,
     label: resolveManifestLabel(definition.label, terminology, locale),
-    args: definition.args.map((def) => resolveActionArgDef(def, definition.id, overlay, terminology, locale)),
+    args: definition.args.map((def) => resolveActionArgDef(def, definition.id, overlay, terminology, locale, manifests, selectedArtifactKinds)),
   });
   const resolved: ResolvedCommand[] = osCommands.map((definition) => ({ definition: resolveDefinition(definition), address: { owner: "os", commandId: definition.id } }));
   for (const definition of activePluginManifest?.commands ?? []) {

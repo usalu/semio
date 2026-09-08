@@ -38,7 +38,7 @@ pub(crate) fn build_pipeline(device: &wgpu::Device, module: &wgpu::ShaderModule,
         primitive: wgpu::PrimitiveState { topology: primitive_topology(spec.topology), cull_mode: cull_mode(spec.cull_mode), ..Default::default() },
         depth_stencil: spec.depth_stencil.as_ref().map(depth_stencil_state),
         multisample: wgpu::MultisampleState::default(),
-        multiview: None,
+        multiview_mask: None,
         cache: None,
     })
 }
@@ -109,23 +109,23 @@ impl Pipelines {
         let scene_blit_module = shader_module(device, "scene_blit_shader", BLUR_FAMILY.variants[1].wgsl);
         let glass_module = shader_module(device, "glass_shader", GLASS_FAMILY.variants[0].wgsl);
 
-        let ui_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("ui_pipeline_layout"), bind_group_layouts: &[&ui_globals_layout], push_constant_ranges: &[] });
+        let ui_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("ui_pipeline_layout"), bind_group_layouts: &[Some(&ui_globals_layout)], immediate_size: 0 });
         let mask_pipeline = build_pipeline(device, &ui_module, &UI_FAMILY.variants[0].pipelines[0], &ui_layout, surface_format);
         let content_pipeline = build_pipeline(device, &ui_module, &UI_FAMILY.variants[0].pipelines[1], &ui_layout, surface_format);
         let vector_pipeline = build_pipeline(device, &vector_module, &VECTOR_FAMILY.variants[0].pipelines[0], &ui_layout, surface_format);
 
-        let world_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("world3d_pipeline_layout"), bind_group_layouts: &[&world_globals_layout], push_constant_ranges: &[] });
+        let world_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("world3d_pipeline_layout"), bind_group_layouts: &[Some(&world_globals_layout)], immediate_size: 0 });
         let world_opaque_pipeline = build_pipeline(device, &world_module, &WORLD3D_FAMILY.variants[0].pipelines[0], &world_layout, surface_format);
         let world_translucent_pipeline = build_pipeline(device, &world_module, &WORLD3D_FAMILY.variants[0].pipelines[1], &world_layout, surface_format);
         let world_line_pipeline = build_pipeline(device, &world_lines_module, &WORLD3D_FAMILY.variants[1].pipelines[0], &world_layout, surface_format);
 
-        let blur_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("blur_downsample_pipeline_layout"), bind_group_layouts: &[&blur_layout], push_constant_ranges: &[] });
+        let blur_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("blur_downsample_pipeline_layout"), bind_group_layouts: &[Some(&blur_layout)], immediate_size: 0 });
         let blur_downsample_pipeline = build_pipeline(device, &blur_module, &BLUR_FAMILY.variants[0].pipelines[0], &blur_pipeline_layout, surface_format);
 
-        let scene_blit_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("scene_blit_pipeline_layout"), bind_group_layouts: &[&scene_sample_layout], push_constant_ranges: &[] });
+        let scene_blit_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("scene_blit_pipeline_layout"), bind_group_layouts: &[Some(&scene_sample_layout)], immediate_size: 0 });
         let scene_blit_pipeline = build_pipeline(device, &scene_blit_module, &BLUR_FAMILY.variants[1].pipelines[0], &scene_blit_layout, surface_format);
 
-        let glass_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("glass_pipeline_layout"), bind_group_layouts: &[&ui_globals_layout, &scene_sample_layout], push_constant_ranges: &[] });
+        let glass_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("glass_pipeline_layout"), bind_group_layouts: &[Some(&ui_globals_layout), Some(&scene_sample_layout)], immediate_size: 0 });
         let glass_pipeline = build_pipeline(device, &glass_module, &GLASS_FAMILY.variants[0].pipelines[0], &glass_layout, surface_format);
 
         let quad_vertices: &[f32] = &[0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0];

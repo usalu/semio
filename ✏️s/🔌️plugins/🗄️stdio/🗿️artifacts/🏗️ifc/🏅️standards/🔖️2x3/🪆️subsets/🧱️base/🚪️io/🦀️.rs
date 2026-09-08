@@ -23,7 +23,7 @@ pub const IFC2X3_SCHEMA_NAME: &str = "IFC2X3";
 pub fn decode_ifc2x3(bytes: &[u8]) -> Result<Ifc2x3Snapshot, String> {
     let text = std::str::from_utf8(bytes).map_err(|e| format!("ifc2x3: not valid utf-8: {e}"))?;
     let document = parse_part21(text).map_err(|e| format!("ifc2x3 parse: {e}"))?;
-    let declares_ifc2x3 = document.header.file_schema.iter().any(|v| v.as_list().map(|items| items.iter().any(|item| item.as_str() == Some(IFC2X3_SCHEMA_NAME))).unwrap_or(false));
+    let declares_ifc2x3 = document.header.file_schema.iter().any(|v| v.as_list().is_some_and(|items| items.iter().any(|item| item.as_str() == Some(IFC2X3_SCHEMA_NAME))));
     if !declares_ifc2x3 {
         return Err(format!("ifc2x3: FILE_SCHEMA does not declare {IFC2X3_SCHEMA_NAME}"));
     }
@@ -243,7 +243,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn snapshot_and_facets_forbid_native_shadow_state() {
-        let value = serde_json::to_value(demo_ifc2x3_snapshot()).expect("serialize logical snapshot");
+        let value = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(demo_ifc2x3_snapshot()))).expect("serialize logical snapshot");
         let object = value.as_object().expect("snapshot object");
         assert_eq!(object.keys().map(String::as_str).collect::<Vec<_>>(), vec!["document", "edmPreamble", "schema"]);
         for (relative, text) in [

@@ -980,7 +980,7 @@ mod tests {
         assert!(document.resolved_up_to.is_none());
 
         let printed = document.print_dsl();
-        let round_tripped = <crate::artifacts::process3d::Process3dSnapshot as store::ArtifactDsl>::parse_dsl(&printed).expect("timber fixture round trip");
+        let round_tripped = <crate::artifacts::process3d::Process3dSnapshot as ArtifactDsl>::parse_dsl(&printed).expect("timber fixture round trip");
         assert_eq!(round_tripped, document, "timber fixture must round-trip through print_dsl/parse_dsl unchanged");
 
         match &document.stock_payload.solid {
@@ -1008,7 +1008,7 @@ mod tests {
         assert_eq!(document.resolved_up_to, Some(2));
 
         let printed = document.print_dsl();
-        let round_tripped = <crate::artifacts::process3d::Process3dSnapshot as store::ArtifactDsl>::parse_dsl(&printed).expect("plate fixture round trip");
+        let round_tripped = <crate::artifacts::process3d::Process3dSnapshot as ArtifactDsl>::parse_dsl(&printed).expect("plate fixture round trip");
         assert_eq!(round_tripped, document, "plate fixture must round-trip through print_dsl/parse_dsl unchanged");
 
         match &document.stock_payload.solid {
@@ -1295,7 +1295,7 @@ mod tests {
         crate::artifacts::process3d::process_working_scene_to_snapshot(&scene, Workshop::default(), cursor)
     }
 
-    fn new_step() -> crate::artifacts::process3d::ProcessStep {
+    fn new_step() -> ProcessStep {
         use crate::artifacts::process3d::{Pose, ProcessMeasure, ProcessStep, WorkingSolid};
         ProcessStep { id: "e".into(), label: "e".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.01, depth: 0.2, height: 0.2 }, pose: Pose::default() } }
     }

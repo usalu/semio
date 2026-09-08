@@ -147,6 +147,7 @@ mod tests {
             match app.close_step(items, bytes).expect("actual viewer closes through its declared five-lane owners") {
                 PluginCloseStep::Pending { released_items, released_bytes } => assert!(released_items <= items && released_bytes <= bytes),
                 PluginCloseStep::Blocked { .. } => panic!("fresh viewer has no outstanding reader that may block close"),
+                PluginCloseStep::AwaitingInput { reason } => panic!("fixture has no active worker input to await: {reason}"),
                 PluginCloseStep::Complete => { completed = true; break; }
             }
         }

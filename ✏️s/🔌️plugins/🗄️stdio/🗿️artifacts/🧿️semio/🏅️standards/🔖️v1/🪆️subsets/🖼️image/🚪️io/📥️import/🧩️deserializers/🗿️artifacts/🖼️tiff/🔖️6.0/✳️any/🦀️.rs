@@ -35,7 +35,7 @@ const CORE_TAGS: [u16; 9] = [TAG_IMAGE_WIDTH, TAG_IMAGE_LENGTH, TAG_BITS_PER_SAM
 fn value_to_metadata_string(v: &TiffValues) -> String {
     match v {
         TiffValues::Ascii(s) => s.clone(),
-        other => other.first_u32().map(|n| n.to_string()).unwrap_or_else(|| format!("{other:?}")),
+        other => other.first_u32().map_or_else(|| format!("{other:?}"), |n| n.to_string()),
     }
 }
 

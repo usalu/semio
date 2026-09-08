@@ -28,6 +28,12 @@
 //! for enums, `name{[removed];[modified];[added]}` for collection triples) — see
 //! `f6-recon-report.md` in this ticket folder.
 
+/// 🧩 Ordered removed keys, modified values, and inserted items.
+pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>);
+
+/// 🧩 Ordered removed keys, modified values, and inserted items.
+pub(crate) type NamedDiffParts<D, T> = (Vec<String>, Vec<(String, D)>, Vec<(usize, T)>);
+
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use crate::artifacts::dxf::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue, DxfVertex};
@@ -71,7 +77,7 @@ fn generic_apply<T: DxfIndexElem>(base: &[T], removed: &[usize], modified: &[(us
 
 /// 🧭️ Pairwise-by-position state delta (recipe's "index keys pairwise by position" rule).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn generic_between<T: DxfIndexElem>(base: &[T], other: &[T]) -> (Vec<usize>, Vec<(usize, T::Diff)>, Vec<(usize, T)>) {
+fn generic_between<T: DxfIndexElem>(base: &[T], other: &[T]) -> IndexedDiffParts<T::Diff, T> {
     let min_len = base.len().min(other.len());
     let mut modified = Vec::new();
     for i in 0..min_len {
@@ -118,11 +124,11 @@ fn generic_absorb_pair<T: DxfIndexElem>(
     d2_removed: &[usize],
     d2_modified: &[(usize, T::Diff)],
     d2_added: &[(usize, T)],
-) -> (Vec<usize>, Vec<(usize, T::Diff)>, Vec<(usize, T)>) {
+) -> IndexedDiffParts<T::Diff, T> {
     use std::collections::HashMap;
     let max_ref =
         d1_removed.iter().copied().chain(d1_modified.iter().map(|(i, _)| *i)).chain(d1_added.iter().map(|(i, _)| *i)).chain(d2_removed.iter().copied()).chain(d2_modified.iter().map(|(i, _)| *i)).chain(d2_added.iter().map(|(i, _)| *i)).max();
-    let l1 = max_ref.map(|m| m + 2).unwrap_or(0);
+    let l1 = max_ref.map_or(0, |m| m + 2);
 
     let base_labels: Vec<Lbl> = (0..l1).map(Lbl::Base).collect();
     let d1_added_lbl: Vec<(usize, Lbl)> = d1_added.iter().enumerate().map(|(j, (idx, _))| (*idx, Lbl::Added1(j))).collect();
@@ -237,7 +243,7 @@ fn named_apply<T: DxfNamedElem>(base: &[T], removed: &[String], modified: &[(Str
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn named_between<T: DxfNamedElem>(base: &[T], other: &[T]) -> (Vec<String>, Vec<(String, T::Diff)>, Vec<(usize, T)>) {
+fn named_between<T: DxfNamedElem>(base: &[T], other: &[T]) -> NamedDiffParts<T::Diff, T> {
     let base_keys: HashSet<&str> = base.iter().map(|t| t.key()).collect();
     let other_keys: HashSet<&str> = other.iter().map(|t| t.key()).collect();
     let removed: Vec<String> = base.iter().filter(|t| !other_keys.contains(&t.key())).map(|t| t.key().to_string()).collect();
@@ -263,7 +269,7 @@ fn named_absorb_pair<T: DxfNamedElem>(
     d2_removed: &[String],
     d2_modified: &[(String, T::Diff)],
     d2_added: &[(usize, T)],
-) -> (Vec<String>, Vec<(String, T::Diff)>, Vec<(usize, T)>) {
+) -> NamedDiffParts<T::Diff, T> {
     let added_keys: HashSet<String> = d1_added.iter().map(|(_, t)| t.key().to_string()).collect();
     let mut merged_removed: Vec<String> = d1_removed.to_vec();
     let mut annihilated: HashSet<String> = HashSet::new();
@@ -750,7 +756,7 @@ pub struct DxfTablesDiff {
 impl DxfTablesDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
-        self.layers.as_ref().map_or(true, DxfLayersDiff::is_empty) && self.styles.as_ref().map_or(true, DxfStylesDiff::is_empty) && self.linetypes.as_ref().map_or(true, DxfLinetypesDiff::is_empty)
+        self.layers.as_ref().is_none_or(DxfLayersDiff::is_empty) && self.styles.as_ref().is_none_or(DxfStylesDiff::is_empty) && self.linetypes.as_ref().is_none_or(DxfLinetypesDiff::is_empty)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn apply(&self, base: &DxfTables) -> DxfTables {
@@ -1502,18 +1508,16 @@ fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified
             return Err(target_error("invalid-modify-index", "modification target must exist exactly once and remain present", target));
         }
     }
-    let mut length = base_len - removed.len();
     let mut additions: Vec<usize> = added_indices.into_iter().collect();
     additions.sort_unstable();
     let mut previous = None;
-    for index in additions {
+    for (length, index) in (base_len - removed.len()..).zip(additions) {
         let mut target = prefix.to_vec();
         target.push(index.to_string());
         if index > length || previous == Some(index) {
             return Err(target_error("invalid-add-index", "addition target must be unique and within the evolving sequence", target));
         }
         previous = Some(index);
-        length += 1;
     }
     Ok(())
 }
@@ -1559,19 +1563,17 @@ fn validate_named_targets<'a>(
             return Err(target_error("invalid-modify-target", "modification target must exist exactly once and remain present", target));
         }
     }
-    let mut length = base_len - removed.len();
     let mut additions: Vec<(usize, &str)> = added.into_iter().collect();
     additions.sort_by_key(|(index, _)| *index);
     let mut added_keys = BTreeSet::new();
     let mut previous = None;
-    for (index, key) in additions {
+    for (length, (index, key)) in (base_len - removed.len()..).zip(additions) {
         let mut target = prefix.to_vec();
         target.push(key.to_string());
         if present(key) || !added_keys.insert(key) || index > length || previous == Some(index) {
             return Err(target_error("invalid-add-target", "addition name and position must be unique and valid", target));
         }
         previous = Some(index);
-        length += 1;
     }
     Ok(())
 }
@@ -1725,10 +1727,10 @@ impl DiffAlgebra<DxfSnapshot> for DxfDiff {
     }
 
     fn is_empty(&self) -> bool {
-        self.header_vars.as_ref().map_or(true, DxfHeaderVarsDiff::is_empty)
-            && self.tables.as_ref().map_or(true, DxfTablesDiff::is_empty)
-            && self.blocks.as_ref().map_or(true, DxfBlocksDiff::is_empty)
-            && self.entities.as_ref().map_or(true, DxfEntitiesDiff::is_empty)
+        self.header_vars.as_ref().is_none_or(DxfHeaderVarsDiff::is_empty)
+            && self.tables.as_ref().is_none_or(DxfTablesDiff::is_empty)
+            && self.blocks.as_ref().is_none_or(DxfBlocksDiff::is_empty)
+            && self.entities.as_ref().is_none_or(DxfEntitiesDiff::is_empty)
     }
 }
 
@@ -1871,7 +1873,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -2442,7 +2444,7 @@ fn enc_name_triple<T, D>(removed: &[String], modified: &[(String, D)], added: &[
     format!("[{removed_s}];[{modified_s}];[{added_s}]")
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_name_triple<T, D>(body: &str, dec_diff: impl Fn(&str) -> Result<D, String>, dec_item: impl Fn(&str) -> Result<T, String>) -> Result<(Vec<String>, Vec<(String, D)>, Vec<(usize, T)>), String> {
+fn dec_name_triple<T, D>(body: &str, dec_diff: impl Fn(&str) -> Result<D, String>, dec_item: impl Fn(&str) -> Result<T, String>) -> Result<NamedDiffParts<D, T>, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("name triple: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
@@ -2474,7 +2476,7 @@ fn enc_index_triple<T, D>(removed: &[usize], modified: &[(usize, D)], added: &[(
     format!("[{removed_s}];[{modified_s}];[{added_s}]")
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_index_triple<T, D>(body: &str, dec_diff: impl Fn(&str) -> Result<D, String>, dec_item: impl Fn(&str) -> Result<T, String>) -> Result<(Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>), String> {
+fn dec_index_triple<T, D>(body: &str, dec_diff: impl Fn(&str) -> Result<D, String>, dec_item: impl Fn(&str) -> Result<T, String>) -> Result<IndexedDiffParts<D, T>, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("index triple: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
@@ -3083,7 +3085,7 @@ pub(crate) fn dec_dxf_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_header_var_diff_bin(d: &DxfHeaderVarDiff, out: &mut Vec<u8>) {
     write_option_bin(out, &d.group_code, |v, out| store::write_varint_i64(out, *v as i64));
-    write_option_bin(out, &d.value, |v, out| enc_dxf_value_bin(v, out));
+    write_option_bin(out, &d.value, enc_dxf_value_bin);
     write_option_bin(out, &d.extra_group_codes, |v, out| enc_group_codes_bin(v, out));
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3273,7 +3275,7 @@ pub(crate) fn dec_entity_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<
 pub(crate) fn enc_block_diff_bin(d: &DxfBlockDiff, out: &mut Vec<u8>) {
     write_option_bin(out, &d.name, |v, out| write_str_lp(out, v));
     write_option_bin(out, &d.base_point, |v, out| write_point3_bin(out, v));
-    write_option_bin(out, &d.entities, |v, out| enc_entities_diff_bin(v, out));
+    write_option_bin(out, &d.entities, enc_entities_diff_bin);
     write_option_bin(out, &d.unknown_group_codes, |v, out| enc_group_codes_bin(v, out));
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3286,9 +3288,9 @@ pub(crate) fn dec_block_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<D
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_tables_diff_bin(t: &DxfTablesDiff, out: &mut Vec<u8>) {
-    write_option_bin(out, &t.layers, |v, out| enc_layers_diff_bin(v, out));
-    write_option_bin(out, &t.styles, |v, out| enc_styles_diff_bin(v, out));
-    write_option_bin(out, &t.linetypes, |v, out| enc_linetypes_diff_bin(v, out));
+    write_option_bin(out, &t.layers, enc_layers_diff_bin);
+    write_option_bin(out, &t.styles, enc_styles_diff_bin);
+    write_option_bin(out, &t.linetypes, enc_linetypes_diff_bin);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_tables_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfTablesDiff, String> {
@@ -3325,7 +3327,7 @@ fn dec_name_triple_bin<T, D>(
     reader: &mut store::ByteReader<'_>,
     dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
     dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
-) -> Result<(Vec<String>, Vec<(String, D)>, Vec<(usize, T)>), String> {
+) -> Result<NamedDiffParts<D, T>, String> {
     let rc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(rc as usize);
     for _ in 0..rc {
@@ -3369,7 +3371,7 @@ fn dec_index_triple_bin<T, D>(
     reader: &mut store::ByteReader<'_>,
     dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
     dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
-) -> Result<(Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>), String> {
+) -> Result<IndexedDiffParts<D, T>, String> {
     let rc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(rc as usize);
     for _ in 0..rc {

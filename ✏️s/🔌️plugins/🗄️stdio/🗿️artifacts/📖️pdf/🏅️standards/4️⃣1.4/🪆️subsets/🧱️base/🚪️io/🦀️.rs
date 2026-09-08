@@ -25,8 +25,6 @@
 //! 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES); registration otherwise flows through
 //! `crate::artifacts::pdf::declaration_1_4()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE).
 
-#[cfg(test)]
-use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::diff::PdfDiff;
 use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::{
     snapshot::{PageDoc, PdfSnapshot},
 };
@@ -287,7 +285,7 @@ fn build_index(data: &[u8]) -> Xref {
             let offsets = brute_force_offsets(data);
             if !trailer.iter().any(|entry| entry.key == "Root") {
                 // 🔍️ No usable trailer either: the catalog is found by its own `/Type /Catalog`.
-                let catalog = offsets.iter().find(|(_, offset)| parse_indirect_at(data, **offset).map(|(_, value)| value.dict_get("Type").and_then(|value| value.as_name()) == Some("Catalog")).unwrap_or(false)).map(|(number, _)| *number);
+                let catalog = offsets.iter().find(|(_, offset)| parse_indirect_at(data, **offset).is_some_and(|(_, value)| value.dict_get("Type").and_then(|value| value.as_name()) == Some("Catalog"))).map(|(number, _)| *number);
                 if let Some(number) = catalog {
                     trailer.push(PdfDictEntry { key: "Root".into(), value: PdfObject::Ref(ObjRef { num: number, gen: 0 }) });
                 }
@@ -463,7 +461,7 @@ pub fn decode_pdf(data: &[u8]) -> Result<PdfSnapshot, String> {
         return Err("pdf 1.4: /Encrypt is present — an encrypted document is refused, never guessed at".to_string());
     }
     let root = index.trailer.iter().find(|entry| entry.key == "Root").and_then(|entry| entry.value.as_ref()).ok_or_else(|| "pdf 1.4: the trailer names no /Root catalog".to_string())?;
-    let mut resolver = Resolver::new(data, index.offsets.clone());
+    let mut resolver = Resolver::new(data, index.offsets);
     let catalog = resolver.resolve(root.num).ok_or_else(|| format!("pdf 1.4: the /Root catalog (object {}) is not in the cross-reference table", root.num))?;
     if catalog.dict_get("Encrypt").is_some() {
         return Err("pdf 1.4: /Encrypt is present on /Root — an encrypted document is refused, never guessed at".to_string());

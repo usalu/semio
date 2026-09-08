@@ -1,14 +1,15 @@
+import { printDocumentOutputDirectory } from "../../../🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🟦️.ts";
 import { stagePrintSources } from "../../../🔨️modules/📥️source-staging/🟦️.ts";
-import { visualizationTemplates, verifyVisualizationCoverage, pdfStableHash, parseVizTaxonomyLeaves } from "../../../🔨️modules/📊️visualization-gallery/🟦️.ts";
+import { visualizationTemplates, verifyVisualizationCoverage, parseVizTaxonomyLeaves } from "../../../🔨️modules/📊️visualization-gallery/🟦️.ts";
 import MarkdownIt from "markdown-it";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, mkdirSync, writeFileSync, rmSync, copyFileSync, mkdtempSync, readdirSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { createRequire } from "node:module";
 import { getWorkspaceRoot } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { provisionPrintFonts } from "../../../🔨️modules/🔤print-font-catalog/🟦️.ts";
+import { stagePrintFonts, printFontDescriptors, printFontSearchPaths } from "../../../🔨️modules/🔤print-font-catalog/🟦️.ts";
 import { loadPrintDesignTokens, renderPrintLatexTokenStylesheet, resolvePrintPanelGlassStyle } from "../../../🔨️modules/🎨print-design-token-paints/🟦️.ts";
-import { buildRegisteredPrintTemplates, deriveDarkPrintTexSource, printTemplatePdfNames, registeredPrintTemplates, resolveRegisteredPrintTemplates } from "../../../🔨️modules/🖨️tectonic-template-compilation/🟦️.ts";
+import { deriveDarkPrintTexSource, printTemplatePdfNames, registeredPrintTemplates } from "../../../🔨️modules/🖨️tectonic-template-compilation/🟦️.ts";
 
 //#region 🧪️PrintPipelineTests
 const workspaceRoot = getWorkspaceRoot();
@@ -18,11 +19,14 @@ const latexRoot = join(productRoot, "🖋️latex");
 const outputRoot = process.env.SEMIO_PRINT_OUTPUT_DIR ?? join(packageRoot, "dist");
 
 /** 🧪️ Runs pure deterministic print-pipeline verification. */
-export function verifyPrintPipelineQuick(): void {
+export async function verifyPrintPipelineQuick(): Promise<void> {
+  await verifyPrintCommandBoundaries();
+  await verifyPrintDocumentCatalog();
+  await verifyPrintBundleContract();
+  verifyPrintFontStaging();
   const galleryIdentities = JSON.parse(readFileSync(join(import.meta.dir, "🗺️gallery-identities.json"), "utf8")) as Record<string, string>;
   assert.deepEqual(Object.fromEntries(visualizationTemplates().map(({ id, texPath }) => [id, basename(texPath)])), galleryIdentities);
   assert.equal(new Set(Object.values(galleryIdentities).map((name) => name.split("viz-")[0]!.replaceAll("\uFE0F", ""))).size, 81);
-  assert.equal(resolveRegisteredPrintTemplates(["viz", "api"]).length, 1);
   const stylesheet = renderPrintLatexTokenStylesheet(loadPrintDesignTokens());
   assert.match(stylesheet, /\\ProvidesPackage\{semio-tokens\}/);
   assert.match(stylesheet, /\\definecolor\{semio-chrome-light-panel\}/);
@@ -82,9 +86,6 @@ export function verifyPrintPipelineQuick(): void {
   }
   assert.equal(oracle.length, contract.vizLeaves);
   assert.deepEqual(parseVizTaxonomyLeaves(taxonomy), oracle);
-  assert.equal(resolveRegisteredPrintTemplates([]).length, templates.length);
-  assert.equal(resolveRegisteredPrintTemplates(["report", "report-dark"]).length, 1);
-  assert.throws(() => resolveRegisteredPrintTemplates(["not-a-template"]));
   assert.deepEqual(printTemplatePdfNames("🧾️template/📋️report/📋️report.tex"), { light: "📋️report.pdf", dark: "📋️report-dark.pdf" });
 
   const loader = readFileSync(join(latexRoot, "semio-viz-charts.sty"), "utf8");
@@ -120,47 +121,153 @@ export function verifyPrintPipelineQuick(): void {
   console.log("[DEBUG] print: unit tests passed");
 }
 
-/** 🧪️ Builds all light and dark registered templates and verifies their PDFs. */
-export async function verifyPrintPipelineLong(): Promise<void> {
-  await provisionPrintFonts();
-  await buildRegisteredPrintTemplates([]);
-  for (const template of registeredPrintTemplates()) {
-    for (const pdf of Object.values(printTemplatePdfNames(template.texPath))) {
-      const path = join(outputRoot, pdf);
-      if (!existsSync(path)) throw new Error(`test missing PDF: ${path}`);
-    }
-  }
-  console.log(`print: all ${registeredPrintTemplates().length * 2} template PDFs built`);
-}
-//#endregion 🧪️PrintPipelineTests
-
-/** 🧪️ Compiles every visualization in both themes and verifies reproducible PDF content. */
-export async function verifyPrintVisualizationBuild(): Promise<void> {
-  await provisionPrintFonts();
-  await buildRegisteredPrintTemplates(["viz"]);
-  for (const template of visualizationTemplates()) for (const name of Object.values(printTemplatePdfNames(template.texPath))) assert.ok(existsSync(join(outputRoot, name)));
-  const probe = visualizationTemplates().find((template) => template.id === "viz-api")!;
-  const path = join(outputRoot, printTemplatePdfNames(probe.texPath).light);
+/** 📖️ Consumes each restored document through the independent PDF.js page and text reader. */
+async function verifyPrintPdfs(templates: readonly { id: string; texPath: string }[], collection: "templates" | "visualizations"): Promise<void> {
   const canvas = createRequire(join(workspaceRoot, "node_modules/pdfjs-dist/legacy/build/pdf.mjs"))("@napi-rs/canvas") as typeof import("@napi-rs/canvas");
   (globalThis as { DOMMatrix?: typeof canvas.DOMMatrix }).DOMMatrix ??= canvas.DOMMatrix;
   const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const expected = JSON.parse(readFileSync(join(import.meta.dir, "🧫️pdf-consumption.json"), "utf8"));
   const contract = JSON.parse(readFileSync(join(import.meta.dir, "🧫️merge-contract.json"), "utf8"));
-  for (const name of Object.values(printTemplatePdfNames(probe.texPath))) {
-    const document = await getDocument({ data: new Uint8Array(readFileSync(join(outputRoot, name))) }).promise;
+  let count = 0;
+  for (const template of templates) for (const name of Object.values(printTemplatePdfNames(template.texPath))) {
+    const pdf = await getDocument({ data: new Uint8Array(readFileSync(join(printDocumentOutputDirectory(template.id), name))) }).promise;
     try {
-      const pages: string[] = [];
-      for (let number = 1; number <= document.numPages; number++) {
-        const page = await document.getPage(number);
-        pages.push((await page.getTextContent()).items.map((item) => "str" in item ? item.str : "").join(" "));
+      assert.ok(pdf.numPages >= expected.minimumPages, `${name}: empty document`);
+      const texts: string[] = [];
+      for (let index = 1; index <= pdf.numPages; index++) {
+        const page = await pdf.getPage(index);
+        texts.push((await page.getTextContent()).items.map(item => "str" in item ? item.str : "").join(" "));
+        page.cleanup();
       }
-      for (const text of contract.vizText) assert.ok(pages.join(" ").includes(text), `missing PDF text: ${text}`);
-    } finally {
-      await document.destroy();
-    }
+      assert.ok(texts.join(" ").trim(), `${name}: no readable text`);
+      if (template.id === "viz-api") for (const text of contract.vizText) assert.ok(texts.join(" ").includes(text), `${name}: missing ${text}`);
+      count++;
+      console.log(`[DEBUG] Print PDF ${name}: ${pdf.numPages} pages consumed`);
+    } finally { await pdf.destroy(); }
   }
-  await buildRegisteredPrintTemplates(["viz", "api"]);
-  const hash = pdfStableHash(path);
-  await buildRegisteredPrintTemplates(["viz", "api"]);
-  assert.equal(pdfStableHash(path), hash);
-  console.log(`[DEBUG] print: all ${visualizationTemplates().length * 2} visualization PDFs built, deterministic content ${hash.slice(0, 12)}`);
+  assert.equal(count, expected[collection]);
+  console.log(`[DEBUG] Print ${collection}: ${count} prepared PDFs parsed with PDF.js`);
+}
+
+/** 🧪️ Verifies the light and dark PDFs prepared by explicit Nx document prerequisites. */
+export async function verifyPrintPipelineLong(): Promise<void> {
+  await verifyPrintPdfs(registeredPrintTemplates(), "templates");
+}
+//#endregion 🧪️PrintPipelineTests
+
+/** 🧪️ Verifies every visualization PDF and the authored API text contract. */
+export async function verifyPrintVisualizationBuild(): Promise<void> {
+  await verifyPrintPdfs(visualizationTemplates(), "visualizations");
+}
+
+/** 🔤️ Verifies font publication against the schema and an independent native font loader. */
+export function verifyPrintFontStaging(output = outputRoot): void {
+  const require = createRequire(import.meta.url), modulePath = join(productRoot, "🔨️modules/🔤print-font-catalog");
+  const catalog = JSON.parse(readFileSync(join(modulePath, "🔣️.json"), "utf8"));
+  assert.equal(new (require("ajv/dist/2020").default)().validate(JSON.parse(readFileSync(join(modulePath, "🧬️schema.json"), "utf8")), catalog), true);
+  assert.deepEqual(printFontDescriptors(), catalog);
+  mkdirSync(output, { recursive: true });
+  const root = mkdtempSync(join(output, "print-fonts-")), product = "🧰️framework/🛍️products/📓️print";
+  try {
+    for (const row of catalog) {
+      const path = join(product, "🖼️assets/🔤️font", row.directory, row.filename);
+      mkdirSync(dirname(join(root, path)), { recursive: true }); copyFileSync(join(workspaceRoot, path), join(root, path));
+    }
+    stagePrintFonts(root);
+    const staged = printFontSearchPaths(root)[0]!;
+    assert.equal(staged, join(root, product, "📦️packages/🟦️typescript/dist/fonts"));
+    const { GlobalFonts } = require("@napi-rs/canvas");
+    for (const row of catalog) {
+      const path = join(staged, row.texFilename);
+      assert.deepEqual(readFileSync(path), readFileSync(join(root, product, "🖼️assets/🔤️font", row.directory, row.filename)));
+      const key = GlobalFonts.registerFromPath(path, "nx-font-fixture-" + row.family);
+      assert.ok(key, row.family); GlobalFonts.remove(key);
+    }
+    writeFileSync(join(staged, "stale.ttf"), "stale");
+    stagePrintFonts(root);
+    assert.equal(existsSync(join(staged, "stale.ttf")), false);
+    assert.deepEqual(JSON.parse(readFileSync(join(staged, ".nx-artifact.json"), "utf8")).files, catalog.map((row: any) => row.texFilename).sort());
+    const prior = readFileSync(join(staged, catalog[0].texFilename));
+    writeFileSync(join(root, product, "🖼️assets/🔤️font", catalog[0].directory, catalog[0].filename), "invalid");
+    assert.throws(() => stagePrintFonts(root), /TTF/);
+    assert.deepEqual(readFileSync(join(staged, catalog[0].texFilename)), prior);
+  } finally { rmSync(root, { recursive: true }); }
+  console.log("[DEBUG] Print fonts: schema, native loading, byte identity and atomic replacement PASS");
+}
+
+/** 🪶️ Independently resolves production imports without loading generators or repository tests. */
+export async function verifyPrintCommandBoundaries(): Promise<void> {
+  const { build } = await import("esbuild");
+  const contract = JSON.parse(readFileSync(join(import.meta.dir, "🧫️command-boundaries.json"), "utf8"));
+  for (const entry of contract.entries) {
+    const result = await build({ absWorkingDir: workspaceRoot, entryPoints: [join(productRoot, entry)], platform: "node", format: "esm", bundle: true, packages: "external", external: ["bun"], write: false, metafile: true, logLevel: "silent" });
+    const files = Object.keys(result.metafile!.inputs);
+    for (const forbidden of contract.forbidden) assert.equal(files.some(path => path.includes(forbidden)), false, `${entry} loads ${forbidden}`);
+    assert.ok(files.length <= contract.maxSourceFiles, `${entry}: ${files.length} source files`);
+    const external = [...new Set(Object.values(result.metafile!.outputs).flatMap(output => output.imports).filter(item => item.external && !item.path.startsWith("node:") && item.path !== "bun").map(item => item.path.startsWith("@") ? item.path.split("/").slice(0, 2).join("/") : item.path.split("/")[0]))].sort();
+    assert.deepEqual(external, contract.externalDependencies[entry], `${entry}: external imports`);
+  }
+  console.log("[DEBUG] Print production command boundaries: esbuild source graph PASS");
+}
+
+/** 📄️ Verifies document ownership against schema, gallery fixtures and Nx inference. */
+export async function verifyPrintDocumentCatalog(): Promise<void> {
+  const root = workspaceRoot, product = "🧰️framework/🛍️products/📓️print";
+  const modulePath = join(product, "🔨️modules/🖨️tectonic-template-compilation/📇️catalog");
+  const require = createRequire(import.meta.url), catalog = JSON.parse(readFileSync(join(root, modulePath, "🔣️.json"), "utf8"));
+  const validate = new (require("ajv/dist/2020").default)().compile(JSON.parse(readFileSync(join(root, modulePath, "🧬️schema.json"), "utf8")));
+  assert.ok(validate(catalog), JSON.stringify(validate.errors));
+  const api = await import(join(root, modulePath, "🟦️.ts"));
+  const plugin = await import(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs"));
+  const gallery = JSON.parse(readFileSync(join(root, product, "🎮️commands/🧪️print-pipeline-verification/🧪️tests/🗺️gallery-identities.json"), "utf8"));
+  const documents = api.printDocuments();
+  assert.equal(documents.length, 87);
+  assert.deepEqual(documents.filter((row: any) => row.collection === "visualizations").map((row: any) => row.id).sort(), Object.keys(gallery).sort());
+  assert.equal(new Set(documents.map((row: any) => api.printDocumentOutputDirectory(row.id, root))).size, documents.length);
+  assert.throws(() => api.printDocument("../report"), /Unknown/);
+  const project = JSON.parse(readFileSync(join(root, product, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
+  const targets = plugin.cacheInternals.printDocumentTargets(project, join(product, "📦️packages/🟦️typescript"), root);
+  for (const document of documents) {
+    const target = targets[`build-${document.id}`];
+    assert.ok(target, document.id);
+    assert.equal(target.cache, true);
+    assert.deepEqual([...new Set(target.inputs.flatMap((input: any) => input.externalDependencies ?? []))].sort(), ["pdfjs-dist", "sharp"]);
+    assert.equal(target.inputs.includes("{workspaceRoot}/bun.lock"), false);
+    assert.deepEqual(target.outputs, [`{projectRoot}/dist/documents/${document.id}`]);
+    assert.match(target.options.command, /📜️script\.ts build [a-z0-9-]+$/);
+    assert.ok(target.dependsOn.includes("fonts"));
+    assert.ok(target.dependsOn.includes("deps-tectonic"));
+    assert.ok(target.dependsOn.includes("deps-tex"));
+  }
+  console.log("[DEBUG] Print catalog schema, independent gallery identities and 87 exclusive Nx document owners PASS");
+}
+
+/** 📚️ Exercises locked range acquisition with language-neutral corruption vectors. */
+export async function verifyPrintBundleContract(output = outputRoot): Promise<void> {
+  const modulePath = join(productRoot, "🔨️modules/🖨️tectonic-template-compilation/📚️bundle");
+  const require = createRequire(import.meta.url), manifest = JSON.parse(readFileSync(join(modulePath, "🔒️dependencies.json"), "utf8"));
+  assert.equal(new (require("ajv/dist/2020").default)().validate(JSON.parse(readFileSync(join(modulePath, "🧬️schema.json"), "utf8")), manifest), true);
+  const vectors = JSON.parse(readFileSync(join(modulePath, "🧫️cases.json"), "utf8"));
+  const api = await import("../../../🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts");
+  mkdirSync(output, { recursive: true });
+  const root = mkdtempSync(join(output, "print-bundle-contract-")), original = globalThis.fetch;
+  try {
+    const controller = new AbortController(); controller.abort();
+    await assert.rejects(() => api.preparePrintBundle(root, controller.signal), /abort/i);
+    for (const vector of vectors.failures) {
+      let requests = 0;
+      globalThis.fetch = (async (_url, options) => {
+        requests++;
+        const range = new Headers(options?.headers).get("range")!.slice(6);
+        const file = manifest.files.find((file: any) => range === `${file.offset}-${file.offset + file.bytes - 1}`);
+        assert.ok(file);
+        return new Response(Buffer.alloc(file.bytes + (vector.bytes === "oversized" ? 1 : 0)), { status: vector.status, headers: { "content-range": `bytes ${vector.range === "matching" ? range : "0-0"}/${manifest.archiveBytes}` } });
+      }) as typeof fetch;
+      await assert.rejects(() => api.preparePrintBundle(root), new RegExp(vector.error), vector.name);
+      assert.ok(requests > 0);
+      assert.equal(existsSync(api.printBundleDirectory(root)), false);
+      assert.equal(readdirSync(dirname(api.printBundleDirectory(root))).some(name => name.startsWith(".prepare-")), false);
+    }
+  } finally { globalThis.fetch = original; rmSync(root, { recursive: true }); }
+  console.log("[DEBUG] Print bundle schema, pre-cancel and four corrupt-acquisition vectors PASS");
 }

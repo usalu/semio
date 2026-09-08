@@ -108,8 +108,8 @@ impl SnapshotReadLeaseRegistry {
             return false;
         }
         self.authority_generation.store(generation, std::sync::atomic::Ordering::Relaxed);
-        for (word, bytes) in self.authority_revision.iter().zip(revision.chunks_exact(8)) {
-            word.store(u64::from_le_bytes(bytes.try_into().expect("fixed revision lane")), std::sync::atomic::Ordering::Relaxed);
+        for (word, bytes) in self.authority_revision.iter().zip(revision.as_chunks::<8>().0.iter()) {
+            word.store(u64::from_le_bytes(*bytes), std::sync::atomic::Ordering::Relaxed);
         }
         self.authority_sequence.store(terminal_sequence, std::sync::atomic::Ordering::Release);
         true
@@ -120,8 +120,8 @@ impl SnapshotReadLeaseRegistry {
         if first == 0 || first & 1 != 0 || self.authority_generation.load(std::sync::atomic::Ordering::Relaxed) != generation {
             return false;
         }
-        for (word, bytes) in self.authority_revision.iter().zip(revision.chunks_exact(8)) {
-            if word.load(std::sync::atomic::Ordering::Relaxed) != u64::from_le_bytes(bytes.try_into().expect("fixed revision lane")) {
+        for (word, bytes) in self.authority_revision.iter().zip(revision.as_chunks::<8>().0.iter()) {
+            if word.load(std::sync::atomic::Ordering::Relaxed) != u64::from_le_bytes(*bytes) {
                 return false;
             }
         }
@@ -145,7 +145,7 @@ impl SnapshotReadLeaseRegistry {
         state.free_len -= 1;
         state.next_generation = generation;
         let returned = Arc::new(std::sync::atomic::AtomicBool::new(false));
-        state.slots[index].write(SnapshotReadLeaseSlot { generation, owner: owner.clone(), returned: returned.clone() });
+        state.slots[index].write(SnapshotReadLeaseSlot { generation, owner, returned: returned.clone() });
         state.occupied[index / 64] |= 1 << (index % 64);
         Ok(SnapshotReadLease { registry: self.clone(), index: index as u16, generation, returned })
     }
@@ -1791,6 +1791,12 @@ pub struct ArtifactStoreCursorDisposer<P, Mutation> {
     started: bool,
     active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     marker: PhantomData<fn() -> (P, Mutation)>,
+}
+
+impl<P, Mutation> Default for ArtifactStoreCursorDisposer<P, Mutation> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<P, Mutation> ArtifactStoreCursorDisposer<P, Mutation> {
@@ -3952,6 +3958,9 @@ impl<P> PresencePeersRoot<P> {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct PresencePeersCapacityError;
+
 pub struct PresencePeersRetiredEntries<P> {
     entries: std::mem::ManuallyDrop<[Option<Arc<PresencePeerEntry<P>>>; PRESENCE_PEER_SLOTS]>,
     len: usize,
@@ -3971,9 +3980,9 @@ impl<P> PresencePeersRetiredEntries<P> {
         retired
     }
 
-    pub fn append(&mut self, other: &mut Self) -> Result<(), ()> {
+    pub fn append(&mut self, other: &mut Self) -> Result<(), PresencePeersCapacityError> {
         if self.len.saturating_add(other.len) > PRESENCE_PEER_SLOTS {
-            return Err(());
+            return Err(PresencePeersCapacityError);
         }
         for index in 0..other.len {
             if let Some(entry) = other.entries[index].take() {
@@ -4998,11 +5007,12 @@ pub mod pack_rt {
 
     /// @emoji 🪶️ Inverse of `encode_wire_value`.
     pub fn decode_wire_value(bytes: &[u8]) -> Result<DslValue, PackError> {
-        let (record, _report) = crate::os_pack::decode_record_body(bytes, &value_bridge_spec(), &PackDecodeOptions::default())?;
-        match record.get(VALUE_BRIDGE_FIELD_ID) {
-            Some(FieldValue::Value(dsl_value)) => Ok(dsl_value.clone()),
-            _ => Ok(DslValue::Null),
-        }
+        decode_wire_value_with_options(bytes, &PackDecodeOptions::default())
+    }
+
+    /// 🛡️ Decodes one exact wire value using caller-owned limits without a second tree clone.
+    pub fn decode_wire_value_with_options(bytes: &[u8], options: &PackDecodeOptions) -> Result<DslValue, PackError> {
+        crate::os_pack::decode_value_record_body_exact(bytes, VALUE_BRIDGE_FIELD_ID, &options.limits)
     }
 
     /// @emoji 🧩️ Compose-only bridge — external technology; converts through `DslValue` without JSON on the wire.
@@ -5328,6 +5338,7 @@ pub struct OwnedSchemaToken {
 }
 
 #[derive(Clone, Copy)]
+#[expect(clippy::large_enum_variant, reason = "The decoder carries its fixed Copy diagnostic path inline so faults remain allocation-free under exhausted grants.")]
 enum OwnedSchemaLexState {
     Ready,
     String { start: usize, escape: bool, unicode: u8, utf8: u8, next_min: u8, next_max: u8 },
@@ -5339,6 +5350,7 @@ enum OwnedSchemaLexState {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[expect(clippy::large_enum_variant, reason = "The decoder carries its fixed Copy diagnostic path inline so faults remain allocation-free under exhausted grants.")]
 pub enum OwnedSchemaTokenStep {
     Pending,
     Token(OwnedSchemaToken),
@@ -5770,6 +5782,7 @@ impl OwnedSchemaRecordSpec {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[expect(clippy::large_enum_variant, reason = "The decoder carries its fixed Copy diagnostic path inline so faults remain allocation-free under exhausted grants.")]
 pub enum OwnedSchemaRecordStep {
     Pending,
     FieldToken { field_id: u16, token: OwnedSchemaToken, terminal: bool },
@@ -5779,6 +5792,7 @@ pub enum OwnedSchemaRecordStep {
 }
 
 #[derive(Clone, Copy)]
+#[expect(clippy::large_enum_variant, reason = "The decoder carries its fixed Copy diagnostic path inline so faults remain allocation-free under exhausted grants.")]
 enum OwnedSchemaRecordState {
     Root,
     Key,
@@ -5964,6 +5978,7 @@ impl OwnedSchemaRecordCursor {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[expect(clippy::large_enum_variant, reason = "The decoder carries its fixed Copy diagnostic path inline so faults remain allocation-free under exhausted grants.")]
 pub enum OwnedSchemaNestedRecordStep {
     Pending,
     FieldToken { field_id: u16, token: OwnedSchemaToken, terminal: bool },
@@ -6400,13 +6415,13 @@ impl<P, Mutation: Send> ArtifactOwnedSprMutationArrayAuthority<P, Mutation> {
         if matches!(self.state, ArtifactOwnedSprMutationArrayState::Publishing) {
             let reservation = self.reservation.ok_or_else(|| self.diagnostic("artifact-spr.mutation-array-reservation-missing", token.start))?;
             let path = self.path;
-            let active = self.active.as_mut().ok_or_else(|| OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-array-owner-missing", offset: token.start, line: 0, column: 0, path })?;
+            let active = self.active.as_mut().ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-array-owner-missing", offset: token.start, line: 0, column: 0, path })?;
             return match active.publish_reserved(&mut self.target, reservation, cx)? {
                 ArtifactEnvelopeFieldDecodeStep::Pending => Ok(ArtifactEnvelopeFieldDecodeStep::Pending),
                 ArtifactEnvelopeFieldDecodeStep::FieldComplete | ArtifactEnvelopeFieldDecodeStep::TokenComplete => {
                     self.reservation = None;
-                    let value = self.target.value.take().ok_or_else(|| OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-array-value-missing", offset: token.start, line: 0, column: 0, path })?;
-                    let values = self.values.as_mut().ok_or_else(|| OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-array-values-missing", offset: token.start, line: 0, column: 0, path })?;
+                    let value = self.target.value.take().ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-array-value-missing", offset: token.start, line: 0, column: 0, path })?;
+                    let values = self.values.as_mut().ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-array-values-missing", offset: token.start, line: 0, column: 0, path })?;
                     if values.len() == values.capacity() {
                         *self.target.value = Some(value);
                         return Err(self.diagnostic("artifact-spr.mutation-array-capacity", token.start));
@@ -6543,6 +6558,7 @@ impl<P, Mutation: Send> Drop for ArtifactOwnedSprMutationArrayAuthority<P, Mutat
     }
 }
 
+#[expect(clippy::large_enum_variant, reason = "The active decoder retains its admitted fixed string authority inline across bounded steps without a new allocation.")]
 enum ArtifactOwnedSprEditActive<P, Mutation: Send> {
     String { field_id: u16, authority: OwnedSchemaStringAuthority<ARTIFACT_ENVELOPE_HISTORY_ENTRY_BYTES> },
     Mutations { field_id: u16, authority: ArtifactOwnedSprMutationArrayAuthority<P, Mutation> },
@@ -7212,6 +7228,7 @@ impl<P, Mutation> Drop for ArtifactEnvelopeReturnedFieldDecoder<P, Mutation> {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[expect(clippy::large_enum_variant, reason = "The decoder carries its fixed Copy diagnostic path inline so faults remain allocation-free under exhausted grants.")]
 pub enum OwnedSchemaStringStep {
     Pending,
     Complete,
@@ -7220,6 +7237,7 @@ pub enum OwnedSchemaStringStep {
 }
 
 #[derive(Clone, Copy)]
+#[expect(clippy::large_enum_variant, reason = "The decoder carries its fixed Copy diagnostic path inline so faults remain allocation-free under exhausted grants.")]
 enum OwnedSchemaStringState {
     Raw,
     Escape,
@@ -7416,6 +7434,7 @@ impl<const MAXIMUM_BYTES: usize> OwnedSchemaStringAuthority<MAXIMUM_BYTES> {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[expect(clippy::large_enum_variant, reason = "The decoder carries its fixed Copy diagnostic path inline so faults remain allocation-free under exhausted grants.")]
 pub enum OwnedSchemaHexStep {
     Pending,
     Complete,
@@ -7587,15 +7606,15 @@ impl<T> OwnedSchemaBoundedArrayAuthority<T> {
                 step => {
                     match token.kind {
                         OwnedSchemaTokenKind::ObjectStart | OwnedSchemaTokenKind::ArrayStart => {
-                            self.entry_depth = self.entry_depth.checked_add(1).ok_or_else(|| OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.history-depth", offset: token.start, line: 0, column: 0, path })?;
+                            self.entry_depth = self.entry_depth.checked_add(1).ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.history-depth", offset: token.start, line: 0, column: 0, path })?;
                         }
                         OwnedSchemaTokenKind::ObjectEnd | OwnedSchemaTokenKind::ArrayEnd => {
-                            self.entry_depth = self.entry_depth.checked_sub(1).ok_or_else(|| OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.history-depth", offset: token.start, line: 0, column: 0, path })?;
+                            self.entry_depth = self.entry_depth.checked_sub(1).ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.history-depth", offset: token.start, line: 0, column: 0, path })?;
                         }
                         _ => {}
                     }
                     if self.entry_depth == 0 {
-                        let value = decoder.take_value().ok_or_else(|| OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.history-entry-owner-missing", offset: token.start, line: 0, column: 0, path })?;
+                        let value = decoder.take_value().ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.history-entry-owner-missing", offset: token.start, line: 0, column: 0, path })?;
                         if !decoder.terminal_is_empty() {
                             *self.rejected = Some(value);
                             return Err(self.diagnostic("artifact-envelope.history-entry-live-after-take", token));
@@ -7636,7 +7655,7 @@ impl<T> OwnedSchemaBoundedArrayAuthority<T> {
                 };
                 let reservation = match values.reserve_one() {
                     Ok(reservation) => reservation,
-                    Err(()) => return Err(self.diagnostic("artifact-envelope.history-item-capacity", token)),
+                    Err(_) => return Err(self.diagnostic("artifact-envelope.history-item-capacity", token)),
                 };
                 self.reservation = Some(reservation);
                 *self.active_decoder = Some(self.decoder.begin_entry(cx.operation(), cx.generation(), self.path, self.retirement_factory.clone()));
@@ -9021,6 +9040,7 @@ impl<P: Send, Mutation: Send> ArtifactEnvelopeDecodedRecordTarget<P, Mutation> f
     }
 }
 
+#[expect(clippy::large_enum_variant, reason = "The active decoder retains its admitted fixed string authority inline across bounded steps without a new allocation.")]
 enum ArtifactEnvelopeFreshRecordActive<P, Mutation> {
     String { field_id: u16, authority: OwnedSchemaStringAuthority<256> },
     Vcs { reservation: ArtifactEnvelopeFieldReservation, authority: Box<dyn ArtifactEnvelopeVcsFieldAuthority<P, Mutation>>, publishing: bool },
@@ -9574,7 +9594,7 @@ impl ArtifactCodec {
 
         Self {
             schema: schema.into(),
-            extension: P::envelope_id(),
+            extension: P::EXTENSION,
             // 🌀️ `schema_hash` is async; `Option::map`'s closure is sync (R10 shape 1), so it's
             // written as an explicit match instead.
             pack_schema_hash: match P::record_spec() {
@@ -9667,25 +9687,13 @@ pub fn preflight_document_codecs_in_assembly(_assembly: &ArtifactAssemblyTransac
 /// 📝️ Registers one schema codec exactly once. Collisions fail deterministically before any
 /// replacement can occur, so registration order never changes decoding behavior.
 #[must_use]
-pub async fn register_document_codec(codec: ArtifactCodec) -> Result<(), DocumentCodecRegistryError> {
-    register_document_codec_now(codec)
-}
-
-/// ⚡️ Registers one schema codec synchronously for process-entry owners that cannot suspend.
-#[must_use]
-pub fn register_document_codec_now(codec: ArtifactCodec) -> Result<(), DocumentCodecRegistryError> {
-    register_document_codecs_now(vec![codec])
+pub fn register_document_codec(codec: ArtifactCodec) -> Result<(), DocumentCodecRegistryError> {
+    register_document_codecs(vec![codec])
 }
 
 /// 📝️ Registers document codecs only when every descriptor and executable is conflict-free.
 #[must_use]
-pub async fn register_document_codecs(codecs: Vec<ArtifactCodec>) -> Result<(), DocumentCodecRegistryError> {
-    register_document_codecs_now(codecs)
-}
-
-/// ⚡️ Registers document codecs synchronously behind the same atomic publication barrier.
-#[must_use]
-pub fn register_document_codecs_now(codecs: Vec<ArtifactCodec>) -> Result<(), DocumentCodecRegistryError> {
+pub fn register_document_codecs(codecs: Vec<ArtifactCodec>) -> Result<(), DocumentCodecRegistryError> {
     let assembly = begin_artifact_assembly().map_err(|_| DocumentCodecRegistryError::Unavailable)?;
     register_document_codecs_in_assembly(&assembly, codecs)
 }
@@ -9813,20 +9821,20 @@ pub async fn preflight_dialect_migrations_in_assembly(_assembly: &ArtifactAssemb
 
 /// 📝️ Registers a migration only when its full descriptor and executable identity match.
 #[must_use]
-pub async fn register_dialect_migration(migration: DialectMigration) -> Result<(), DialectMigrationRegistryError> {
-    register_dialect_migrations(vec![migration]).await
+pub fn register_dialect_migration(migration: DialectMigration) -> Result<(), DialectMigrationRegistryError> {
+    register_dialect_migrations(vec![migration])
 }
 
 /// 📝️ Registers migrations only when every candidate pair is conflict-free.
 #[must_use]
-pub async fn register_dialect_migrations(migrations: Vec<DialectMigration>) -> Result<(), DialectMigrationRegistryError> {
+pub fn register_dialect_migrations(migrations: Vec<DialectMigration>) -> Result<(), DialectMigrationRegistryError> {
     let assembly = begin_artifact_assembly().map_err(|_| DialectMigrationRegistryError::Unavailable)?;
-    register_dialect_migrations_in_assembly(&assembly, migrations).await
+    register_dialect_migrations_in_assembly(&assembly, migrations)
 }
 
 /// 📝️ Publishes preflighted migrations while one artifact assembly owns the shared barrier.
 #[must_use]
-pub async fn register_dialect_migrations_in_assembly(_assembly: &ArtifactAssemblyTransaction, migrations: Vec<DialectMigration>) -> Result<(), DialectMigrationRegistryError> {
+pub fn register_dialect_migrations_in_assembly(_assembly: &ArtifactAssemblyTransaction, migrations: Vec<DialectMigration>) -> Result<(), DialectMigrationRegistryError> {
     let mut registry = dialect_migration_registry().write().map_err(|_| DialectMigrationRegistryError::Unavailable)?;
     validate_dialect_migrations(&registry, &migrations)?;
     for migration in migrations {
@@ -12604,7 +12612,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         let dag = self.dag.take().expect("validated initialization owns its causal graph");
         let revision = unsafe { std::mem::ManuallyDrop::take(&mut self.revision) };
         self.taken = true;
-        (current, applied, redo, cursor, actor, dag, self.edit_sequence, self.clock.clone(), self.initial_digest, revision)
+        (current, applied, redo, cursor, actor, dag, self.edit_sequence, self.clock, self.initial_digest, revision)
     }
 }
 
@@ -13823,8 +13831,8 @@ where
                     self.phase = ArtifactStoreResolutionCandidateRetirementPhase::Envelope;
                 }
                 ArtifactStoreResolutionCandidateRetirementPhase::Envelope => {
-                    let initial_snapshot_factory = (&*candidate.initial_snapshot_retirement_factory).clone().ok_or_else(|| "resolution candidate lost its initial snapshot retirement factory".to_string())?;
-                    let mutation_factory = (&*candidate.mutation_retirement_factory).clone().ok_or_else(|| "resolution candidate lost its mutation retirement factory".to_string())?;
+                    let initial_snapshot_factory = (*candidate.initial_snapshot_retirement_factory).clone().ok_or_else(|| "resolution candidate lost its initial snapshot retirement factory".to_string())?;
+                    let mutation_factory = (*candidate.mutation_retirement_factory).clone().ok_or_else(|| "resolution candidate lost its mutation retirement factory".to_string())?;
                     candidate.envelope_detached = true;
                     let envelope = unsafe { std::mem::ManuallyDrop::take(&mut candidate.envelope) };
                     *self.active = Some(Box::new(ArtifactStoreEnvelopeRetirement::new(envelope, initial_snapshot_factory, mutation_factory)));
@@ -14088,9 +14096,9 @@ where
         ArtifactRevision {
             artifact_id: self.envelope.id.clone(),
             schema: self.envelope.schema.clone(),
-            applied_edit_ids: group.map_or_else(|| (&*self.applied_edit_ids).clone(), |root| root.applied_edit_ids.clone()),
-            redo_edit_ids: group.map_or_else(|| (&*self.redo_edit_ids).clone(), |root| root.redo_edit_ids.clone()),
-            checkpoint_id: (&*self.current_checkpoint_id).clone(),
+            applied_edit_ids: group.map_or_else(|| (*self.applied_edit_ids).clone(), |root| root.applied_edit_ids.clone()),
+            redo_edit_ids: group.map_or_else(|| (*self.redo_edit_ids).clone(), |root| root.redo_edit_ids.clone()),
+            checkpoint_id: (*self.current_checkpoint_id).clone(),
         }
     }
 
@@ -14121,10 +14129,7 @@ where
     /// 📣️ Returns the last successful transition through the shared projection invalidation seam.
     pub fn last_projection_invalidation(&self) -> Option<ArtifactProjectionInvalidation> {
         // 🌀️ `projection_stamp` is async; `Option::map`'s closure is sync (R10 shape 1).
-        match self.durable_group_read_root().map_or(self.last_projection_cause, |root| root.last_projection_cause) {
-            Some(cause) => Some(ArtifactProjectionInvalidation { cause, stamp: self.projection_stamp() }),
-            None => None,
-        }
+        self.durable_group_read_root().map_or(self.last_projection_cause, |root| root.last_projection_cause).map(|cause| ArtifactProjectionInvalidation { cause, stamp: self.projection_stamp() })
     }
 
     /// 🔄️ Invalidates projections after a verified replay that did not otherwise change history.
@@ -14170,12 +14175,12 @@ where
     }
 
     pub fn applied_edit_ids(&self) -> &[String] {
-        self.durable_group_read_root().map_or((&*self.applied_edit_ids).as_slice(), |root| root.applied_edit_ids.as_slice())
+        self.durable_group_read_root().map_or((*self.applied_edit_ids).as_slice(), |root| root.applied_edit_ids.as_slice())
     }
 
     /// @emoji ↪️ Pending redo stack (edit ids undone since the last fresh `Apply`).
     pub fn redo_edit_ids(&self) -> &[String] {
-        self.durable_group_read_root().map_or((&*self.redo_edit_ids).as_slice(), |root| root.redo_edit_ids.as_slice())
+        self.durable_group_read_root().map_or((*self.redo_edit_ids).as_slice(), |root| root.redo_edit_ids.as_slice())
     }
 
     /// @emoji 🧭️ The checkpoint new commits currently parent onto (defaults to the latest checkpoint
@@ -14230,7 +14235,7 @@ where
         self.ensure_durable_group_idle()?;
         self.set_state(envelope, applied_edit_ids, redo_edit_ids).await?;
         self.last_projection_cause = Some(ArtifactProjectionCause::Reset);
-        Ok(CommandReceipt { edit_ids: (&*self.applied_edit_ids).clone(), generation: self.generation(), messages: Vec::new(), worst: None })
+        Ok(CommandReceipt { edit_ids: (*self.applied_edit_ids).clone(), generation: self.generation(), messages: Vec::new(), worst: None })
     }
 
     /// @emoji 💾️ Restores full store state including the redo stack, so `Redo` survives
@@ -14415,7 +14420,7 @@ where
             return Ok(());
         }
         self.displaced_retirements.reserve(1)?;
-        let Some(factory) = (&*self.snapshot_retirement_factory).clone() else {
+        let Some(factory) = (*self.snapshot_retirement_factory).clone() else {
             return Err(VcsError::ValidationFailed("artifact store current replacement requires its exact snapshot retirement factory".into()));
         };
         let previous = std::mem::replace(&mut *self.current, next);
@@ -14424,15 +14429,15 @@ where
     }
 
     fn displaced_envelope_retirement(&self, envelope: ArtifactEnvelope<P, Mutation>) -> Result<Box<dyn ErasedSnapshotRetirement>, VcsError> {
-        let initial_snapshot_factory = (&*self.initial_snapshot_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store envelope replacement requires its exact initial-snapshot retirement factory".into()))?;
-        let mutation_factory = (&*self.mutation_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store envelope replacement requires its exact mutation retirement factory".into()))?;
+        let initial_snapshot_factory = (*self.initial_snapshot_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store envelope replacement requires its exact initial-snapshot retirement factory".into()))?;
+        let mutation_factory = (*self.mutation_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store envelope replacement requires its exact mutation retirement factory".into()))?;
         Ok(Box::new(ArtifactStoreEnvelopeRetirement::new(envelope, initial_snapshot_factory, mutation_factory)))
     }
 
     fn replace_envelope_retained(&mut self, next: ArtifactEnvelope<P, Mutation>) -> Result<(), VcsError> {
         self.displaced_retirements.reserve(1)?;
-        let initial_snapshot_factory = (&*self.initial_snapshot_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store envelope replacement requires its exact initial-snapshot retirement factory".into()))?;
-        let mutation_factory = (&*self.mutation_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store envelope replacement requires its exact mutation retirement factory".into()))?;
+        let initial_snapshot_factory = (*self.initial_snapshot_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store envelope replacement requires its exact initial-snapshot retirement factory".into()))?;
+        let mutation_factory = (*self.mutation_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store envelope replacement requires its exact mutation retirement factory".into()))?;
         let previous = std::mem::replace(&mut *self.envelope, next);
         self.displaced_retirements.push_reserved(Box::new(ArtifactStoreEnvelopeRetirement::new(previous, initial_snapshot_factory, mutation_factory)));
         Ok(())
@@ -14440,9 +14445,9 @@ where
 
     fn replace_document_roots_retained(&mut self, next_envelope: ArtifactEnvelope<P, Mutation>, next_current: Arc<P>) -> Result<(), VcsError> {
         self.displaced_retirements.reserve(2)?;
-        let initial_snapshot_factory = (&*self.initial_snapshot_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store document-root replacement requires its exact initial-snapshot retirement factory".into()))?;
-        let mutation_factory = (&*self.mutation_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store document-root replacement requires its exact mutation retirement factory".into()))?;
-        let snapshot_factory = (&*self.snapshot_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store document-root replacement requires its exact snapshot retirement factory".into()))?;
+        let initial_snapshot_factory = (*self.initial_snapshot_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store document-root replacement requires its exact initial-snapshot retirement factory".into()))?;
+        let mutation_factory = (*self.mutation_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store document-root replacement requires its exact mutation retirement factory".into()))?;
+        let snapshot_factory = (*self.snapshot_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store document-root replacement requires its exact snapshot retirement factory".into()))?;
         let previous_envelope = std::mem::replace(&mut *self.envelope, next_envelope);
         let previous_current = std::mem::replace(&mut *self.current, next_current);
         self.displaced_retirements.push_reserved(Box::new(ArtifactStoreEnvelopeRetirement::new(previous_envelope, initial_snapshot_factory, mutation_factory)));
@@ -14455,9 +14460,9 @@ where
         self.displaced_retirements
             .reserve(3usize.checked_add(tail_slots).and_then(|slots| slots.checked_add(additional_displaced_owners)).ok_or_else(|| VcsError::ValidationFailed("artifact store document-root retirement reservation overflowed".into()))?)?;
         Ok(ArtifactStoreDocumentRootCommitAuthority {
-            snapshot: (&*self.snapshot_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store document-root transaction requires its exact snapshot retirement factory".into()))?,
-            initial_snapshot: (&*self.initial_snapshot_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store document-root transaction requires its exact initial-snapshot retirement factory".into()))?,
-            mutation: (&*self.mutation_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store document-root transaction requires its exact mutation retirement factory".into()))?,
+            snapshot: (*self.snapshot_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store document-root transaction requires its exact snapshot retirement factory".into()))?,
+            initial_snapshot: (*self.initial_snapshot_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store document-root transaction requires its exact initial-snapshot retirement factory".into()))?,
+            mutation: (*self.mutation_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store document-root transaction requires its exact mutation retirement factory".into()))?,
         })
     }
 
@@ -14598,7 +14603,7 @@ where
         let rejected_owner = self.displaced_retirements.reserve_owner_slots(1)?;
         match self.envelope.vcs.edits.reserve_one() {
             Ok(history) => Ok(ArtifactStoreHistoryCommitReservation { history, rejected_owner }),
-            Err(()) => {
+            Err(_) => {
                 self.displaced_retirements.release_owner_slots(rejected_owner)?;
                 Err(VcsError::ValidationFailed("edit history ledger is saturated".into()))
             }
@@ -14606,7 +14611,7 @@ where
     }
 
     fn insert_reserved_edit_history(&mut self, mut reservation: ArtifactStoreHistoryCommitReservation, edit: Edit<Mutation>) -> Result<ArtifactHistoryKey, VcsError> {
-        let factory = (&*self.mutation_retirement_factory).clone().expect("edit history admission validated its exact mutation retirement factory");
+        let factory = (*self.mutation_retirement_factory).clone().expect("edit history admission validated its exact mutation retirement factory");
         match self.envelope.vcs.edits.insert_reserved(reservation.history, edit) {
             Ok(key) => {
                 self.displaced_retirements.release_owner_slots(reservation.rejected_owner)?;
@@ -14626,7 +14631,7 @@ where
         let rejected_owner = self.displaced_retirements.reserve_owner_slots(1)?;
         match self.envelope.vcs.changes.reserve_one() {
             Ok(history) => Ok(ArtifactStoreHistoryCommitReservation { history, rejected_owner }),
-            Err(()) => {
+            Err(_) => {
                 self.displaced_retirements.release_owner_slots(rejected_owner)?;
                 Err(VcsError::ValidationFailed("change history ledger is saturated".into()))
             }
@@ -14653,7 +14658,7 @@ where
         let rejected_owner = self.displaced_retirements.reserve_owner_slots(1)?;
         match self.envelope.vcs.checkpoints.reserve_one() {
             Ok(history) => Ok(ArtifactStoreHistoryCommitReservation { history, rejected_owner }),
-            Err(()) => {
+            Err(_) => {
                 self.displaced_retirements.release_owner_slots(rejected_owner)?;
                 Err(VcsError::ValidationFailed("checkpoint history ledger is saturated".into()))
             }
@@ -14680,7 +14685,7 @@ where
         let rejected_owner = self.displaced_retirements.reserve_owner_slots(1)?;
         match self.envelope.vcs.alternatives.reserve_one() {
             Ok(history) => Ok(ArtifactStoreHistoryCommitReservation { history, rejected_owner }),
-            Err(()) => {
+            Err(_) => {
                 self.displaced_retirements.release_owner_slots(rejected_owner)?;
                 Err(VcsError::ValidationFailed("alternative history ledger is saturated".into()))
             }
@@ -14711,7 +14716,7 @@ where
         let snapshot_is_shared_with_current = !self.current_detached && Arc::ptr_eq(snapshot, &self.current);
         self.displaced_retirements.reserve(usize::from(!edit_id.is_empty()) + usize::from(!snapshot_is_shared_with_current))?;
         let factory =
-            if snapshot_is_shared_with_current { None } else { Some((&*self.snapshot_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store tail replacement requires its exact snapshot retirement factory".into()))?) };
+            if snapshot_is_shared_with_current { None } else { Some((*self.snapshot_retirement_factory).clone().ok_or_else(|| VcsError::ValidationFailed("artifact store tail replacement requires its exact snapshot retirement factory".into()))?) };
         let (edit_id, snapshot) = self.tail_undo_cache.take().expect("validated tail undo owner remains present");
         if !edit_id.is_empty() {
             self.displaced_retirements.push_reserved(Box::new(ArtifactStoreStringRetirement::new(edit_id)));
@@ -14777,7 +14782,7 @@ where
         if !self.snapshot_read_leases.has_returned() {
             return Ok(None);
         }
-        let Some(factory) = (&*self.snapshot_retirement_factory).clone() else {
+        let Some(factory) = (*self.snapshot_retirement_factory).clone() else {
             return Err(VcsError::ValidationFailed("snapshot read retirement factory is not installed".into()));
         };
         let owner = self.snapshot_read_leases.try_take_one_returned::<P>().map_err(VcsError::ValidationFailed)?;
@@ -14785,7 +14790,7 @@ where
     }
 
     fn close_take_history_mutation_at(&mut self, edit_index: usize) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, VcsError> {
-        let Some(factory) = (&*self.mutation_retirement_factory).clone() else {
+        let Some(factory) = (*self.mutation_retirement_factory).clone() else {
             return Err(VcsError::ValidationFailed("artifact store mutation retirement factory is not installed".into()));
         };
         let Some(edit) = self.envelope.vcs.edits.get_mut(edit_index) else {
@@ -14799,7 +14804,7 @@ where
         if !edit.forwards.is_empty() || !edit.inverse.is_empty() {
             return Err(VcsError::ValidationFailed("artifact store close attempted to detach an edit before every domain mutation owner was retired".into()));
         }
-        let Some(mutation_factory) = (&*self.mutation_retirement_factory).clone() else {
+        let Some(mutation_factory) = (*self.mutation_retirement_factory).clone() else {
             return Err(VcsError::ValidationFailed("artifact store history close requires its exact mutation retirement factory".into()));
         };
         self.displaced_retirements.reserve(1)?;
@@ -14911,7 +14916,7 @@ where
         if !edit_id.is_empty() {
             return Err(VcsError::ValidationFailed("artifact store tail snapshot root was addressed before its edit-id owner reached terminal empty".into()));
         }
-        let Some(factory) = (&*self.snapshot_retirement_factory).clone() else {
+        let Some(factory) = (*self.snapshot_retirement_factory).clone() else {
             return Err(VcsError::ValidationFailed("snapshot retirement factory is not installed".into()));
         };
         if self.current_detached {
@@ -14935,7 +14940,7 @@ where
         if !self.snapshot_read_leases_terminal_is_empty() {
             return Err(VcsError::ValidationFailed("artifact store current snapshot cannot detach while registered reads remain live or returned".into()));
         }
-        let Some(factory) = (&*self.snapshot_retirement_factory).clone() else {
+        let Some(factory) = (*self.snapshot_retirement_factory).clone() else {
             return Err(VcsError::ValidationFailed("snapshot retirement factory is not installed".into()));
         };
         self.current_detached = true;
@@ -14974,7 +14979,7 @@ where
         if !self.current_detached || !self.close_structural_owners_terminal_is_empty() {
             return Err(VcsError::ValidationFailed("artifact store final envelope cannot detach before every runtime and structural authority is terminal empty".into()));
         }
-        let Some(factory) = (&*self.initial_snapshot_retirement_factory).clone() else {
+        let Some(factory) = (*self.initial_snapshot_retirement_factory).clone() else {
             return Err(VcsError::ValidationFailed("initial snapshot retirement factory is not installed".into()));
         };
         self.envelope_detached = true;
@@ -15695,7 +15700,7 @@ where
                     // 🌀️ Same `dispatch`/`dispatch_inner` mutual-recursion cycle as the `Undo` arm.
                     Box::pin(self.dispatch(ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() })).await?;
                 }
-                let checkpoint_id = (&*self.current_checkpoint_id).clone().or_else(|| self.envelope.vcs.checkpoints.last().map(|cp| cp.id.clone())).ok_or(VcsError::NoCheckpoint)?;
+                let checkpoint_id = (*self.current_checkpoint_id).clone().or_else(|| self.envelope.vcs.checkpoints.last().map(|cp| cp.id.clone())).ok_or(VcsError::NoCheckpoint)?;
                 let alt_id = mint_alternative_id(&name, std::slice::from_ref(&checkpoint_id)).await;
                 let reservation = self.reserve_alternative_history_slot()?;
                 self.insert_reserved_alternative_history(reservation, Alternative { id: alt_id.clone(), name, checkpoint_ids: vec![checkpoint_id.clone()] })?;
@@ -16148,7 +16153,7 @@ where
         let no_op_report = |policy: crate::os_spr::MergePolicy, insertion_index: usize| crate::os_spr::MergeReport { policy, accepted: true, insertion_index: insertion_index as u32, replayed: Vec::new(), worst: None, conflict: None };
         // 1
         self.displaced_retirements.reserve(2)?;
-        let mut candidate_dag = (&*self.dag).clone();
+        let mut candidate_dag = (*self.dag).clone();
         let insertion = match candidate_dag.insert(envelope.clone()) {
             Ok(insertion) => insertion,
             Err(rejected) => {
@@ -16226,7 +16231,7 @@ where
             }
         }
         // 4 — stable HLC merge of `batch` into `applied_edit_ids[k..]`.
-        let mut order: Vec<String> = (&*self.applied_edit_ids).clone();
+        let mut order: Vec<String> = (*self.applied_edit_ids).clone();
         for (edit, &hlc_key) in batch.iter().zip(batch_keys.iter()) {
             let mut insert_at = order.len();
             for offset in k..order.len() {
@@ -16774,7 +16779,7 @@ where
         applied.extend(self.applied_edit_ids.iter().cloned());
         let mut redo = Vec::with_capacity(self.redo_edit_ids.capacity());
         redo.extend(self.redo_edit_ids.iter().cloned());
-        let next = Some(ArtifactCursor::new(applied, redo, (&*self.current_checkpoint_id).clone()));
+        let next = Some(ArtifactCursor::new(applied, redo, (*self.current_checkpoint_id).clone()));
         if let Some(previous) = std::mem::replace(&mut self.envelope.cursor, next) {
             self.displaced_retirements.push_reserved(Box::new(ArtifactStoreCursorRetirement::new(previous)));
         }
@@ -23091,7 +23096,7 @@ mod tests {
         panic!("durable publication did not reach terminal empty");
     }
 
-    pub(super) fn close_demo_artifact_store(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>) {
+    fn close_demo_artifact_store(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>) {
         for _ in 0..4_096 {
             let step = SpaceMember::close_owned_step(store, 1, 512).expect("demo artifact store closes under its bounded owner grant");
             if step == SnapshotRetirementStep::Complete {
@@ -24859,7 +24864,7 @@ mod tests {
         let mut store_b: ArtifactStore<DemoSnapshot, DemoMutation> = ArtifactStore::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None)).await;
         store_a.attach_backbone(Backbones::Memory(backbone_a)).await.expect("attach a");
         store_b.attach_backbone(Backbones::Memory(backbone_b)).await.expect("attach b");
-        store_a.detach_backbone();
+        store_a.detach_backbone().expect("detach source backbone");
         assert!(store_a.backbone_ref().is_none());
 
         store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], description: None }).await.expect("apply after detach still works on the in-memory graph");
@@ -24884,10 +24889,12 @@ mod tests {
     async fn document_codec_of_round_trips_dsl_and_pack_and_edit_text() {
         let codec = ArtifactCodec::of::<DemoSnapshot, DemoMutation>("test.document-codec-roundtrip/v1");
         assert_eq!(codec.schema, "test.document-codec-roundtrip/v1");
-        assert_eq!(codec.extension, "demo.doc");
+        assert_eq!(codec.extension, "demo");
 
         let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("test.document-codec-roundtrip/v1", "demo", DemoSnapshot { n: Some(4) }, None);
-        let text_files = print_document_text(&envelope).await.expect("print document text");
+        let text_files = print_document_text(&envelope).await;
+        drop(envelope.into_owners());
+        let text_files = text_files.expect("print document text");
 
         let (pack_files, dsl_mirror) = (codec.compile_dsl)(&text_files.dsl, &text_files.ops).await.expect("codec compile_dsl");
         assert_eq!(dsl_mirror, DemoSnapshot { n: Some(4) }.print_dsl(), "dsl mirror matches the initial snapshot's print_dsl");
@@ -24917,7 +24924,7 @@ mod tests {
 
         preflight_document_codecs(std::slice::from_ref(&codec)).await.expect("preflight accepts an unclaimed full descriptor without publishing it");
         assert!(document_codec("test.document-codec-roundtrip/v1").await.expect("registry availability").is_none(), "preflight must not publish a codec");
-        register_document_codec(codec).await.expect("first document codec registration");
+        register_document_codec(codec).expect("first document codec registration");
         assert!(document_codec("test.document-codec-roundtrip/v1").await.expect("registry availability").is_some(), "registered codec is discoverable by schema string");
         assert!(document_codec("no-such-schema").await.expect("registry availability").is_none());
     }
@@ -24928,9 +24935,9 @@ mod tests {
         let second = ArtifactCodec { pack_schema_hash: [7u8; 32], ..first.clone() };
         assert_ne!(first.pack_schema_hash, second.pack_schema_hash, "fixture precondition: the two codecs must be distinguishable");
 
-        register_document_codec(first.clone()).await.expect("first registration");
-        register_document_codec(first.clone()).await.expect("an identical descriptor and executable is idempotent");
-        let conflict = match register_document_codec(second).await.expect_err("a schema collision must reject rather than replace") {
+        register_document_codec(first.clone()).expect("first registration");
+        register_document_codec(first.clone()).expect("an identical descriptor and executable is idempotent");
+        let conflict = match register_document_codec(second).expect_err("a schema collision must reject rather than replace") {
             DocumentCodecRegistryError::Conflict(conflict) => conflict,
             DocumentCodecRegistryError::Unavailable => panic!("document codec registry unavailable"),
         };
@@ -24952,7 +24959,7 @@ mod tests {
         let migration = DialectMigration { from: from.clone(), to: to.clone(), lossless: true, migrate_pack: append_marker };
         preflight_dialect_migrations(std::slice::from_ref(&migration)).await.expect("preflight accepts an unclaimed dialect pair without mutation");
         assert!(matches!(migrate_document(&from, &to, b"seed").await, Err(DialectMigrationError::Missing { .. })), "preflight must not publish a migration");
-        register_dialect_migrations(vec![migration.clone()]).await.expect("batch migration registration");
+        register_dialect_migrations(vec![migration.clone()]).expect("batch migration registration");
         assert_eq!(migrate_document(&from, &to, b"seed").await.expect("registered migration"), b"seed-migrated");
 
         let conflict = DialectMigration { lossless: false, ..migration };
@@ -25577,7 +25584,7 @@ mod tests {
         host_b.tick().await.expect("tick b");
         assert_eq!(host_b.meta_snapshot().await.expect("meta snapshot b").checkpoints.len(), 1, "the space-wide checkpoint replicates through the meta-document's backbone");
 
-        host_a.detach_backbone().await;
+        host_a.detach_backbone().await.expect("detach source host backbone");
         assert!(host_a.backbone_ref().await.is_none());
         host_a.commit_space_checkpoint("studio offline".into(), Vec::new()).await.expect("meta history keeps working purely in memory once detached");
         host_b.tick().await.expect("tick b again");

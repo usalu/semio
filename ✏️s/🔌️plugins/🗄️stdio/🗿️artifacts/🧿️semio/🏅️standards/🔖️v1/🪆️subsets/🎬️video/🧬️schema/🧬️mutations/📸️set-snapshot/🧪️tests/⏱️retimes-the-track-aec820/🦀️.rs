@@ -20,13 +20,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioVideoSnapshot {
-    serde_json::from_str(BEFORE).expect("before video snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("before video snapshot decodes")
 }
 fn expected_after() -> SemioVideoSnapshot {
-    serde_json::from_str(AFTER).expect("after video snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("after video snapshot decodes")
 }
 fn mutation() -> SemioVideoMutation {
-    serde_json::from_str(MUTATION).expect("set-snapshot mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("set-snapshot mutation decodes")
 }
 
 /// ▶️ `set-snapshot` carries the container to exactly the committed `after`: a 25/1 video track
@@ -63,12 +63,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioVideoSnapshot = serde_json::from_str(text).expect("video snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("video snapshot encodes");
+        let decoded: SemioVideoSnapshot = dsl::json::from_json_str(text).expect("video snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("video snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("video snapshot reparses");
         assert_eq!(reencoded, original, "semio-video/set-snapshot: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("set-snapshot mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("set-snapshot mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("set-snapshot mutation reparses");
     assert_eq!(reencoded, original, "semio-video/set-snapshot: committed mutation JSON is not canonical");
 }
@@ -93,7 +93,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioVideoMutation as protocol::Mutation<SemioVideoSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced video diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced video diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed video diff decodes");
     assert_eq!(produced, committed, "semio-video/set-snapshot: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -102,7 +102,7 @@ async fn produces_committed_diff() {
 /// carrying one patched sample, no removals and no additions at either level.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: SemioVideoDiff = serde_json::from_str(DIFF).expect("committed video diff decodes");
+    let decoded: SemioVideoDiff = dsl::json::from_json_str(DIFF).expect("committed video diff decodes");
     let streams = decoded.streams.as_ref().expect("the committed diff carries a streams triple");
     assert!(streams.removed.is_empty() && streams.added.is_empty() && streams.modified.len() == 1 && streams.modified[0].index == 0, "semio-video/set-snapshot: exactly the first stream may be patched in place");
     let stream = &streams.modified[0].diff;
@@ -110,7 +110,7 @@ async fn committed_diff_is_canonical() {
     let samples = stream.samples.as_ref().expect("the patched stream carries a samples triple");
     assert!(samples.removed.is_empty() && samples.added.is_empty() && samples.modified.len() == 1 && samples.modified[0].index == 1, "semio-video/set-snapshot: exactly the second sample may be patched in place");
     assert!(samples.modified[0].diff.pts.is_none(), "semio-video/set-snapshot: the sample's presentation timestamp did not move and must stay absent");
-    let reencoded = serde_json::to_value(&decoded).expect("video diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("video diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed video diff reparses");
     assert_eq!(reencoded, original, "semio-video/set-snapshot: committed diff JSON is not canonical");
 }
@@ -119,7 +119,7 @@ async fn committed_diff_is_canonical() {
 /// stream + sample delta is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioVideoDiff = serde_json::from_str(DIFF).expect("committed video diff decodes");
+    let decoded: SemioVideoDiff = dsl::json::from_json_str(DIFF).expect("committed video diff decodes");
     let produced = <SemioVideoDiff as protocol::MutationDiff<SemioVideoSnapshot>>::apply(&decoded, &before()).expect("committed video diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "semio-video/set-snapshot: committed diff did not carry before to after");
 }

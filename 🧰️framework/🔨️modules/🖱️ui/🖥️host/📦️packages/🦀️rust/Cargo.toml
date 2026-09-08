@@ -2,7 +2,7 @@
 name = "semio-framework-ui-host"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Platform layer: window/event-loop hosting, platform event normalization, and the per-target concrete graphics backend alias"
 
 [package.metadata.semio]

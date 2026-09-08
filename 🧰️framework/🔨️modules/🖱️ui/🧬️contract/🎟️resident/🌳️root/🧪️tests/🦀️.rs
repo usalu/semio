@@ -11,9 +11,9 @@ fn assembled(generation: u64, bytes: usize) -> UiDocumentAssembly {
     let mut permit = reserve(bytes);
     let mut owner = UiDocumentAssembly::default();
     let mut surface = Some(SurfaceId::try_from(fixture()["surface"].as_str().unwrap()).unwrap());
-    assert!(!owner.open_with_permit(&mut permit, &mut surface, generation, UiRevision(1), Some(UiNodeId(41)), 0, 1, 0).unwrap().progressed);
+    assert!(!owner.open_with_permit(&mut permit, &mut surface, crate::UiDocumentAssemblyIdentity { generation: generation, revision: UiRevision(1), root: Some(UiNodeId(41)), layout_epoch: 0 }, 1, 0).unwrap().progressed);
     assert!(permit.is_some() && surface.is_some());
-    assert!(owner.open_with_permit(&mut permit, &mut surface, generation, UiRevision(1), Some(UiNodeId(41)), 0, 1, 32768).unwrap().progressed);
+    assert!(owner.open_with_permit(&mut permit, &mut surface, crate::UiDocumentAssemblyIdentity { generation: generation, revision: UiRevision(1), root: Some(UiNodeId(41)), layout_epoch: 0 }, 1, 32768).unwrap().progressed);
     assert!(permit.is_none() && surface.is_none());
     let mut record = tests::leaf_record(41, "root");
     record.component = crate::Component::Extension(crate::ExtensionProps { extension: crate::UiText::try_from_str("typed").unwrap(), props: serde_json::from_value(serde_json::json!({"payload":"Grüße"})).unwrap() });
@@ -128,12 +128,12 @@ fn retained_document_root_permit_reader_pressure_refuses_then_retries_exact_slot
     assert!(permit.as_ref().unwrap().root_key().unwrap().epoch > old_key.epoch);
     let mut candidate = UiDocumentAssembly::default();
     let mut surface = Some(SurfaceId::try_from("retry").unwrap());
-    let error = candidate.open_with_permit(&mut permit, &mut surface, 300, UiRevision(1), Some(UiNodeId(41)), 0, 1, 32768).unwrap_err();
+    let error = candidate.open_with_permit(&mut permit, &mut surface, crate::UiDocumentAssemblyIdentity { generation: 300, revision: UiRevision(1), root: Some(UiNodeId(41)), layout_epoch: 0 }, 1, 32768).unwrap_err();
     assert_eq!(error.kind, UiDocumentAssemblyErrorKind::Stale);
     assert!(data["slotReuseRequiresTypedTerminal"].as_bool().unwrap());
     assert!(permit.is_some() && surface.is_some());
     close(reader.as_mut().unwrap(), 64);
-    assert!(candidate.open_with_permit(&mut permit, &mut surface, 300, UiRevision(1), Some(UiNodeId(41)), 0, 1, 32768).unwrap().progressed);
+    assert!(candidate.open_with_permit(&mut permit, &mut surface, crate::UiDocumentAssemblyIdentity { generation: 300, revision: UiRevision(1), root: Some(UiNodeId(41)), layout_epoch: 0 }, 1, 32768).unwrap().progressed);
     for _ in 0..10000 { if candidate.close_step(1, 64).unwrap().complete { break; } }
     assert!(candidate.terminal_is_empty());
     for root in &mut roots { close(root, 64); }

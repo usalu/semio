@@ -148,7 +148,7 @@ impl En1996Mutation {
 mod tests {
     use super::*;
     use protocol::Mutation;
-    use protocol::SemanticMutation;
+    
 
     /// ⚖️ One value per `En1996Mutation` variant — the closed set the semantics/round-trip
     /// tests iterate, mirroring `din16798`'s own `every_mutation()` fixture.
@@ -191,7 +191,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn every_variant_registers_an_approved_semantic_descriptor() {
+    async fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
             assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {mutation:?}", descriptor.verb);
@@ -200,7 +200,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn every_variant_round_trips_via_inverse() {
+    async fn every_variant_round_trips_via_inverse() {
         let base = En1996Snapshot::default();
         for mutation in every_mutation() {
             round_trip(&base, &mutation);
@@ -213,31 +213,31 @@ mod tests {
     /// variants: an enum scalar (`change-annex`), a plain `f64` scalar (`change-m-ed-knm`), and a
     /// `String` scalar (`change-unit`).
     #[semio_framework_async_macros::async_test]
-    fn change_annex_satisfies_the_inverse_and_absorb_laws() {
+    async fn change_annex_satisfies_the_inverse_and_absorb_laws() {
         let base = En1996Snapshot::default();
         let mutation = En1996Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
-        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).diff().clone();
         let d2 = En1996Mutation::ChangeUnit(change_unit::ChangeUnit { new_unit: "calcium_silicate".to_string() }).diff(&base).diff().clone();
-        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
     #[semio_framework_async_macros::async_test]
-    fn change_m_ed_knm_satisfies_the_inverse_and_absorb_laws() {
+    async fn change_m_ed_knm_satisfies_the_inverse_and_absorb_laws() {
         let base = En1996Snapshot::default();
         let mutation = En1996Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: 12.5 });
-        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).diff().clone();
         let d2 = En1996Mutation::ChangeStoreys(change_storeys::ChangeStoreys { new_storeys: 4 }).diff(&base).diff().clone();
-        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
     #[semio_framework_async_macros::async_test]
-    fn change_unit_satisfies_the_inverse_and_absorb_laws() {
+    async fn change_unit_satisfies_the_inverse_and_absorb_laws() {
         let base = En1996Snapshot::default();
         let mutation = En1996Mutation::ChangeUnit(change_unit::ChangeUnit { new_unit: "calcium_silicate".to_string() });
-        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).diff().clone();
         let d2 = En1996Mutation::ChangeFKMpa(change_f_k_mpa::ChangeFKMpa { new_f_k_mpa: 6.5 }).diff(&base).diff().clone();
-        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
     //#endregion 🧪️MutationLaws
 
@@ -247,16 +247,16 @@ mod tests {
     /// `🔖️OutcomeLaws` note for why `assert_missing_target_is_error`/`assert_outcome_policy_matrix`
     /// don't apply/aren't landed yet.
     #[semio_framework_async_macros::async_test]
-    fn change_m_ed_knm_non_finite_is_fatal() {
+    async fn change_m_ed_knm_non_finite_is_fatal() {
         let base = En1996Snapshot::default();
         let mutation = En1996Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: f64::NAN });
         let outcome = mutation.diff(&base);
-        protocol::os_spr::testkit::assert_fatal_never_applies(&outcome);
+        protocol::os_spr::testkit::assert_fatal_never_applies(&outcome).await;
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_masonry_class_same_value_is_no_op() {
+    async fn change_masonry_class_same_value_is_no_op() {
         let base = En1996Snapshot::default();
         let mutation = En1996Mutation::ChangeMasonryClass(change_masonry_class::ChangeMasonryClass { new_masonry_class: base.masonry_class });
         let outcome = mutation.diff(&base);
@@ -265,10 +265,10 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn change_m_ed_knm_is_deterministic() {
+    async fn change_m_ed_knm_is_deterministic() {
         let base = En1996Snapshot::default();
         let mutation = En1996Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: 12.5 });
-        protocol::os_spr::testkit::assert_outcome_deterministic(&base, &mutation);
+        protocol::os_spr::testkit::assert_outcome_deterministic(&base, &mutation).await;
     }
     //#endregion 🔖️OutcomeLaws
 }
@@ -282,49 +282,49 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "🌍️change-annex/🧪️tests/🌍️switches-from-the-german-na-to-the-recommended-en-annex/🦀️.rs"]
+    #[path = "🌍️change-annex/🧪️tests/🌍️switches-from-the-434eb3/🦀️.rs"]
     mod tests_change_annex_switches_from_the_german_na_to_the_recommended_en_annex;
-    #[path = "📐️change-area-mm2/🧪️tests/📐️enlarges-the-gross-area-to-640000-mm2/🦀️.rs"]
+    #[path = "📐️change-area-mm2/🧪️tests/📐️enlarges-the-56cbe4/🦀️.rs"]
     mod tests_change_area_mm2_enlarges_the_gross_area_to_640000_mm2;
-    #[path = "🥪️change-bed-joint-thickness-mm/🧪️tests/🥪️thickens-the-bed-joint-to-the-15-mm-upper-limit/🦀️.rs"]
+    #[path = "🥪️change-bed-joint-thickness-mm/🧪️tests/t035/🦀️.rs"]
     mod tests_change_bed_joint_thickness_mm_thickens_the_bed_joint_to_the_15_mm_upper_limit;
-    #[path = "🎭️change-design-situation/🧪️tests/🌋️switches-the-design-situation-to-seismic/🦀️.rs"]
+    #[path = "🎭️change-design-situation/🧪️tests/🌋️switches-the-2a7bcc/🦀️.rs"]
     mod tests_change_design_situation_switches_the_design_situation_to_seismic;
-    #[path = "💧️change-exposure/🧪️tests/💧️moves-the-wall-to-exposure-class-mx3/🦀️.rs"]
+    #[path = "💧️change-exposure/🧪️tests/💧️moves-the-wall-to-cd9f12/🦀️.rs"]
     mod tests_change_exposure_moves_the_wall_to_exposure_class_mx3;
-    #[path = "✂️change-f-vk-mpa/🧪️tests/✂️raises-the-characteristic-shear-strength-to-0-375-mpa/🦀️.rs"]
+    #[path = "✂️change-f-vk-mpa/🧪️tests/✂️raises-the-8d0545/🦀️.rs"]
     mod tests_change_f_vk_mpa_raises_the_characteristic_shear_strength_to_0_375_mpa;
-    #[path = "🔥️change-fire-resistance-min/🧪️tests/🔥️raises-the-fire-resistance-requirement-from-r60-to-r90/🦀️.rs"]
+    #[path = "🔥️change-fire-resistance-min/🧪️tests/t034/🦀️.rs"]
     mod tests_change_fire_resistance_min_raises_the_fire_resistance_requirement_from_r60_to_r90;
-    #[path = "🗜️change-fk-mpa/🧪️tests/🗜️raises-the-characteristic-compressive-strength-to-7-5-mpa/🦀️.rs"]
+    #[path = "🗜️change-fk-mpa/🧪️tests/🗜️raises-the-ba8e02/🦀️.rs"]
     mod tests_change_fk_mpa_raises_the_characteristic_compressive_strength_to_7_5_mpa;
-    #[path = "↔️change-h-ed-kn/🧪️tests/↔️raises-the-design-sliding-force-to-26-kn/🦀️.rs"]
+    #[path = "↔️change-h-ed-kn/🧪️tests/↔️raises-the-design-7e7577/🦀️.rs"]
     mod tests_change_h_ed_kn_raises_the_design_sliding_force_to_26_kn;
-    #[path = "↕️change-h-ef-mm/🧪️tests/↕️lengthens-the-effective-height-to-2750-mm/🦀️.rs"]
+    #[path = "↕️change-h-ef-mm/🧪️tests/↕️lengthens-the-407e8a/🦀️.rs"]
     mod tests_change_h_ef_mm_lengthens_the_effective_height_to_2750_mm;
-    #[path = "⤴️change-m-ed-knm/🧪️tests/⤴️raises-the-design-bending-moment-to-12-5-knm/🦀️.rs"]
+    #[path = "⤴️change-m-ed-knm/🧪️tests/⤴️raises-the-design-25feb5/🦀️.rs"]
     mod tests_change_m_ed_knm_raises_the_design_bending_moment_to_12_5_knm;
-    #[path = "🏭️change-masonry-class/🧪️tests/🏭️downgrades-manufacturing-control-to-class-4/🦀️.rs"]
+    #[path = "🏭️change-masonry-class/🧪️tests/🏭️downgrades-0b2888/🦀️.rs"]
     mod tests_change_masonry_class_downgrades_manufacturing_control_to_class_4;
-    #[path = "🪣️change-mortar/🧪️tests/🪣️upgrades-the-general-purpose-mortar-to-m10/🦀️.rs"]
+    #[path = "🪣️change-mortar/🧪️tests/🪣️upgrades-the-425dfe/🦀️.rs"]
     mod tests_change_mortar_upgrades_the_general_purpose_mortar_to_m10;
-    #[path = "🧲️change-mu/🧪️tests/🧲️raises-the-bed-joint-friction-coefficient-to-0-625/🦀️.rs"]
+    #[path = "🧲️change-mu/🧪️tests/🧲️raises-the-bed-joint-d26040/🦀️.rs"]
     mod tests_change_mu_raises_the_bed_joint_friction_coefficient_to_0_625;
-    #[path = "🏋️change-n-ed-kn/🧪️tests/🏋️raises-the-design-axial-force-to-320-kn/🦀️.rs"]
+    #[path = "🏋️change-n-ed-kn/🧪️tests/🏋️raises-the-design-378c39/🦀️.rs"]
     mod tests_change_n_ed_kn_raises_the_design_axial_force_to_320_kn;
-    #[path = "🧩️change-shear-area-mm2/🧪️tests/🧩️enlarges-the-shear-area-to-384000-mm2/🦀️.rs"]
+    #[path = "🧩️change-shear-area-mm2/🧪️tests/🧩️enlarges-the-09c903/🦀️.rs"]
     mod tests_change_shear_area_mm2_enlarges_the_shear_area_to_384000_mm2;
-    #[path = "🏢️change-storeys/🧪️tests/🏢️adds-a-third-storey-at-the-simplified-method-limit/🦀️.rs"]
+    #[path = "🏢️change-storeys/🧪️tests/🏢️adds-a-third-33d537/🦀️.rs"]
     mod tests_change_storeys_adds_a_third_storey_at_the_simplified_method_limit;
-    #[path = "📏️change-t-ef-mm/🧪️tests/📏️raises-the-effective-thickness-to-300-mm/🦀️.rs"]
+    #[path = "📏️change-t-ef-mm/🧪️tests/📏️raises-the-4de151/🦀️.rs"]
     mod tests_change_t_ef_mm_raises_the_effective_thickness_to_300_mm;
-    #[path = "🧊️change-unit/🧪️tests/🧊️switches-the-masonry-unit-from-clay-to-calcium-silicate/🦀️.rs"]
+    #[path = "🧊️change-unit/🧪️tests/🧊️switches-the-masonry-40385c/🦀️.rs"]
     mod tests_change_unit_switches_the_masonry_unit_from_clay_to_calcium_silicate;
-    #[path = "🪚️change-v-ed-kn/🧪️tests/🪚️raises-the-design-shear-force-to-48-kn/🦀️.rs"]
+    #[path = "🪚️change-v-ed-kn/🧪️tests/🪚️raises-the-design-f11dd4/🦀️.rs"]
     mod tests_change_v_ed_kn_raises_the_design_shear_force_to_48_kn;
-    #[path = "🧱️change-wall-thickness-mm/🧪️tests/🧱️thickens-the-wall-to-300-mm/🦀️.rs"]
+    #[path = "🧱️change-wall-thickness-mm/🧪️tests/🧱️thickens-the-4a9eea/🦀️.rs"]
     mod tests_change_wall_thickness_mm_thickens_the_wall_to_300_mm;
-    #[path = "📊️change-z-mm3/🧪️tests/📊️raises-the-section-modulus-to-9500000-mm3/🦀️.rs"]
+    #[path = "📊️change-z-mm3/🧪️tests/📊️raises-the-section-e88f26/🦀️.rs"]
     mod tests_change_z_mm3_raises_the_section_modulus_to_9500000_mm3;
 }
 //#endregion 🧪️FixtureTests

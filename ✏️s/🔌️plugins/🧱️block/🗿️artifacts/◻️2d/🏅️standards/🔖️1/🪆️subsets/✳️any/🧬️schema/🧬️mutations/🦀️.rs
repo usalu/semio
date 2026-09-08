@@ -175,7 +175,7 @@ mod tests {
     use super::*;
     use crate::artifacts::block2d::schema::empty_block2d_snapshot;
     use crate::{BlockAttribute, BlockAuthor, BlockCompatibilityRule};
-    use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use semio_framework_os_kernel::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::MutationDiff;
     use protocol::SemanticMutation;
 
@@ -290,32 +290,32 @@ mod tests {
         base.attributes.push(BlockAttribute { key: "material".into(), value: "concrete".into(), definition: None });
         base.authors.push(BlockAuthor { id: "a0".into(), name: "Ada".into(), email: None });
 
-        assert_mutation_inverse_law(&base, &rename_node_kind("x".into()));
-        assert_mutation_inverse_law(&base, &change_node_kind_label("x".into()));
-        assert_mutation_inverse_law(&base, &change_node_kind_variant(Some("v2".into())));
-        assert_mutation_inverse_law(&base, &change_node_kind_description("d".into()));
-        assert_mutation_inverse_law(&base, &change_node_kind_icon(Some("i".into())));
-        assert_mutation_inverse_law(&base, &change_node_kind_unit(Some("m".into())));
-        assert_mutation_inverse_law(&base, &update_presentation(Some("s".into()), Some(1.0), None, None, None, None));
-        assert_mutation_inverse_law(&base, &create_handle_kind(crate::artifacts::block2d::Block2dHandleKind { id: "hk1".into(), name: "hk1".into(), label: "HK1".into(), color: "#000".into(), default_wire_kind: "cable.link".into() }));
-        assert_mutation_inverse_law(&base, &delete_handle_kind("hk0".into()));
-        assert_mutation_inverse_law(&base, &rename_handle_kind("hk0".into(), "renamed".into()));
-        assert_mutation_inverse_law(&base, &change_handle_kind_label("hk0".into(), "Renamed".into()));
-        assert_mutation_inverse_law(&base, &change_handle_kind_color("hk0".into(), "#fff".into()));
-        assert_mutation_inverse_law(&base, &change_handle_kind_default_wire_kind("hk0".into(), "cable.power".into()));
-        assert_mutation_inverse_law(&base, &create_handle(crate::artifacts::block2d::Block2dHandleTemplate { id: "h1".into(), handle_kind: "hk0".into(), angle: 0.1, radius: 0.2 }));
-        assert_mutation_inverse_law(&base, &delete_handle("h0".into()));
-        assert_mutation_inverse_law(&base, &move_handle("h0".into(), 1.5, 0.9));
-        assert_mutation_inverse_law(&base, &change_handle_handle_kind("h0".into(), "hk0".into()));
-        assert_mutation_inverse_law(&base, &add_compatibility_rule(BlockCompatibilityRule { id: "c1".into(), source: "a".into(), target: "c".into(), bidirectional: false }));
-        assert_mutation_inverse_law(&base, &remove_compatibility_rule("c0".into()));
-        assert_mutation_inverse_law(&base, &add_attribute(BlockAttribute { key: "finish".into(), value: "matte".into(), definition: None }));
-        assert_mutation_inverse_law(&base, &remove_attribute("material".into()));
-        assert_mutation_inverse_law(&base, &add_author(BlockAuthor { id: "a1".into(), name: "Bo".into(), email: None }));
-        assert_mutation_inverse_law(&base, &remove_author("a0".into()));
-        assert_mutation_inverse_law(&base, &move_camera2d(3.0, 4.0));
-        assert_mutation_inverse_law(&base, &scale_camera2d(1.5));
-        assert_mutation_inverse_law(&base, &change_meta_description("notes".into()));
+        assert_mutation_inverse_law(&base, &rename_node_kind("x".into())).await;
+        assert_mutation_inverse_law(&base, &change_node_kind_label("x".into())).await;
+        assert_mutation_inverse_law(&base, &change_node_kind_variant(Some("v2".into()))).await;
+        assert_mutation_inverse_law(&base, &change_node_kind_description("d".into())).await;
+        assert_mutation_inverse_law(&base, &change_node_kind_icon(Some("i".into()))).await;
+        assert_mutation_inverse_law(&base, &change_node_kind_unit(Some("m".into()))).await;
+        assert_mutation_inverse_law(&base, &update_presentation(Some("s".into()), Some(1.0), None, None, None, None)).await;
+        assert_mutation_inverse_law(&base, &create_handle_kind(crate::artifacts::block2d::Block2dHandleKind { id: "hk1".into(), name: "hk1".into(), label: "HK1".into(), color: "#000".into(), default_wire_kind: "cable.link".into() })).await;
+        assert_mutation_inverse_law(&base, &delete_handle_kind("hk0".into())).await;
+        assert_mutation_inverse_law(&base, &rename_handle_kind("hk0".into(), "renamed".into())).await;
+        assert_mutation_inverse_law(&base, &change_handle_kind_label("hk0".into(), "Renamed".into())).await;
+        assert_mutation_inverse_law(&base, &change_handle_kind_color("hk0".into(), "#fff".into())).await;
+        assert_mutation_inverse_law(&base, &change_handle_kind_default_wire_kind("hk0".into(), "cable.power".into())).await;
+        assert_mutation_inverse_law(&base, &create_handle(crate::artifacts::block2d::Block2dHandleTemplate { id: "h1".into(), handle_kind: "hk0".into(), angle: 0.1, radius: 0.2 })).await;
+        assert_mutation_inverse_law(&base, &delete_handle("h0".into())).await;
+        assert_mutation_inverse_law(&base, &move_handle("h0".into(), 1.5, 0.9)).await;
+        assert_mutation_inverse_law(&base, &change_handle_handle_kind("h0".into(), "hk0".into())).await;
+        assert_mutation_inverse_law(&base, &add_compatibility_rule(BlockCompatibilityRule { id: "c1".into(), source: "a".into(), target: "c".into(), bidirectional: false })).await;
+        assert_mutation_inverse_law(&base, &remove_compatibility_rule("c0".into())).await;
+        assert_mutation_inverse_law(&base, &add_attribute(BlockAttribute { key: "finish".into(), value: "matte".into(), definition: None })).await;
+        assert_mutation_inverse_law(&base, &remove_attribute("material".into())).await;
+        assert_mutation_inverse_law(&base, &add_author(BlockAuthor { id: "a1".into(), name: "Bo".into(), email: None })).await;
+        assert_mutation_inverse_law(&base, &remove_author("a0".into())).await;
+        assert_mutation_inverse_law(&base, &move_camera2d(3.0, 4.0)).await;
+        assert_mutation_inverse_law(&base, &scale_camera2d(1.5)).await;
+        assert_mutation_inverse_law(&base, &change_meta_description("notes".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -324,7 +324,7 @@ mod tests {
         let d1 = change_node_kind_label("first".into()).diff(&base).into_parts().0;
         let mid = d1.apply(&base).expect("valid mutation diff");
         let d2 = change_node_kind_label("second".into()).diff(&mid).into_parts().0;
-        assert_mutation_diff_absorb_law(&base, d1, d2);
+        assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -335,7 +335,7 @@ mod tests {
         let d1 = move_handle("h0".into(), 0.5, 0.3).diff(&base).into_parts().0;
         let mid = d1.apply(&base).expect("valid mutation diff");
         let d2 = move_handle("h0".into(), 1.1, 0.6).diff(&mid).into_parts().0;
-        assert_mutation_diff_absorb_law(&base, d1, d2);
+        assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -356,20 +356,20 @@ mod tests {
     // `📡️spr/🧪️testkit`'s `🔖️Laws` region (only `assert_missing_target_is_error`,
     // `assert_fatal_never_applies`, `assert_outcome_deterministic`, `assert_policy_matrix` exist as
     // of this lane's pass) — pending lane 1-D, tracked in `📓️w3-f-block-puzzle-report.md`.
-    use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
+    use semio_framework_os_kernel::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
 
     #[semio_framework_async_macros::async_test]
     async fn missing_target_is_error_per_verb_family() {
         let base = empty_block2d_snapshot();
-        assert_missing_target_is_error(&base, &delete_handle("missing".into())); // delete
-        assert_missing_target_is_error(&base, &delete_handle_kind("missing".into())); // delete
-        assert_missing_target_is_error(&base, &remove_author("missing".into())); // remove
-        assert_missing_target_is_error(&base, &remove_attribute("missing".into())); // remove
-        assert_missing_target_is_error(&base, &remove_compatibility_rule("missing".into())); // remove
-        assert_missing_target_is_error(&base, &rename_handle_kind("missing".into(), "x".into())); // rename
-        assert_missing_target_is_error(&base, &change_handle_kind_color("missing".into(), "#fff".into())); // change/set/update
-        assert_missing_target_is_error(&base, &change_handle_handle_kind("missing".into(), "hk0".into())); // change/set/update
-        assert_missing_target_is_error(&base, &move_handle("missing".into(), 1.0, 1.0));
+        assert_missing_target_is_error(&base, &delete_handle("missing".into())).await; // delete
+        assert_missing_target_is_error(&base, &delete_handle_kind("missing".into())).await; // delete
+        assert_missing_target_is_error(&base, &remove_author("missing".into())).await; // remove
+        assert_missing_target_is_error(&base, &remove_attribute("missing".into())).await; // remove
+        assert_missing_target_is_error(&base, &remove_compatibility_rule("missing".into())).await; // remove
+        assert_missing_target_is_error(&base, &rename_handle_kind("missing".into(), "x".into())).await; // rename
+        assert_missing_target_is_error(&base, &change_handle_kind_color("missing".into(), "#fff".into())).await; // change/set/update
+        assert_missing_target_is_error(&base, &change_handle_handle_kind("missing".into(), "hk0".into())).await; // change/set/update
+        assert_missing_target_is_error(&base, &move_handle("missing".into(), 1.0, 1.0)).await;
         // move/drag/rotate/scale/resize
     }
 
@@ -379,7 +379,7 @@ mod tests {
         let handle_kind = crate::artifacts::block2d::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() };
         base.handle_kinds.push(handle_kind.clone());
         let outcome = create_handle_kind(handle_kind).diff(&base);
-        assert_fatal_never_applies(&outcome);
+        assert_fatal_never_applies(&outcome).await;
         assert_eq!(outcome.worst_level(), Some(dsl::Severity::Fatal));
         assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.duplicate-id"));
     }
@@ -392,7 +392,7 @@ mod tests {
     /// declared vocabulary and the measured one from drifting apart.
     #[test]
     fn kinds_match_the_enum_and_the_catalog() {
-        let descriptors = <Block2dMutation as protocol::SemanticMutation<Block2dSnapshot>>::kinds();
+        let descriptors = <Block2dMutation as SemanticMutation<Block2dSnapshot>>::kinds();
         assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared Block2dMutation variant");
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");

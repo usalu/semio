@@ -18,13 +18,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioKitSnapshot {
-    serde_json::from_str(BEFORE).expect("remove-type before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("remove-type before snapshot decodes")
 }
 fn expected_after() -> SemioKitSnapshot {
-    serde_json::from_str(AFTER).expect("remove-type after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("remove-type after snapshot decodes")
 }
 fn mutation() -> SemioKitMutation {
-    serde_json::from_str(MUTATION).expect("remove-type mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("remove-type mutation decodes")
 }
 
 /// ▶️ Only the column type goes; the beam type and every design keep their place.
@@ -58,12 +58,12 @@ async fn the_undo_add_type_restores_the_full_captured_type() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioKitSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: SemioKitSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "remove-type/removes-the-column-type-and-keeps-the-beam-type: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("remove-type mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("remove-type mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("remove-type mutation reparses");
     assert_eq!(reencoded, original, "remove-type/removes-the-column-type-and-keeps-the-beam-type: committed mutation JSON is not canonical");
 }
@@ -82,7 +82,7 @@ async fn declared_outcome_holds_as_committed() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "remove-type/removes-the-column-type-and-keeps-the-beam-type: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -91,10 +91,10 @@ async fn produces_committed_diff() {
 /// allowed to touch appears in it at all.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioKitDiff = serde_json::from_str(DIFF).expect("committed remove-type diff decodes");
+    let decoded: SemioKitDiff = dsl::json::from_json_str(DIFF).expect("committed remove-type diff decodes");
     assert_eq!(decoded.types.as_ref().map(|list| list.values.len()), Some(1), "the diff carries the shortened type catalogue, not a removal marker");
     assert!(decoded.designs.is_none() && decoded.objects.is_none() && decoded.models.is_none() && decoded.properties.is_none() && decoded.representations.is_none(), "no other kit slot may appear in the diff");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "remove-type/removes-the-column-type-and-keeps-the-beam-type: committed diff JSON is not canonical");
 }
@@ -102,7 +102,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioKitDiff = serde_json::from_str(DIFF).expect("committed remove-type diff decodes");
+    let decoded: SemioKitDiff = dsl::json::from_json_str(DIFF).expect("committed remove-type diff decodes");
     let produced = decoded.apply(&before()).expect("committed remove-type diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-type/removes-the-column-type-and-keeps-the-beam-type: committed diff did not carry before to after");
 }

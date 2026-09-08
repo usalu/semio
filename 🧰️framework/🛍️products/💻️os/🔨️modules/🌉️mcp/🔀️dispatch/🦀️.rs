@@ -120,6 +120,11 @@ pub trait ArtifactChannel: Send {
     fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault>;
 }
 
+/// ↩️ Private durable-history port; only a Hub-bound workspace implements the remote member.
+pub trait HistoryUndoPort: Send + Sync {
+    fn undo_hub_gis_map_approval(&self, member: &HubGisMapApprovalUndoMemberV1) -> Result<(), GatewayError>;
+}
+
 /// 🧯️ `Fault.code` → `GatewayErrorCode` — `📋️master.md` §3.3's Fault code table, plus this crate's
 /// own `"budget.exceeded"` addition (`GatewayErrorCode::BudgetExceeded`, retryable) and W8's
 /// `"capability.not-found"`/`"plugin.unavailable"` (`🏠️workspace/🦀️.rs`'s `RoutingArtifactChannel`
@@ -333,13 +338,26 @@ struct SagaRecord {
 /// committed invocation or saga touched; `history.undo`/`history.redo` fan `TransactionUndo`/
 /// `TransactionRedo` out to every member, best-effort, exactly like the real
 /// `HostTransactionCoordinator::undo_group`/`redo_group` (`📓️luna-channel-audit.md` §6).
-#[derive(Clone, Debug, Serialize, Deserialize, ToValue, FromValue)]
-struct UndoMember {
-    instance: u32,
-    txn_id: String,
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(tag = "kind", content = "member", rename_all = "kebab-case", deny_unknown_fields)]
+enum UndoMember {
+    LocalGuestTransaction { instance: u32, transaction_id: String },
+    HubGisMapApproval(HubGisMapApprovalUndoMemberV1),
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, ToValue, FromValue)]
+/// 🌐 Exact server-owned remote history member; it carries a locator/frontier, never inverse bytes.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct HubGisMapApprovalUndoMemberV1 {
+    pub hub_origin: String,
+    pub space_id: String,
+    pub document_id: String,
+    pub target_id: String,
+    pub idempotency_key: String,
+    pub expected_current: semio_framework_os_kernel::os_directory::CheckpointPublicationFrontierV1,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 struct UndoRecord {
     members: Vec<UndoMember>,
 }
@@ -408,6 +426,7 @@ pub struct ActionAdapter {
     policy: PolicyEngine,
     client: ClientInfo,
     invocation_counter: AtomicU64,
+    history_undo_port: Mutex<Option<Arc<dyn HistoryUndoPort>>>,
 }
 
 const INSTANCE_BUSY_MAX_ATTEMPTS: u32 = 3;
@@ -415,7 +434,7 @@ const INSTANCE_BUSY_MAX_ATTEMPTS: u32 = 3;
 impl ActionAdapter {
     pub fn new(channel: Box<ArtifactChannels>, handles: Arc<HandleTable>, idempotency: Arc<IdempotencyStore>, audit: Arc<AuditSinks>, auto_approve: AutoApprovePolicy, client: ClientInfo) -> Self {
         let policy = PolicyEngine::new(handles.clone(), auto_approve);
-        Self { channel: Mutex::new(channel), handles, idempotency, audit, policy, client, invocation_counter: AtomicU64::new(0) }
+        Self { channel: Mutex::new(channel), handles, idempotency, audit, policy, client, invocation_counter: AtomicU64::new(0), history_undo_port: Mutex::new(None) }
     }
 
     //#region 💡️Inference
@@ -429,6 +448,43 @@ impl ActionAdapter {
     /// 🎫️ The one shared handle table, for a facet that mints or resolves session-owned handles.
     pub fn handles(&self) -> &Arc<HandleTable> {
         &self.handles
+    }
+
+    /// 🔌 Binds the sole workspace-owned remote history implementation before serving tools.
+    pub fn bind_history_undo_port(&self, port: Arc<dyn HistoryUndoPort>) {
+        *self.history_undo_port.lock().expect("history undo port lock poisoned") = Some(port);
+    }
+
+    /// 🪪 Mints one session-private undo token from a Hub receipt without retaining mutation bytes.
+    pub fn retain_hub_gis_map_approval_undo(
+        &self,
+        session: &SessionHandle,
+        hub_origin: &str,
+        scope: &semio_framework_os_kernel::os_directory::DocumentScope,
+        handle: &semio_framework_os_kernel::os_directory::GisMapApprovalUndoHandleV1,
+        now_ms: u64,
+    ) -> Result<String, GatewayError> {
+        if hub_origin.is_empty()
+            || hub_origin.len() > 2048
+            || handle.target_id.len() != 32
+            || !handle.target_id.bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
+            || !handle.expected_current.validate()
+            || handle.expected_current.document_id != scope.document_id
+        {
+            return Err(GatewayError::new(GatewayErrorCode::InputInvalid, "invalid durable GIS approval undo authority"));
+        }
+        let identity = format!("semio.mcp.hub-gis-map-approval-undo/v1\0{}\0{}\0{}\0{}\0{}", session.0, hub_origin, scope.space_id, scope.document_id, handle.target_id);
+        let idempotency_key = framework_hash::hash_bytes(identity.as_bytes())[..32].to_owned();
+        let member = UndoMember::HubGisMapApproval(HubGisMapApprovalUndoMemberV1 {
+            hub_origin: hub_origin.to_owned(),
+            space_id: scope.space_id.clone(),
+            document_id: scope.document_id.clone(),
+            target_id: handle.target_id.clone(),
+            idempotency_key,
+            expected_current: handle.expected_current.clone(),
+        });
+        let payload = serde_json::to_value(UndoRecord { members: vec![member] }).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?;
+        Ok(self.handles.mint(HandleKind::Undo, session.clone(), Attachment::Other { label: "hub-gis-map-approval".into() }, payload, now_ms))
     }
     //#endregion 💡️Inference
 
@@ -676,7 +732,7 @@ impl ActionAdapter {
                         Ok(AppFrame::HistorySnapshot(revision)) => revision,
                         _ => current.clone(),
                     };
-                    let undo_record = UndoRecord { members: vec![UndoMember { instance: record.instance, txn_id: txn_id.clone() }] };
+                    let undo_record = UndoRecord { members: vec![UndoMember::LocalGuestTransaction { instance: record.instance, transaction_id: txn_id.clone() }] };
                     let undo_token = self.handles.mint(HandleKind::Undo, session.clone(), Attachment::Capability { capability_id: record.capability_id.clone() }, serde_json::to_value(&undo_record).unwrap_or_default(), now_ms);
                     Ok(InvocationReport {
                         invocation_id: invocation_id.clone(),
@@ -835,7 +891,12 @@ impl ActionAdapter {
         }
 
         self.handles.revoke(saga_handle);
-        let undo_record = UndoRecord { members: committed.iter().map(|(index, txn_id, _)| UndoMember { instance: saga.members[*index].instance, txn_id: txn_id.clone() }).collect() };
+        let undo_record = UndoRecord {
+            members: committed
+                .iter()
+                .map(|(index, txn_id, _)| UndoMember::LocalGuestTransaction { instance: saga.members[*index].instance, transaction_id: txn_id.clone() })
+                .collect(),
+        };
         let undo_token = self.handles.mint(HandleKind::Undo, session.clone(), Attachment::Other { label: "saga".into() }, serde_json::to_value(&undo_record).unwrap_or_default(), now_ms);
 
         let mut ordered = committed;
@@ -847,7 +908,7 @@ impl ActionAdapter {
     //#endregion 🔖️Saga
 
     //#region 🔖️UndoRedo
-    fn fan_out(&self, session: &SessionHandle, undo_token: &str, now_ms: u64, build: impl Fn(String) -> AppCommand) -> Result<UndoRedoReport, GatewayError> {
+    fn fan_out(&self, session: &SessionHandle, undo_token: &str, now_ms: u64, redo: bool) -> Result<UndoRedoReport, GatewayError> {
         let record = self.handles.resolve(undo_token, session, now_ms)?;
         if record.kind != HandleKind::Undo {
             return Err(GatewayError::new(GatewayErrorCode::InputInvalid, "handle is not an undo handle"));
@@ -855,8 +916,32 @@ impl ActionAdapter {
         let undo: UndoRecord = serde_json::from_value(record.payload).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?;
         let mut warnings = Vec::new();
         for member in &undo.members {
-            if let Err(error) = self.exchange_one(member.instance, build(member.txn_id.clone())) {
-                warnings.push(format!("member {} (instance {}) failed: {}", member.txn_id, member.instance, error.message));
+            let result = match member {
+                UndoMember::LocalGuestTransaction { instance, transaction_id } => match self.exchange_one(
+                    *instance,
+                    if redo { AppCommand::TransactionRedo { group_id: transaction_id.clone() } } else { AppCommand::TransactionUndo { group_id: transaction_id.clone() } },
+                ) {
+                    Ok(AppFrame::TransactionRedone { group_id }) if redo && group_id == *transaction_id => Ok(()),
+                    Ok(AppFrame::TransactionUndone { group_id }) if !redo && group_id == *transaction_id => Ok(()),
+                    Ok(frame) => Err((
+                        format!("local transaction {transaction_id} on instance {instance}"),
+                        GatewayError::new(GatewayErrorCode::Internal, format!("unexpected history frame: {frame:?}")),
+                    )),
+                    Err(error) => Err((format!("local transaction {transaction_id} on instance {instance}"), error)),
+                },
+                UndoMember::HubGisMapApproval(remote) if redo => Err((
+                    format!("Hub GIS approval target {}", remote.target_id),
+                    GatewayError::new(GatewayErrorCode::SideEffectRejected, "durable Hub GIS approval redo requires a new authenticated approval"),
+                )),
+                UndoMember::HubGisMapApproval(remote) => {
+                    let port = self.history_undo_port.lock().expect("history undo port lock poisoned").clone();
+                    port.ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, "Hub durable history port is unavailable").retryable())
+                        .and_then(|port| port.undo_hub_gis_map_approval(remote))
+                        .map_err(|error| (format!("Hub GIS approval target {}", remote.target_id), error))
+                }
+            };
+            if let Err((label, error)) = result {
+                warnings.push(format!("member {label} failed: {}", error.message));
             }
         }
         if !undo.members.is_empty() && warnings.len() == undo.members.len() {
@@ -869,11 +954,11 @@ impl ActionAdapter {
     /// best-effort (a per-member failure is a warning, not a hard error, unless EVERY member fails).
     /// The handle stays resolvable afterward (never revoked) so a symmetric `history.redo` can follow.
     pub fn history_undo(&self, session: &SessionHandle, undo_token: &str, now_ms: u64) -> Result<UndoRedoReport, GatewayError> {
-        self.fan_out(session, undo_token, now_ms, |txn_id| AppCommand::TransactionUndo { group_id: txn_id })
+        self.fan_out(session, undo_token, now_ms, false)
     }
 
     pub fn history_redo(&self, session: &SessionHandle, undo_token: &str, now_ms: u64) -> Result<UndoRedoReport, GatewayError> {
-        self.fan_out(session, undo_token, now_ms, |txn_id| AppCommand::TransactionRedo { group_id: txn_id })
+        self.fan_out(session, undo_token, now_ms, true)
     }
     //#endregion 🔖️UndoRedo
 }
@@ -939,6 +1024,18 @@ mod quick {
         let audit = Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new()));
         let adapter = ActionAdapter::new(Box::new(ArtifactChannels::Mock(channel.clone())), handles.clone(), idempotency, audit.clone(), auto_approve, ClientInfo { name: "test".into(), version: "0".into() });
         (adapter, channel, handles, audit)
+    }
+
+    #[derive(Default)]
+    struct RecordingHistoryUndoPort {
+        members: Mutex<Vec<HubGisMapApprovalUndoMemberV1>>,
+    }
+
+    impl HistoryUndoPort for RecordingHistoryUndoPort {
+        fn undo_hub_gis_map_approval(&self, member: &HubGisMapApprovalUndoMemberV1) -> Result<(), GatewayError> {
+            self.members.lock().expect("history members lock poisoned").push(member.clone());
+            Ok(())
+        }
     }
 
     // 🔀️ dedyn-fw-os-misc: extracts the recorded events from a harness `Arc<AuditSinks>` known (by
@@ -1061,6 +1158,45 @@ mod quick {
         let redo_report = adapter.history_redo(&session, &undo_token, 3).unwrap();
         assert_eq!(redo_report.members, 1);
         assert!(channel.frame_log().iter().any(|(_, command)| matches!(command, AppCommand::TransactionRedo { .. })));
+    }
+
+    #[test]
+    fn hub_gis_approval_history_uses_the_private_port_and_never_stores_inverse_bytes() {
+        let (adapter, _channel, handles, _audit) = harness(AutoApprovePolicy::Never);
+        let port = Arc::new(RecordingHistoryUndoPort::default());
+        adapter.bind_history_undo_port(port.clone());
+        let session = SessionHandle::new("sess_owner");
+        let scope = semio_framework_os_kernel::os_directory::DocumentScope::new("space-a", "document-a");
+        let expected_current = semio_framework_os_kernel::os_directory::CheckpointPublicationFrontierV1 {
+            document_id: scope.document_id.clone(),
+            head_edit_ordinal: 1,
+            head_edit_id: "edit-a".into(),
+            last_commit_seq: 1,
+            chain_sha256: "11".repeat(32),
+        };
+        let token = adapter
+            .retain_hub_gis_map_approval_undo(
+                &session,
+                "https://hub.invalid",
+                &scope,
+                &semio_framework_os_kernel::os_directory::GisMapApprovalUndoHandleV1 { target_id: "22".repeat(16), expected_current: expected_current.clone() },
+                7,
+            )
+            .expect("Hub receipt mints one private undo token");
+        let retained = handles.resolve(&token, &session, 8).expect("owner resolves its token");
+        let encoded = serde_json::to_string(&retained.payload).expect("payload");
+        assert!(encoded.contains("hub-gis-map-approval") && !encoded.contains("inverse") && !encoded.contains("mutation"), "{encoded}");
+        let report = adapter.history_undo(&session, &token, 9).expect("history routes through the Hub port");
+        assert_eq!((report.members, report.warnings.len()), (1, 0));
+        let observed = port.members.lock().expect("history members lock poisoned");
+        assert_eq!(observed.len(), 1);
+        assert_eq!((observed[0].space_id.as_str(), observed[0].document_id.as_str(), observed[0].target_id.as_str()), ("space-a", "document-a", "22222222222222222222222222222222"));
+        assert_eq!(observed[0].expected_current, expected_current);
+        drop(observed);
+        let redo = adapter.history_redo(&session, &token, 10).expect_err("remote durable undo cannot be replayed as a fabricated redo");
+        assert_eq!(redo.code, GatewayErrorCode::SideEffectRejected);
+        assert_eq!(port.members.lock().expect("history members lock poisoned").len(), 1);
+        assert_eq!(adapter.history_undo(&SessionHandle::new("sess_foreign"), &token, 11).expect_err("foreign session cannot resolve token").code, GatewayErrorCode::PermissionDenied);
     }
     //#endregion 🔖️UndoRoundTrip
 

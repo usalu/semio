@@ -171,43 +171,43 @@ mod tests {
         let base = RemodelingConfig::default();
 
         let camera = RemodelingWorldCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 60.0 };
-        let op = RemodelingConfigMutation::SetCamera(crate::editor::remodeling::config::SetCamera { camera: camera.clone() });
+        let op = RemodelingConfigMutation::SetCamera(SetCamera { camera: camera.clone() });
         let next = op.diff(&base).into_parts().0;
         assert_eq!(next.camera, camera);
-        assert_eq!(op.inverse(&base), vec![RemodelingConfigMutation::ReplaceConfig(crate::editor::remodeling::config::ReplaceConfig { config: base.clone() })]);
+        assert_eq!(op.inverse(&base), vec![RemodelingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]);
         assert_eq!(op.inverse(&base)[0].diff(&next).into_parts().0, base, "backwards restores the exact pre-edit config");
 
-        let op = RemodelingConfigMutation::SetLayerVisibility(crate::editor::remodeling::config::SetLayerVisibility { layer: "dense".into(), visible: false });
+        let op = RemodelingConfigMutation::SetLayerVisibility(SetLayerVisibility { layer: "dense".into(), visible: false });
         let next = op.diff(&base).into_parts().0;
         assert!(!next.layers.dense);
         assert!(next.layers.mesh, "only the named layer flips");
 
-        let op = RemodelingConfigMutation::SetFrameCursor(crate::editor::remodeling::config::SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 4 });
+        let op = RemodelingConfigMutation::SetFrameCursor(SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 4 });
         let next = op.diff(&base).into_parts().0;
         assert_eq!(next.frame_cursor.stream_id.as_deref(), Some("stream-1"));
         assert_eq!(next.frame_cursor.frame_index, 4);
 
-        let op = RemodelingConfigMutation::SetReportTable(crate::editor::remodeling::config::SetReportTable { table: "gcps".into() });
+        let op = RemodelingConfigMutation::SetReportTable(SetReportTable { table: "gcps".into() });
         assert_eq!(op.diff(&base).diff().report_table, "gcps");
 
-        let op = RemodelingConfigMutation::SetActiveUtility(crate::editor::remodeling::config::SetActiveUtility { utility_id: "measure".into() });
+        let op = RemodelingConfigMutation::SetActiveUtility(SetActiveUtility { utility_id: "measure".into() });
         assert_eq!(op.diff(&base).diff().active_utility_id, "measure");
 
-        let op = RemodelingConfigMutation::SetLocale(crate::editor::remodeling::config::SetLocale { value: "de-DE".into() });
+        let op = RemodelingConfigMutation::SetLocale(SetLocale { value: "de-DE".into() });
         assert_eq!(op.diff(&base).diff().locale, "de-DE");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn config_mutations_roundtrip_through_op_text() {
         let config = RemodelingConfig::default();
-        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::ReplaceConfig(crate::editor::remodeling::config::ReplaceConfig { config }));
-        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetCamera(crate::editor::remodeling::config::SetCamera { camera: RemodelingWorldCamera::default() }));
-        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetLayerVisibility(crate::editor::remodeling::config::SetLayerVisibility { layer: "gcps".into(), visible: false }));
-        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetFrameCursor(crate::editor::remodeling::config::SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 2 }));
-        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetFrameCursor(crate::editor::remodeling::config::SetFrameCursor { stream_id: None, frame_index: 0 }));
-        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetReportTable(crate::editor::remodeling::config::SetReportTable { table: "tracks".into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetActiveUtility(crate::editor::remodeling::config::SetActiveUtility { utility_id: "gcpPlace".into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetLocale(crate::editor::remodeling::config::SetLocale { value: "de-DE".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::ReplaceConfig(ReplaceConfig { config }));
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetCamera(SetCamera { camera: RemodelingWorldCamera::default() }));
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetLayerVisibility(SetLayerVisibility { layer: "gcps".into(), visible: false }));
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetFrameCursor(SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 2 }));
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetFrameCursor(SetFrameCursor { stream_id: None, frame_index: 0 }));
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetReportTable(SetReportTable { table: "tracks".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetActiveUtility(SetActiveUtility { utility_id: "gcpPlace".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetLocale(SetLocale { value: "de-DE".into() }));
     }
 }
 //#endregion 🧪️Tests

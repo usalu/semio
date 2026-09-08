@@ -503,16 +503,8 @@ impl ArtifactEditor for Gis3dPlayApp {
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
         };
-        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            request.context,
-            operation_context,
-            request.completion,
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
             Gis3dCommand::command_id,
             GIS3D_RETAINED_RAW_BYTES,
             GIS3D_RETAINED_WORK_ITEMS,
@@ -694,8 +686,8 @@ pub(crate) mod testkit {
 
     pub type Gis3dApp = VcsArtifactApp<EditorApp<Gis3dPlayApp>>;
 
-    pub fn app() -> Gis3dApp {
-        new_app::<EditorApp<Gis3dPlayApp>>()
+    pub async fn app() -> Gis3dApp {
+        new_app::<EditorApp<Gis3dPlayApp>>().await
     }
 
     /// ✏️ Adapts `create_gis3d_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
@@ -706,16 +698,16 @@ pub(crate) mod testkit {
     }
 
     /// 🧬️ A wrapper carrying the real registry so kind discipline (View/Shell-emits-operations rejection) runs.
-    pub fn app_with_registry() -> Gis3dApp {
-        new_app_with_registry::<EditorApp<Gis3dPlayApp>>(gis3d_app_manifest_for_testkit)
+    pub async fn app_with_registry() -> Gis3dApp {
+        new_app_with_registry::<EditorApp<Gis3dPlayApp>>(gis3d_app_manifest_for_testkit).await
     }
 
-    pub fn dispatch(app: &mut Gis3dApp, command: Gis3dCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+    pub async fn dispatch(app: &mut Gis3dApp, command: Gis3dCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
     }
 
-    pub fn render(app: &mut Gis3dApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+    pub async fn render(app: &mut Gis3dApp, body_key: &str) -> String {
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render projection")
     }
 }
 //#endregion 🧪️Testkit
@@ -778,14 +770,13 @@ mod tests {
     /// hard error and the whole `{action,args}` host wire was dead.
     #[semio_framework_async_macros::async_test]
     async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
-        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Gis3dPlayApp>>(gis3d_app_manifest_for_testkit);
+        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Gis3dPlayApp>>(gis3d_app_manifest_for_testkit).await;
         assert!(Gis3dPlayApp::command_from_action("noSuchAction", None).is_err());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn command_from_action_reads_the_nested_camera_object() {
-        let app = Gis3dPlayApp;
-        let camera = Gis3dPlayApp::command_from_action("setCamera", Some(&json!({ "camera": { "position": [1.0, 2.0, 3.0] } }))).expect("setCamera");
+                let camera = Gis3dPlayApp::command_from_action("setCamera", Some(&dsl::json::to_dsl_value(&dsl::json!({ "camera": { "position": [1.0, 2.0, 3.0] } })))).expect("setCamera");
         assert!(matches!(camera, Gis3dCommand::SetCamera(ref payload) if payload.camera_json.contains("position")));
     }
 
@@ -801,23 +792,23 @@ mod tests {
         assert_eq!(tool_ids, GIS3D_RETAINED_TOOL_IDS);
         let snapshot = default_terrain_document();
         let interaction = protocol::InteractionState::default();
-        let accepted = Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: "c".repeat(maximum) });
+        let accepted = Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: format!("{{}}{}", " ".repeat(maximum - 2)) });
         let rejected = Gis3dCommand::SetLocale(set_locale::SetLocale { value: "l".repeat(maximum + additional) });
         assert_eq!(gis3d_retained_extent(&accepted, &snapshot, &interaction), Some(expected_items));
         assert_eq!(gis3d_retained_extent(&rejected, &snapshot, &interaction), None);
         let factory = Gis3dCommandJobFactory::new("s.gis.gisterrain@1/*#editor");
         assert_eq!(factory.execution_contract(), ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500));
-        assert!(Gis3dPlayApp::command_from_action("setCamera", Some(&json!({ "cameraJson": "c".repeat(maximum + additional) }))).is_err());
+        assert!(Gis3dPlayApp::command_from_action("setCamera", Some(&dsl::json::to_dsl_value(&dsl::json!({ "cameraJson": "c".repeat(maximum + additional) })))).is_err());
     }
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️Manifest
     #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
-        let definition = create_gis3d_app().definition;
+        let definition = create_gis3d_app();
         assert_eq!(definition.modes.len(), 1);
         assert_eq!(definition.window_kinds.len(), 1);
-        assert!(definition.actions.iter().all(|action| action.semantics.execution.interactive_job == semio_framework::InteractiveJobClassification::Migrated));
+        assert!(definition.window_kinds.iter().flat_map(|window| &window.actions).all(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::Migrated));
         // 🧷️ gis3d declares no app panel tabs of its own; whatever is present comes from the framework.
         assert!(!definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref().is_some_and(|key| key.starts_with("gis3d.play."))), "gis3d declares no app panels");
         assert!(definition.artifact_kinds.iter().any(|kind| kind.id == crate::artifacts::gismap::GISMAP_DIALECT.artifact_kind));
@@ -831,26 +822,26 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_falls_back_to_a_text_node() {
-        let mut app = app();
-        assert!(render(&mut app, "gis3d.play.nope").contains("Unknown body"));
+        let mut app = app().await;
+        assert!(render(&mut app, "gis3d.play.nope").await.contains("Unknown body"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn view_actions_emit_no_ops_under_registry_kind_discipline() {
-        let mut app = app_with_registry();
-        assert!(dispatch(&mut app, Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: "{}".into() })).mutations.is_empty());
-        assert_eq!(dispatch(&mut app, Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: 2.0 })).mutations.len(), 1);
+        let mut app = app_with_registry().await;
+        assert!(dispatch(&mut app, Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: "{}".into() })).await.mutations.is_empty());
+        assert_eq!(dispatch(&mut app, Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: 2.0 })).await.mutations.len(), 1);
     }
     //#endregion 🔖️Manifest
 
     //#region 🔖️Media
     #[semio_framework_async_macros::async_test]
     async fn export_media_scene_out_produces_a_3d_mesh_structured_payload() {
-        let app = app();
+        let app = app().await;
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
-        let media = semio_framework_plugin::resolve_ready(Gis3dPlayApp::export_media("scene:out", &doc)).expect("scene:out export");
+        let media = Gis3dPlayApp::export_media("scene:out", &doc).expect("scene:out export");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "3d.mesh");
         assert!(json.contains("exaggeration"));
@@ -858,7 +849,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn import_media_map_in_writes_the_imported_features_operation() {
-        let app = app();
+        let app = app().await;
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
@@ -871,8 +862,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn media_ports_declare_map_in_and_scene_out() {
-        let app = Gis3dPlayApp;
-        let ports = Gis3dPlayApp::media_ports();
+                let ports = Gis3dPlayApp::media_ports().await;
         assert!(ports.iter().any(|port| port.id == "map:in"));
         assert!(ports.iter().any(|port| port.id == "scene:out"));
     }
@@ -883,7 +873,7 @@ mod tests {
     async fn gis3d_io_declares_the_map_in_and_scene_out_ports() {
         let io = gis3d_io();
         assert_eq!(io.document_schema, GIS_3D_TERRAIN_SCHEMA);
-        let ports = io.all_ports();
+        let ports = io.all_ports().await;
         let map_in = ports.iter().find(|port| port.id == "map:in").expect("map:in declared");
         assert_eq!(map_in.direction, semio_framework_plugin::MediaPortDirection::In);
         assert_eq!(map_in.kind_id.as_deref(), Some(crate::artifacts::gismap::GISMAP_DIALECT.artifact_kind));
@@ -896,7 +886,7 @@ mod tests {
     async fn gis3d_scene_media_exports_the_terrain_descriptor() {
         let document = default_terrain_document();
         let media = gis3d_scene_media(&document);
-        let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else {
+        let MediaPayload::Structured { schema, json } = media.payload else {
             panic!("expected a structured scene:out payload");
         };
         assert_eq!(schema, "3d.mesh");

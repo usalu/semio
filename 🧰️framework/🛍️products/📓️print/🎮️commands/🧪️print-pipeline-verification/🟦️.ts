@@ -10,13 +10,13 @@ export class PrintPipelineVerificationCommand extends BundleScript {
     if (segments[0] === "viz") {
       const mode = segments[1] ?? "coverage";
       if (!["quick", "coverage", "full"].includes(mode)) throw new Error(`unknown viz test mode: ${mode}`);
-      verifyPrintPipelineQuick();
+      await verifyPrintPipelineQuick();
       verifyVisualizationCoverage();
       if (mode === "full") await verifyPrintVisualizationBuild();
       return;
     }
     const { level } = resolveTestLevel(segments);
-    verifyPrintPipelineQuick();
+    await verifyPrintPipelineQuick();
     if (TEST_LEVELS.indexOf(level) >= TEST_LEVELS.indexOf("long")) await verifyPrintPipelineLong();
   }
 }

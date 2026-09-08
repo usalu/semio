@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:hub:gis-map-two-author-composition-fixture:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "version", "selection", "authors", "locales", "steps", "observations", "hostiles", "nonclaims"],
+  "properties": {
+    "schema": { "const": "semio.hub.gis-map-two-author-composition-fixture/v1" },
+    "version": { "const": 1 },
+    "selection": {
+      "type": "object", "additionalProperties": false,
+      "required": ["closure", "executionProtocol", "receiptIdentity", "sameDataRoot"],
+      "properties": {
+        "closure": { "type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{ "const": "stdio" }, { "const": "gis" }], "items": false },
+        "executionProtocol": { "const": 14 },
+        "receiptIdentity": { "const": ["generationId", "bundleSha256", "profileId", "publicationRevision"] },
+        "sameDataRoot": { "const": true }
+      }
+    },
+    "authors": {
+      "type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true,
+      "prefixItems": [{ "const": "author-a" }, { "const": "author-b" }], "items": false
+    },
+    "locales": {
+      "type": "object", "additionalProperties": false,
+      "required": ["author-a", "author-b"],
+      "properties": {
+        "author-a": { "const": "en" },
+        "author-b": { "const": "de" }
+      }
+    },
+    "steps": {
+      "type": "array", "minItems": 16, "maxItems": 16, "uniqueItems": true,
+      "prefixItems": [
+        { "const": "materialize-and-validate-current" },
+        { "const": "start-hub-with-receipt-data-root" },
+        { "const": "create-shared-map-and-admit-author-b" },
+        { "const": "open-two-authenticated-mcp-clients" },
+        { "const": "open-two-authenticated-document-sockets" },
+        { "const": "mount-author-a-real-shell-worker-map" },
+        { "const": "mount-author-b-real-shell-worker-map" },
+        { "const": "author-b-submit-running-inference" },
+        { "const": "checkpoint-gate-entered" },
+        { "const": "author-b-cancel-and-release" },
+        { "const": "author-a-shell-submit-and-approve-create-region" },
+        { "const": "both-peers-rebootstrap-and-observe-region" },
+        { "const": "author-a-shell-ordinary-undo" },
+        { "const": "both-peers-rebootstrap-and-observe-region-removed" },
+        { "const": "restart-hub-same-data-root" },
+        { "const": "reopen-two-authenticated-maps-and-compare-durable-frontier" }
+      ],
+      "items": false
+    },
+    "observations": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mapSurface", "cancel", "approval", "undo", "restart"],
+      "properties": {
+        "mapSurface": { "const": ["actual-ui-document-store", "tiled-map", "actual-worker-ui-patch-ack"] },
+        "cancel": { "const": ["running-receipt-before-compute", "fd4-entered", "author-b-own-private-mcp-cancel", "cancelled-without-offer"] },
+        "approval": { "const": ["author-a-shell-worker-approval", "one-server-stamped-create-region", "same-peer-rebootstrap-control", "same-pair-and-frontier", "author-b-private-job-denied"] },
+        "undo": { "const": ["ordinary-shell-undo-action", "private-worker-handle", "durable-undo-receipt", "region-absent-on-both-maps"] },
+        "restart": { "const": ["same-current-receipt", "no-retained-running-job", "same-durable-post-undo-frontier"] }
+      }
+    },
+    "hostiles": {
+      "type": "array", "minItems": 9, "maxItems": 9, "uniqueItems": true,
+      "prefixItems": [
+        { "const": "different-data-root" },
+        { "const": "current-token-changed" },
+        { "const": "descriptor-or-actor-digest-mismatch" },
+        { "const": "controlled-scene-substituted-for-worker-patch" },
+        { "const": "cancel-before-entered-or-before-release" },
+        { "const": "author-b-private-job-or-undo-access" },
+        { "const": "mcp-approval-private-handle-forwarded-to-shell" },
+        { "const": "direct-http-undo-substituted-for-shell-action" },
+        { "const": "restart-without-post-undo-pair-revalidation" }
+      ],
+      "items": false
+    },
+    "nonclaims": {
+      "type": "array", "minItems": 3, "maxItems": 3, "uniqueItems": true,
+      "prefixItems": [
+        { "const": "external-model-provider" },
+        { "const": "browser-qualified-current-publication" },
+        { "const": "durable-collaborative-redo" }
+      ],
+      "items": false
+    }
+  }
+}

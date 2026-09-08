@@ -116,7 +116,7 @@ impl Din18599Mutation {
 mod tests {
     use super::*;
     use protocol::Mutation;
-    use protocol::SemanticMutation;
+    
 
     fn every_mutation() -> Vec<Din18599Mutation> {
         vec![
@@ -149,7 +149,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn every_variant_registers_an_approved_semantic_descriptor() {
+    async fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
             assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {mutation:?}", descriptor.verb);
@@ -158,7 +158,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn every_variant_round_trips_via_inverse() {
+    async fn every_variant_round_trips_via_inverse() {
         let base = Din18599Snapshot::default();
         for mutation in every_mutation() {
             round_trip(&base, &mutation);
@@ -166,7 +166,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn from_snapshot_round_trips_via_full_document_replacement() {
+    async fn from_snapshot_round_trips_via_full_document_replacement() {
         let base = Din18599Snapshot::default();
         let target = Din18599Snapshot::default();
         let mut projected = base.clone();
@@ -182,33 +182,33 @@ mod tests {
     /// variants: the nested-facet `update-climate`, an enum scalar (`change-use-class`), and a plain
     /// `f64` scalar (`change-heated-area-m2`).
     #[semio_framework_async_macros::async_test]
-    fn update_climate_satisfies_the_inverse_and_absorb_laws() {
+    async fn update_climate_satisfies_the_inverse_and_absorb_laws() {
         let base = Din18599Snapshot::default();
         let mutation = Din18599Mutation::UpdateClimate(update_climate::UpdateClimate {
             new_climate: crate::artifacts::din18599::MonthlyClimate { theta_e_c: [-12.0, -9.0, -2.0, 6.0, 15.0, 22.0, 25.0, 24.0, 18.0, 9.0, -1.0, -8.0], g_h_w_m2: [25.0, 55.0, 95.0, 135.0, 175.0, 195.0, 205.0, 185.0, 135.0, 85.0, 35.0, 18.0] },
         });
-        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).diff().clone();
         let d2 = Din18599Mutation::ChangeUseClass(change_use_class::ChangeUseClass { new_use_class: crate::artifacts::din18599::UseClass::Office }).diff(&base).diff().clone();
-        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
     #[semio_framework_async_macros::async_test]
-    fn change_use_class_satisfies_the_inverse_and_absorb_laws() {
+    async fn change_use_class_satisfies_the_inverse_and_absorb_laws() {
         let base = Din18599Snapshot::default();
         let mutation = Din18599Mutation::ChangeUseClass(change_use_class::ChangeUseClass { new_use_class: crate::artifacts::din18599::UseClass::Office });
-        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).diff().clone();
         let d2 = Din18599Mutation::ChangeHeatedAreaM2(change_heated_area_m2::ChangeHeatedAreaM2 { new_heated_area_m2: 120.0 }).diff(&base).diff().clone();
-        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
     #[semio_framework_async_macros::async_test]
-    fn change_heated_area_m2_satisfies_the_inverse_and_absorb_laws() {
+    async fn change_heated_area_m2_satisfies_the_inverse_and_absorb_laws() {
         let base = Din18599Snapshot::default();
         let mutation = Din18599Mutation::ChangeHeatedAreaM2(change_heated_area_m2::ChangeHeatedAreaM2 { new_heated_area_m2: 120.0 });
-        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).diff().clone();
         let d2 = Din18599Mutation::ChangeOccupants(change_occupants::ChangeOccupants { new_occupants: 5 }).diff(&base).diff().clone();
-        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
     //#endregion 🧪️MutationLaws
 }
@@ -224,31 +224,31 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "🚦️change-annual-limit-kwh/🧪️tests/🎯️tightens-the-annual-primary-energy-limit-to-6000-kwh/🦀️.rs"]
+    #[path = "🚦️change-annual-limit-kwh/🧪️tests/t012/🦀️.rs"]
     mod tests_change_annual_limit_kwh_tightens_the_annual_primary_energy_limit_to_6000_kwh;
-    #[path = "🔋️change-energy-carrier/🧪️tests/⚡️switches-the-energy-carrier-to-an-electric-heat-pump/🦀️.rs"]
+    #[path = "🔋️change-energy-carrier/🧪️tests/⚡️switches-the-289546/🦀️.rs"]
     mod tests_change_energy_carrier_switches_the_energy_carrier_to_an_electric_heat_pump;
-    #[path = "🧱️change-ht/🧪️tests/🧱️raises-the-transmission-loss-coefficient-to-118-w-per-k/🦀️.rs"]
+    #[path = "🧱️change-ht/🧪️tests/🧱️raises-the-transmission-e9941c/🦀️.rs"]
     mod tests_change_h_t_raises_the_transmission_loss_coefficient_to_118_w_per_k;
-    #[path = "🌬️change-hv/🧪️tests/🌬️raises-the-ventilation-loss-coefficient-to-52-25-w-per-k/🦀️.rs"]
+    #[path = "🌬️change-hv/🧪️tests/🌬️raises-the-ventilation-da7537/🦀️.rs"]
     mod tests_change_h_v_raises_the_ventilation_loss_coefficient_to_52_25_w_per_k;
-    #[path = "📐️change-heated-area-m2/🧪️tests/📏️extends-the-heated-area-to-160-m2/🦀️.rs"]
+    #[path = "📐️change-heated-area-m2/🧪️tests/📏️extends-the-5d0902/🦀️.rs"]
     mod tests_change_heated_area_m2_extends_the_heated_area_to_160_m2;
-    #[path = "🔥️change-internal-gains-wm2/🧪️tests/🌡️raises-the-internal-gains-to-5-w-per-m2/🦀️.rs"]
+    #[path = "🔥️change-internal-gains-wm2/🧪️tests/🌡️raises-the-3d4b4a/🦀️.rs"]
     mod tests_change_internal_gains_w_m2_raises_the_internal_gains_to_5_w_per_m2;
-    #[path = "👥️change-occupants/🧪️tests/👥️raises-the-occupancy-to-six-people/🦀️.rs"]
+    #[path = "👥️change-occupants/🧪️tests/👥️raises-the-74d26c/🦀️.rs"]
     mod tests_change_occupants_raises_the_occupancy_to_six_people;
-    #[path = "🏢️change-reference-qp-kwh/🧪️tests/📉️lowers-the-reference-building-primary-energy-to-8750-kwh/🦀️.rs"]
+    #[path = "🏢️change-reference-qp-kwh/🧪️tests/t011/🦀️.rs"]
     mod tests_change_reference_q_p_kwh_lowers_the_reference_building_primary_energy_to_8750_kwh;
-    #[path = "♻️change-renewable-kwh/🧪️tests/🔆️raises-the-on-site-renewable-yield-to-2250-kwh/🦀️.rs"]
+    #[path = "♻️change-renewable-kwh/🧪️tests/🔆️raises-the-on-6b89f7/🦀️.rs"]
     mod tests_change_renewable_kwh_raises_the_on_site_renewable_yield_to_2250_kwh;
-    #[path = "☀️change-solar-gains-kwh/🧪️tests/🌞️raises-the-annual-solar-gains-to-132-kwh/🦀️.rs"]
+    #[path = "☀️change-solar-gains-kwh/🧪️tests/🌞️raises-the-eff66c/🦀️.rs"]
     mod tests_change_solar_gains_kwh_raises_the_annual_solar_gains_to_132_kwh;
-    #[path = "📉️change-system-losses-kwh/🧪️tests/🛠️cuts-the-system-losses-to-450-kwh/🦀️.rs"]
+    #[path = "📉️change-system-losses-kwh/🧪️tests/🛠️cuts-the-system-3f748b/🦀️.rs"]
     mod tests_change_system_losses_kwh_cuts_the_system_losses_to_450_kwh;
-    #[path = "🏷️change-use-class/🧪️tests/🏢️reclassifies-the-building-as-an-office/🦀️.rs"]
+    #[path = "🏷️change-use-class/🧪️tests/🏢️reclassifies-the-263fac/🦀️.rs"]
     mod tests_change_use_class_reclassifies_the_building_as_an_office;
-    #[path = "🌦️update-climate/🧪️tests/🌧️refuses-a-negative-january-irradiance/🦀️.rs"]
+    #[path = "🌦️update-climate/🧪️tests/🌧️refuses-a-c08891/🦀️.rs"]
     mod tests_update_climate_refuses_a_negative_january_irradiance;
 }
 //#endregion 🧪️FixtureTests

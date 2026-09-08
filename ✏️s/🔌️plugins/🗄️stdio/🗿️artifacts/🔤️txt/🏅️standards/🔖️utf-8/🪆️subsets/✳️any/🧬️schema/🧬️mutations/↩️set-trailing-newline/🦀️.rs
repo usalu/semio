@@ -69,7 +69,7 @@ mod tests {
     #[test]
     fn canonical_leaf_metadata_matches_descriptor_and_provenance() {
         let expected: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
-        assert_eq!(serde_json::to_value(<SetTrailingNewlineMutation as MutationLeaf>::DESCRIPTOR).unwrap(), expected);
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(<SetTrailingNewlineMutation as MutationLeaf>::DESCRIPTOR))).unwrap(), expected);
         let provenance = <SetTrailingNewlineMutation as MutationLeaf>::PROVENANCE;
         assert_eq!(provenance.mutation_root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
         assert_eq!(provenance.owner, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↩️set-trailing-newline");
@@ -80,7 +80,7 @@ mod tests {
     }
     #[test]
     fn semantic_identity_matches_descriptor() {
-        assert_eq!(<SetTrailingNewlineMutation as protocol::MutationKind<TxtSnapshot, super::super::TxtMutation>>::SEMANTICS.kind, "set-trailing-newline");
+        assert_eq!(<SetTrailingNewlineMutation as MutationKind<TxtSnapshot, TxtMutation>>::SEMANTICS.kind, "set-trailing-newline");
     }
 
     #[test]
@@ -106,7 +106,7 @@ mod tests {
         let base = TxtSnapshot { lines: vec!["a".into()], trailing_newline: true, line_ending: LineEnding::CrLf, ..Default::default() };
         let mutation = SetTrailingNewlineMutation { value: false };
         assert!(!<SetTrailingNewlineMutation as MutationKind<TxtSnapshot, TxtMutation>>::diff(&mutation, &base).messages().is_empty());
-        assert!(serde_json::from_str::<SetTrailingNewlineMutation>(r#"{"value":true,"unknown":true}"#).is_err());
+        assert!(dsl::json::from_json_str::<SetTrailingNewlineMutation>(r#"{"value":true,"unknown":true}"#).is_err());
     }
 }
 //#endregion 🧪️Tests

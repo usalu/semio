@@ -155,6 +155,7 @@ fn is_section(component: &crate::Component) -> bool {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "type", rename_all = "camelCase")]
 #[value(crate = "::protocol::value", tag = "type", rename_all = "camelCase")]
+#[expect(clippy::large_enum_variant, reason = "The fixed-capacity diagnostic census owns the bounded duplicate-key witness inline without per-violation allocation.")]
 pub enum UiContractViolation {
     CensusCapacity,
     /// 🔁️ `node` is reachable from itself by following `children` — a document must be a tree.
@@ -424,17 +425,12 @@ impl UiPatchRetirement {
     }
 }
 
+#[derive(Default)]
 struct UiPatchApplySlot {
     epoch: u64,
     generation: u64,
     occupied: bool,
     retirement: Option<UiPatchRetirement>,
-}
-
-impl Default for UiPatchApplySlot {
-    fn default() -> Self {
-        Self { epoch: 0, generation: 0, occupied: false, retirement: None }
-    }
 }
 
 struct UiPatchApplyArena {
@@ -546,6 +542,7 @@ pub struct UiPatchApplyProducer {
 }
 
 impl UiPatchApplyProducer {
+    #[expect(clippy::result_large_err, reason = "Refused patch admission returns the original state and patch with their explicit retirement authority.")]
     pub fn try_new(state: crate::UiSnapshotState, patch: crate::UiPatch, limits: UiDocumentLimits, generation: u64) -> Result<Self, UiPatchApplyRejected> {
         let retirement_handle = with_ui_patch_apply_arena(|arena| arena.reserve(generation));
         if retirement_handle.is_none() {
@@ -857,7 +854,7 @@ impl UiPatchApplyProducer {
                 return UiPatchApplyStep::MoreWork;
             }
             let _ = self.validation_stack.pop();
-            if self.validation_path.iter().last().is_some_and(|id| *id == frame.id) {
+            if self.validation_path.iter().next_back().is_some_and(|id| *id == frame.id) {
                 let _ = self.validation_path.pop();
             }
             return UiPatchApplyStep::MoreWork;
@@ -891,6 +888,7 @@ impl UiPatchApplyProducer {
         self.phase = UiPatchApplyPhase::Rejected;
     }
 
+    #[expect(clippy::result_large_err, reason = "A not-yet-ready producer must retain its exact state, patch, and retirement handle for another step.")]
     pub fn take_ready(mut self) -> Result<UiPatchApplyOutcome, Self> {
         if self.phase != UiPatchApplyPhase::Ready || self.remove_record.is_some() {
             return Err(self);
@@ -909,6 +907,7 @@ impl UiPatchApplyProducer {
         })
     }
 
+    #[expect(clippy::result_large_err, reason = "A producer that has not reached rejection returns its full retained authority without a new allocation.")]
     pub fn take_rejected(mut self) -> Result<UiPatchApplyRejected, Self> {
         if self.phase != UiPatchApplyPhase::Rejected {
             return Err(self);
@@ -970,6 +969,7 @@ impl UiPatchApplyOutcome {
         retire_validation_seen_one(&mut self.validation_seen, &mut self.validation_seen_cursor)
     }
 
+    #[expect(clippy::result_large_err, reason = "State extraction retains the exact outcome owner until its previous payloads and validation backing are retired.")]
     pub fn take_state(mut self) -> Result<crate::UiSnapshotState, Self> {
         if self.previous.is_some() || self.patch.is_some() || self.validation_seen_cursor < self.validation_seen.len() {
             return Err(self);
@@ -1057,6 +1057,7 @@ impl UiPatchApplyRejected {
         retire_validation_seen_one(&mut self.validation_seen, &mut self.validation_seen_cursor)
     }
 
+    #[expect(clippy::result_large_err, reason = "State extraction retains the exact outcome owner until its previous payloads and validation backing are retired.")]
     pub fn take_state(mut self) -> Result<crate::UiSnapshotState, Self> {
         if self.draft.is_some()
             || self.remove_record.is_some()

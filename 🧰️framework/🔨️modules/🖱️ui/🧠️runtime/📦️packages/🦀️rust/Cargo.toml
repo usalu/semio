@@ -2,7 +2,7 @@
 name = "semio-framework-ui-runtime"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Headless UI runtime: typed entities with mutation leasing, actual-read dependency tracking, and keyed reconciliation into transactional UiPatch revisions"
 
 [package.metadata.semio]

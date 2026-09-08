@@ -1,75 +1,11 @@
 //! 🧪️ Preserved raster sparse-diff and codec regression laws.
-use crate::artifacts::jpg::schema::diff::{self, JpgDiff, JpgHuffmanTableKey};
+use crate::artifacts::jpg::schema::diff::JpgDiff;
 use crate::artifacts::jpg::schema::snapshot::{JfifDensityUnits, JfifThumbnail, JpgHuffmanTable, JpgQuantTable, JpgSegment};
 use crate::artifacts::jpg::JpgSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
-use serde::{Deserialize, Serialize};
 
 use crate::artifacts::jpg::schema::mutations::*;
-//#region 🔖️DemoCases
-/// 🧪️ P2-FG2: representative `JpgMutation` values (every variant, incl. `SetSnapshot`'s full
-/// nested `JpgFrameHeader`/`JpgFrameComponent` tree and both legs of every `Option<T>`-shaped
-/// argument) — the single source of truth reused by `tests::op_text_binary_roundtrip_law` below
-/// AND by `⚙️engine/🦀️.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
-/// conformance tests. `pub(crate)` (not `#[cfg(test)]`-gated) so the engine's non-test conformance
-/// module can reuse it, matching png's own `regression_mutation_cases()` visibility.
-#[cfg(test)]
-pub(crate) fn regression_mutation_cases() -> Vec<JpgMutation> {
-    fn quant(id: u8, seed: u16) -> JpgQuantTable {
-        JpgQuantTable { id, precision: 0, values: [seed; 64] }
-    }
-    fn huffman(class: JpgHuffmanClass, id: u8, seed: u8) -> JpgHuffmanTable {
-        JpgHuffmanTable { id, class, bits: [seed; 16], values: vec![seed, seed.wrapping_add(1)] }
-    }
-    fn segment(marker: u8, data: Vec<u8>) -> JpgSegment {
-        JpgSegment { marker, data }
-    }
-    use crate::artifacts::jpg::schema::snapshot::{JpgFrameComponent, JpgFrameHeader, JpgHuffmanClass};
-
-    let base = JpgSnapshot {
-        schema: "stdio.jpg".into(),
-        width: 4,
-        height: 4,
-        pixels: vec![0u8; 4 * 4 * 4],
-        re_encode_quality: None,
-        jfif_version: (1, 1),
-        jfif_density_units: JfifDensityUnits::Aspect,
-        jfif_x_density: 1,
-        jfif_y_density: 1,
-        jfif_thumbnail: None,
-        frame: Some(JpgFrameHeader { precision: 8, width: 4, height: 4, components: vec![JpgFrameComponent { id: 1, h_sampling: 2, v_sampling: 2, quant_table_id: 0 }, JpgFrameComponent { id: 2, h_sampling: 1, v_sampling: 1, quant_table_id: 1 }] }),
-        sof_marker: 0xC0,
-        arithmetic: false,
-        quant_tables: vec![quant(0, 10)],
-        huffman_tables: vec![huffman(JpgHuffmanClass::Dc, 0, 1)],
-        restart_interval: None,
-        other_segments: vec![segment(0xFE, vec![1, 2, 3])],
-    };
-
-    vec![
-        JpgMutation::ChangeJfifHeader(crate::artifacts::jpg::schema::mutations::ChangeJfifHeaderMutation {
-            version: (1, 2),
-            density_units: JfifDensityUnits::PixelsPerCm,
-            x_density: 300,
-            y_density: 300,
-            thumbnail: Some(JfifThumbnail { width: 1, height: 1, rgb_data: vec![9, 9, 9] }),
-        }),
-        JpgMutation::ChangeJfifHeader(crate::artifacts::jpg::schema::mutations::ChangeJfifHeaderMutation { version: (1, 1), density_units: JfifDensityUnits::Aspect, x_density: 1, y_density: 1, thumbnail: None }),
-        JpgMutation::ReplaceQuantTable(crate::artifacts::jpg::schema::mutations::ReplaceQuantTableMutation { table: quant(0, 77) }),
-        JpgMutation::RemoveQuantTable(crate::artifacts::jpg::schema::mutations::RemoveQuantTableMutation { id: 3 }),
-        JpgMutation::ReplaceHuffmanTable(crate::artifacts::jpg::schema::mutations::ReplaceHuffmanTableMutation { table: huffman(JpgHuffmanClass::Ac, 2, 5) }),
-        JpgMutation::RemoveHuffmanTable(crate::artifacts::jpg::schema::mutations::RemoveHuffmanTableMutation { key: JpgHuffmanTableKey { class: JpgHuffmanClass::Dc, id: 0 } }),
-        JpgMutation::ChangeRestartInterval(crate::artifacts::jpg::schema::mutations::ChangeRestartIntervalMutation { restart_interval: Some(16) }),
-        JpgMutation::ChangeRestartInterval(crate::artifacts::jpg::schema::mutations::ChangeRestartIntervalMutation { restart_interval: None }),
-        JpgMutation::InsertOtherSegment(crate::artifacts::jpg::schema::mutations::InsertOtherSegmentMutation { index: 1, segment: segment(0xE2, vec![7, 8]) }),
-        JpgMutation::RemoveOtherSegment(crate::artifacts::jpg::schema::mutations::RemoveOtherSegmentMutation { index: 0 }),
-        JpgMutation::ReplacePixels(crate::artifacts::jpg::schema::mutations::ReplacePixelsMutation { pixels: vec![9u8; base.pixels.len()] }),
-        JpgMutation::ChangeReEncodeQuality(crate::artifacts::jpg::schema::mutations::ChangeReEncodeQualityMutation { quality: Some(50) }),
-        JpgMutation::ChangeReEncodeQuality(crate::artifacts::jpg::schema::mutations::ChangeReEncodeQualityMutation { quality: None }),
-    ]
-}
-//#endregion 🔖️DemoCases
 
 //#region Tests
 #[cfg(test)]
@@ -186,30 +122,30 @@ mod tests {
 
     fn all_variants(base: &JpgSnapshot) -> Vec<JpgMutation> {
         vec![
-            JpgMutation::ChangeJfifHeader(crate::artifacts::jpg::schema::mutations::ChangeJfifHeaderMutation {
+            JpgMutation::ChangeJfifHeader(ChangeJfifHeaderMutation {
                 version: (1, 2),
                 density_units: JfifDensityUnits::PixelsPerCm,
                 x_density: 300,
                 y_density: 300,
                 thumbnail: Some(JfifThumbnail { width: 1, height: 1, rgb_data: vec![9, 9, 9] }),
             }),
-            JpgMutation::ReplaceQuantTable(crate::artifacts::jpg::schema::mutations::ReplaceQuantTableMutation { table: quant(0, 77) }),
-            JpgMutation::ReplaceQuantTable(crate::artifacts::jpg::schema::mutations::ReplaceQuantTableMutation { table: quant(3, 55) }),
-            JpgMutation::RemoveQuantTable(crate::artifacts::jpg::schema::mutations::RemoveQuantTableMutation { id: 0 }),
-            JpgMutation::ReplaceHuffmanTable(crate::artifacts::jpg::schema::mutations::ReplaceHuffmanTableMutation { table: huffman(JpgHuffmanClass::Dc, 0, 9) }),
-            JpgMutation::ReplaceHuffmanTable(crate::artifacts::jpg::schema::mutations::ReplaceHuffmanTableMutation { table: huffman(JpgHuffmanClass::Ac, 0, 3) }),
-            JpgMutation::RemoveHuffmanTable(crate::artifacts::jpg::schema::mutations::RemoveHuffmanTableMutation { key: HKey { class: JpgHuffmanClass::Dc, id: 0 } }),
-            JpgMutation::ChangeRestartInterval(crate::artifacts::jpg::schema::mutations::ChangeRestartIntervalMutation { restart_interval: Some(16) }),
-            JpgMutation::ChangeRestartInterval(crate::artifacts::jpg::schema::mutations::ChangeRestartIntervalMutation { restart_interval: None }),
-            JpgMutation::InsertOtherSegment(crate::artifacts::jpg::schema::mutations::InsertOtherSegmentMutation { index: 1, segment: segment(0xE2, vec![7, 8]) }),
-            JpgMutation::RemoveOtherSegment(crate::artifacts::jpg::schema::mutations::RemoveOtherSegmentMutation { index: 0 }),
-            JpgMutation::ReplacePixels(crate::artifacts::jpg::schema::mutations::ReplacePixelsMutation { pixels: vec![9u8; base.pixels.len()] }),
-            JpgMutation::ChangeReEncodeQuality(crate::artifacts::jpg::schema::mutations::ChangeReEncodeQualityMutation { quality: Some(50) }),
-            JpgMutation::ChangeReEncodeQuality(crate::artifacts::jpg::schema::mutations::ChangeReEncodeQualityMutation { quality: None }),
+            JpgMutation::ReplaceQuantTable(ReplaceQuantTableMutation { table: quant(0, 77) }),
+            JpgMutation::ReplaceQuantTable(ReplaceQuantTableMutation { table: quant(3, 55) }),
+            JpgMutation::RemoveQuantTable(RemoveQuantTableMutation { id: 0 }),
+            JpgMutation::ReplaceHuffmanTable(ReplaceHuffmanTableMutation { table: huffman(JpgHuffmanClass::Dc, 0, 9) }),
+            JpgMutation::ReplaceHuffmanTable(ReplaceHuffmanTableMutation { table: huffman(JpgHuffmanClass::Ac, 0, 3) }),
+            JpgMutation::RemoveHuffmanTable(RemoveHuffmanTableMutation { key: HKey { class: JpgHuffmanClass::Dc, id: 0 } }),
+            JpgMutation::ChangeRestartInterval(ChangeRestartIntervalMutation { restart_interval: Some(16) }),
+            JpgMutation::ChangeRestartInterval(ChangeRestartIntervalMutation { restart_interval: None }),
+            JpgMutation::InsertOtherSegment(InsertOtherSegmentMutation { index: 1, segment: segment(0xE2, vec![7, 8]) }),
+            JpgMutation::RemoveOtherSegment(RemoveOtherSegmentMutation { index: 0 }),
+            JpgMutation::ReplacePixels(ReplacePixelsMutation { pixels: vec![9u8; base.pixels.len()] }),
+            JpgMutation::ChangeReEncodeQuality(ChangeReEncodeQualityMutation { quality: Some(50) }),
+            JpgMutation::ChangeReEncodeQuality(ChangeReEncodeQualityMutation { quality: None }),
             // Out-of-range/nonexistent targets: graceful no-ops, still law-compliant.
-            JpgMutation::RemoveQuantTable(crate::artifacts::jpg::schema::mutations::RemoveQuantTableMutation { id: 99 }),
-            JpgMutation::RemoveHuffmanTable(crate::artifacts::jpg::schema::mutations::RemoveHuffmanTableMutation { key: HKey { class: JpgHuffmanClass::Ac, id: 99 } }),
-            JpgMutation::RemoveOtherSegment(crate::artifacts::jpg::schema::mutations::RemoveOtherSegmentMutation { index: 99 }),
+            JpgMutation::RemoveQuantTable(RemoveQuantTableMutation { id: 99 }),
+            JpgMutation::RemoveHuffmanTable(RemoveHuffmanTableMutation { key: HKey { class: JpgHuffmanClass::Ac, id: 99 } }),
+            JpgMutation::RemoveOtherSegment(RemoveOtherSegmentMutation { index: 99 }),
         ]
     }
 
@@ -266,61 +202,61 @@ mod tests {
         // remove index 0 ("seg") -> [new] lands at final index 0 (the recipe's own canonical case).
         assert_absorb_law(
             &base,
-            JpgMutation::InsertOtherSegment(crate::artifacts::jpg::schema::mutations::InsertOtherSegmentMutation { index: 1, segment: segment(0xE3, vec![1]) }),
-            JpgMutation::RemoveOtherSegment(crate::artifacts::jpg::schema::mutations::RemoveOtherSegmentMutation { index: 0 }),
+            JpgMutation::InsertOtherSegment(InsertOtherSegmentMutation { index: 1, segment: segment(0xE3, vec![1]) }),
+            JpgMutation::RemoveOtherSegment(RemoveOtherSegmentMutation { index: 0 }),
         );
 
         // Insert+Insert-same-index: both survive.
         assert_absorb_law(
             &base,
-            JpgMutation::InsertOtherSegment(crate::artifacts::jpg::schema::mutations::InsertOtherSegmentMutation { index: 1, segment: segment(0xE4, vec![2]) }),
-            JpgMutation::InsertOtherSegment(crate::artifacts::jpg::schema::mutations::InsertOtherSegmentMutation { index: 1, segment: segment(0xE5, vec![3]) }),
+            JpgMutation::InsertOtherSegment(InsertOtherSegmentMutation { index: 1, segment: segment(0xE4, vec![2]) }),
+            JpgMutation::InsertOtherSegment(InsertOtherSegmentMutation { index: 1, segment: segment(0xE5, vec![3]) }),
         );
 
         // Add+SetField: the second mutation patches directly into the still-pending added table.
         assert_absorb_law(
             &base,
-            JpgMutation::ReplaceQuantTable(crate::artifacts::jpg::schema::mutations::ReplaceQuantTableMutation { table: quant(5, 1) }),
-            JpgMutation::ReplaceQuantTable(crate::artifacts::jpg::schema::mutations::ReplaceQuantTableMutation { table: quant(5, 2) }),
+            JpgMutation::ReplaceQuantTable(ReplaceQuantTableMutation { table: quant(5, 1) }),
+            JpgMutation::ReplaceQuantTable(ReplaceQuantTableMutation { table: quant(5, 2) }),
         );
 
         // Modify+Remove: a pending field patch on a since-removed base item vanishes.
         assert_absorb_law(
             &base,
-            JpgMutation::ReplaceQuantTable(crate::artifacts::jpg::schema::mutations::ReplaceQuantTableMutation { table: quant(0, 42) }),
-            JpgMutation::RemoveQuantTable(crate::artifacts::jpg::schema::mutations::RemoveQuantTableMutation { id: 0 }),
+            JpgMutation::ReplaceQuantTable(ReplaceQuantTableMutation { table: quant(0, 42) }),
+            JpgMutation::RemoveQuantTable(RemoveQuantTableMutation { id: 0 }),
         );
 
         // Insert then annihilate the very same insert — huffman_tables' id-keyed transport.
         assert_absorb_law(
             &base,
-            JpgMutation::ReplaceHuffmanTable(crate::artifacts::jpg::schema::mutations::ReplaceHuffmanTableMutation { table: huffman(JpgHuffmanClass::Ac, 3, 1) }),
-            JpgMutation::RemoveHuffmanTable(crate::artifacts::jpg::schema::mutations::RemoveHuffmanTableMutation { key: HKey { class: JpgHuffmanClass::Ac, id: 3 } }),
+            JpgMutation::ReplaceHuffmanTable(ReplaceHuffmanTableMutation { table: huffman(JpgHuffmanClass::Ac, 3, 1) }),
+            JpgMutation::RemoveHuffmanTable(RemoveHuffmanTableMutation { key: HKey { class: JpgHuffmanClass::Ac, id: 3 } }),
         );
 
         // Two unrelated scalar sets absorb via LWW.
         assert_absorb_law(
             &base,
-            JpgMutation::ChangeRestartInterval(crate::artifacts::jpg::schema::mutations::ChangeRestartIntervalMutation { restart_interval: Some(1) }),
-            JpgMutation::ChangeRestartInterval(crate::artifacts::jpg::schema::mutations::ChangeRestartIntervalMutation { restart_interval: Some(2) }),
+            JpgMutation::ChangeRestartInterval(ChangeRestartIntervalMutation { restart_interval: Some(1) }),
+            JpgMutation::ChangeRestartInterval(ChangeRestartIntervalMutation { restart_interval: Some(2) }),
         );
 
         // Tri-state set-then-clear: the later clear wins outright over the pending set.
         assert_absorb_law(
             &base,
-            JpgMutation::ChangeReEncodeQuality(crate::artifacts::jpg::schema::mutations::ChangeReEncodeQualityMutation { quality: Some(10) }),
-            JpgMutation::ChangeReEncodeQuality(crate::artifacts::jpg::schema::mutations::ChangeReEncodeQualityMutation { quality: None }),
+            JpgMutation::ChangeReEncodeQuality(ChangeReEncodeQualityMutation { quality: Some(10) }),
+            JpgMutation::ChangeReEncodeQuality(ChangeReEncodeQualityMutation { quality: None }),
         );
     }
 
     #[test]
     fn absorb_law_associativity() {
         let base = base_snapshot();
-        let d1 = JpgMutation::ReplaceQuantTable(crate::artifacts::jpg::schema::mutations::ReplaceQuantTableMutation { table: quant(7, 1) }).diff(&base);
+        let d1 = JpgMutation::ReplaceQuantTable(ReplaceQuantTableMutation { table: quant(7, 1) }).diff(&base);
         let s1 = d1.diff().apply(&base).expect("d1 must apply to base");
-        let d2 = JpgMutation::ReplaceQuantTable(crate::artifacts::jpg::schema::mutations::ReplaceQuantTableMutation { table: quant(7, 2) }).diff(&s1);
+        let d2 = JpgMutation::ReplaceQuantTable(ReplaceQuantTableMutation { table: quant(7, 2) }).diff(&s1);
         let s2 = d2.diff().apply(&s1).expect("d2 must apply to s1");
-        let d3 = JpgMutation::RemoveQuantTable(crate::artifacts::jpg::schema::mutations::RemoveQuantTableMutation { id: 0 }).diff(&s2);
+        let d3 = JpgMutation::RemoveQuantTable(RemoveQuantTableMutation { id: 0 }).diff(&s2);
         let s3 = d3.diff().apply(&s2).expect("d3 must apply to s2");
 
         // (d1∘d2)∘d3
@@ -487,11 +423,11 @@ mod tests {
     fn out_of_range_mutation_is_noop_not_panic() {
         let base = base_snapshot();
         let mut snap = base.clone();
-        apply_jpg_mutation(&mut snap, &JpgMutation::RemoveQuantTable(crate::artifacts::jpg::schema::mutations::RemoveQuantTableMutation { id: 99 }));
+        apply_jpg_mutation(&mut snap, &JpgMutation::RemoveQuantTable(RemoveQuantTableMutation { id: 99 }));
         assert_eq!(snap, base);
-        apply_jpg_mutation(&mut snap, &JpgMutation::RemoveHuffmanTable(crate::artifacts::jpg::schema::mutations::RemoveHuffmanTableMutation { key: HKey { class: JpgHuffmanClass::Ac, id: 99 } }));
+        apply_jpg_mutation(&mut snap, &JpgMutation::RemoveHuffmanTable(RemoveHuffmanTableMutation { key: HKey { class: JpgHuffmanClass::Ac, id: 99 } }));
         assert_eq!(snap, base);
-        apply_jpg_mutation(&mut snap, &JpgMutation::RemoveOtherSegment(crate::artifacts::jpg::schema::mutations::RemoveOtherSegmentMutation { index: 99 }));
+        apply_jpg_mutation(&mut snap, &JpgMutation::RemoveOtherSegment(RemoveOtherSegmentMutation { index: 99 }));
         assert_eq!(snap, base);
     }
 
@@ -504,25 +440,25 @@ mod tests {
     fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         let mutations = vec![
-            JpgMutation::ChangeJfifHeader(crate::artifacts::jpg::schema::mutations::ChangeJfifHeaderMutation {
+            JpgMutation::ChangeJfifHeader(ChangeJfifHeaderMutation {
                 version: (1, 2),
                 density_units: JfifDensityUnits::PixelsPerCm,
                 x_density: 300,
                 y_density: 300,
                 thumbnail: Some(JfifThumbnail { width: 1, height: 1, rgb_data: vec![9, 9, 9] }),
             }),
-            JpgMutation::ChangeJfifHeader(crate::artifacts::jpg::schema::mutations::ChangeJfifHeaderMutation { version: (1, 1), density_units: JfifDensityUnits::Aspect, x_density: 1, y_density: 1, thumbnail: None }),
-            JpgMutation::ReplaceQuantTable(crate::artifacts::jpg::schema::mutations::ReplaceQuantTableMutation { table: quant(0, 77) }),
-            JpgMutation::RemoveQuantTable(crate::artifacts::jpg::schema::mutations::RemoveQuantTableMutation { id: 3 }),
-            JpgMutation::ReplaceHuffmanTable(crate::artifacts::jpg::schema::mutations::ReplaceHuffmanTableMutation { table: huffman(JpgHuffmanClass::Ac, 2, 5) }),
-            JpgMutation::RemoveHuffmanTable(crate::artifacts::jpg::schema::mutations::RemoveHuffmanTableMutation { key: HKey { class: JpgHuffmanClass::Dc, id: 0 } }),
-            JpgMutation::ChangeRestartInterval(crate::artifacts::jpg::schema::mutations::ChangeRestartIntervalMutation { restart_interval: Some(16) }),
-            JpgMutation::ChangeRestartInterval(crate::artifacts::jpg::schema::mutations::ChangeRestartIntervalMutation { restart_interval: None }),
-            JpgMutation::InsertOtherSegment(crate::artifacts::jpg::schema::mutations::InsertOtherSegmentMutation { index: 1, segment: segment(0xE2, vec![7, 8]) }),
-            JpgMutation::RemoveOtherSegment(crate::artifacts::jpg::schema::mutations::RemoveOtherSegmentMutation { index: 0 }),
-            JpgMutation::ReplacePixels(crate::artifacts::jpg::schema::mutations::ReplacePixelsMutation { pixels: vec![9u8; base.pixels.len()] }),
-            JpgMutation::ChangeReEncodeQuality(crate::artifacts::jpg::schema::mutations::ChangeReEncodeQualityMutation { quality: Some(50) }),
-            JpgMutation::ChangeReEncodeQuality(crate::artifacts::jpg::schema::mutations::ChangeReEncodeQualityMutation { quality: None }),
+            JpgMutation::ChangeJfifHeader(ChangeJfifHeaderMutation { version: (1, 1), density_units: JfifDensityUnits::Aspect, x_density: 1, y_density: 1, thumbnail: None }),
+            JpgMutation::ReplaceQuantTable(ReplaceQuantTableMutation { table: quant(0, 77) }),
+            JpgMutation::RemoveQuantTable(RemoveQuantTableMutation { id: 3 }),
+            JpgMutation::ReplaceHuffmanTable(ReplaceHuffmanTableMutation { table: huffman(JpgHuffmanClass::Ac, 2, 5) }),
+            JpgMutation::RemoveHuffmanTable(RemoveHuffmanTableMutation { key: HKey { class: JpgHuffmanClass::Dc, id: 0 } }),
+            JpgMutation::ChangeRestartInterval(ChangeRestartIntervalMutation { restart_interval: Some(16) }),
+            JpgMutation::ChangeRestartInterval(ChangeRestartIntervalMutation { restart_interval: None }),
+            JpgMutation::InsertOtherSegment(InsertOtherSegmentMutation { index: 1, segment: segment(0xE2, vec![7, 8]) }),
+            JpgMutation::RemoveOtherSegment(RemoveOtherSegmentMutation { index: 0 }),
+            JpgMutation::ReplacePixels(ReplacePixelsMutation { pixels: vec![9u8; base.pixels.len()] }),
+            JpgMutation::ChangeReEncodeQuality(ChangeReEncodeQualityMutation { quality: Some(50) }),
+            JpgMutation::ChangeReEncodeQuality(ChangeReEncodeQualityMutation { quality: None }),
         ];
         for mutation in mutations {
             let printed = mutation.print_op();

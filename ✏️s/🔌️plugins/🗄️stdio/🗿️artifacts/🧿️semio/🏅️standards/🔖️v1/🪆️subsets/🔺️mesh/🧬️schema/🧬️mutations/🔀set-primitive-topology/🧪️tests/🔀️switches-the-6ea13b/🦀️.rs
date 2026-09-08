@@ -17,13 +17,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioMeshSnapshot {
-    serde_json::from_str(BEFORE).expect("set-primitive-topology before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("set-primitive-topology before snapshot decodes")
 }
 fn expected_after() -> SemioMeshSnapshot {
-    serde_json::from_str(AFTER).expect("set-primitive-topology after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("set-primitive-topology after snapshot decodes")
 }
 fn mutation() -> SemioMeshMutation {
-    serde_json::from_str(MUTATION).expect("set-primitive-topology mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("set-primitive-topology mutation decodes")
 }
 
 /// ▶️ Only the draw mode changes; every vertex buffer and the material binding survive.
@@ -57,12 +57,12 @@ async fn the_undo_set_primitive_topology_restores_the_triangle_mode() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioMeshSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: SemioMeshSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "set-primitive-topology/switches-the-primitive-to-a-triangle-strip: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("set-primitive-topology mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("set-primitive-topology mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("set-primitive-topology mutation reparses");
     assert_eq!(reencoded, original, "set-primitive-topology/switches-the-primitive-to-a-triangle-strip: committed mutation JSON is not canonical");
 }
@@ -81,7 +81,7 @@ async fn declared_outcome_holds_as_committed() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-primitive-topology/switches-the-primitive-to-a-triangle-strip: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -90,7 +90,7 @@ async fn produces_committed_diff() {
 /// allowed to touch appears in it at all.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioMeshDiff = serde_json::from_str(DIFF).expect("committed set-primitive-topology diff decodes");
+    let decoded: SemioMeshDiff = dsl::json::from_json_str(DIFF).expect("committed set-primitive-topology diff decodes");
     let meshes = decoded.meshes.as_ref().expect("the meshes triple must be present");
     assert!(meshes.removed.is_empty() && meshes.added.is_empty(), "the mesh is modified, never removed or re-added");
     let nested = meshes.modified[0].diff.primitives.as_ref().expect("the per-mesh diff must carry a primitives triple");
@@ -100,7 +100,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
     assert!(pdiff.positions.is_none() && pdiff.normals.is_none() && pdiff.uvs.is_none() && pdiff.colors.is_none() && pdiff.indices.is_none(), "no buffer field may be written");
     assert!(pdiff.material_id.is_none(), "the material binding must stay untouched");
     assert!(decoded.materials.is_none() && decoded.textures.is_none(), "no material or texture slot may appear in the diff");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-primitive-topology/switches-the-primitive-to-a-triangle-strip: committed diff JSON is not canonical");
 }
@@ -108,7 +108,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioMeshDiff = serde_json::from_str(DIFF).expect("committed set-primitive-topology diff decodes");
+    let decoded: SemioMeshDiff = dsl::json::from_json_str(DIFF).expect("committed set-primitive-topology diff decodes");
     let produced = decoded.apply(&before()).expect("committed set-primitive-topology diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-primitive-topology/switches-the-primitive-to-a-triangle-strip: committed diff did not carry before to after");
 }

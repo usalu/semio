@@ -37,6 +37,9 @@ export const SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS = 1000;
 export type PluginWebMaterializeContext = {
   readonly repoRoot: string;
   readonly preview2VendorDir: string;
+  readonly signal?: AbortSignal;
+  readonly optimize?: boolean;
+  readonly wasmOptBin?: string;
 };
 
 export function ensurePreview2ShimVendorAt(preview2VendorDir: string, repoRoot: string): void {
@@ -802,32 +805,35 @@ export function transpilePluginComponent(artifact: string, outDir: string, compo
  * surfaced (as one block) only on failure. Reuses the shared repo-lib's `resolveWorkspaceBin` for the
  * exact same monorepo-aware `.bin/` lookup `runNodeBinStatus` itself uses, rather than
  * reimplementing it. */
-function spawnAsync(cmd: string, args: readonly string[], cwd: string): Promise<void> {
+function spawnAsync(cmd: string, args: readonly string[], cwd: string, signal?: AbortSignal): Promise<void> {
+  signal?.throwIfAborted();
   return new Promise((resolveSpawn, rejectSpawn) => {
-    const child = spawn(cmd, args as string[], { cwd, shell: false, stdio: ["ignore", "pipe", "pipe"] });
-    let output = "";
-    child.stdout?.on("data", (chunk: Buffer) => {
-      output += chunk;
-    });
-    child.stderr?.on("data", (chunk: Buffer) => {
-      output += chunk;
-    });
-    child.on("error", (error) => rejectSpawn(error));
+    const child = spawn(cmd, args as string[], { cwd, shell: false, detached: signal !== undefined && process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"] });
+    let output = "", forced: ReturnType<typeof setTimeout> | undefined;
+    const terminate = (force = false): void => {
+      if (!child.pid) return;
+      if (process.platform === "win32") { spawn("taskkill", ["/pid", String(child.pid), "/T", "/F"], { stdio: "ignore", windowsHide: true }); return; }
+      try { process.kill(-child.pid, force ? "SIGKILL" : "SIGTERM"); } catch {}
+    };
+    const cancel = (): void => { terminate(); forced ??= setTimeout(() => terminate(true), 2_000); };
+    signal?.addEventListener("abort", cancel, { once: true });
+    const capture = (chunk: Buffer): void => { output = (output + chunk.toString("utf8")).slice(-64 * 1024); };
+    child.stdout?.on("data", capture); child.stderr?.on("data", capture);
+    child.on("error", rejectSpawn);
     child.on("close", (code) => {
-      if (code === 0) {
-        resolveSpawn();
-        return;
-      }
-      rejectSpawn(new Error(`${cmd} ${args.join(" ")} exited with status ${code}\n${output}`));
+      if (forced) clearTimeout(forced);
+      signal?.removeEventListener("abort", cancel);
+      if (signal?.aborted) rejectSpawn(signal.reason);
+      else if (code === 0) resolveSpawn();
+      else rejectSpawn(new Error(`${cmd} ${args.join(" ")} exited with status ${code}\n${output}`));
     });
   });
 }
 
-function spawnNodeBinAsync(args: readonly string[], cwd: string): Promise<void> {
+function spawnNodeBinAsync(args: readonly string[], cwd: string, signal?: AbortSignal): Promise<void> {
   const binName = args[0]!;
   const resolved = resolveWorkspaceBin(binName, cwd);
-  const executable = resolved ?? binName;
-  return spawnAsync("node", [executable, ...args.slice(1)], cwd);
+  return spawnAsync("node", [resolved ?? binName, ...args.slice(1)], cwd, signal);
 }
 
 /** @emoji 🪶️ Async twin of {@link optimizePluginCoreModules} — same ship-mode-only `wasm-opt` pass,
@@ -835,15 +841,14 @@ function spawnNodeBinAsync(args: readonly string[], cwd: string): Promise<void> 
  * it can run concurrently with sibling plugins' own optimize pass under
  * `📜️script.ts`'s bounded-parallel materialize stage (T-P8). */
 async function optimizePluginCoreModulesAsync(outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): Promise<void> {
-  if (semioBuildMode() !== "ship") return;
-  if (process.env.SEMIO_WASM_OPT === "0") return;
-  const wasmOptBin = process.env.SEMIO_WASM_OPT_BIN ?? join(ctx.repoRoot, "node_modules/binaryen/bin/wasm-opt");
+  if (!(ctx.optimize ?? (semioBuildMode() === "ship" && process.env.SEMIO_WASM_OPT !== "0"))) return;
+  const wasmOptBin = ctx.wasmOptBin ?? process.env.SEMIO_WASM_OPT_BIN ?? join(ctx.repoRoot, "node_modules/binaryen/bin/wasm-opt");
   for (const file of readdirSync(outDir)) {
     if (!file.startsWith(`${componentBase}.core`) || !file.endsWith(".wasm")) continue;
     const coreWasm = join(outDir, file);
     const optimized = `${coreWasm}.opt`;
     try {
-      await spawnAsync("bun", [wasmOptBin, coreWasm, ...WASM_OPT_ARGS, "-o", optimized], ctx.repoRoot);
+      await spawnAsync("bun", [wasmOptBin, coreWasm, ...WASM_OPT_ARGS, "-o", optimized], ctx.repoRoot, ctx.signal);
     } catch {
       throw new Error(`wasm-opt failed for ${coreWasm}`);
     }
@@ -867,8 +872,9 @@ export async function transpilePluginComponentAsync(artifact: string, outDir: st
     // 🧪️ terra-web-bridges: same flags/map pair as the sync {@link transpilePluginComponent} above —
     // see that function's own doc for why no `--async-mode` flag is needed and why `host-async` maps
     // to the same shim file `pure` already does.
-    await spawnNodeBinAsync(["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/pure=./🟨️.js", "--map", "semio:framework/host-async=./🟨️.js"], ctx.repoRoot);
+    await spawnNodeBinAsync(["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/pure=./🟨️.js", "--map", "semio:framework/host-async=./🟨️.js"], ctx.repoRoot, ctx.signal);
   } catch {
+    ctx.signal?.throwIfAborted();
     throw new Error(`jco transpile failed for ${artifact}`);
   }
   rewriteJcoAsyncResultLiftingAt(join(outDir, `${componentBase}.js`));

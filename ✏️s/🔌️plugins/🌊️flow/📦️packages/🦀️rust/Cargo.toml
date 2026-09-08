@@ -18,7 +18,7 @@ consumes = ["flow.extension"]
 [[package.metadata.semio.playground]]
 variant = "flow"
 ports = { react = 6016, wgpu = 6116 }
-engines = ["./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings"]
+engines = ["./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]

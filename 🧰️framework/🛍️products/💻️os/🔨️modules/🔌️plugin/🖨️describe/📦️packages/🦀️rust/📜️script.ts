@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { buildCargoArtifacts } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts";
+import { buildCargoArtifacts } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts";
 /**
  * 🛂️ `@semio-tech/os-plugin-describe-rs` task router: `bun ./📜️script.ts <build|test|describe>`.
  * `describe <component.wasm> --core <core.wasm> --out <dir>` builds (if needed) and execs the

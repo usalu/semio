@@ -99,8 +99,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: "note.document".into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: crate::artifacts::note::io::export_stdio_kinds().to_vec(),
-        import_stdio_kinds: crate::artifacts::note::io::import_stdio_kinds().to_vec(),
+        export_stdio_kinds: crate::artifacts::note::io::export_stdio_kinds().iter().map(|kind| (*kind).to_owned()).collect(),
+        import_stdio_kinds: crate::artifacts::note::io::import_stdio_kinds().iter().map(|kind| (*kind).to_owned()).collect(),
     }
 }
 //#endregion 🔖️ArtifactKind

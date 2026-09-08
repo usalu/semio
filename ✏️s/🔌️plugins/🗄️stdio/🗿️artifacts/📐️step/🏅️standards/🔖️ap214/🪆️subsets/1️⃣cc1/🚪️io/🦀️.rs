@@ -32,7 +32,7 @@ pub mod derived_composition {
             let mut snapshot = inner.snapshot;
             let mut doc = snapshot.to_part21_document();
             ensure_file_schema(&mut doc, "AUTOMOTIVE_DESIGN");
-            snapshot = StepSnapshot::from_part21_document(doc);
+            snapshot = StepSnapshot::from_part21_document(&doc);
             let checks = check_cc1_conformance(&snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -87,7 +87,7 @@ pub mod derived_composition {
     /// (`crate::artifacts::step::standards::v_ap214::engine::io_registry::entries()`).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        let _ = register_subset_validator(validator_entry());
+        register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
     }
     //#endregion 🔖️SubsetValidator
 
@@ -107,7 +107,7 @@ pub mod derived_composition {
                     Part21Instance { id: 3, entities: vec![("PRODUCT_DEFINITION".into(), vec![])] },
                 ],
             };
-            <StepSnapshot as store::ArtifactPack>::encode_pack(&StepSnapshot::from_part21_document(doc))
+            <StepSnapshot as store::ArtifactPack>::encode_pack(&StepSnapshot::from_part21_document(&doc))
         }
 
         #[semio_framework_async_macros::async_test]

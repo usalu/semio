@@ -98,7 +98,7 @@ fn resolve_path_commands(cmds: &[PathCommand]) -> Vec<PathSegment> {
             }
             PathCommand::SmoothCurveTo { x2, y2, x, y, relative } => {
                 let (c2, to) = if relative { ((cur_x + x2, cur_y + y2), (cur_x + x, cur_y + y)) } else { ((x2, y2), (x, y)) };
-                let c1 = last_cubic_ctrl.map(|(lx, ly)| (2.0 * cur_x - lx, 2.0 * cur_y - ly)).unwrap_or((cur_x, cur_y));
+                let c1 = last_cubic_ctrl.map_or((cur_x, cur_y), |(lx, ly)| (2.0 * cur_x - lx, 2.0 * cur_y - ly));
                 segs.push(PathSegment::CubicTo { c1: SemioPoint2 { x: c1.0, y: c1.1 }, c2: SemioPoint2 { x: c2.0, y: c2.1 }, to: SemioPoint2 { x: to.0, y: to.1 } });
                 last_cubic_ctrl = Some(c2);
                 last_quad_ctrl = None;
@@ -115,7 +115,7 @@ fn resolve_path_commands(cmds: &[PathCommand]) -> Vec<PathSegment> {
             }
             PathCommand::SmoothQuadraticCurveTo { x, y, relative } => {
                 let to = if relative { (cur_x + x, cur_y + y) } else { (x, y) };
-                let c = last_quad_ctrl.map(|(lx, ly)| (2.0 * cur_x - lx, 2.0 * cur_y - ly)).unwrap_or((cur_x, cur_y));
+                let c = last_quad_ctrl.map_or((cur_x, cur_y), |(lx, ly)| (2.0 * cur_x - lx, 2.0 * cur_y - ly));
                 segs.push(PathSegment::QuadTo { c: SemioPoint2 { x: c.0, y: c.1 }, to: SemioPoint2 { x: to.0, y: to.1 } });
                 last_quad_ctrl = Some(c);
                 last_cubic_ctrl = None;
@@ -255,7 +255,7 @@ fn base64_decode(s: &str) -> Option<Vec<u8>> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn common_presentation<'a>(common: &'a crate::artifacts::svg::schema::snapshot::CommonAttrs) -> (Option<&'a str>, Option<&'a str>, Option<&'a str>, Option<&'a str>) {
+fn common_presentation(common: &crate::artifacts::svg::schema::snapshot::CommonAttrs) -> (Option<&str>, Option<&str>, Option<&str>, Option<&str>) {
     (common.presentation.fill.as_deref(), common.presentation.stroke.as_deref(), common.presentation.stroke_width.as_deref(), common.presentation.opacity.as_deref())
 }
 
@@ -306,7 +306,7 @@ fn draw_node_from_svg(el: &SvgElement, styles: &mut Vec<DrawStyle>) -> Option<Dr
             Some(DrawNode::Path { segments: resolve_path_commands(d), style })
         }
         SvgElement::Group { common, children } => {
-            let transform = common.transform.as_ref().map(|ops| matrix_to_semio_transform(&transform_ops_to_matrix(ops))).unwrap_or_else(SemioTransform::identity);
+            let transform = common.transform.as_ref().map_or_else(SemioTransform::identity, |ops| matrix_to_semio_transform(&transform_ops_to_matrix(ops)));
             Some(DrawNode::Group { transform, children: children.iter().filter_map(|c| draw_node_from_svg(c, styles)).collect() })
         }
         SvgElement::Text { common, x, y, children } => {

@@ -661,7 +661,7 @@ pub mod host {
                 .entry(wire)
                 .and_modify(|smallest| {
                     if edge.id < *smallest {
-                        *smallest = edge.id.clone()
+                        *smallest = edge.id.clone();
                     }
                 })
                 .or_insert_with(|| edge.id.clone());
@@ -1051,14 +1051,14 @@ pub mod host {
     fn os_space_catalog_entry_from_document(backbone_uri: &str, document: &OsSpaceDocument) -> Result<OsSpaceCatalogEntry, VcsError> {
         let space_id = os_space_id_from_backbone_uri(backbone_uri).unwrap_or_else(|| document.id.clone());
         let snapshot = materialize_backbone_snapshot(document, &[])?;
-        let updated_at = document.vcs.changes.last().map(|change| change.saved_at.clone()).unwrap_or_else(|| "0".into());
+        let updated_at = document.vcs.changes.last().map_or_else(|| "0".into(), |change| change.saved_at.clone());
         Ok(OsSpaceCatalogEntry { id: space_id, name: document.name.clone(), backbone_uri: backbone_uri.into(), kind: snapshot.kind, visibility: snapshot.visibility, collection_count: snapshot.collections.len(), updated_at })
     }
 
     /// @emoji 📚️ Lists persisted space manifests from the dev backbone namespace.
-    pub fn list_os_space_catalog_entries(port: Arc<OsBackbonePorts>) -> Result<Vec<OsSpaceCatalogEntry>, VcsError> {
+    pub fn list_os_space_catalog_entries(port: &Arc<OsBackbonePorts>) -> Result<Vec<OsSpaceCatalogEntry>, VcsError> {
         let mut entries = Vec::new();
-        let uris: Vec<String> = SPACE_CATALOG_URIS.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&port_key(&port)).cloned().unwrap_or_default().into_iter().collect();
+        let uris: Vec<String> = SPACE_CATALOG_URIS.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&port_key(port)).cloned().unwrap_or_default().into_iter().collect();
         for uri in uris {
             if os_space_id_from_backbone_uri(&uri).is_none() {
                 continue;
@@ -1080,7 +1080,7 @@ pub mod host {
     /// `## The inversion`/`Addressing` in the plan: a space no longer auto-creates a workflow artifact
     /// (that's an explicit, later user action), only the collection every space needs to hold artifacts
     /// in the first place.
-    pub fn create_os_space(name: &str, kind: space::SpaceKind, visibility: space::SpaceVisibility, owner: space::SpaceUser, port: Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
+    pub fn create_os_space(name: &str, kind: space::SpaceKind, visibility: space::SpaceVisibility, owner: space::SpaceUser, port: &Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
         let space_id = create_os_id("space");
         let collection_id = create_os_id("collection");
         let mut space_snapshot = space::empty_space_snapshot(name.trim(), kind, visibility);
@@ -1091,48 +1091,47 @@ pub mod host {
 
         let space_uri = space::space_backbone_uri(&space_id);
         let collection_uri = space::collection_backbone_uri(&space_id, &collection_id);
-        sync_backbone_document(&space_document, &space_uri, &port)?;
-        sync_backbone_document(&collection_document, &collection_uri, &port)?;
-        track_os_space_backbone_uri(&port, &space_uri);
-        track_os_space_backbone_uri(&port, &collection_uri);
+        sync_backbone_document(&space_document, &space_uri, port)?;
+        sync_backbone_document(&collection_document, &collection_uri, port)?;
+        track_os_space_backbone_uri(port, &space_uri);
+        track_os_space_backbone_uri(port, &collection_uri);
         os_space_catalog_entry_from_document(&space_uri, &space_document)
     }
 
     /// @emoji 🗑️ Deletes a space manifest and every collection it references from the dev backbone.
-    pub fn delete_os_space(space_id: &str, port: Arc<OsBackbonePorts>) -> Result<(), VcsError> {
+    pub fn delete_os_space(space_id: &str, port: &Arc<OsBackbonePorts>) -> Result<(), VcsError> {
         let uri = space::space_backbone_uri(space_id);
-        if let Ok(document) = load_os_space_document(space_id, port.clone()) {
+        if let Ok(document) = load_os_space_document(space_id, port) {
             if let Ok(snapshot) = materialize_backbone_snapshot(&document, &[]) {
                 for collection in &snapshot.collections {
                     let collection_uri = space::collection_backbone_uri(space_id, &collection.id);
-                    untrack_os_space_backbone_uri(&port, &collection_uri);
+                    untrack_os_space_backbone_uri(port, &collection_uri);
                     port.write(&collection_uri, &[])?;
                 }
             }
         }
-        untrack_os_space_backbone_uri(&port, &uri);
+        untrack_os_space_backbone_uri(port, &uri);
         port.write(&uri, &[])
     }
 
     /// @emoji 🌉️ Shared admission tail for `import_os_space_from_dsl`/`import_os_space_from_pack`:
     /// mints a fresh id when the source carried none, syncs, and tracks the catalog uri.
-    fn admit_os_space_document(mut document: OsSpaceDocument, port: Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
+    fn admit_os_space_document(mut document: OsSpaceDocument, port: &Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
         let space_id = if document.id.is_empty() { create_os_id("space") } else { document.id.clone() };
         let backbone_uri = space::space_backbone_uri(&space_id);
         document.id = space_id;
-        sync_backbone_document(&document, &backbone_uri, &port)?;
-        track_os_space_backbone_uri(&port, &backbone_uri);
+        sync_backbone_document(&document, &backbone_uri, port)?;
+        track_os_space_backbone_uri(port, &backbone_uri);
         os_space_catalog_entry_from_document(&backbone_uri, &document)
     }
 
     /// @emoji 📥️ Imports a space manifest dsl text (`export_os_space_dsl`'s counterpart) onto the dev
     /// backbone. Does not create a collection — a manifest imported this way is expected to already
     /// reference its own collections (a fresh, collection-less space only comes from `create_os_space`).
-    pub fn import_os_space_from_dsl(dsl: &str, port: Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
+    pub fn import_os_space_from_dsl(dsl: &str, port: &Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
         let snapshot = <space::SpaceSnapshot as store::ArtifactDsl>::parse_dsl(dsl).map_err(|error| VcsError::Deserialize(error.message))?;
         let vcs = create_document_envelope::<space::SpaceSnapshot, space::SpaceMutation>(space::S_SPACE_SCHEMA, "", snapshot, None).vcs.clone();
-        admit_os_space_document(
-            BackboneDocument {
+        admit_os_space_document(BackboneDocument {
                 schema: space::S_SPACE_SCHEMA.into(),
                 id: String::new(),
                 name: String::new(),
@@ -1141,13 +1140,11 @@ pub mod host {
                 edit_messages: Vec::new(),
                 conflicts: Vec::new(),
                 backbone: None,
-            },
-            port,
-        )
+            }, port)
     }
 
     /// @emoji 📦️ Pack counterpart of `import_os_space_from_dsl`.
-    pub fn import_os_space_from_pack(pack: &[u8], spr: &[u8], port: Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
+    pub fn import_os_space_from_pack(pack: &[u8], spr: &[u8], port: &Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
         let parsed: store::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = resolve_kernel_future(store::parse_document_pack(pack, spr)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         // 🧺️ See `decode_backbone_payload` above — the shell must be consumed, never dropped.
         let owners = parsed.envelope.into_owners();
@@ -1177,7 +1174,7 @@ pub mod host {
     }
 
     /// @emoji 📂️ Loads a space manifest from the dev backbone.
-    pub fn load_os_space_document(space_id: &str, port: Arc<OsBackbonePorts>) -> Result<OsSpaceDocument, VcsError> {
+    pub fn load_os_space_document(space_id: &str, port: &Arc<OsBackbonePorts>) -> Result<OsSpaceDocument, VcsError> {
         let backbone_uri = space::space_backbone_uri(space_id);
         let payload = port.read(&backbone_uri)?;
         if payload.is_empty() {
@@ -1187,16 +1184,16 @@ pub mod host {
     }
 
     /// @emoji 🌱️ Seeds the demo space when the catalog is empty.
-    pub fn seed_os_space_catalog_if_empty(seed_document: OsSpaceDocument, port: Arc<OsBackbonePorts>) -> Result<Option<OsSpaceCatalogEntry>, VcsError> {
-        if !list_os_space_catalog_entries(port.clone())?.is_empty() {
+    pub fn seed_os_space_catalog_if_empty(seed_document: OsSpaceDocument, port: &Arc<OsBackbonePorts>) -> Result<Option<OsSpaceCatalogEntry>, VcsError> {
+        if !list_os_space_catalog_entries(port)?.is_empty() {
             return Ok(None);
         }
         let space_id = if seed_document.id.is_empty() { "default".into() } else { seed_document.id.clone() };
         let backbone_uri = space::space_backbone_uri(&space_id);
         let mut seeded = seed_document;
         seeded.id = space_id;
-        sync_backbone_document(&seeded, &backbone_uri, &port)?;
-        track_os_space_backbone_uri(&port, &backbone_uri);
+        sync_backbone_document(&seeded, &backbone_uri, port)?;
+        track_os_space_backbone_uri(port, &backbone_uri);
         Ok(Some(os_space_catalog_entry_from_document(&backbone_uri, &seeded)?))
     }
     //#endregion 🔖️SpaceCatalog
@@ -1871,14 +1868,14 @@ pub mod host {
         fn creates_and_lists_space_catalog_entries() {
             let port = Arc::new(OsBackbonePorts::Store(store::BackbonePorts::Memory(resolve_kernel_future(MemoryBackbonePort::new()))));
             let owner = space::SpaceUser { id: "user-1".into(), name: "Ada".into(), avatar: None, role: space::SpaceRole::Author };
-            let entry = create_os_space("Catalog Space", space::SpaceKind::Studio, space::SpaceVisibility::Private, owner, port.clone()).expect("create");
+            let entry = create_os_space("Catalog Space", space::SpaceKind::Studio, space::SpaceVisibility::Private, owner, &port).expect("create");
             assert_eq!(entry.collection_count, 1, "create_os_space must seed exactly one default collection");
             assert_eq!(entry.kind, space::SpaceKind::Studio);
             assert_eq!(entry.visibility, space::SpaceVisibility::Private);
-            let listed = list_os_space_catalog_entries(port.clone()).expect("list");
+            let listed = list_os_space_catalog_entries(&port).expect("list");
             assert!(listed.iter().any(|row| row.id == entry.id));
-            delete_os_space(&entry.id, port.clone()).expect("delete");
-            assert!(!list_os_space_catalog_entries(port).expect("list").iter().any(|row| row.id == entry.id));
+            delete_os_space(&entry.id, &port).expect("delete");
+            assert!(!list_os_space_catalog_entries(&port).expect("list").iter().any(|row| row.id == entry.id));
         }
 
         #[test]
@@ -2582,7 +2579,7 @@ pub mod instance {
 
     /// @emoji 🎛️ Creates a default space parameter of the given type.
     pub fn create_default_os_parameter(parameter_type: &OsParameterType, name: &str, id: Option<&str>) -> OsParameter {
-        let parameter_id = id.map(str::to_string).unwrap_or_else(|| create_os_id("param"));
+        let parameter_id = id.map_or_else(|| create_os_id("param"), str::to_string);
         match parameter_type {
             OsParameterType::Numeric => OsParameter::Numeric { id: parameter_id, name: name.into(), value: 0.0, min: Some(0.0), max: Some(100.0), step: Some(1.0) },
             OsParameterType::Categorical => OsParameter::Categorical { id: parameter_id, name: name.into(), value: "Option A".into(), options: vec!["Option A".into(), "Option B".into()] },
@@ -2614,7 +2611,7 @@ pub mod instance {
 
     /// @emoji 🎛️ Applies a partial patch to a space parameter, enforcing type constraints.
     pub fn patch_os_parameter(parameter: &OsParameter, patch: &Value) -> OsParameter {
-        let name = patch.get("name").and_then(|v| v.as_str()).map(str::to_string).unwrap_or_else(|| parameter_name(parameter));
+        let name = patch.get("name").and_then(|v| v.as_str()).map_or_else(|| parameter_name(parameter), str::to_string);
         let patch_type = patch.get("type").and_then(|v| v.as_str());
         let use_numeric = patch_type == Some("numeric") || (patch_type.is_none() && matches!(parameter, OsParameter::Numeric { .. }));
         if use_numeric {
@@ -2637,7 +2634,7 @@ pub mod instance {
                 _ => create_default_os_parameter(&OsParameterType::Categorical, &name, Some(parameter_id(parameter))),
             };
             if let OsParameter::Categorical { id, value: current_value, options: current_options, .. } = current {
-                let options = patch.get("options").and_then(|v| v.as_array()).map(|entries| entries.iter().filter_map(|entry| entry.as_str().map(str::to_string)).collect::<Vec<_>>()).unwrap_or(current_options);
+                let options = patch.get("options").and_then(|v| v.as_array()).map_or(current_options, |entries| entries.iter().filter_map(|entry| entry.as_str().map(str::to_string)).collect::<Vec<_>>());
                 let unique_options = if options.is_empty() { vec!["Option A".into()] } else { options };
                 let value = patch
                     .get("value")
@@ -2664,7 +2661,7 @@ pub mod instance {
             _ => create_default_os_parameter(&OsParameterType::Text, &name, Some(parameter_id(parameter))),
         };
         if let OsParameter::Text { id, value: current_value, .. } = current {
-            let value = patch.get("value").and_then(|v| v.as_str()).map(str::to_string).unwrap_or(current_value);
+            let value = patch.get("value").and_then(|v| v.as_str()).map_or(current_value, str::to_string);
             return OsParameter::Text { id, name, value };
         }
         parameter.clone()
@@ -2773,7 +2770,7 @@ pub mod instance {
 
     /// @emoji 🎛️ Returns whether a media port id denotes a space parameter input channel.
     pub fn is_parameter_port_id(port_id: &str) -> bool {
-        media_port_spec_id(port_id).map(|spec_id| spec_id.starts_with(OS_PARAMETER_PORT_PREFIX)).unwrap_or(false)
+        media_port_spec_id(port_id).is_some_and(|spec_id| spec_id.starts_with(OS_PARAMETER_PORT_PREFIX))
     }
 
     /// @emoji 🎛️ Extracts the space parameter id from a parameter input port id.
@@ -3512,7 +3509,7 @@ pub mod workflow {
             return Ok(Some(descriptor.kind_id));
         }
         let source_reads: HashSet<&str> = crate::host::resolve_kernel_future(semio_framework::io_dialects_for(source_kind, IoDirection::Import)).map_err(|error| format!("{} registry unavailable", error.registry))?.iter().map(|d| d.artifact_kind).collect();
-        for candidate in target_reads.intersection(&source_reads) {
+        if let Some(candidate) = target_reads.intersection(&source_reads).next() {
             let descriptor = semio_framework::format_descriptor(candidate).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown shared dialect format kind `{candidate}`"))?;
             return Ok(Some(descriptor.kind_id));
         }
@@ -3655,7 +3652,7 @@ pub mod workflow {
             let Some(source_port) = node_by_id.get(source_node_id.as_str()).and_then(|node| node.outputs.iter().find(|port| port.id == source_port_id)) else { continue };
             let Some(target_port) = node_by_id.get(target_node_id.as_str()).and_then(|node| node.inputs.iter().find(|port| port.id == target_port_id)) else { continue };
             let Ok(contract) = negotiate_media_contract(source_port, target_port) else { continue };
-            let id = synapse.get("id").and_then(Value::as_str).filter(|value| !value.is_empty()).map(str::to_string).unwrap_or_else(|| create_os_id("edge"));
+            let id = synapse.get("id").and_then(Value::as_str).filter(|value| !value.is_empty()).map_or_else(|| create_os_id("edge"), str::to_string);
             operations.push(WorkflowMutation::ConnectPorts(ConnectPorts { edge: WorkflowEdge { id, source_node_id, source_port_id, target_node_id, target_port_id, contract } }));
         }
         if fixture.get("synapses").and_then(Value::as_array).is_some() {
@@ -3811,7 +3808,7 @@ pub mod workflow {
     /// `MediaPortSpec` — `operators` (accepted schema ids) is the port's own `kind_id` (falling back to
     /// its id when unset, e.g. the implicit `document:*` ports).
     fn os_workflow_channel_spec(port: &WorkflowMediaPort, label: &str) -> OsWorkflowChannelSpec {
-        let code = port.spec.id.chars().next().map(|ch| ch.to_uppercase().collect::<String>()).unwrap_or_else(|| "P".into());
+        let code = port.spec.id.chars().next().map_or_else(|| "P".into(), |ch| ch.to_uppercase().collect::<String>());
         let abbreviation = if label.chars().count() <= 3 { label.into() } else { label.chars().take(3).collect() };
         let operator = port.spec.kind_id.clone().unwrap_or_else(|| port.spec.id.clone());
         OsWorkflowChannelSpec { name: port.spec.id.clone(), code, abbreviation, full_name: label.into(), operators: vec![operator] }
@@ -3836,7 +3833,7 @@ pub mod workflow {
                     module: OS_MEDIA_FLOW_MODULE_ID.into(),
                     name: node.label.clone(),
                     abbreviation: if node.app_id.chars().count() <= 3 { node.app_id.clone() } else { node.app_id.chars().take(3).collect() },
-                    icon: format!("emoji:{}", registration.map(|row| row.component_kind.clone()).unwrap_or_else(|| "s".into())),
+                    icon: format!("emoji:{}", registration.map_or_else(|| "s".into(), |row| row.component_kind)),
                     summary: format!("{}/{}", node.plugin_id, node.app_id),
                     inputs: node
                         .inputs
@@ -4747,6 +4744,13 @@ pub mod codec_abi {
         pub copied_bytes: usize,
     }
 
+    #[derive(Clone, Copy)]
+    struct OsHostCodecProgress {
+        phase: OsHostCodecPhase,
+        completed: usize,
+        total: usize,
+    }
+
     struct PendingInputPage {
         page: AbiPage,
         cursor: usize,
@@ -5437,8 +5441,8 @@ pub mod codec_abi {
             }
         }
 
-        fn step_result(&mut self, state: OsHostCodecStepState, phase: OsHostCodecPhase, completed: usize, total: usize, input_acknowledgement: Option<AbiControl>, page: Option<AbiPage>, reply: Option<AbiReply>) -> OsHostCodecStep {
-            OsHostCodecStep { state, event: self.event(phase, completed, total), input_acknowledgement, page, reply }
+        fn step_result(&mut self, state: OsHostCodecStepState, progress: OsHostCodecProgress, input_acknowledgement: Option<AbiControl>, page: Option<AbiPage>, reply: Option<AbiReply>) -> OsHostCodecStep {
+            OsHostCodecStep { state, event: self.event(progress.phase, progress.completed, progress.total), input_acknowledgement, page, reply }
         }
 
         fn offer(&mut self, page: AbiPage) -> Result<(), AbiRejectedPage> {
@@ -5511,7 +5515,7 @@ pub mod codec_abi {
             AbiReply { request_id: self.request.request_id, generation: self.request.generation, status: AbiStatus::OK, bytes: AbiBytes::try_new(summary).expect("reply summary is bounded") }
         }
 
-        fn install_output(&mut self, bytes: Vec<u8>) -> Result<(), OsHostCodecFailure> {
+        fn install_output(&mut self, bytes: &[u8]) -> Result<(), OsHostCodecFailure> {
             let payload_len = bytes.len().checked_add(6).ok_or_else(|| OsHostCodecFailure::fixed(OsHostCodecErrorCode::OutputLimit, "OS host codec reply exceeds output limit"))?;
             if payload_len > OS_HOST_CODEC_MAX_OUTPUT_BYTES {
                 return Err(OsHostCodecFailure::fixed(OsHostCodecErrorCode::OutputLimit, "OS host codec reply exceeds output limit"));
@@ -5520,7 +5524,7 @@ pub mod codec_abi {
             payload.push(1);
             payload.push(self.operation.reply_kind());
             payload.extend_from_slice(&(bytes.len() as u32).to_le_bytes());
-            payload.extend_from_slice(&bytes);
+            payload.extend_from_slice(bytes);
             self.install_payload(payload)
         }
 
@@ -5542,11 +5546,11 @@ pub mod codec_abi {
                 }
                 OsHostCodecOperation::NormalizeStdioFormatKind => {
                     let output = self.input.normalize().expect("normalize operation owns a structural cursor").finish()?;
-                    self.install_output(output)
+                    self.install_output(&output)
                 }
                 OsHostCodecOperation::MediaAcceptFilterKinds => {
                     let output = self.input.filter().expect("filter operation owns a structural cursor").finish()?;
-                    self.install_output(output)
+                    self.install_output(&output)
                 }
             }
         }
@@ -5579,29 +5583,29 @@ pub mod codec_abi {
                     self.pending_input = None;
                     self.next_input_index += 1;
                     let acknowledgement = AbiControl::Acknowledge { handle: self.handle(), index };
-                    return Ok(self.step_result(OsHostCodecStepState::InputAcknowledged, OsHostCodecPhase::Input, self.input_bytes_received, self.declared_input_bytes, Some(acknowledgement), None, None));
+                    return Ok(self.step_result(OsHostCodecStepState::InputAcknowledged, OsHostCodecProgress { phase: OsHostCodecPhase::Input, completed: self.input_bytes_received, total: self.declared_input_bytes }, Some(acknowledgement), None, None));
                 }
-                return Ok(self.step_result(OsHostCodecStepState::Progress, OsHostCodecPhase::Decode, self.input_bytes_received, self.declared_input_bytes, None, None, None));
+                return Ok(self.step_result(OsHostCodecStepState::Progress, OsHostCodecProgress { phase: OsHostCodecPhase::Decode, completed: self.input_bytes_received, total: self.declared_input_bytes }, None, None, None));
             }
             if !self.sealed {
-                return Ok(self.step_result(OsHostCodecStepState::Idle, OsHostCodecPhase::Input, self.input_bytes_received, self.declared_input_bytes, None, None, None));
+                return Ok(self.step_result(OsHostCodecStepState::Idle, OsHostCodecProgress { phase: OsHostCodecPhase::Input, completed: self.input_bytes_received, total: self.declared_input_bytes }, None, None, None));
             }
             if let Some(failure) = self.terminal_failure.clone() {
                 if self.reply_emitted {
-                    return Ok(self.step_result(OsHostCodecStepState::Idle, OsHostCodecPhase::Reply, 1, 1, None, None, None));
+                    return Ok(self.step_result(OsHostCodecStepState::Idle, OsHostCodecProgress { phase: OsHostCodecPhase::Reply, completed: 1, total: 1 }, None, None, None));
                 }
                 self.reply_emitted = true;
                 let reply = self.failure_reply(&failure);
-                return Ok(self.step_result(OsHostCodecStepState::Reply, OsHostCodecPhase::Reply, 1, 1, None, None, Some(reply)));
+                return Ok(self.step_result(OsHostCodecStepState::Reply, OsHostCodecProgress { phase: OsHostCodecPhase::Reply, completed: 1, total: 1 }, None, None, Some(reply)));
             }
             if !self.decoded {
                 match self.execute() {
-                    Ok(()) => return Ok(self.step_result(OsHostCodecStepState::Progress, OsHostCodecPhase::Decode, 1, 1, None, None, None)),
+                    Ok(()) => return Ok(self.step_result(OsHostCodecStepState::Progress, OsHostCodecProgress { phase: OsHostCodecPhase::Decode, completed: 1, total: 1 }, None, None, None)),
                     Err(failure) => {
                         self.terminal_failure = Some(failure.clone());
                         self.reply_emitted = true;
                         let reply = self.failure_reply(&failure);
-                        return Ok(self.step_result(OsHostCodecStepState::Reply, OsHostCodecPhase::Reply, 1, 1, None, None, Some(reply)));
+                        return Ok(self.step_result(OsHostCodecStepState::Reply, OsHostCodecProgress { phase: OsHostCodecPhase::Reply, completed: 1, total: 1 }, None, None, Some(reply)));
                     }
                 }
             }
@@ -5609,24 +5613,24 @@ pub mod codec_abi {
             match output_step {
                 AbiCursorStep::Advanced(copied) => {
                     self.output_copied = self.output_copied.saturating_add(copied).min(self.output_bytes);
-                    Ok(self.step_result(OsHostCodecStepState::Progress, OsHostCodecPhase::Output, self.output_copied, self.output_bytes, None, None, None))
+                    Ok(self.step_result(OsHostCodecStepState::Progress, OsHostCodecProgress { phase: OsHostCodecPhase::Output, completed: self.output_copied, total: self.output_bytes }, None, None, None))
                 }
                 AbiCursorStep::PageComplete(index) => {
                     let page = self.output.as_ref().and_then(AbiPageReader::page).cloned().expect("page-complete retains the exact page until ACK");
                     self.output_copied = (index as usize * ABI_MAX_PAGE_BYTES + page.bytes.len()).min(self.output_bytes);
-                    Ok(self.step_result(OsHostCodecStepState::OutputPage, OsHostCodecPhase::Output, self.output_copied, self.output_bytes, None, Some(page), None))
+                    Ok(self.step_result(OsHostCodecStepState::OutputPage, OsHostCodecProgress { phase: OsHostCodecPhase::Output, completed: self.output_copied, total: self.output_bytes }, None, Some(page), None))
                 }
-                AbiCursorStep::AwaitingAcknowledgement(_) => Ok(self.step_result(OsHostCodecStepState::AwaitingAcknowledgement, OsHostCodecPhase::AwaitingAcknowledgement, self.output_copied, self.output_bytes, None, None, None)),
+                AbiCursorStep::AwaitingAcknowledgement(_) => Ok(self.step_result(OsHostCodecStepState::AwaitingAcknowledgement, OsHostCodecProgress { phase: OsHostCodecPhase::AwaitingAcknowledgement, completed: self.output_copied, total: self.output_bytes }, None, None, None)),
                 AbiCursorStep::Complete => {
                     if self.reply_emitted {
-                        Ok(self.step_result(OsHostCodecStepState::Idle, OsHostCodecPhase::Reply, self.output_bytes, self.output_bytes, None, None, None))
+                        Ok(self.step_result(OsHostCodecStepState::Idle, OsHostCodecProgress { phase: OsHostCodecPhase::Reply, completed: self.output_bytes, total: self.output_bytes }, None, None, None))
                     } else {
                         self.reply_emitted = true;
                         let reply = self.success_reply();
-                        Ok(self.step_result(OsHostCodecStepState::Reply, OsHostCodecPhase::Reply, self.output_bytes, self.output_bytes, None, None, Some(reply)))
+                        Ok(self.step_result(OsHostCodecStepState::Reply, OsHostCodecProgress { phase: OsHostCodecPhase::Reply, completed: self.output_bytes, total: self.output_bytes }, None, None, Some(reply)))
                     }
                 }
-                AbiCursorStep::Idle => Ok(self.step_result(OsHostCodecStepState::Idle, OsHostCodecPhase::Output, 0, self.output_bytes, None, None, None)),
+                AbiCursorStep::Idle => Ok(self.step_result(OsHostCodecStepState::Idle, OsHostCodecProgress { phase: OsHostCodecPhase::Output, completed: 0, total: self.output_bytes }, None, None, None)),
             }
         }
 
@@ -6490,8 +6494,8 @@ pub mod registry {
                 schema: spec.schema.clone(),
                 export_formats: spec.export_formats.clone(),
                 import_formats: spec.import_formats.clone(),
-                export_stdio_kinds: spec.export_stdio_kinds.iter().map(|row| (*row).to_string()).collect(),
-                import_stdio_kinds: spec.import_stdio_kinds.iter().map(|row| (*row).to_string()).collect(),
+                export_stdio_kinds: spec.export_stdio_kinds.clone(),
+                import_stdio_kinds: spec.import_stdio_kinds.clone(),
                 dialect,
             },
             media_capability: spec.media_capability,
@@ -6625,7 +6629,7 @@ pub mod registry {
     /// bare placeholder built from the kind id itself — dimension is declared by the app, never inferred
     /// from an id-prefix convention.
     pub fn os_artifact_descriptor(kind: &str) -> OsArtifactDescriptor {
-        RESOURCE_KIND_REGISTRY.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(kind).map(|entry| entry.descriptor.clone()).unwrap_or_else(|| OsArtifactDescriptor {
+        RESOURCE_KIND_REGISTRY.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(kind).map_or_else(|| OsArtifactDescriptor {
             kind: kind.into(),
             name: kind.into(),
             source_format: kind.into(),
@@ -6638,7 +6642,7 @@ pub mod registry {
             export_stdio_kinds: Vec::new(),
             import_stdio_kinds: Vec::new(),
             dialect: dialect_from_component_kind("panel"),
-        })
+        }, |entry| entry.descriptor.clone())
     }
 
     /// @emoji 🎯️🆕️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1b task 2: the single
@@ -6654,7 +6658,7 @@ pub mod registry {
     /// @emoji 🧬️ Registry lookup for a resource kind's media capability; unregistered kinds default to
     /// `MeshOnly` (the lighter, dependency-free representation).
     pub fn os_resource_media_capability(kind: &str) -> OsMediaCapability {
-        RESOURCE_KIND_REGISTRY.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(kind).map(|entry| entry.media_capability).unwrap_or(OsMediaCapability::MeshOnly)
+        RESOURCE_KIND_REGISTRY.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(kind).map_or(OsMediaCapability::MeshOnly, |entry| entry.media_capability)
     }
 
     /// @emoji 🚫️ Fail-closed sibling of `os_artifact_descriptor` for workflow connect-time validation —
@@ -6745,8 +6749,7 @@ pub mod registry {
             .iter()
             .find(|port| port.id == "document:in")
             .or_else(|| registration.outputs.iter().find(|port| port.id == "document:out"))
-            .map(|port| port.media_type)
-            .unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
+            .map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |port| port.media_type);
         let declared_ports: Vec<_> = registration.inputs.iter().chain(registration.outputs.iter()).filter(|port| port.id != "document:in" && port.id != "document:out").cloned().collect();
         let io = crate::host::resolve_kernel_future(semio_framework::AppIo::from_document(
             registration.source_format.clone(),
@@ -6899,6 +6902,20 @@ pub mod registry {
     #[cfg(test)]
     mod tests {
         use super::*;
+
+        #[test]
+        fn owned_artifact_kind_formats_survive_host_registry_projection() {
+            let value: semio_framework::DslValue = dsl::os_pack::json::from_json_str(include_str!("../../../🔨️modules/🛂️manifest/🧪️fixtures/🗄️artifact-kind-formats.json")).unwrap();
+            let spec: ArtifactKindSpec = semio_framework::from_dsl_value(value).unwrap();
+            assert_eq!(spec.export_stdio_kinds, ["stdio.svg", "stdio.png"]);
+            assert_eq!(spec.import_stdio_kinds, ["stdio.dwg", "stdio.svg"]);
+            register_artifact_descriptor(&spec);
+            let projected = try_os_artifact_descriptor(&spec.id).unwrap();
+            assert_eq!(projected.export_stdio_kinds, spec.export_stdio_kinds);
+            assert_eq!(projected.import_stdio_kinds, spec.import_stdio_kinds);
+            assert_eq!(projected.schema, spec.schema);
+            assert_eq!(projected.media_type, spec.media_type);
+        }
 
         #[test]
         fn registers_app_io_and_resolves_registration() {

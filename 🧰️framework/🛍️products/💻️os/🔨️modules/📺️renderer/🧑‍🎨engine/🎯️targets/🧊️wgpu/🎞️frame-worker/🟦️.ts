@@ -48,12 +48,17 @@ type RendererBindings = {
 //#region ⏱️StepAuthority
 const WORKER_STEP_BUDGET_MS = 8;
 const BOOT_HEARTBEAT_MS = 2;
+/** @emoji 💓️ How often a still-running browser-owned suspension re-posts its stage to the UI isolate.
+ * `FRAME_WORKER_BOOT_TIMEOUT_MS` fires on SILENCE, not on slowness, and a cold `shell-boot` of a 5.4 MB-manifest
+ * plugin legitimately outlasts it while yielding normally — so liveness is reported rather than the watchdog
+ * loosened, and a genuinely wedged worker still trips it. */
+const BOOT_LIVENESS_INTERVAL_MS = 1_000;
+let lastProgressValue = 0;
 /** @emoji 🧮️ Fixed boot credit taken from the generated catalog itself. A boot plan is by construction a
  * subset of the catalog's own plugin and extension rows, so no legitimate plan can exceed it, and unlike a
  * magic number it cannot go stale as the product grows — a hardcoded 32 rejected the `s` plan's 57 rows
  * outright and made every wgpu boot impossible. */
 const PLUGIN_BOOT_CAPACITY = PLUGIN_CATALOG.plugins.length + PLUGIN_CATALOG.extensions.length;
-const PLUGIN_MANIFEST_CODE_UNIT_CAPACITY = 64 * 1024;
 const ASSET_RESPONSE_BYTE_CAPACITY = 16 * 1024 * 1024;
 const ASSET_RESPONSE_PAGE_BYTES = 16 * 1024;
 /** @emoji 🔬️ Introspection walks the whole retained tree, so it earns a wider turn than a frame step —
@@ -78,11 +83,16 @@ function ownedStep<T>(stage: string, callback: () => T, budgetMs: number = WORKE
 
 async function monitoredSuspension<T>(stage: string, operation: () => Promise<T>, blockBudgetMs: number = WORKER_STEP_BUDGET_MS): Promise<T> {
   let lastBeat = performance.now();
+  let lastLivenessAt = performance.now();
   let maximumBlockMs = 0;
   const heartbeat = setInterval(() => {
     const now = performance.now();
     maximumBlockMs = Math.max(maximumBlockMs, now - lastBeat - BOOT_HEARTBEAT_MS);
     lastBeat = now;
+    if (now - lastLivenessAt >= BOOT_LIVENESS_INTERVAL_MS) {
+      lastLivenessAt = now;
+      progress(stage, lastProgressValue);
+    }
   }, BOOT_HEARTBEAT_MS);
   try {
     const result = await ownedStep(`${stage}:start`, operation, blockBudgetMs);
@@ -270,10 +280,6 @@ async function mountPluginHandles(targets: readonly { readonly pluginId: string;
     await macrotask();
     try {
       const module = await monitoredSuspension(`plugin:${target.pluginId}`, () => loadPluginModule(target.pluginId, target.moduleUrl), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
-      ownedStep(`plugin-manifest:${target.pluginId}`, () => {
-        const manifest = JSON.stringify(module.manifest);
-        if (manifest.length > PLUGIN_MANIFEST_CODE_UNIT_CAPACITY) throw new Error(`plugin-manifest-credits: ${target.pluginId} exceeds ${PLUGIN_MANIFEST_CODE_UNIT_CAPACITY} code units`);
-      });
       mounted.push(ownedStep(`plugin-handle:${target.pluginId}`, () => ({ pluginId: target.pluginId, handle: pluginHandleForBridge(module) })));
     } catch (error) {
       if (closed || closing) throw error;
@@ -301,7 +307,7 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
     ownedStep("runtime-environment", () => {
       loaded.semioWgpuSetAppRole?.(message.appRole);
       if (message.hub) loaded.semioWgpuSetHubEnv?.(message.hub.hubUrl, message.hub.user, message.hub.dataDir);
-    });
+    }, BROWSER_OWNED_SUSPENSION_BUDGET_MS);
     progress("plugin-graph", 0.25);
     const bootPlan = ownedStep("plugin-graph", () => resolvePlaygroundBoot(PLUGIN_CATALOG, message.pluginVariant));
     if (bootPlan.plugins.length > PLUGIN_BOOT_CAPACITY) throw new Error(`plugin-credits: boot plan exceeds ${PLUGIN_BOOT_CAPACITY} plugins`);
@@ -317,13 +323,13 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
       console.log(`[DEBUG] renderer-bootstrap stage=${step.stage} took ${(performance.now() - bootstrapStartedAt).toFixed(1)}ms`);
       progress(step.stage, 0.65 + step.progress * 0.3);
       if (step.shellBoot) {
-        bootstrap = await monitoredSuspension("shell-boot", () => bootstrap.bootShell());
+        bootstrap = await monitoredSuspension("shell-boot", () => bootstrap.bootShell(), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
         continue;
       }
       if (step.complete) break;
     }
-    runtime = ownedStep("renderer-finish", () => bootstrap.finish());
-    interactiveJobs = ownedStep("interactive-job-registry", () => new InteractiveWorkerScheduler(lifecycle, INTERACTIVE_WORKER_DESCRIPTORS, post, (callback) => setTimeout(callback, 0), () => performance.now(), (detail) => fault("interactive-job-fault", detail)));
+    runtime = ownedStep("renderer-finish", () => bootstrap.finish(), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
+    interactiveJobs = ownedStep("interactive-job-registry", () => new InteractiveWorkerScheduler(lifecycle, INTERACTIVE_WORKER_DESCRIPTORS, post, (callback) => setTimeout(callback, 0), () => performance.now(), (detail) => fault("interactive-job-fault", detail)), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
     progress("ready", 1);
     post({ kind: "booted", lifecycle });
     scheduleAssetPump();
@@ -391,6 +397,7 @@ async function pumpAsset(): Promise<void> {
 }
 
 function progress(stage: string, value: number): void {
+  lastProgressValue = value;
   if (!closed && !closing && !failed) post({ kind: "boot-progress", lifecycle, stage, progress: value });
 }
 

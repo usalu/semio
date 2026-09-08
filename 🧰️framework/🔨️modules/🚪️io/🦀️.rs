@@ -1033,18 +1033,18 @@ pub async fn preflight_composer_entry_refs_in_assembly(_assembly: &store::Artifa
 
 /// 📌️ Registers one artifact's composer entries atomically. Re-registering the exact static entry
 /// is idempotent; a different entry for any exact key fails and leaves the registry unchanged.
-pub async fn register_composer_entries(entries: &'static [ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
-    register_composer_entry_refs(&entries.iter().collect::<Vec<_>>()).await
+pub fn register_composer_entries(entries: &'static [ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
+    register_composer_entry_refs(&entries.iter().collect::<Vec<_>>())
 }
 
 /// 📌️ Registers independently declared static composers as one all-or-nothing candidate set.
-pub async fn register_composer_entry_refs(entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
+pub fn register_composer_entry_refs(entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
     let assembly = store::begin_artifact_assembly().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
-    register_composer_entry_refs_in_assembly(&assembly, entries).await
+    register_composer_entry_refs_in_assembly(&assembly, entries)
 }
 
 /// 📌️ Publishes preflighted composers while one artifact assembly owns the shared barrier.
-pub async fn register_composer_entry_refs_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
+pub fn register_composer_entry_refs_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
     let proposed = composer_entries_by_key(entries.iter().copied())?;
     let mut reg = io_registry().write().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" }))?;
     validate_composer_entries(&reg, &proposed)?;
@@ -1267,8 +1267,8 @@ fn same_subset_validator_entry(left: &SubsetValidatorEntry, right: &SubsetValida
 }
 
 /// 📌️ Registers one subset validator without replacing an established dialect owner.
-pub async fn register_subset_validator(entry: &'static SubsetValidatorEntry) -> Result<(), SubsetValidatorRegistryError> {
-    register_subset_validators(&[entry]).await
+pub fn register_subset_validator(entry: &'static SubsetValidatorEntry) -> Result<(), SubsetValidatorRegistryError> {
+    register_subset_validators(&[entry])
 }
 
 fn validate_subset_validators(registry: &BTreeMap<ArtifactDialect, &'static SubsetValidatorEntry>, entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
@@ -1306,13 +1306,13 @@ pub async fn preflight_subset_validators_in_assembly(_assembly: &store::Artifact
 }
 
 /// 📌️ Registers subset-validator entries only when the entire candidate set is conflict-free.
-pub async fn register_subset_validators(entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
+pub fn register_subset_validators(entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
     let assembly = store::begin_artifact_assembly().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
-    register_subset_validators_in_assembly(&assembly, entries).await
+    register_subset_validators_in_assembly(&assembly, entries)
 }
 
 /// 📌️ Publishes preflighted subset validators while one artifact assembly owns the shared barrier.
-pub async fn register_subset_validators_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
+pub fn register_subset_validators_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
     let mut reg = subset_validator_registry().write().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
     validate_subset_validators(&reg, entries)?;
     for entry in entries {
@@ -2049,7 +2049,7 @@ mod tests {
     /// doc comment describes, registered and resolved through the real `IO_REGISTRY`.
     #[semio_framework_async_macros::async_test]
     async fn io_compose_via_chains_two_registered_hops() {
-        register_composer_entries(&ENTRIES).await.expect("register two-hop test entries");
+        register_composer_entries(&ENTRIES).expect("register two-hop test entries");
         let hub_key = IoKey::from_owner_counterpart(HOP1_INTO, HOP1_FROM, IoDirection::Import);
         let target_key = IoKey::from_owner_counterpart(HOP2_INTO, HOP1_INTO, IoDirection::Import);
         let sources = [ErasedComposeSource { dialect: HOP1_FROM, payload: IoPayload::Text("seed".to_string()) }];
@@ -2078,9 +2078,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn io_registry_rejects_a_conflicting_key_without_replacing_the_first_entry() {
-        register_composer_entries(std::slice::from_ref(&CONFLICT_FIRST)).await.expect("first owner registers");
+        register_composer_entries(std::slice::from_ref(&CONFLICT_FIRST)).expect("first owner registers");
         assert!(matches!(preflight_composer_entry_refs(&[&CONFLICT_SECOND]).await, Err(IoRegistryRegistrationError::Conflict(_))), "preflight must expose the same conflict before any later assembly mutation");
-        let conflict = match register_composer_entries(std::slice::from_ref(&CONFLICT_SECOND)).await.expect_err("a second owner for the same IO key must fail") {
+        let conflict = match register_composer_entries(std::slice::from_ref(&CONFLICT_SECOND)).expect_err("a second owner for the same IO key must fail") {
             IoRegistryRegistrationError::Conflict(conflict) => conflict,
             IoRegistryRegistrationError::Unavailable(error) => panic!("registry unavailable: {error:?}"),
         };

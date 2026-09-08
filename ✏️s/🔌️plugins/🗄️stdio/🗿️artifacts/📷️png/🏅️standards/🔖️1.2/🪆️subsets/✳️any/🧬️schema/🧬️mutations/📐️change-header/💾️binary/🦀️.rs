@@ -18,17 +18,17 @@ pub fn encode_payload(payload: &ChangeHeaderMutation) -> Result<Vec<u8>, protoco
     w.write_u8(if *interlace { 1 } else { 0 });
     Ok(w.into_bytes())
 }
-fn op_pack_err(error: dsl::PackError) -> protocol::ProtocolError {
+fn op_pack_err(error: &dsl::PackError) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "change-header", offset: 0, detail: error.to_string() }
 }
 pub fn decode(bytes: &[u8]) -> Result<PngMutation, protocol::ProtocolError> {
     let mut r = dsl::ByteReader::new(bytes);
     let result: Result<PngMutation, protocol::ProtocolError> = Ok(PngMutation::ChangeHeader(ChangeHeaderMutation {
-        width: r.read_u32_le().map_err(op_pack_err)?,
-        height: r.read_u32_le().map_err(op_pack_err)?,
-        bit_depth: r.read_u8().map_err(op_pack_err)?,
-        color_type: PngColorType::from_u8(r.read_u8().map_err(op_pack_err)?).map_err(|e| protocol::ProtocolError::Malformed { what: "png op color type", offset: 0, detail: e })?,
-        interlace: r.read_u8().map_err(op_pack_err)? != 0,
+        width: r.read_u32_le().map_err(|error| op_pack_err(&error))?,
+        height: r.read_u32_le().map_err(|error| op_pack_err(&error))?,
+        bit_depth: r.read_u8().map_err(|error| op_pack_err(&error))?,
+        color_type: PngColorType::from_u8(r.read_u8().map_err(|error| op_pack_err(&error))?).map_err(|e| protocol::ProtocolError::Malformed { what: "png op color type", offset: 0, detail: e })?,
+        interlace: r.read_u8().map_err(|error| op_pack_err(&error))? != 0,
     }));
     let position = r.position();
     if position != bytes.len() {

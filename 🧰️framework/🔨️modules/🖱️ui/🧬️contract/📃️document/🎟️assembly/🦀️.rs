@@ -30,6 +30,15 @@ fn arena() -> Result<MutexGuard<'static, UiDocumentArena>, UiDocumentAssemblyErr
     UI_DOCUMENT_ARENA.try_lock().map_err(|cause| error(match cause { TryLockError::WouldBlock => UiDocumentAssemblyErrorKind::Contended, TryLockError::Poisoned(_) => UiDocumentAssemblyErrorKind::Poisoned }))
 }
 
+/// 🪪️ Scalar identity for one admitted document assembly.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct UiDocumentAssemblyIdentity {
+    pub generation: u64,
+    pub revision: UiRevision,
+    pub root: Option<UiNodeId>,
+    pub layout_epoch: u64,
+}
+
 #[derive(Debug, Default)]
 pub struct UiDocumentAssembly {
     builder: Option<UiDocumentBuilder>,
@@ -47,17 +56,18 @@ impl UiDocumentAssembly {
     pub const fn required_open_bytes() -> usize { size_of::<UiDocumentSlot>() + size_of::<Self>() + size_of::<SurfaceId>() + size_of::<UiResidentPermit>() }
 
     /// 🧊️ Cold convenience reserves the fixed surface ceiling; retained callers transfer their admitted job permit.
-    pub fn open_into(&mut self, surface: &mut Option<SurfaceId>, generation: u64, revision: UiRevision, root: Option<UiNodeId>, layout_epoch: u64, items: usize, bytes: usize) -> Result<UiDocumentAssemblyProgress, UiDocumentAssemblyError> {
+    pub fn open_into(&mut self, surface: &mut Option<SurfaceId>, identity: UiDocumentAssemblyIdentity, items: usize, bytes: usize) -> Result<UiDocumentAssemblyProgress, UiDocumentAssemblyError> {
         if items == 0 || bytes < Self::required_open_bytes() { return Ok(Default::default()); }
         let mut permit = None;
         UiResidentPermit::try_reserve(UiResidentLimits { items: UI_RESIDENT_SURFACE_ITEMS, bytes: UI_RESIDENT_SURFACE_BYTES }, &mut permit, bytes).map_err(|_| error(UiDocumentAssemblyErrorKind::ArenaFull))?;
-        let result = self.open_with_permit(&mut permit, surface, generation, revision, root, layout_epoch, items, bytes);
+        let result = self.open_with_permit(&mut permit, surface, identity, items, bytes);
         if let Some(permit) = permit.as_mut() { let _ = permit.close_step(1); }
         result
     }
 
     /// 🎟️ The exact job reservation becomes the root's sole credit before any payload allocation.
-    pub fn open_with_permit(&mut self, permit: &mut Option<UiResidentPermit>, surface: &mut Option<SurfaceId>, generation: u64, revision: UiRevision, root: Option<UiNodeId>, layout_epoch: u64, items: usize, bytes: usize) -> Result<UiDocumentAssemblyProgress, UiDocumentAssemblyError> {
+    pub fn open_with_permit(&mut self, permit: &mut Option<UiResidentPermit>, surface: &mut Option<SurfaceId>, identity: UiDocumentAssemblyIdentity, items: usize, bytes: usize) -> Result<UiDocumentAssemblyProgress, UiDocumentAssemblyError> {
+        let UiDocumentAssemblyIdentity { generation, revision, root, layout_epoch } = identity;
         if self.builder.is_some() || self.closing { return Err(error(UiDocumentAssemblyErrorKind::Occupied)); }
         if generation == 0 { return Err(error(UiDocumentAssemblyErrorKind::InvalidGeneration)); }
         if surface.is_none() { return Err(error(UiDocumentAssemblyErrorKind::MissingSurface)); }
@@ -81,6 +91,10 @@ impl UiDocumentAssembly {
         let handle = self.handle()?;
         Ok(arena()?.slot(handle).ok_or_else(|| error(UiDocumentAssemblyErrorKind::Stale))?.nodes.entries.allocated_bytes())
     }
+    pub fn is_empty(&self) -> Result<bool, UiDocumentAssemblyError> {
+        self.len().map(|len| len == 0)
+    }
+
     pub fn len(&self) -> Result<usize, UiDocumentAssemblyError> {
         let handle = self.handle()?;
         Ok(arena()?.slot(handle).ok_or_else(|| error(UiDocumentAssemblyErrorKind::Stale))?.nodes.len())

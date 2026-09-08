@@ -759,14 +759,15 @@ pub(crate) mod test_support {
 
     pub(crate) fn retire_raster_snapshot(snapshot: RasterSnapshot) {
         let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&RasterSnapshotRetirementFactory, snapshot);
+        let maximum_bytes = RASTER_OWNED_FIELD_BYTES.max(crate::artifacts::raster::RASTER_OWNED_MAP_PAGE_BACKING_BYTES);
         let mut steps = 0_u64;
         let mut idle = 0_u64;
         loop {
             steps += 1;
-            match retirement.close_step(1, RASTER_OWNED_FIELD_BYTES).expect("one Raster test snapshot owner retires") {
+            match retirement.close_step(1, maximum_bytes).expect("one Raster test snapshot owner retires") {
                 store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
                     assert!(released_items <= 1);
-                    assert!(released_bytes <= RASTER_OWNED_FIELD_BYTES);
+                    assert!(released_bytes <= maximum_bytes);
                     idle = if released_items == 0 && released_bytes == 0 { idle + 1 } else { 0 };
                     assert!(idle <= 4_096, "Raster test snapshot retirement stalled: {idle} consecutive zero-release turns after {steps} turns");
                 }
@@ -5001,7 +5002,7 @@ mod tests {
     #[test]
     fn raster_nested_snapshot_and_child_handles_retire_one_owner_per_grant() {
         let mut params = RasterOwnedMap::new();
-        params.insert("nested".repeat(16), dsl::DslValue::Object(vec![("array".repeat(16), dsl::DslValue::Array(vec![dsl::DslValue::String("payload".repeat(64)), dsl::DslValue::String("tail".into())]))]));
+        params.insert("nested".repeat(16), dsl::DslValue::Object(vec![("array".repeat(16), dsl::DslValue::Array(vec![dsl::DslValue::String("payload".repeat(64)), dsl::DslValue::String("tail".into())]))])).expect("bounded fixture operation succeeds");
         let adjustment = RasterLayerNode::Adjustment { id: "adjustment".into(), name: "Adjustment".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "levels".into(), params };
         let mut snapshot = empty_raster_document();
         snapshot.title = Some("Nested raster".into());
@@ -5009,7 +5010,7 @@ mod tests {
         snapshot.assets.insert(
             "asset".into(),
             store::ArtifactChild::new("child".into(), store::os_io::ArtifactRef { artifact_id: "artifact".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } }),
-        );
+        ).expect("bounded fixture operation succeeds");
         let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&RasterSnapshotRetirementFactory, snapshot);
         for _ in 0..10_000 {
             match retirement.close_step(1, RASTER_OWNED_FIELD_BYTES).expect("one nested Raster owner retires") {

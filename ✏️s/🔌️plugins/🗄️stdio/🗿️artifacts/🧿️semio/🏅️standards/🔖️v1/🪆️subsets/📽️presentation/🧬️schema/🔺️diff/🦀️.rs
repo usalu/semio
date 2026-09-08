@@ -277,13 +277,13 @@ where
     D: Clone,
 {
     let d1_ref_max = d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).max();
-    let mut base_len = d1_ref_max.map(|m| m + 1).unwrap_or(0);
+    let mut base_len = d1_ref_max.map_or(0, |m| m + 1);
     let mid_len_needed_by_d1 = d1.added.iter().map(|a| a.index + 1).max().unwrap_or(0);
     while base_len.saturating_sub(d1.removed.len()) + d1.added.len() < mid_len_needed_by_d1 {
         base_len += 1;
     }
     let d2_ref_max = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max();
-    let required_mid_len = d2_ref_max.map(|m| m + 1).unwrap_or(0);
+    let required_mid_len = d2_ref_max.map_or(0, |m| m + 1);
     while base_len.saturating_sub(d1.removed.len()) + d1.added.len() < required_mid_len {
         base_len += 1;
     }
@@ -340,9 +340,7 @@ where
         let final_index = transform_index(add.index, &d2.removed, &d2.added);
         added.push(IndexAdded { index: final_index, item: add.item });
     }
-    for a2 in &d2.added {
-        added.push(a2.clone());
-    }
+    added.extend(d2.added);
     added.sort_by_key(|a| a.index);
 
     IndexedTripleDiff { removed, modified, added }
@@ -424,7 +422,7 @@ where
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
+fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -503,7 +501,7 @@ fn inverse_frame(base: &SlideFrame, diff: &SlideFrameDiff) -> SlideFrameDiff {
     SlideFrameDiff { origin: diff.origin.map(|_| base.origin), width: diff.width.map(|_| base.width), height: diff.height.map(|_| base.height) }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_frame(mut a: SlideFrameDiff, b: SlideFrameDiff) -> SlideFrameDiff {
+fn absorb_frame(mut a: SlideFrameDiff, b: &SlideFrameDiff) -> SlideFrameDiff {
     if b.origin.is_some() {
         a.origin = b.origin;
     }
@@ -742,13 +740,13 @@ fn absorb_shape(a: SlideShapeDiff, b: SlideShapeDiff) -> SlideShapeDiff {
         (_, SlideShapeDiff::Replace { shape }) => SlideShapeDiff::Replace { shape },
         (SlideShapeDiff::Replace { shape }, b) => SlideShapeDiff::Replace { shape: shape_with_diff_applied(&shape, &b) },
         (SlideShapeDiff::TextBox { frame: fa, blocks: ba }, SlideShapeDiff::TextBox { frame: fb, blocks: bb }) => {
-            SlideShapeDiff::TextBox { frame: absorb_opt(fa, fb, absorb_frame), blocks: absorb_opt(ba, bb, |x, y| absorb_indexed(x, y, absorb_doc_block, doc_block_with_diff_applied)) }
+            SlideShapeDiff::TextBox { frame: absorb_opt(fa, fb, |a, b| absorb_frame(a, &b)), blocks: absorb_opt(ba, bb, |x, y| absorb_indexed(x, y, absorb_doc_block, doc_block_with_diff_applied)) }
         }
-        (SlideShapeDiff::Picture { frame: fa, image: ia }, SlideShapeDiff::Picture { frame: fb, image: ib }) => SlideShapeDiff::Picture { frame: absorb_opt(fa, fb, absorb_frame), image: absorb_opt(ia, ib, absorb_image) },
+        (SlideShapeDiff::Picture { frame: fa, image: ia }, SlideShapeDiff::Picture { frame: fb, image: ib }) => SlideShapeDiff::Picture { frame: absorb_opt(fa, fb, |a, b| absorb_frame(a, &b)), image: absorb_opt(ia, ib, absorb_image) },
         (SlideShapeDiff::Table { frame: fa, rows: ra }, SlideShapeDiff::Table { frame: fb, rows: rb }) => {
-            SlideShapeDiff::Table { frame: absorb_opt(fa, fb, absorb_frame), rows: absorb_opt(ra, rb, |x, y| absorb_indexed(x, y, absorb_table_row_diff, table_row_with_diff_applied)) }
+            SlideShapeDiff::Table { frame: absorb_opt(fa, fb, |a, b| absorb_frame(a, &b)), rows: absorb_opt(ra, rb, |x, y| absorb_indexed(x, y, absorb_table_row_diff, table_row_with_diff_applied)) }
         }
-        (SlideShapeDiff::Placeholder { frame: fa, kind: ka }, SlideShapeDiff::Placeholder { frame: fb, kind: kb }) => SlideShapeDiff::Placeholder { frame: absorb_opt(fa, fb, absorb_frame), kind: kb.or(ka) },
+        (SlideShapeDiff::Placeholder { frame: fa, kind: ka }, SlideShapeDiff::Placeholder { frame: fb, kind: kb }) => SlideShapeDiff::Placeholder { frame: absorb_opt(fa, fb, |a, b| absorb_frame(a, &b)), kind: kb.or(ka) },
         (_, b) => b,
     }
 }
@@ -902,8 +900,8 @@ impl MutationDiff<SemioPresentationSnapshot> for SemioPresentationDiff {
     }
 
     fn absorb(&mut self, other: Self) {
-        self.masters = absorb_opt(self.masters.take(), other.masters, |a, b| absorb_named(a, b, |m| m.id.clone(), absorb_master_diff, apply_master));
-        self.layouts = absorb_opt(self.layouts.take(), other.layouts, |a, b| absorb_named(a, b, |l| l.id.clone(), absorb_layout_diff, apply_layout));
+        self.masters = absorb_opt(self.masters.take(), other.masters, |a, b| absorb_named(a, &b, |m| m.id.clone(), absorb_master_diff, apply_master));
+        self.layouts = absorb_opt(self.layouts.take(), other.layouts, |a, b| absorb_named(a, &b, |l| l.id.clone(), absorb_layout_diff, apply_layout));
         self.slides = absorb_opt(self.slides.take(), other.slides, |a, b| absorb_indexed(a, b, absorb_slide_diff, slide_with_diff_applied));
     }
 }
@@ -968,9 +966,9 @@ pub fn diff_set_slide_layout(base: &SemioPresentationSnapshot, index: usize, lay
 }
 /// 🧩 Diff for replacing slide `index`'s `notes`, via a real structural comparison.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_slide_notes(base: &SemioPresentationSnapshot, index: usize, notes: Vec<DocBlock>) -> SemioPresentationDiff {
+pub fn diff_set_slide_notes(base: &SemioPresentationSnapshot, index: usize, notes: &[DocBlock]) -> SemioPresentationDiff {
     let Some(slide) = base.slides.get(index) else { return SemioPresentationDiff::default() };
-    let Some(notes_diff) = between_indexed(&slide.notes, &notes, diff_doc_block) else { return SemioPresentationDiff::default() };
+    let Some(notes_diff) = between_indexed(&slide.notes, notes, diff_doc_block) else { return SemioPresentationDiff::default() };
     wrap_slide_diff(index, SlideDiff { layout_id: None, shapes: None, notes: Some(notes_diff) })
 }
 /// 🧩 Diff for inserting `shape` at `shape_index` on slide `slide_index`.
@@ -995,11 +993,11 @@ pub fn diff_set_shape_frame(base: &SemioPresentationSnapshot, slide_index: usize
 }
 /// 🧩 Diff for replacing a `TextBox` shape's `blocks`, via a real structural comparison.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_textbox_blocks(base: &SemioPresentationSnapshot, slide_index: usize, shape_index: usize, blocks: Vec<DocBlock>) -> SemioPresentationDiff {
+pub fn diff_set_textbox_blocks(base: &SemioPresentationSnapshot, slide_index: usize, shape_index: usize, blocks: &[DocBlock]) -> SemioPresentationDiff {
     let Some(SlideShape::TextBox { blocks: old, .. }) = base.slides.get(slide_index).and_then(|s| s.shapes.get(shape_index)) else {
         return SemioPresentationDiff::default();
     };
-    let Some(blocks_diff) = between_indexed(old, &blocks, diff_doc_block) else { return SemioPresentationDiff::default() };
+    let Some(blocks_diff) = between_indexed(old, blocks, diff_doc_block) else { return SemioPresentationDiff::default() };
     wrap_shape_diff(slide_index, shape_index, SlideShapeDiff::TextBox { frame: None, blocks: Some(blocks_diff) })
 }
 /// 🧭️ Read-only accessor: every `SlideShape` variant carries a `frame`.
@@ -1060,7 +1058,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -1103,7 +1101,7 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
-    format!("[{}]", items.iter().map(|i| enc(i)).collect::<Vec<_>>().join(","))
+    format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
@@ -1312,16 +1310,16 @@ fn dec_indexed_triple<D, T>(body: &str, dec_d: impl Fn(&str) -> Result<D, String
 /// 🏷️ `[removed];[modified];[added]` — generic over `NamedTripleDiff<K,D,T>`'s own `K`/`D`/`T`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_named_triple<K, D, T>(diff: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K) -> String, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
-    let removed = diff.removed.iter().map(|k| enc_k(k)).collect::<Vec<_>>().join(",");
+    let removed = diff.removed.iter().map(&enc_k).collect::<Vec<_>>().join(",");
     let modified = diff.modified.iter().map(|m| format!("{}:{}", enc_k(&m.key), enc_d(&m.diff))).collect::<Vec<_>>().join(",");
-    let added = diff.added.iter().map(|t| enc_t(t)).collect::<Vec<_>>().join(",");
+    let added = diff.added.iter().map(enc_t).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_named_triple<K, D, T>(s: &str, dec_k: impl Fn(&str) -> Result<K, String>, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedTripleDiff<K, D, T>, String> {
     let three = split_top_level(s, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("named triple: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|e| dec_k(e)).collect::<Result<Vec<_>, String>>()?;
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(&dec_k).collect::<Result<Vec<_>, String>>()?;
     let modified = split_top_level(strip_brackets(modified_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
@@ -1330,7 +1328,7 @@ fn dec_named_triple<K, D, T>(s: &str, dec_k: impl Fn(&str) -> Result<K, String>,
             Ok(NamedModified { key: dec_k(k)?, diff: dec_d(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|e| dec_t(e)).collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_t).collect::<Result<Vec<_>, String>>()?;
     Ok(NamedTripleDiff { removed, modified, added })
 }
 //#endregion 🔖️GenericTripleCodecs
@@ -1338,7 +1336,7 @@ fn dec_named_triple<K, D, T>(s: &str, dec_k: impl Fn(&str) -> Result<K, String>,
 //#region 🔖️DiffValueCodecs
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_frame_diff(d: &SlideFrameDiff) -> String {
-    format!("[{},{},{}]", encode_option(&d.origin, |v| enc_semio_point2(v)), encode_option(&d.width, |v| enc_f64(*v)), encode_option(&d.height, |v| enc_f64(*v)))
+    format!("[{},{},{}]", encode_option(&d.origin, enc_semio_point2), encode_option(&d.width, |v| enc_f64(*v)), encode_option(&d.height, |v| enc_f64(*v)))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_frame_diff(s: &str) -> Result<SlideFrameDiff, String> {
@@ -1414,7 +1412,7 @@ fn enc_shape_diff(d: &SlideShapeDiff) -> String {
         SlideShapeDiff::TextBox { frame, blocks } => format!("X[{},{}]", encode_option(frame, enc_frame_diff), encode_option(blocks, enc_doc_blocks_diff)),
         SlideShapeDiff::Picture { frame, image } => format!("P[{},{}]", encode_option(frame, enc_frame_diff), encode_option(image, enc_image_diff)),
         SlideShapeDiff::Table { frame, rows } => format!("T[{},{}]", encode_option(frame, enc_frame_diff), encode_option(rows, enc_table_rows_diff)),
-        SlideShapeDiff::Placeholder { frame, kind } => format!("H[{},{}]", encode_option(frame, enc_frame_diff), encode_option(kind, |v| enc_placeholder_kind(v))),
+        SlideShapeDiff::Placeholder { frame, kind } => format!("H[{},{}]", encode_option(frame, enc_frame_diff), encode_option(kind, enc_placeholder_kind)),
         SlideShapeDiff::Replace { shape } => format!("R[{}]", enc_shape(shape)),
     }
 }

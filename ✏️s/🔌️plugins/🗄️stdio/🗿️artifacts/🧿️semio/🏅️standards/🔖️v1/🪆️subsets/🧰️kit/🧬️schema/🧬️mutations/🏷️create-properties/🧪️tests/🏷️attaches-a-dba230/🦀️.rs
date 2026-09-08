@@ -19,13 +19,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioKitSnapshot {
-    serde_json::from_str(BEFORE).expect("create-properties before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("create-properties before snapshot decodes")
 }
 fn expected_after() -> SemioKitSnapshot {
-    serde_json::from_str(AFTER).expect("create-properties after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("create-properties after snapshot decodes")
 }
 fn mutation() -> SemioKitMutation {
-    serde_json::from_str(MUTATION).expect("create-properties mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("create-properties mutation decodes")
 }
 
 /// ▶️ The properties slot goes from absent to a handle; the two child collections stay put.
@@ -60,12 +60,12 @@ async fn the_undo_delete_properties_clears_the_slot_again() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioKitSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: SemioKitSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "create-properties/attaches-a-properties-child-to-a-kit-that-has-none: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("create-properties mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("create-properties mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("create-properties mutation reparses");
     assert_eq!(reencoded, original, "create-properties/attaches-a-properties-child-to-a-kit-that-has-none: committed mutation JSON is not canonical");
 }
@@ -84,7 +84,7 @@ async fn declared_outcome_holds_as_committed() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-properties/attaches-a-properties-child-to-a-kit-that-has-none: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -93,10 +93,10 @@ async fn produces_committed_diff() {
 /// allowed to touch appears in it at all.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioKitDiff = serde_json::from_str(DIFF).expect("committed create-properties diff decodes");
+    let decoded: SemioKitDiff = dsl::json::from_json_str(DIFF).expect("committed create-properties diff decodes");
     assert!(matches!(decoded.properties, Some(Some(_))), "the properties slot must decode as Some(Some(handle)) — set, not cleared");
     assert!(decoded.types.is_none() && decoded.designs.is_none() && decoded.objects.is_none() && decoded.models.is_none() && decoded.representations.is_none(), "no other kit slot may appear in the diff");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "create-properties/attaches-a-properties-child-to-a-kit-that-has-none: committed diff JSON is not canonical");
 }
@@ -104,7 +104,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioKitDiff = serde_json::from_str(DIFF).expect("committed create-properties diff decodes");
+    let decoded: SemioKitDiff = dsl::json::from_json_str(DIFF).expect("committed create-properties diff decodes");
     let produced = decoded.apply(&before()).expect("committed create-properties diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-properties/attaches-a-properties-child-to-a-kit-that-has-none: committed diff did not carry before to after");
 }

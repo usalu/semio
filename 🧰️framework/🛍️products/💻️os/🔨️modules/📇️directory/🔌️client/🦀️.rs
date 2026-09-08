@@ -427,7 +427,7 @@ pub struct DocumentSocketAuthorityV1 {
     pub surface: DocumentOpenSurfaceV1,
     pub browser_actor: DocumentOpenBrowserActorV1,
     pub grant: DocumentOpenGrantV1,
-    pub checkpoint: Option<DocumentOpenCheckpointV1>,
+    pub checkpoint: DocumentOpenCheckpointV1,
     pub revalidation: DocumentOpenRevalidationV1,
 }
 
@@ -569,7 +569,7 @@ fn decode_lower_hex_32(value: &str) -> Option<[u8; 32]> {
         _ => None,
     };
     let mut decoded = [0u8; 32];
-    for (index, pair) in value.as_bytes().chunks_exact(2).enumerate() {
+    for (index, pair) in value.as_bytes().as_chunks::<2>().0.iter().enumerate() {
         decoded[index] = digit(pair[0])? << 4 | digit(pair[1])?;
     }
     Some(decoded)

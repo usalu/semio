@@ -133,7 +133,7 @@ impl SceneRasterizer {
     pub async fn new(width: u32, height: u32) -> Result<Self, RasterError> {
         let width = width.max(1);
         let height = height.max(1);
-        let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor { backends: wgpu::Backends::PRIMARY, ..Default::default() });
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor { backends: wgpu::Backends::PRIMARY, ..wgpu::InstanceDescriptor::new_without_display_handle() });
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions { power_preference: wgpu::PowerPreference::HighPerformance, compatible_surface: None, force_fallback_adapter: false })
             .await

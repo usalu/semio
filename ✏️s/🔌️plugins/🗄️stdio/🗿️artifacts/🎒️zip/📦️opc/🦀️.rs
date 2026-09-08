@@ -443,7 +443,7 @@ impl OpcPackage {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn relationships_for(&self, owner: &str) -> &[OpcRelationship] {
-        self.relationships.get(owner).map(|v| v.as_slice()).unwrap_or(&[])
+        self.relationships.get(owner).map_or(&[][..], |v| v.as_slice())
     }
 
     /// ✍️ Appends one internal relationship under `owner` (`""` = package root).
@@ -538,9 +538,9 @@ pub(crate) fn encode_opc_with_package_order(pkg: &OpcPackage) -> Result<Vec<u8>,
         for part in &pkg.parts {
             take(part.path.clone());
         }
-        drop(take);
+
         paths.sort();
-        ordered.extend(paths.drain(..));
+        ordered.append(paths);
         *paths = ordered;
     })
 }

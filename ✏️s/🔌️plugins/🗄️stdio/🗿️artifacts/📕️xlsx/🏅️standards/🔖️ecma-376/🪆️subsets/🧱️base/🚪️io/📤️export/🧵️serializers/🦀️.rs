@@ -183,8 +183,8 @@ fn fresh_rel_id(taken: &mut Vec<String>) -> String {
 /// keeps its `purl.oclc.org/ooxml` types and the whole list keeps its original order.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn workbook_relationships(existing: &[OpcRelationship], sheet_count: usize) -> (Vec<String>, Vec<OpcRelationship>) {
-    let worksheet_type = existing.iter().find(|r| is_rel_type(&r.rel_type, "/worksheet")).map(|r| r.rel_type.clone()).unwrap_or_else(|| REL_TYPE_WORKSHEET.to_string());
-    let shared_strings_type = existing.iter().find(|r| is_rel_type(&r.rel_type, "/sharedStrings")).map(|r| r.rel_type.clone()).unwrap_or_else(|| REL_TYPE_SHARED_STRINGS.to_string());
+    let worksheet_type = existing.iter().find(|r| is_rel_type(&r.rel_type, "/worksheet")).map_or_else(|| REL_TYPE_WORKSHEET.to_string(), |r| r.rel_type.clone());
+    let shared_strings_type = existing.iter().find(|r| is_rel_type(&r.rel_type, "/sharedStrings")).map_or_else(|| REL_TYPE_SHARED_STRINGS.to_string(), |r| r.rel_type.clone());
 
     // 🩹 Every id the package already spells — preserved AND regenerated alike — is reserved before
     // a single fresh one is minted, so growing the sheet list can never steal the `sharedStrings`
@@ -197,7 +197,7 @@ fn workbook_relationships(existing: &[OpcRelationship], sheet_count: usize) -> (
             OpcRelationship { id, rel_type: worksheet_type.clone(), target: format!("worksheets/sheet{}.xml", i + 1), target_mode: OpcTargetMode::Internal }
         })
         .collect();
-    let shared_strings_id = existing.iter().find(|r| is_rel_type(&r.rel_type, "/sharedStrings")).map(|r| r.id.clone()).unwrap_or_else(|| fresh_rel_id(&mut taken));
+    let shared_strings_id = existing.iter().find(|r| is_rel_type(&r.rel_type, "/sharedStrings")).map_or_else(|| fresh_rel_id(&mut taken), |r| r.id.clone());
     let shared_strings = OpcRelationship { id: shared_strings_id, rel_type: shared_strings_type, target: "sharedStrings.xml".into(), target_mode: OpcTargetMode::Internal };
 
     let rids = worksheets.iter().map(|r| r.id.clone()).collect();

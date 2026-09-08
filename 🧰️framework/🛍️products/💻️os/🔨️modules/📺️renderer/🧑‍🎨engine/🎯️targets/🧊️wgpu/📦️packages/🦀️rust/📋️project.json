@@ -4,7 +4,22 @@
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
   "projectType": "library",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/**/*"]
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/**/*",
+      "nativeAssets"
+    ],
+    "nativeAssets": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔣️icons/**/*.svg",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/**/*.svg",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔣️.svg"
+    ],
+    "nativeSources": [
+      "nativeAssets"
+    ],
+    "nativeTestSources": [
+      "nativeAssets"
+    ]
   },
   "targets": {
     "test": {
@@ -115,7 +130,9 @@
     },
     "wasm": {
       "executor": "nx:run-commands",
-      "dependsOn": ["generate-frame-worker"],
+      "dependsOn": [
+        "generate-frame-worker"
+      ],
       "options": {
         "command": "bun ./📜️script.ts wasm",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
@@ -123,7 +140,9 @@
     },
     "serve": {
       "executor": "nx:run-commands",
-      "dependsOn": ["generate-frame-worker"],
+      "dependsOn": [
+        "generate-frame-worker"
+      ],
       "options": {
         "command": "bun ./📜️script.ts serve",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
@@ -132,7 +151,9 @@
     },
     "dev": {
       "executor": "nx:run-commands",
-      "dependsOn": ["generate-frame-worker"],
+      "dependsOn": [
+        "generate-frame-worker"
+      ],
       "options": {
         "command": "bun ./📜️script.ts dev",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
@@ -141,8 +162,14 @@
     },
     "native": {
       "executor": "nx:run-commands",
+      "cache": false,
+      "continuous": true,
+      "outputs": [],
+      "dependsOn": [
+        "native-build"
+      ],
       "options": {
-        "command": "bun ./📜️script.ts native",
+        "command": "bun ./📜️script.ts native dev",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -156,9 +183,48 @@
     },
     "native-build": {
       "executor": "nx:run-commands",
+      "cache": true,
+      "parallelism": false,
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/native-dev"
+      ],
       "options": {
-        "command": "bun ./📜️script.ts native-build",
+        "command": "bun ./📜️script.ts native-build dev",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "native-build-release": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "parallelism": false,
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/native-release"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts native-build release",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "native-release": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "continuous": true,
+      "outputs": [],
+      "dependsOn": [
+        "native-build-release"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts native release",
+        "cwd": "{projectRoot}",
         "forwardAllArgs": true
       }
     },

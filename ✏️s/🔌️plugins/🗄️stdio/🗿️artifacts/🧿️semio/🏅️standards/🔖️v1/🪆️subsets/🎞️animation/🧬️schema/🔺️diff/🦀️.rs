@@ -74,10 +74,8 @@ fn between_indexed<T: Clone, D>(base: &[T], other: &[T], between_item: impl Fn(&
 fn apply_indexed<T: Clone, D>(diff: &IndexedTripleDiff<D, T>, base: &[T], apply_item: impl Fn(&D, &T) -> T) -> Vec<T> {
     let mut next: Vec<Option<T>> = base.iter().cloned().map(Some).collect();
     for m in &diff.modified {
-        if let Some(slot) = next.get_mut(m.index) {
-            if let Some(item) = slot {
-                *item = apply_item(&m.diff, item);
-            }
+        if let Some(Some(item)) = next.get_mut(m.index) {
+            *item = apply_item(&m.diff, item);
         }
     }
     let mut removed_sorted = diff.removed.clone();
@@ -231,7 +229,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -266,7 +264,7 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
-    format!("[{}]", items.iter().map(|i| enc(i)).collect::<Vec<_>>().join(","))
+    format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
@@ -483,7 +481,7 @@ pub struct AnimChannelDiff {
 impl AnimChannelDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn is_empty(&self) -> bool {
-        self.target.is_none() && self.interpolation.is_none() && self.keyframes.as_ref().map(indexed_is_empty).unwrap_or(true)
+        self.target.is_none() && self.interpolation.is_none() && self.keyframes.as_ref().is_none_or(indexed_is_empty)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn between(base: &AnimChannel, other: &AnimChannel) -> Self {
@@ -572,7 +570,7 @@ pub struct AnimTimelineDiff {
 impl AnimTimelineDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn is_empty(&self) -> bool {
-        self.name.is_none() && self.channels.as_ref().map(indexed_is_empty).unwrap_or(true)
+        self.name.is_none() && self.channels.as_ref().is_none_or(indexed_is_empty)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn between(base: &AnimTimeline, other: &AnimTimeline) -> Self {
@@ -652,7 +650,7 @@ pub struct SemioAnimationDiff {
 impl SemioAnimationDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty_diff(&self) -> bool {
-        self.timelines.as_ref().map(indexed_is_empty).unwrap_or(true)
+        self.timelines.as_ref().is_none_or(indexed_is_empty)
     }
 }
 

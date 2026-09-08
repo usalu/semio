@@ -18,13 +18,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> CadSnapshot {
-    serde_json::from_str(BEFORE).expect("create-drawing/appends-drawing-2: before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("create-drawing/appends-drawing-2: before snapshot decodes")
 }
 fn expected_after() -> CadSnapshot {
-    serde_json::from_str(AFTER).expect("create-drawing/appends-drawing-2: after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("create-drawing/appends-drawing-2: after snapshot decodes")
 }
 fn mutation() -> CadMutation {
-    serde_json::from_str(MUTATION).expect("create-drawing/appends-drawing-2: mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("create-drawing/appends-drawing-2: mutation decodes")
 }
 fn applied() -> CadSnapshot {
     let base = before();
@@ -62,12 +62,12 @@ async fn inverse_deletes_the_drawing_it_created() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: CadSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: CadSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "create-drawing/appends-drawing-2: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "create-drawing/appends-drawing-2: committed mutation JSON is not canonical");
 }
@@ -92,7 +92,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = mutation().diff(&base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-drawing/appends-drawing-2: create-drawing must emit the whole post-state drawings list, not an added-only delta");
 }
@@ -102,8 +102,8 @@ async fn produces_committed_diff() {
 /// the wire and the untouched ones must be committed as explicit `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::cad::diff::CadDiff = serde_json::from_str(DIFF).expect("committed diff decodes into the artifact's diff type");
-    let reencoded = serde_json::to_value(&decoded).expect("committed diff re-encodes");
+    let decoded: crate::artifacts::cad::diff::CadDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes into the artifact's diff type");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "create-drawing/appends-drawing-2: committed diff JSON is not canonical");
 }
@@ -112,7 +112,7 @@ async fn committed_diff_is_canonical() {
 /// description of the change `create-drawing` makes, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::cad::diff::CadDiff = serde_json::from_str(DIFF).expect("committed diff decodes into the artifact's diff type");
+    let decoded: crate::artifacts::cad::diff::CadDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes into the artifact's diff type");
     let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-drawing/appends-drawing-2: committed diff did not carry before to after");
 }

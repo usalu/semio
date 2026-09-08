@@ -143,9 +143,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@nx/devkit": "21.6.11",
-    "@nx/js": "21.6.11",
-    "@nxlv/python": "^21.2.3",
+    "@nx/devkit": "23.2.0",
+    "@nx/js": "23.2.0",
+    "@nxlv/python": "23.0.2",
     "@playwright/test": "^1.57.0",
     "@storybook/addon-docs": "^10.4.0",
     "@storybook/addon-vitest": "^10.4.0",
@@ -163,7 +163,7 @@
     "graphology": "0.26.0",
     "jsonschema": "1.5.0",
     "manifold-3d": "3.5.1",
-    "nx": "21.6.11",
+    "nx": "23.2.0",
     "playwright": "^1.57.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
@@ -214,5 +214,8 @@
   },
   "nx": {
     "includedScripts": []
+  },
+  "patchedDependencies": {
+    "nx@23.2.0": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/nx@23.2.0.patch"
   }
 }

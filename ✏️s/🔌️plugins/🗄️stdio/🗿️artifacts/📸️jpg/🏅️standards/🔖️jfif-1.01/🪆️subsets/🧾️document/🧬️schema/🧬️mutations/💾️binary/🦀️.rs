@@ -1,4 +1,7 @@
 //! 💾️ Framing and direct binary registry for JpgMutation.
+/// 📦 Encodes a recognized mutation payload or declines another variant.
+pub type JpgMutationPayloadEncoder = fn(&JpgMutation) -> Option<Result<Vec<u8>, protocol::ProtocolError>>;
+
 use crate::artifacts::jpg::schema::mutations::JpgMutation;
 
 //#region Registry
@@ -6,7 +9,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 pub struct Entry {
     pub tag: u8,
-    pub encode: fn(&JpgMutation) -> Option<Result<Vec<u8>, protocol::ProtocolError>>,
+    pub encode: JpgMutationPayloadEncoder,
     pub decode: fn(&[u8]) -> Result<JpgMutation, protocol::ProtocolError>,
 }
 pub const REGISTRY: &[Entry] = &[

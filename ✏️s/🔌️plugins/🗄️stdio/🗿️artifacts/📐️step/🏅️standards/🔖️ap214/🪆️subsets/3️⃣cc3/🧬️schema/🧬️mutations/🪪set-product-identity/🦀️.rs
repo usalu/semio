@@ -25,7 +25,7 @@ impl protocol::MutationKind<StepSnapshot, StepCc3Mutation> for SetProductIdentit
         class_inverse(base, &ClassEdit::ProductIdentity { identity: self.identity.clone() })
     }
     fn label(&self) -> String {
-        format!("Set the PRODUCT identity chain")
+        "Set the PRODUCT identity chain".to_string()
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

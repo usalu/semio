@@ -6,37 +6,89 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts generate"
-      }
+        "command": "bun ../../🔨️modules/🎨print-design-token-paints/📜️script.ts generate"
+      },
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌗️mixing/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+        {
+          "runtime": "bun --version"
+        },
+        {
+          "externalDependencies": []
+        }
+      ],
+      "cache": true
     },
     "preview-generated": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts preview-generated"
-      }
+        "command": "bun ../../🔨️modules/🎨print-design-token-paints/📜️script.ts preview-generated"
+      },
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌗️mixing/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+        {
+          "runtime": "bun --version"
+        }
+      ]
     },
     "fonts": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts fonts"
-      }
+        "command": "bun ../../🔨️modules/🔤print-font-catalog/📜️script.ts build"
+      },
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/dist/fonts"
+      ],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🖼️assets/🔤️font/**/*.ttf",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+        {
+          "runtime": "bun --version"
+        },
+        {
+          "externalDependencies": []
+        }
+      ]
     },
     "build": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts build",
-        "forwardAllArgs": true
-      }
+        "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/📜️script.ts complete templates",
+        "forwardAllArgs": false
+      },
+      "dependsOn": [
+        "fonts",
+        "deps-tectonic",
+        "generate"
+      ]
     },
     "watch": {
       "executor": "nx:run-commands",
+      "cache": false,
+      "continuous": true,
+      "dependsOn": [
+        "build"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts watch",
-        "forwardAllArgs": true
+        "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/📜️script.ts watch",
+        "forwardAllArgs": false
       }
     },
     "test": {
@@ -57,51 +109,149 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test long"
-      }
+        "command": "bun ./📜️script.ts test long",
+        "forwardAllArgs": false
+      },
+      "dependsOn": [
+        "build"
+      ],
+      "cache": true,
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "dependentTasksOutputFiles": "**/*.pdf",
+          "transitive": true
+        }
+      ]
     },
     "test-exhaustive": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test exhaustive"
-      }
+        "command": "bun ./📜️script.ts test exhaustive",
+        "forwardAllArgs": false
+      },
+      "dependsOn": [
+        "build"
+      ],
+      "cache": true,
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "dependentTasksOutputFiles": "**/*.pdf",
+          "transitive": true
+        }
+      ]
     },
     "build-viz": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts build viz",
-        "forwardAllArgs": true
-      }
+        "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/📜️script.ts complete visualizations",
+        "forwardAllArgs": false
+      },
+      "dependsOn": [
+        "fonts",
+        "deps-tectonic",
+        "generate"
+      ]
     },
     "watch-viz": {
       "executor": "nx:run-commands",
       "cache": false,
+      "continuous": true,
+      "dependsOn": [
+        "build-viz"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts watch viz",
-        "forwardAllArgs": true
+        "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/📜️script.ts watch",
+        "forwardAllArgs": false
       }
     },
     "test-viz": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test viz",
-        "forwardAllArgs": true
-      }
+        "command": "bun ./📜️script.ts test viz coverage",
+        "forwardAllArgs": false
+      },
+      "outputs": []
     },
     "test-viz-full": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test viz full",
-        "forwardAllArgs": true
+        "forwardAllArgs": false
+      },
+      "dependsOn": [
+        "build-viz"
+      ],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "dependentTasksOutputFiles": "**/*.pdf",
+          "transitive": true
+        }
+      ]
+    },
+    "deps-tectonic": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "parallelism": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts prepare"
+      }
+    },
+    "test-toolchain": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "outputs": [],
+      "dependsOn": [
+        "deps-tectonic"
+      ],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/**/*",
+        {
+          "runtime": "node -p \"process.platform.concat(process.arch)\""
+        },
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+        {
+          "runtime": "bun --version"
+        }
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts verify"
+      }
+    },
+    "deps-tex": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "parallelism": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts prepare"
       }
     }
+  },
+  "metadata": {
+    "printCatalog": "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🔣️.json"
   }
 }

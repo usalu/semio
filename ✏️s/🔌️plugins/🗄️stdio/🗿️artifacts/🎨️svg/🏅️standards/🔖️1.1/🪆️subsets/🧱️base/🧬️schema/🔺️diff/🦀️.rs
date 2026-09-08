@@ -592,12 +592,12 @@ fn absorb_element_diff(mut a: SvgElementDiff, b: SvgElementDiff) -> SvgElementDi
     a.attributes = match (a.attributes.take(), b.attributes) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ad), Some(bd)) => Some(absorb_attrs_diff(ad, bd)),
+        (Some(ad), Some(bd)) => Some(absorb_attrs_diff(ad, &bd)),
     };
     a.children = match (a.children.take(), b.children) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ad), Some(bd)) => Some(absorb_children_diff(ad, bd)),
+        (Some(ad), Some(bd)) => Some(absorb_children_diff(ad, &bd)),
     };
     a
 }
@@ -606,7 +606,7 @@ fn absorb_element_diff(mut a: SvgElementDiff, b: SvgElementDiff) -> SvgElementDi
 /// `added.index` needs any position bookkeeping, approximated (not fully index-transported like
 /// children) since attribute order carries no spec-mandated meaning, only round-trip fidelity.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_attrs_diff(mut a: SvgAttributesDiff, b: SvgAttributesDiff) -> SvgAttributesDiff {
+fn absorb_attrs_diff(mut a: SvgAttributesDiff, b: &SvgAttributesDiff) -> SvgAttributesDiff {
     let a_added_names: std::collections::HashSet<String> = a.added.iter().map(|x| x.name.clone()).collect();
     let mut removed = a.removed.clone();
     let mut annihilated: Vec<String> = Vec::new();
@@ -647,15 +647,15 @@ fn absorb_attrs_diff(mut a: SvgAttributesDiff, b: SvgAttributesDiff) -> SvgAttri
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_children_diff(d1: SvgChildrenDiff, d2: SvgChildrenDiff) -> SvgChildrenDiff {
+fn absorb_children_diff(d1: SvgChildrenDiff, d2: &SvgChildrenDiff) -> SvgChildrenDiff {
     let d1_ref_max = d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).max();
-    let mut base_len = d1_ref_max.map(|m| m + 1).unwrap_or(0);
+    let mut base_len = d1_ref_max.map_or(0, |m| m + 1);
     let mid_len_needed_by_d1 = d1.added.iter().map(|a| a.index + 1).max().unwrap_or(0);
     while base_len.saturating_sub(d1.removed.len()) + d1.added.len() < mid_len_needed_by_d1 {
         base_len += 1;
     }
     let d2_ref_max = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max();
-    let required_mid_len = d2_ref_max.map(|m| m + 1).unwrap_or(0);
+    let required_mid_len = d2_ref_max.map_or(0, |m| m + 1);
     while base_len.saturating_sub(d1.removed.len()) + d1.added.len() < required_mid_len {
         base_len += 1;
     }
@@ -664,7 +664,7 @@ fn absorb_children_diff(d1: SvgChildrenDiff, d2: SvgChildrenDiff) -> SvgChildren
 
     let mut removed = d1.removed.clone();
     let mut modified = d1.modified.clone();
-    let mut working_added = d1.added.clone();
+    let mut working_added = d1.added;
     let mut annihilated: std::collections::HashSet<usize> = std::collections::HashSet::new();
 
     for &r2 in &d2.removed {
@@ -746,7 +746,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -808,7 +808,7 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_prolog(prolog: &Vec<XmlNode>) -> String {
+pub(crate) fn enc_prolog(prolog: &[XmlNode]) -> String {
     format!("[{}]", prolog.iter().map(enc_xml_node).collect::<Vec<_>>().join(","))
 }
 
@@ -1171,7 +1171,7 @@ fn enc_node_diff(d: &SvgNodeDiff) -> String {
             },
         ),
         SvgNodeDiff::Text { text } => format!("T[{}]", encode_option(text, |v| enc_str(v))),
-        SvgNodeDiff::Replace { node } => format!("R[{}]", encode_option(node, |v| enc_xml_node(v))),
+        SvgNodeDiff::Replace { node } => format!("R[{}]", encode_option(node, enc_xml_node)),
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

@@ -19,7 +19,9 @@ pub const STDIO_TSV_DOCUMENT_SCHEMA: &str = "stdio.tsv";
 /// ↩️ The file's own line-ending convention. IANA TSV doesn't mandate one; real files use either.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
+#[derive(Default)]
 pub enum LineEnding {
+    #[default]
     Lf,
     Crlf,
 }
@@ -34,11 +36,6 @@ impl LineEnding {
     }
 }
 
-impl Default for LineEnding {
-    fn default() -> Self {
-        LineEnding::Lf
-    }
-}
 //#endregion 🔖️LineEnding
 
 //#region 🔖️Snapshot

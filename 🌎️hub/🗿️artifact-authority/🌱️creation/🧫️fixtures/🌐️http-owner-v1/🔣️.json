@@ -1,0 +1,36 @@
+{
+  "schema": "semio.test.artifact-creation-http-owner/v1",
+  "limits": {
+    "bodyBytes": 4096,
+    "liveOperations": 8,
+    "lifetimeMs": 30000
+  },
+  "routes": [
+    { "id": "accept", "method": "POST", "path": "/_semio/hub/spaces/space-fixture/artifact-creations", "accepted": true },
+    { "id": "status", "method": "GET", "path": "/_semio/hub/spaces/space-fixture/artifact-creations/1234567890abcdef1234567890abcdef", "accepted": true },
+    { "id": "cancel", "method": "POST", "path": "/_semio/hub/spaces/space-fixture/artifact-creations/1234567890abcdef1234567890abcdef/cancel", "accepted": true },
+    { "id": "selected-current-catalog", "method": "GET", "path": "/_semio/hub/spaces/space-fixture/artifact-creations", "accepted": true },
+    { "id": "status-post", "method": "POST", "path": "/_semio/hub/spaces/space-fixture/artifact-creations/1234567890abcdef1234567890abcdef", "accepted": false },
+    { "id": "cancel-read", "method": "GET", "path": "/_semio/hub/spaces/space-fixture/artifact-creations/1234567890abcdef1234567890abcdef/cancel", "accepted": false },
+    { "id": "zero-request", "method": "POST", "path": "/_semio/hub/spaces/space-fixture/artifact-creations/00000000000000000000000000000000/cancel", "accepted": false },
+    { "id": "encoded-space", "method": "POST", "path": "/_semio/hub/spaces/space%20fixture/artifact-creations", "accepted": false },
+    { "id": "query-overpost", "method": "POST", "path": "/_semio/hub/spaces/space-fixture/artifact-creations?authority=overpost", "accepted": false },
+    { "id": "client-document", "method": "POST", "path": "/_semio/hub/spaces/space-fixture/documents/client-supplied/artifact-creations", "accepted": false }
+  ],
+  "authorities": [
+    { "id": "current-author", "authenticated": true, "sessionCurrent": true, "member": true, "role": "author", "backendAvailable": true, "expected": "admitted" },
+    { "id": "missing-bearer", "authenticated": false, "sessionCurrent": false, "member": false, "role": "none", "backendAvailable": true, "expected": "unauthorized" },
+    { "id": "rotated-session", "authenticated": true, "sessionCurrent": false, "member": true, "role": "author", "backendAvailable": true, "expected": "unauthorized" },
+    { "id": "removed-member", "authenticated": true, "sessionCurrent": true, "member": false, "role": "none", "backendAvailable": true, "expected": "forbidden" },
+    { "id": "spectator", "authenticated": true, "sessionCurrent": true, "member": true, "role": "spectator", "backendAvailable": true, "expected": "forbidden" },
+    { "id": "backend-unavailable", "authenticated": true, "sessionCurrent": true, "member": true, "role": "author", "backendAvailable": false, "expected": "unavailable" }
+  ],
+  "responses": [
+    { "phase": "accepted", "status": 202 },
+    { "phase": "preparing", "status": 202 },
+    { "phase": "ready", "status": 200 },
+    { "phase": "indeterminate", "status": 200 },
+    { "phase": "failed", "status": 200 },
+    { "phase": "cancelled", "status": 200 }
+  ]
+}

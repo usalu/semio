@@ -35,7 +35,8 @@ pub use schema::{
     DirectorySpaceAdministrationPageV1, DirectorySpaceAdministrationPublicDocumentWindowV1, DirectorySpaceAdministrationSectionV1, DirectorySpaceListEntryV1, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentBrowserActorSourceV1,
     DocumentDescriptor, DocumentExecutionProtocolV1, DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetLocaleV1, DocumentExecutionTargetStatusCodeV1, DocumentFrontier, DocumentOpenArtifactV1,
     DocumentOpenBrowserActorV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanErrorCodeV1, DocumentOpenPlanErrorV1, DocumentOpenPlanV1,
-    DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1, DocumentOwner, DocumentPlanSocketGrantIntentV1, DocumentScope, DocumentView, Hlc, InviteView, MemberSpaceViewV1,
+    DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1, DocumentOwner, DocumentPlanSocketGrantIntentV1, DocumentScope, DocumentView, GisMapApprovalUndoHandleV1,
+    GisMapApprovalUndoReceiptV1, GisMapApprovalUndoRequestV1, Hlc, InviteView, MemberSpaceViewV1,
     PublicDocumentCatalogEntryV1, PublicSpaceViewV1, PublishedArtifactBlob, PublishedArtifactCheckpoint, RebootstrapRequired, CHECKPOINT_PUBLICATION_COMMAND_MAX_BYTES, CHECKPOINT_PUBLICATION_DEADLINE_MS, CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES,
     DESCRIPTOR_DIGEST_V1_DOMAIN, DIRECTORY_COMMAND_INVITE_TOKEN_MAX_BYTES, DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_COMMAND_RECEIPT_MAX_EVENTS, DIRECTORY_COMMAND_REQUEST_ID_LEN, DIRECTORY_COMMAND_REQUEST_MAX_BYTES,
     DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES,
@@ -43,6 +44,7 @@ pub use schema::{
     DOCUMENT_OPEN_PLAN_MAX_TTL_MS,
 };
 pub use schema::{DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, MemberView, SpaceView, UserView};
+pub use schema::{DirectoryIndexedDocumentViewV1, DocumentIndexEntryV1};
 
 //#region 🔖️ReadModel
 /// 🏠️ One projected space: its `SpaceView` plus the current member roster.
@@ -51,6 +53,7 @@ pub struct DirectorySpace {
     pub view: SpaceView,
     pub members: Vec<MemberView>,
     pub documents: Vec<DocumentDescriptor>,
+    pub indexed_documents: Vec<DirectoryIndexedDocumentViewV1>,
 }
 
 /// 📇️ The directory's whole projected state, folded from the event log.
@@ -112,6 +115,7 @@ pub fn fold(model: DirectoryReadModel, event: &DirectoryEvent) -> DirectoryReadM
                     },
                     members: Vec::new(),
                     documents: Vec::new(),
+                    indexed_documents: Vec::new(),
                 },
             );
         }
@@ -168,6 +172,15 @@ pub fn fold(model: DirectoryReadModel, event: &DirectoryEvent) -> DirectoryReadM
                 }
                 space.view.document_count = space.documents.len() as u32;
                 space.view.updated_at_ms = event.recorded_at_ms;
+            }
+        }
+        DirectoryEventBody::DocumentIndexed { scope, descriptor_digest_v1, entry } => {
+            if let (Some(space), Some(author)) = (next.spaces.get_mut(&scope.space_id), event.user_id.as_ref()) {
+                if entry.validate() && descriptor_digest_v1.0 != [0; 32] && !author.is_empty() && author.len() <= 256 && event.space_id.as_deref() == Some(scope.space_id.as_str()) && !space.indexed_documents.iter().any(|row| row.descriptor.document_id == scope.document_id) {
+                    if let Some(descriptor) = space.documents.iter().find(|descriptor| descriptor.document_id == scope.document_id && descriptor.artifact_kind == entry.dialect.artifact_kind) {
+                        space.indexed_documents.push(DirectoryIndexedDocumentViewV1 { descriptor: descriptor.clone(), descriptor_digest_v1: *descriptor_digest_v1, entry: entry.clone(), created_at_ms: event.recorded_at_ms, created_by: author.clone() });
+                    }
+                }
             }
         }
         DirectoryEventBody::ArtifactCheckpointPublished { .. } | DirectoryEventBody::ArtifactRetentionAdvanced { .. } => {}

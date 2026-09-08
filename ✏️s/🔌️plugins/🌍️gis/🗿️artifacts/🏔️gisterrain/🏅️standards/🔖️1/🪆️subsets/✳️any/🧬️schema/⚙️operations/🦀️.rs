@@ -19,7 +19,8 @@ pub type GisTerrainStore = ArtifactStore<GisTerrainSnapshot, GisTerrainMutation>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::MutationDiff;
+    use crate::artifacts::gisterrain::schema::mutations::{ChangeExaggeration, ChangeImportedFeatures};
+    
 
     #[semio_framework_async_macros::async_test]
     async fn change_exaggeration_and_change_imported_features_invert_to_the_prior_field_value() {

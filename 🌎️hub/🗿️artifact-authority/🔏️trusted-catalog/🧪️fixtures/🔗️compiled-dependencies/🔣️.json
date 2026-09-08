@@ -1,0 +1,114 @@
+{
+  "schema": "semio.hub.compiled-stdio-dependencies/v1",
+  "publicationFiles": ["component.wasm", "descriptor.semio", "closed-actor.mjs", "stdio-component.wasm", "stdio-descriptor.semio", "trusted-catalog.json"],
+  "descriptorPreviewCases": [
+    { "id": "first-selected-descriptor-invalid", "packageIndex": 1, "previews": [] },
+    { "id": "second-selected-descriptor-invalid", "packageIndex": 0, "previews": ["semio:fixture-base"] }
+  ],
+  "selectedClosure": [
+    { "pluginId": "gis", "packageId": "semio:gis", "version": "0.1.0" },
+    { "pluginId": "stdio", "packageId": "semio:stdio", "version": "0.1.0" }
+  ],
+  "cases": [
+    { "change": "exact", "owner": "gis", "accepted": true },
+    { "change": "exact", "owner": "stdio", "accepted": true },
+    { "change": "selected-order", "owner": "gis", "accepted": true },
+    { "change": "missing", "owner": "gis", "accepted": false },
+    { "change": "duplicate", "owner": "gis", "accepted": false },
+    { "change": "self", "owner": "gis", "accepted": false },
+    { "change": "unknown", "owner": "gis", "accepted": false },
+    { "change": "any", "owner": "gis", "accepted": false },
+    { "change": "caret", "owner": "gis", "accepted": false },
+    { "change": "wrong-version", "owner": "gis", "accepted": false },
+    { "change": "noncanonical-version", "owner": "gis", "accepted": false },
+    { "change": "overflow-version", "owner": "gis", "accepted": false },
+    { "change": "foreign-package", "owner": "gis", "accepted": false },
+    { "change": "duplicate-selected", "owner": "gis", "accepted": false },
+    { "change": "missing-selected", "owner": "gis", "accepted": false },
+    { "change": "extra-field", "owner": "gis", "accepted": false },
+    { "change": "missing-manifest", "owner": "gis", "accepted": false },
+    { "change": "oversized-claim", "owner": "gis", "accepted": false },
+    { "change": "stdio-dependent", "owner": "stdio", "accepted": false },
+    { "change": "owner-plugin", "owner": "gis", "accepted": false },
+    { "change": "owner-package", "owner": "gis", "accepted": false },
+    { "change": "owner-version", "owner": "gis", "accepted": false },
+    { "change": "selected-version", "owner": "gis", "accepted": false },
+    { "change": "missing-protocol", "owner": "gis", "accepted": false },
+    { "change": "unsupported-protocol", "owner": "gis", "accepted": false }
+  ],
+  "consumerCatalogCases": [
+    { "change": "exact", "accepted": true },
+    { "change": "missing", "accepted": false },
+    { "change": "duplicate", "accepted": false },
+    { "change": "wrong-version", "accepted": false },
+    { "change": "foreign-topic-version", "accepted": false }
+  ],
+  "atomicCases": [
+    { "change": "stdio-catalog", "accepted": false, "previews": [] },
+    { "change": "gis-catalog", "accepted": false, "previews": ["stdio"] },
+    { "change": "gis-dependency", "accepted": false, "previews": ["stdio"] },
+    { "change": "gis-provider", "accepted": false, "previews": ["stdio"] },
+    { "change": "gis-trailing-byte", "accepted": false, "previews": ["stdio"] },
+    { "change": "gis-duplicate-field", "accepted": false, "previews": ["stdio"] },
+    { "change": "exact", "accepted": true, "previews": ["stdio", "gis"] }
+  ],
+  "nativeCases": [
+    { "id": "exact", "dependencies": [{ "pluginId": "stdio", "version": "=0.1.0" }], "accepted": true },
+    { "id": "missing", "dependencies": [], "accepted": false },
+    { "id": "duplicate", "dependencies": [{ "pluginId": "stdio", "version": "=0.1.0" }, { "pluginId": "stdio", "version": "=0.1.0" }], "accepted": false },
+    { "id": "foreign", "dependencies": [{ "pluginId": "other", "version": "=0.1.0" }], "accepted": false },
+    { "id": "any", "dependencies": [{ "pluginId": "stdio", "version": "*" }], "accepted": false },
+    { "id": "caret", "dependencies": [{ "pluginId": "stdio", "version": "^0.1.0" }], "accepted": false },
+    { "id": "tilde", "dependencies": [{ "pluginId": "stdio", "version": "~0.1.0" }], "accepted": false },
+    { "id": "at-least", "dependencies": [{ "pluginId": "stdio", "version": ">=0.1.0" }], "accepted": false },
+    { "id": "wrong-version", "dependencies": [{ "pluginId": "stdio", "version": "=0.2.0" }], "accepted": false }
+  ],
+  "rawCases": [
+    {
+      "name": "canonical-gis-descriptor",
+      "hex": "0505302e312e30063d302e312e30036769730973656d696f3a67697305737464696f01011110030711657865637574696f6e50726f746f636f6c100107116170704368616e6e656c56657273696f6e050000000000002c4007086d616e69666573741003070c646570656e64656e636965730c0110020708706c7567696e49640604070776657273696f6e06010708706c7567696e49640602070776657273696f6e060007097061636b61676549640603",
+      "accepted": true
+    },
+    {
+      "name": "duplicate-top-level-packageId-earlier-null-overwritten",
+      "hex": "0505302e312e30063d302e312e30036769730973656d696f3a67697305737464696f01011110040711657865637574696f6e50726f746f636f6c100107116170704368616e6e656c56657273696f6e050000000000002c4007086d616e69666573741003070c646570656e64656e636965730c0110020708706c7567696e49640604070776657273696f6e06010708706c7567696e49640602070776657273696f6e060007097061636b61676549641207097061636b61676549640603",
+      "accepted": false
+    },
+    {
+      "name": "duplicate-manifest-earlier-null-overwritten",
+      "hex": "0505302e312e30063d302e312e30036769730973656d696f3a67697305737464696f01011110040711657865637574696f6e50726f746f636f6c100107116170704368616e6e656c56657273696f6e050000000000002c4007086d616e69666573741207086d616e69666573741003070c646570656e64656e636965730c0110020708706c7567696e49640604070776657273696f6e06010708706c7567696e49640602070776657273696f6e060007097061636b61676549640603",
+      "accepted": false
+    },
+    {
+      "name": "canonical-descriptor-with-trailing-zero",
+      "hex": "0505302e312e30063d302e312e30036769730973656d696f3a67697305737464696f01011110030711657865637574696f6e50726f746f636f6c100107116170704368616e6e656c56657273696f6e050000000000002c4007086d616e69666573741003070c646570656e64656e636965730c0110020708706c7567696e49640604070776657273696f6e06010708706c7567696e49640602070776657273696f6e060007097061636b6167654964060300",
+      "accepted": false
+    }
+  ],
+  "encodingCases": [
+    {
+      "name": "gis-direct-dependency-stdio",
+      "identities": [
+        {
+          "pluginId": "stdio",
+          "packageId": "semio:stdio",
+          "version": "0.1.0"
+        }
+      ],
+      "hex": "000000010000000000000005737464696f000000000000000b73656d696f3a737464696f0000000000000005302e312e30"
+    },
+    {
+      "name": "stdio-direct-dependencies-empty",
+      "identities": [],
+      "hex": "00000000"
+    }
+  ],
+  "ordering": {
+    "input": [
+      { "pluginId": "\ud800\udc00", "packageId": "semio:astral", "version": "0.1.0" },
+      { "pluginId": "\ue000", "packageId": "semio:bmp", "version": "0.1.0" },
+      { "pluginId": "Z", "packageId": "semio:ascii", "version": "0.1.0" }
+    ],
+    "expected": ["Z", "\ue000", "\ud800\udc00"]
+  }
+}

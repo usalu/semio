@@ -143,7 +143,7 @@ pub(crate) fn rejected(message: String) -> protocol::MutationOutcome<StepDiff> {
 pub(crate) fn edited(base: &StepSnapshot, edit: &ClassEdit) -> Result<StepSnapshot, String> {
     let mut doc = base.to_part21_document();
     ladder::apply_class_edit(&mut doc, CLASS, MAX_RUNG, edit)?;
-    Ok(StepSnapshot::from_part21_document(doc))
+    Ok(StepSnapshot::from_part21_document(&doc))
 }
 //#endregion 🔖️Apply
 
@@ -181,7 +181,7 @@ mod tests {
     use crate::artifacts::step::standards::v_ap214::subsets::cc1::schema::check_cc1_conformance;
 
     fn base() -> StepSnapshot {
-        StepSnapshot::from_part21_document(Part21Document {
+        StepSnapshot::from_part21_document(&Part21Document {
             header: Part21Header { file_schema: vec![Part21Value::List(vec![Part21Value::Str("AUTOMOTIVE_DESIGN".into())])], ..Part21Header::default() },
             instances: vec![
                 Part21Instance { id: 821, entities: vec![("PRODUCT_DEFINITION".into(), vec![Part21Value::Str("A".into())])] },

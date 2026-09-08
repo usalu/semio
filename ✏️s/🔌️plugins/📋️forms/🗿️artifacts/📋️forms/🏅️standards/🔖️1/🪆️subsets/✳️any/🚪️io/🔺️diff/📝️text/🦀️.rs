@@ -239,7 +239,7 @@ mod tests {
         let step = FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() };
         let operation = FormMutation::CreateStep(create_step::mutation::CreateStep { step, index: None });
         let diff: FormsDiff = operation.diff(&base).into_parts().0;
-        assert_eq!(crate::artifacts::forms::forms_steps(&diff.apply(&base).expect("valid mutation diff")).len(), 1);
+        assert_eq!(forms_steps(&diff.apply(&base).expect("valid mutation diff")).len(), 1);
     }
 }
 //#endregion 🧪️Tests

@@ -1,4 +1,7 @@
 //! 💾️ Framing and direct binary registry for BmpMutation.
+/// 📦 Encodes a recognized mutation payload or declines another variant.
+pub type BmpMutationPayloadEncoder = fn(&BmpMutation) -> Option<Result<Vec<u8>, protocol::ProtocolError>>;
+
 use crate::artifacts::bmp::schema::mutations::BmpMutation;
 
 //#region Registry
@@ -6,7 +9,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 pub struct Entry {
     pub tag: u8,
-    pub encode: fn(&BmpMutation) -> Option<Result<Vec<u8>, protocol::ProtocolError>>,
+    pub encode: BmpMutationPayloadEncoder,
     pub decode: fn(&[u8]) -> Result<BmpMutation, protocol::ProtocolError>,
 }
 pub const REGISTRY: &[Entry] = &[

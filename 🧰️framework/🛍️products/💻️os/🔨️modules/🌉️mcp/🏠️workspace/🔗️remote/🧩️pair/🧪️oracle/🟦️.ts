@@ -60,16 +60,19 @@ const decode = async (wire: Buffer, expectedSpace = fixture.binding.spaceId, exp
   const descriptor = take(header, state, 32).toString("hex");
   const checkpoint = take(header, state, 32);
   const frontierDocument = readText(header, state, true);
-  state.offset += 8;
-  readText(header, state, false);
-  state.offset += 8;
+  const headOrdinal = Number(header.readBigUInt64BE(state.offset)); state.offset += 8;
+  const headEditId = readText(header, state, false);
+  const lastCommitSeq = Number(header.readBigUInt64BE(state.offset)); state.offset += 8;
   const chain = take(header, state, 32);
   const packHash = take(header, state, 32).toString("hex");
   const packLength = Number(header.readBigUInt64BE(state.offset)); state.offset += 8;
   const sprHash = take(header, state, 32).toString("hex");
   const sprLength = Number(header.readBigUInt64BE(state.offset)); state.offset += 8;
   const aggregate = take(header, state, 32).toString("hex");
-  if (state.offset !== header.length || space !== expectedSpace || document !== fixture.binding.documentId || descriptor !== fixture.binding.descriptorDigest || checkpoint.every((byte) => byte === 0) || chain.every((byte) => byte === 0) || frontierDocument !== document || etag(header) !== expectedEtag) throw new Error("authority identity");
+  const zeroChain = chain.every((byte) => byte === 0);
+  const exactFrontier = frontierDocument === document && ((headOrdinal === 0 && headEditId === "" && lastCommitSeq === 0 && zeroChain)
+    || (Number.isSafeInteger(headOrdinal) && headOrdinal > 0 && headEditId.length > 0 && Number.isSafeInteger(lastCommitSeq) && lastCommitSeq > 0 && !zeroChain));
+  if (state.offset !== header.length || space !== expectedSpace || document !== fixture.binding.documentId || descriptor !== fixture.binding.descriptorDigest || checkpoint.every((byte) => byte === 0) || !exactFrontier || etag(header) !== expectedEtag) throw new Error("authority identity");
   if (packLength === 0 || sprLength === 0 || packLength + sprLength > fixture.limits.pairBytes) throw new Error("pair budget");
   const recordCount = Math.ceil(packLength / fixture.limits.recordBytes) + Math.ceil(sprLength / fixture.limits.recordBytes);
   if (all.length !== recordCount + 2) throw new Error("record count");
@@ -113,6 +116,28 @@ const mutate = (name: string, valid: Buffer): { wire: Buffer; space?: string; et
 const wire = hex(fixture.valid.wireHex);
 await decode(wire);
 if (digest(hex(fixture.valid.packHex)) !== fixture.valid.packSha256 || await subtleDigest(hex(fixture.valid.sprHex)) !== fixture.valid.sprSha256) throw new Error("fixture part hash mismatch");
+
+const edit = wire.indexOf(Buffer.from("edit:7"));
+if (edit < 12) throw new Error("genesis mutation target missing");
+const headLength = edit - 4;
+const headOrdinal = headLength - 8;
+const genesis = Buffer.concat([wire.subarray(0, edit), wire.subarray(edit + 6)]);
+genesis.fill(0, headOrdinal, headOrdinal + 8);
+genesis.writeUInt32BE(0, headLength);
+genesis.fill(0, headLength + 4, headLength + 44);
+genesis.writeUInt32BE(genesis.readUInt32BE(0) - 6, 0);
+const genesisHeader = frames(genesis)[0]!;
+await decode(genesis, fixture.binding.spaceId, etag(genesis.subarray(genesisHeader.payload, genesisHeader.end)));
+for (const [name, offset] of [["ordinal", headOrdinal], ["commit", headLength + 4]] as const) {
+  const partial = Buffer.from(genesis);
+  partial.writeBigUInt64BE(1n, offset);
+  const partialHeader = frames(partial)[0]!;
+  try { await decode(partial, fixture.binding.spaceId, etag(partial.subarray(partialHeader.payload, partialHeader.end))); throw new Error(`partial ${name} accepted`); } catch (error) { if (error instanceof Error && error.message === `partial ${name} accepted`) throw error; }
+}
+const partialChain = Buffer.from(genesis);
+partialChain[headLength + 12] = 1;
+const partialChainHeader = frames(partialChain)[0]!;
+try { await decode(partialChain, fixture.binding.spaceId, etag(partialChain.subarray(partialChainHeader.payload, partialChainHeader.end))); throw new Error("partial chain accepted"); } catch (error) { if (error instanceof Error && error.message === "partial chain accepted") throw error; }
 
 let rejected = 0;
 for (const name of fixture.negativeVectors) {

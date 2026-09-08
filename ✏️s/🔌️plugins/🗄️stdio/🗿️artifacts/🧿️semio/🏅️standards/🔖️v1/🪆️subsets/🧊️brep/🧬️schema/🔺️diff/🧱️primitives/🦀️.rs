@@ -6,7 +6,7 @@
 //! every coedge. Topology: box (V=8 E=12 F=6), sphere/cylinder/cone/torus as exact analytic
 //! surfaces with seam/degenerate edges (no faceting, no `segments`), convex hull as
 //! coplanar-merged polygon faces (Quickhull + boundary-walk merge).
-
+//!
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/🧱️primitives` in ticket
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL3. Rewritten to
 //! exact analytic primitives (no `segments`, no triangle-soup topology) in ticket
@@ -24,8 +24,13 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::sur
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+#[cfg(test)]
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Edge;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec2, Vec3};
+
+/// 🔺 Coplanar triangles grouped by quantized plane coordinates.
+pub type PlaneClusters = HashMap<(i64, i64, i64, i64), (Vec3, Vec<[usize; 3]>)>;
 
 // #region 🔖️Wire
 
@@ -755,7 +760,7 @@ fn plane_key(normal: Vec3, d: f64) -> (i64, i64, i64, i64) {
 /// (e.g. every face of a tetrahedron) round-trip unchanged.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn merge_coplanar_triangles(hull: &ConvexHull) -> Vec<FaceGroup> {
-    let mut clusters: HashMap<(i64, i64, i64, i64), (Vec3, Vec<[usize; 3]>)> = HashMap::new();
+    let mut clusters: PlaneClusters = HashMap::new();
     for &[a, b, c] in &hull.faces {
         let normal = face_normal(&hull.vertices, a, b, c);
         let d = -normal.dot(hull.vertices[a].to_vec());
@@ -779,8 +784,7 @@ fn merge_coplanar_triangles(hull: &ConvexHull) -> Vec<FaceGroup> {
         let Some((&start, _)) = next.iter().next() else { continue };
         let mut boundary = vec![start];
         let mut current = start;
-        loop {
-            let Some(&n) = next.get(&current) else { break };
+        while let Some(&n) = next.get(&current) {
             if n == start {
                 break;
             }

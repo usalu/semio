@@ -488,7 +488,7 @@ fn absorb_value_diff(d1: JsonValueDiff, d2: JsonValueDiff) -> JsonValueDiff {
         (JsonValueDiff::Bool { .. }, JsonValueDiff::Bool { value }) => JsonValueDiff::Bool { value },
         (JsonValueDiff::Number { .. }, JsonValueDiff::Number { lexeme }) => JsonValueDiff::Number { lexeme },
         (JsonValueDiff::String { .. }, JsonValueDiff::String { value }) => JsonValueDiff::String { value },
-        (JsonValueDiff::Array { diff: a1 }, JsonValueDiff::Array { diff: a2 }) => JsonValueDiff::Array { diff: absorb_array_diff(a1, a2) },
+        (JsonValueDiff::Array { diff: a1 }, JsonValueDiff::Array { diff: a2 }) => JsonValueDiff::Array { diff: absorb_array_diff(a1, &a2) },
         (JsonValueDiff::Object { diff: o1 }, JsonValueDiff::Object { diff: o2 }) => JsonValueDiff::Object { diff: absorb_object_diff(o1, o2) },
         // Defensive: a kind mismatch that isn't a Replace shouldn't arise from two diffs that were
         // actually produced by real sequential application against the same intervening state —
@@ -508,7 +508,7 @@ fn absorb_value_diff(d1: JsonValueDiff, d2: JsonValueDiff) -> JsonValueDiff {
 /// a `d2`-removal of a `d1`-added slot silently drops the add, and a `d2`-modify of a `d1`-added
 /// slot patches the carried payload — matching the recipe's canonical absorb cases exactly.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_array_diff(d1: JsonArrayDiff, d2: JsonArrayDiff) -> JsonArrayDiff {
+fn absorb_array_diff(d1: JsonArrayDiff, d2: &JsonArrayDiff) -> JsonArrayDiff {
     #[derive(Clone, Copy)]
     enum Origin {
         Base(usize),
@@ -684,7 +684,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()

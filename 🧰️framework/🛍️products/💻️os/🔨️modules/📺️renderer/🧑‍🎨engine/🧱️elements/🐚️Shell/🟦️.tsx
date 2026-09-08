@@ -9,6 +9,7 @@
 // #region 🔌️Adapters
 import React, { Component, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
+import type { ShellDialogV1 } from "../🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🟦️.ts";
 import {
   ANCHORS,
   Button,
@@ -517,7 +518,7 @@ type OverlayState = {
   /** ✅️ Indices into the active step's `interactions` that are done — reset whenever the step changes. */
   readonly introductionCompletedInteractions: readonly number[];
   /** 🗨️ The open declared dialog (id + `Effect`-seeded args), or `null` when none is open. */
-  readonly dialog: { readonly dialogId: string; readonly seedArgs?: Readonly<Record<string, unknown>> } | null;
+  readonly dialog: ShellDialogV1 | null;
   /** 🧯️ A non-blocking, auto-dismissing notice — e.g. a `"viewer.read-only"` fault arriving from the
    * host (contract freeze §2.3/§5: surfaces as a notice, never a crash). `null` when nothing to show. */
   readonly transientNotice: TransientNotice | null;
@@ -562,7 +563,7 @@ type TutorialShellUiSnapshot = {
   readonly treeOpenStates: Readonly<Record<string, boolean>>;
   readonly activeUtilityByWindowId: Readonly<Record<string, string | null>>;
   readonly activeToolId: string | null;
-  readonly openDialogId: string | null;
+  readonly dialog: ShellDialogV1 | null;
   readonly commandPanelOpen: boolean;
 };
 
@@ -696,6 +697,7 @@ export type ShellAction =
   | { readonly type: "SET_INTRODUCTION_STEP"; readonly value: Updatable<number | null> }
   | { readonly type: "COMPLETE_INTRODUCTION_INTERACTION"; readonly index: number }
   | { readonly type: "SET_DIALOG"; readonly value: OverlayState["dialog"] }
+  | { readonly type: "CLOSE_DIALOG"; readonly openingId: number }
   | { readonly type: "SET_TRANSIENT_NOTICE"; readonly value: TransientNotice | null }
   | { readonly type: "SET_OPEN_WITH_FOCUS_ROLE"; readonly value: AppRole | null }
   | { readonly type: "SET_TUTORIAL"; readonly value: string | null }
@@ -945,15 +947,14 @@ function overlayReducer(state: OverlayState, action: ShellAction): OverlayState 
       return action.value != null && state.introductionStepIndex != null ? { ...state, introductionStepIndex: null, introductionCompletedInteractions: [] } : state;
     case "SET_DIALOG":
       return { ...state, dialog: action.value };
+    case "CLOSE_DIALOG":
+      return state.dialog?.openingId === action.openingId ? { ...state, dialog: null } : state;
     case "SET_TRANSIENT_NOTICE":
       return { ...state, transientNotice: action.value };
     case "SET_OPEN_WITH_FOCUS_ROLE":
       return { ...state, openWithFocusRole: action.value };
-    // 🎥️ `commandPanelOpen`/`openDialogId` restore onto the existing `searchOpen`/`dialog` fields — a
-    // tutorial snapshot's "command panel" IS the shell's command palette (`UISearch`), and a dialog
-    // restore only ever carries the id (seed args are not part of `TutorialUiSnapshot`).
     case "APPLY_TUTORIAL_UI_SNAPSHOT":
-      return { ...state, dialog: action.snapshot.openDialogId ? { dialogId: action.snapshot.openDialogId } : null, searchOpen: action.snapshot.commandPanelOpen };
+      return { ...state, dialog: action.snapshot.dialog, searchOpen: action.snapshot.commandPanelOpen };
     default:
       return state;
   }

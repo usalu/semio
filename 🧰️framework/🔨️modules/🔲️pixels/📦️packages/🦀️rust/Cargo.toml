@@ -2,7 +2,7 @@
 name = "semio-framework-pixels"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Owned raster image codecs (PNG) and pixel-buffer utilities for the framework kernel"
 
 [package.metadata.semio]

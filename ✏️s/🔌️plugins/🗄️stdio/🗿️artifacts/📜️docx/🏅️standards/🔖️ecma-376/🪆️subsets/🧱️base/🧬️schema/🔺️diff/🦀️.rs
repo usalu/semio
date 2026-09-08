@@ -469,19 +469,19 @@ fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdd
 /// `apply_item` patches a `D` onto a `T` (needed when `d2` modifies an item `d1` just added).
 #[allow(clippy::too_many_arguments)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_indexed<T, D>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T>
+fn absorb_indexed<T, D>(d1: IndexedTripleDiff<D, T>, d2: &IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T>
 where
     T: Clone,
     D: Clone,
 {
     let d1_ref_max = d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).max();
-    let mut base_len = d1_ref_max.map(|m| m + 1).unwrap_or(0);
+    let mut base_len = d1_ref_max.map_or(0, |m| m + 1);
     let mid_len_needed_by_d1 = d1.added.iter().map(|a| a.index + 1).max().unwrap_or(0);
     while base_len.saturating_sub(d1.removed.len()) + d1.added.len() < mid_len_needed_by_d1 {
         base_len += 1;
     }
     let d2_ref_max = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max();
-    let required_mid_len = d2_ref_max.map(|m| m + 1).unwrap_or(0);
+    let required_mid_len = d2_ref_max.map_or(0, |m| m + 1);
     while base_len.saturating_sub(d1.removed.len()) + d1.added.len() < required_mid_len {
         base_len += 1;
     }
@@ -736,7 +736,7 @@ where
         }
     }
     let order = if !d2.order.is_empty() {
-        d2.order.clone()
+        d2.order
     } else if d1_order.is_empty() {
         Vec::new()
     } else {
@@ -848,7 +848,7 @@ fn apply_block(block: &mut DocxBlock, diff: &DocxBlockDiff) -> MutationApplyResu
                 return Err(MutationApplyError::new("mutation.apply.kind-mismatch", "paragraph diff targets a non-paragraph block"));
             };
             if let Some(rd) = &pd.runs {
-                apply_indexed(&mut p.runs, rd, apply_run).map_err(|error| error.under(["runs"]))?;
+                apply_indexed(&mut p.runs, rd, |item, diff| { apply_run(item, diff); Ok(()) }).map_err(|error| error.under(["runs"]))?;
             }
             if let Some(s) = &pd.style {
                 p.style = s.clone();
@@ -867,7 +867,7 @@ fn apply_block(block: &mut DocxBlock, diff: &DocxBlockDiff) -> MutationApplyResu
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_run(run: &mut DocxRun, diff: &DocxRunDiff) -> MutationApplyResult<()> {
+fn apply_run(run: &mut DocxRun, diff: &DocxRunDiff) {
     if let Some(v) = &diff.text {
         run.text = v.clone();
     }
@@ -880,7 +880,6 @@ fn apply_run(run: &mut DocxRun, diff: &DocxRunDiff) -> MutationApplyResult<()> {
     if let Some(v) = diff.underline {
         run.underline = v;
     }
-    Ok(())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -900,14 +899,13 @@ fn apply_cell(cell: &mut DocxTableCell, diff: &DocxTableCellDiff) -> MutationApp
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_style(style: &mut DocxStyle, diff: &DocxStyleDiff) -> MutationApplyResult<()> {
+fn apply_style(style: &mut DocxStyle, diff: &DocxStyleDiff) {
     if let Some(v) = &diff.name {
         style.name = v.clone();
     }
     if let Some(v) = &diff.based_on {
         style.based_on = v.clone();
     }
-    Ok(())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -916,7 +914,7 @@ fn apply_document_diff(doc: &mut DocxDocument, diff: &DocxDocumentDiff) -> Mutat
         apply_indexed(&mut doc.body, bd, apply_block).map_err(|error| error.under(["body"]))?;
     }
     if let Some(sd) = &diff.styles {
-        apply_named(&mut doc.styles, sd, |s| s.id.clone(), apply_style).map_err(|error| error.under(["styles"]))?;
+        apply_named(&mut doc.styles, sd, |s| s.id.clone(), |item, diff| { apply_style(item, diff); Ok(()) }).map_err(|error| error.under(["styles"]))?;
     }
     Ok(())
 }
@@ -1092,7 +1090,7 @@ fn absorb_paragraph_diff(mut a: DocxParagraphDiff, b: DocxParagraphDiff) -> Docx
     a.runs = match (a.runs.take(), b.runs) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ra), Some(rb)) => Some(absorb_indexed(ra, rb, absorb_run_diff, run_with_diff_applied)),
+        (Some(ra), Some(rb)) => Some(absorb_indexed(ra, &rb, absorb_run_diff, run_with_diff_applied)),
     };
     a
 }
@@ -1107,7 +1105,7 @@ fn absorb_table_diff(mut a: DocxTableDiff, b: DocxTableDiff) -> DocxTableDiff {
     a.rows = match (a.rows.take(), b.rows) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ra), Some(rb)) => Some(absorb_indexed(ra, rb, absorb_row_diff, row_with_diff_applied)),
+        (Some(ra), Some(rb)) => Some(absorb_indexed(ra, &rb, absorb_row_diff, row_with_diff_applied)),
     };
     a
 }
@@ -1117,7 +1115,7 @@ fn absorb_row_diff(mut a: DocxTableRowDiff, b: DocxTableRowDiff) -> DocxTableRow
     a.cells = match (a.cells.take(), b.cells) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ca), Some(cb)) => Some(absorb_indexed(ca, cb, absorb_cell_diff, cell_with_diff_applied)),
+        (Some(ca), Some(cb)) => Some(absorb_indexed(ca, &cb, absorb_cell_diff, cell_with_diff_applied)),
     };
     a
 }
@@ -1127,7 +1125,7 @@ fn absorb_cell_diff(mut a: DocxTableCellDiff, b: DocxTableCellDiff) -> DocxTable
     a.blocks = match (a.blocks.take(), b.blocks) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ba), Some(bb)) => Some(absorb_indexed(ba, bb, absorb_block_diff, block_with_diff_applied)),
+        (Some(ba), Some(bb)) => Some(absorb_indexed(ba, &bb, absorb_block_diff, block_with_diff_applied)),
     };
     a
 }
@@ -1149,7 +1147,7 @@ fn absorb_document_diff(a: DocxDocumentDiff, b: DocxDocumentDiff) -> DocxDocumen
         body: match (a.body, b.body) {
             (None, x) => x,
             (x, None) => x,
-            (Some(ba), Some(bb)) => Some(absorb_indexed(ba, bb, absorb_block_diff, block_with_diff_applied)),
+            (Some(ba), Some(bb)) => Some(absorb_indexed(ba, &bb, absorb_block_diff, block_with_diff_applied)),
         },
         styles: match (a.styles, b.styles) {
             (None, x) => x,
@@ -1683,7 +1681,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -1761,7 +1759,7 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
-    format!("[{}]", items.iter().map(|i| enc(i)).collect::<Vec<_>>().join(","))
+    format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
@@ -2025,17 +2023,17 @@ fn dec_indexed_triple<D, T>(body: &str, dec_d: impl Fn(&str) -> Result<D, String
 /// relationship lists, relationships-by-owner).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_named_triple<K, D, T>(diff: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K) -> String, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
-    let removed = diff.removed.iter().map(|k| enc_k(k)).collect::<Vec<_>>().join(",");
+    let removed = diff.removed.iter().map(&enc_k).collect::<Vec<_>>().join(",");
     let modified = diff.modified.iter().map(|m| format!("{}:{}", enc_k(&m.key), enc_d(&m.diff))).collect::<Vec<_>>().join(",");
-    let added = diff.added.iter().map(|t| enc_t(t)).collect::<Vec<_>>().join(",");
-    let order = diff.order.iter().map(|k| enc_k(k)).collect::<Vec<_>>().join(",");
+    let added = diff.added.iter().map(enc_t).collect::<Vec<_>>().join(",");
+    let order = diff.order.iter().map(enc_k).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}];[{order}]")
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_named_triple<K, D, T>(body: &str, dec_k: impl Fn(&str) -> Result<K, String>, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedTripleDiff<K, D, T>, String> {
     let four = split_top_level(body, ';');
     let [removed_s, modified_s, added_s, order_s] = four.as_slice() else { return Err(format!("named triple: expected 4 sections, got {}", four.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| dec_k(s)).collect::<Result<Vec<_>, String>>()?;
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(&dec_k).collect::<Result<Vec<_>, String>>()?;
     let modified = split_top_level(strip_brackets(modified_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
@@ -2044,8 +2042,8 @@ fn dec_named_triple<K, D, T>(body: &str, dec_k: impl Fn(&str) -> Result<K, Strin
             Ok(NamedModified { key: dec_k(key)?, diff: dec_d(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| dec_t(s)).collect::<Result<Vec<_>, String>>()?;
-    let order = split_top_level(strip_brackets(order_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| dec_k(s)).collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_t).collect::<Result<Vec<_>, String>>()?;
+    let order = split_top_level(strip_brackets(order_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_k).collect::<Result<Vec<_>, String>>()?;
     Ok(NamedTripleDiff { removed, modified, added, order })
 }
 //#endregion 🔖️GenericTripleCodecs
@@ -2731,7 +2729,7 @@ fn dec_named_triple_bin<K, D, T>(
 //#region 🔖️DiffValueBinaryCodecs
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_runs_diff_bin(d: &DocxRunsDiff, out: &mut Vec<u8>) {
-    enc_indexed_triple_bin(d, enc_run_diff_bin, enc_run_bin, out)
+    enc_indexed_triple_bin(d, enc_run_diff_bin, enc_run_bin, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_runs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRunsDiff, String> {
@@ -2740,7 +2738,7 @@ fn dec_runs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRunsDiff,
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_blocks_diff_bin(d: &DocxBlocksDiff, out: &mut Vec<u8>) {
-    enc_indexed_triple_bin(d, enc_block_diff_bin, enc_block_bin, out)
+    enc_indexed_triple_bin(d, enc_block_diff_bin, enc_block_bin, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_blocks_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlocksDiff, String> {
@@ -2749,7 +2747,7 @@ fn dec_blocks_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlocksD
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_table_rows_diff_bin(d: &DocxTableRowsDiff, out: &mut Vec<u8>) {
-    enc_indexed_triple_bin(d, enc_table_row_diff_bin, enc_row_bin, out)
+    enc_indexed_triple_bin(d, enc_table_row_diff_bin, enc_row_bin, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_table_rows_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableRowsDiff, String> {
@@ -2758,7 +2756,7 @@ fn dec_table_rows_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTab
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_table_cells_diff_bin(d: &DocxTableCellsDiff, out: &mut Vec<u8>) {
-    enc_indexed_triple_bin(d, enc_table_cell_diff_bin, enc_cell_bin, out)
+    enc_indexed_triple_bin(d, enc_table_cell_diff_bin, enc_cell_bin, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_table_cells_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableCellsDiff, String> {
@@ -2767,11 +2765,11 @@ fn dec_table_cells_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTa
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_styles_diff_bin(d: &DocxStylesDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_style_diff_bin, enc_style_bin, out)
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_style_diff_bin, enc_style_bin, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_styles_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStylesDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_style_diff_bin, dec_style_bin)
+    dec_named_triple_bin(reader, read_str_lp, dec_style_diff_bin, dec_style_bin)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2914,11 +2912,11 @@ fn dec_block_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlockDif
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_ct_entries_diff_bin(d: &DocxOpcCtEntriesDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), |v: &String, out| write_str_lp(out, v), enc_ct_entry_bin, out)
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), |v: &String, out| write_str_lp(out, v), enc_ct_entry_bin, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_ct_entries_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcCtEntriesDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), |r| read_str_lp(r), dec_ct_entry_bin)
+    dec_named_triple_bin(reader, read_str_lp, read_str_lp, dec_ct_entry_bin)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2941,11 +2939,11 @@ fn dec_opc_part_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcPa
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_parts_diff_bin(d: &DocxOpcPartsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_opc_part_diff_bin, enc_opc_part_bin, out)
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_opc_part_diff_bin, enc_opc_part_bin, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_parts_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcPartsDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_opc_part_diff_bin, dec_opc_part_bin)
+    dec_named_triple_bin(reader, read_str_lp, dec_opc_part_diff_bin, dec_opc_part_bin)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2973,20 +2971,20 @@ fn dec_rel_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcRelDiff
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_rel_list_diff_bin(d: &DocxOpcRelListDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_rel_diff_bin, enc_rel_bin, out)
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_rel_diff_bin, enc_rel_bin, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_rel_list_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcRelListDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_rel_diff_bin, dec_rel_bin)
+    dec_named_triple_bin(reader, read_str_lp, dec_rel_diff_bin, dec_rel_bin)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_relationships_diff_bin(d: &DocxOpcRelationshipsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_rel_list_diff_bin, enc_rel_owner_entry_bin, out)
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_rel_list_diff_bin, enc_rel_owner_entry_bin, out);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_relationships_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcRelationshipsDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_rel_list_diff_bin, dec_rel_owner_entry_bin)
+    dec_named_triple_bin(reader, read_str_lp, dec_rel_list_diff_bin, dec_rel_owner_entry_bin)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

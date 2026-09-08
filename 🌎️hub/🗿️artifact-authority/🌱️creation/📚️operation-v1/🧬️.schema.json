@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://hub/artifact-creation-operation/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "state",
+    "fact",
+    "next"
+  ],
+  "properties": {
+    "state": {
+      "enum": [
+        "absent",
+        "accepted",
+        "prepared",
+        "committed",
+        "cancelled",
+        "failed"
+      ]
+    },
+    "fact": {
+      "enum": [
+        "accepted",
+        "prepared",
+        "committed",
+        "cancelled",
+        "failed"
+      ]
+    },
+    "next": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "accepted",
+        "prepared",
+        "committed",
+        "cancelled",
+        "failed",
+        null
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "state": {
+          "const": "absent"
+        },
+        "fact": {
+          "const": "accepted"
+        },
+        "next": {
+          "const": "accepted"
+        }
+      }
+    },
+    {
+      "properties": {
+        "state": {
+          "const": "accepted"
+        },
+        "fact": {
+          "const": "prepared"
+        },
+        "next": {
+          "const": "prepared"
+        }
+      }
+    },
+    {
+      "properties": {
+        "state": {
+          "const": "prepared"
+        },
+        "fact": {
+          "const": "committed"
+        },
+        "next": {
+          "const": "committed"
+        }
+      }
+    },
+    {
+      "properties": {
+        "state": {
+          "enum": [
+            "accepted",
+            "prepared"
+          ]
+        },
+        "fact": {
+          "const": "cancelled"
+        },
+        "next": {
+          "const": "cancelled"
+        }
+      }
+    },
+    {
+      "properties": {
+        "state": {
+          "enum": [
+            "accepted",
+            "prepared"
+          ]
+        },
+        "fact": {
+          "const": "failed"
+        },
+        "next": {
+          "const": "failed"
+        }
+      }
+    },
+    {
+      "properties": {
+        "next": {
+          "const": null
+        }
+      },
+      "not": {
+        "anyOf": [
+          {
+            "properties": {
+              "state": {
+                "const": "absent"
+              },
+              "fact": {
+                "const": "accepted"
+              }
+            }
+          },
+          {
+            "properties": {
+              "state": {
+                "const": "accepted"
+              },
+              "fact": {
+                "enum": [
+                  "prepared",
+                  "cancelled",
+                  "failed"
+                ]
+              }
+            }
+          },
+          {
+            "properties": {
+              "state": {
+                "const": "prepared"
+              },
+              "fact": {
+                "enum": [
+                  "committed",
+                  "cancelled",
+                  "failed"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -276,7 +276,7 @@ pub fn register() {
     register_artifact_schema();
     register_artifact_inferences();
     register_pilot_languages();
-    let _ = store::register_document_codec(store::ArtifactCodec::of::<IfcSnapshot, IfcMutation>(STDIO_IFC_DOCUMENT_SCHEMA));
+    store::register_document_codec(store::ArtifactCodec::of::<IfcSnapshot, IfcMutation>(STDIO_IFC_DOCUMENT_SCHEMA)).expect("static Stdio registration must be available and conflict-free");
 }
 
 /// 📌️ P2-FG1: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per the recipe's
@@ -344,7 +344,6 @@ pub fn register_pilot_languages() {
 /// `IfcSnapshot`/`IfcDiff` at all (real `cargo check` confirmed, see `🔺️diff/🦀️.rs`'s own
 /// doc comment) — filed as the `register-schema-spec-needs-recordspec` mechanism gap rather than
 /// fabricating an unrelated spec, per the recipe's own instruction.
-
 /// 📌️ Registers schema leaves for `s.stdio.ifc`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_artifact_schema() {

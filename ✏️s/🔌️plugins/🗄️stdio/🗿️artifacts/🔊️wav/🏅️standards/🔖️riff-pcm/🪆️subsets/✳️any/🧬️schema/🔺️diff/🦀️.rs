@@ -97,7 +97,7 @@ fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -189,14 +189,14 @@ fn dec_wav_data(s: &str) -> Result<WavData, String> {
             if bytes.len() % 2 != 0 {
                 return Err("wav data p16: odd byte length".into());
             }
-            Ok(WavData::Pcm16(bytes.chunks_exact(2).map(|c| i16::from_le_bytes([c[0], c[1]])).collect()))
+            Ok(WavData::Pcm16(bytes.as_chunks::<2>().0.iter().map(|c| i16::from_le_bytes([c[0], c[1]])).collect()))
         }
         "p8" => Ok(WavData::Pcm8(bytes)),
         "f32" => {
             if bytes.len() % 4 != 0 {
                 return Err("wav data f32: bad byte length".into());
             }
-            Ok(WavData::Float32(bytes.chunks_exact(4).map(|c| f32::from_le_bytes([c[0], c[1], c[2], c[3]])).collect()))
+            Ok(WavData::Float32(bytes.as_chunks::<4>().0.iter().map(|c| f32::from_le_bytes([c[0], c[1], c[2], c[3]])).collect()))
         }
         "raw" => Ok(WavData::Raw(bytes)),
         other => Err(format!("wav data: unknown tag {other:?}")),

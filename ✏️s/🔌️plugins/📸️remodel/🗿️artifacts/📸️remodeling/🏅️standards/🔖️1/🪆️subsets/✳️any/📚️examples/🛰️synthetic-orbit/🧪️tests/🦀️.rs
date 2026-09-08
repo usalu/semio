@@ -460,7 +460,7 @@ fn continuation(effect: &Effect) -> Option<AdvanceReconstruction> {
     if action != ADVANCE_RECONSTRUCTION_ACTION_ID {
         return None;
     }
-    let value: serde_json::Value = semio_framework::from_dsl_value(args.clone()?).expect("continuation args");
+    let value: serde_json::Value = serde_json::from_str(&dsl::json::from_dsl_value(args.as_ref()?).to_string()).expect("continuation oracle");
     Some(AdvanceReconstruction {
         generation: value["generation"].as_u64().expect("generation"),
         job_id: value["jobId"].as_str().expect("job id").to_string(),
@@ -480,7 +480,7 @@ async fn drive(app: &mut RemodelingApp, interrupt_at: Option<u32>) -> (Remodelin
     let mut result = dispatch(app, RemodelingCommand::RunReconstruction(RunReconstruction {})).await;
     let mut progress = Vec::new();
     for tick in 0..TICK_CAP {
-        let snapshot = app.snapshot().await.expect("worker-applied remodeling snapshot");
+        let snapshot = app.snapshot().expect("worker-applied remodeling snapshot");
         progress.push(snapshot.job.progress_0_1);
         let next = result.requested_effects.iter().find_map(continuation);
         let Some(payload) = next else { return (snapshot, progress, tick) };
@@ -549,7 +549,7 @@ async fn committed_frames_match_the_png_oracle_and_the_reference_renderer() {
 async fn reconstructs_the_synthetic_orbit_against_ground_truth() {
     let truth = ground_truth();
     let mut app = imported_app().await;
-    let imported = app.snapshot().await.expect("imported snapshot");
+    let imported = app.snapshot().expect("imported snapshot");
     assert_eq!(imported.streams.iter().map(|stream| stream.frames.len()).sum::<usize>(), FRAMES.len(), "every committed frame must reach the document");
 
     let (scene, progress, ticks) = drive(&mut app, None).await;

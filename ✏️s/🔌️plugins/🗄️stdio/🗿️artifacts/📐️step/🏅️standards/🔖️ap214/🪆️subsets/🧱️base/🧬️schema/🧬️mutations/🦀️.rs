@@ -117,7 +117,7 @@ pub(crate) fn agg_diff(this: &StepMutation, base: &StepSnapshot) -> protocol::Mu
         },
 
         StepMutation::SetEntityArg(set_entity_arg::SetEntityArg { id, arg_index, value }) => match base.entities.iter().find(|e| e.id == *id) {
-            Some(e) if e.args.get(*arg_index).map(|v| v != value).unwrap_or(false) => StepDiff {
+            Some(e) if e.args.get(*arg_index).is_some_and(|v| v != value) => StepDiff {
                 entities: Some(StepEntitiesDiff {
                     modified: vec![StepEntityModified { id: *id, diff: StepEntityDiff { args: Some(StepArgsDiff { modified: vec![StepArgModified { index: *arg_index, value: value.clone() }], ..Default::default() }), ..Default::default() } }],
                     ..Default::default()
@@ -597,7 +597,7 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📸️set-snapshot/🧪️tests/🏷️restamps-the-product-long-name/🦀️.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/🏷️restamps-the-9dd8a0/🦀️.rs"]
     mod tests_set_snapshot_restamps_the_product_long_name;
 }
 //#endregion 🧪️FixtureTests

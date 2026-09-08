@@ -32,7 +32,7 @@ fn applied() -> Vdi3805Snapshot {
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
 #[semio_framework_async_macros::async_test]
-fn applies_to_committed_after() {
+async fn applies_to_committed_after() {
     let snapshot = applied();
     assert!(snapshot.geometry.contains_key("geom.valve.80"), "create-geometry/adds-the-geom-valve-80-definition: the new geometry id must be present");
     assert_eq!(snapshot.geometry.len(), 2, "create-geometry/adds-the-geom-valve-80-definition: the pre-existing geom.valve.50 must survive");
@@ -42,7 +42,7 @@ fn applies_to_committed_after() {
 
 /// ↩️ Applying the mutation then every step of its inverse restores `before` exactly.
 #[semio_framework_async_macros::async_test]
-fn inverse_restores_before() {
+async fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
     let inverse = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::inverse(&mutation, &base);
@@ -58,7 +58,7 @@ fn inverse_restores_before() {
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical: decode→encode is
 /// a fixed point.
 #[semio_framework_async_macros::async_test]
-fn committed_json_is_canonical() {
+async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: Vdi3805Snapshot = serde_json::from_str(text).expect("snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
@@ -73,7 +73,7 @@ fn committed_json_is_canonical() {
 /// 🎯️ The declared outcome — status AND every diagnostic `create-geometry`'s own diff builder raises —
 /// matches what the mutation actually produces.
 #[semio_framework_async_macros::async_test]
-fn declared_outcome_holds() {
+async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     let declared: Vec<(String, String)> =
@@ -83,7 +83,7 @@ fn declared_outcome_holds() {
         .messages()
         .iter()
         .map(|message| {
-            let level = serde_json::to_value(message.level).expect("severity encodes");
+            let level = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&message.level)).expect("severity encodes");
             (level.as_str().unwrap_or_default().to_string(), message.code.0.clone())
         })
         .collect();
@@ -100,7 +100,7 @@ fn declared_outcome_holds() {
 /// load-bearing assertion in the fixture: it pins WHICH fields `create-geometry` is allowed to
 /// touch, not merely that the end state matches.
 #[semio_framework_async_macros::async_test]
-fn produces_committed_diff() {
+async fn produces_committed_diff() {
     let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(&mutation(), &before());
     let raised_diff = raised.diff();
     assert_eq!(raised_diff.geometry.as_ref().map(|map| map.len()), Some(2), "create-geometry/adds-the-geom-valve-80-definition: the diff republishes the whole geometry map, now holding two definitions");
@@ -115,7 +115,7 @@ fn produces_committed_diff() {
 /// explicit `null` — and its `Option<Option<u32>>` presence field cannot distinguish "cleared" from
 /// "untouched" across a JSON round trip, which is why no case here writes it.
 #[semio_framework_async_macros::async_test]
-fn committed_diff_is_canonical() {
+async fn committed_diff_is_canonical() {
     let decoded: Vdi3805Diff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -125,7 +125,7 @@ fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is a
 /// complete description of what `create-geometry` changed, not a summary of it.
 #[semio_framework_async_macros::async_test]
-fn committed_diff_applies_to_after() {
+async fn committed_diff_applies_to_after() {
     let decoded: Vdi3805Diff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let produced = <Vdi3805Diff as protocol::MutationDiff<Vdi3805Snapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-geometry/adds-the-geom-valve-80-definition: committed diff did not carry before to after");

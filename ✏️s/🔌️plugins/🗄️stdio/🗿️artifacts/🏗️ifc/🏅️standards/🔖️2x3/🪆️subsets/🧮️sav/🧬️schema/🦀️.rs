@@ -161,11 +161,11 @@ pub mod derived_analysis {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn declares_schema(snapshot: &Ifc2x3Snapshot, name: &str) -> bool {
-        snapshot.document.header.file_schema.iter().any(|v| v.as_list().map(|items| items.iter().any(|item| item.as_str() == Some(name))).unwrap_or(false))
+        snapshot.document.header.file_schema.iter().any(|v| v.as_list().is_some_and(|items| items.iter().any(|item| item.as_str() == Some(name))))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn view_definition_names(snapshot: &Ifc2x3Snapshot, view: &str) -> bool {
-        snapshot.document.header.file_description.first().and_then(|v| v.as_list()).map(|items| items.iter().any(|item| item.as_str().map(|s| s.contains(view)).unwrap_or(false))).unwrap_or(false)
+        snapshot.document.header.file_description.first().and_then(|v| v.as_list()).is_some_and(|items| items.iter().any(|item| item.as_str().is_some_and(|s| s.contains(view))))
     }
 
     //#region 🔖️Conformance

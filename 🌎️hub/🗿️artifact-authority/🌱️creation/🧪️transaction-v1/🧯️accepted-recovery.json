@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {
+      "kind": "live",
+      "recoveryCandidates": 0,
+      "terminal": "accepted",
+      "facts": 1
+    },
+    {
+      "kind": "revoked",
+      "recoveryCandidates": 0,
+      "terminal": "failed",
+      "facts": 2
+    },
+    {
+      "kind": "expired",
+      "recoveryCandidates": 1,
+      "terminal": "failed",
+      "facts": 2
+    }
+  ]
+}

@@ -191,7 +191,7 @@ fn checkpoint_generation(json: &str) -> Option<u64> {
 fn commit_duplicate(generation: u64, child_id: &str, node: FlowNode, source_id: String, new_id: String, synapse_id: String) -> Emit<FlowMutation, FlowConfigMutation> {
     let edge = FlowEdge { id: synapse_id, from: PortRef { node: source_id, port: String::new() }, to: PortRef { node: new_id, port: String::new() }, kind: "data".into() };
     Emit {
-        child_emits: vec![ChildEmit::of::<SemioFlowSnapshot, _>("content", child_id, vec![SemioFlowMutation::InsertNode(insert_node::InsertNode::new(node)), SemioFlowMutation::InsertEdge(insert_edge::InsertEdge::new(edge))])],
+        child_emits: vec![ChildEmit::of::<SemioFlowSnapshot, _>("content", child_id, &[SemioFlowMutation::InsertNode(insert_node::InsertNode::new(node)), SemioFlowMutation::InsertEdge(insert_edge::InsertEdge::new(edge))])],
         coalesce_key: Some(format!("duplicateWidget:{generation}")),
         config_mutations: vec![FlowConfigMutation::SetDuplicateWidgetProgress { json: String::new() }],
         ui_scope: UiDirtyScope::Full,

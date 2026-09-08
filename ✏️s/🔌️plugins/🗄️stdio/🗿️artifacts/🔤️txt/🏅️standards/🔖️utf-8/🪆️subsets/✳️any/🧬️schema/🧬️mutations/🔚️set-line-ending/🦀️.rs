@@ -70,7 +70,7 @@ mod tests {
     #[test]
     fn canonical_leaf_metadata_matches_descriptor_and_provenance() {
         let expected: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).expect("valid canonical set-line-ending descriptor");
-        assert_eq!(serde_json::to_value(<SetLineEndingMutation as MutationLeaf>::DESCRIPTOR).expect("serializable descriptor"), expected);
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(<SetLineEndingMutation as MutationLeaf>::DESCRIPTOR))).expect("serializable descriptor"), expected);
         let provenance = <SetLineEndingMutation as MutationLeaf>::PROVENANCE;
         assert_eq!(provenance.mutation_root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
         assert_eq!(provenance.owner, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔚️set-line-ending");
@@ -82,7 +82,7 @@ mod tests {
 
     #[test]
     fn semantic_identity_matches_descriptor() {
-        assert_eq!(<SetLineEndingMutation as protocol::MutationKind<TxtSnapshot, super::super::TxtMutation>>::SEMANTICS.kind, "set-line-ending");
+        assert_eq!(<SetLineEndingMutation as MutationKind<TxtSnapshot, TxtMutation>>::SEMANTICS.kind, "set-line-ending");
     }
 
     #[test]
@@ -107,7 +107,7 @@ mod tests {
         let base = TxtSnapshot { lines: vec!["a".into()], ..Default::default() };
         let mutation = SetLineEndingMutation { value: LineEnding::CrLf };
         assert!(!<SetLineEndingMutation as MutationKind<TxtSnapshot, TxtMutation>>::diff(&mutation, &base).messages().is_empty());
-        assert!(serde_json::from_str::<SetLineEndingMutation>(r#"{"value":"lf","unknown":true}"#).is_err());
+        assert!(dsl::json::from_json_str::<SetLineEndingMutation>(r#"{"value":"lf","unknown":true}"#).is_err());
     }
 }
 //#endregion 🧪️Tests

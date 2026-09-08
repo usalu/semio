@@ -2,7 +2,7 @@
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { stageArtifacts } from "../../../📚️library/⚡️caching/📜️script.ts";
+import { stageArtifacts } from "../../../📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 
 const project = "🧪️Semio.Repo.Test.csproj";
 const nativeState = (root: string): string => join(root, ".🧬semio/🦑️repo/⚡️cache/dotnet/repo-test");

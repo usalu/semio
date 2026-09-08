@@ -653,6 +653,10 @@ impl PreparedAtlasPages {
         self.len
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
     pub fn next_row(&self) -> u32 {
         self.len.checked_sub(1).and_then(|index| self.slots.as_ref()?.get(index)?.as_ref()).and_then(|page| page.start_row.checked_add(page.rows)).unwrap_or(0)
     }
@@ -1436,6 +1440,10 @@ impl PreparedRenderCommandPages {
         self.len
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
     fn close_step(&mut self) -> bool {
         if let Some(index) = self.len.checked_sub(1) {
             let page = index / PREPARED_RENDER_COMMAND_PAGE_ITEMS;
@@ -1541,6 +1549,7 @@ impl PreparedRenderPacket {
         &self.commands
     }
 
+    #[expect(clippy::result_large_err, reason = "Refusal returns the exact admitted packet without allocating another owner.")]
     fn try_arm_abandonment(mut self) -> Result<Self, Self> {
         let Some(slot) = self.permit.as_ref().map(|permit| usize::from(permit.slot)) else { return Err(self) };
         let Some(state) = PREPARED_RENDER_PACKET_ABANDONMENT_STATE.get(slot) else { return Err(self) };
@@ -1783,6 +1792,7 @@ impl PreparedRenderInputRejected {
 }
 
 impl PreparedRenderInput {
+    #[expect(clippy::result_large_err, reason = "Admission failure retains both exact draw owners for incremental retirement; boxing would allocate on refusal.")]
     pub fn try_new(scene_revision: u64, preview_generation: u64, draw: DrawList, overlay: Option<DrawList>, time_seconds: f32) -> Result<Self, PreparedRenderInputRejected> {
         let limits = PreparedRenderLimits::default();
         let (draw_items, draw_bytes) = draw.prepared_output_usage();
@@ -1858,6 +1868,7 @@ impl PreparedRenderInput {
         self.uploads.try_push(upload)
     }
 
+    #[expect(clippy::result_large_err, reason = "The full producer is returned unchanged when fixed slots are exhausted; refusal must not allocate.")]
     pub fn try_push_raster_producer(&mut self, producer: PreparedRasterProducer) -> Result<(), PreparedRasterProducer> {
         if self.raster_producers.len().checked_add(self.uploads.len()).is_none_or(|items| items >= self.limits.max_upload_items) {
             return Err(producer);
@@ -1870,6 +1881,7 @@ impl PreparedRenderInput {
     }
 
     /// 🧱 Admits and transfers the final retained draw owners before worker submission.
+    #[expect(clippy::result_large_err, reason = "A rejected bind returns the exact draw and overlay for incremental retirement without another allocation.")]
     pub fn try_bind_draw(&mut self, draw: DrawList, overlay: Option<DrawList>) -> Result<(), PreparedRenderInputRejected> {
         if !self.draw.retirement_is_empty() || self.overlay.is_some() {
             return Err(PreparedRenderInputRejected { fault: "prepared render draw owner was already bound", draw: Some(draw), overlay, permit: None });
@@ -2104,6 +2116,7 @@ impl PreparedRenderReceiver {
         Some(*unsafe { Box::from_raw(pointer) })
     }
 
+    #[expect(clippy::result_large_err, reason = "A stale or occupied mailbox returns the exact admitted packet instead of allocating an error owner.")]
     fn publish(&self, packet: PreparedRenderPacket) -> Result<(), PreparedRenderPacket> {
         let Some(slot) = PREPARED_RENDER_MAILBOX.get(usize::from(self.slot)) else { return Err(packet) };
         if slot.generation.load(Ordering::Acquire) != self.generation || slot.state.load(Ordering::Acquire) != 1 {
@@ -2289,6 +2302,7 @@ impl PreparedRenderJobRejected {
 }
 
 impl PreparedRenderJob {
+    #[expect(clippy::result_large_err, reason = "Job admission failure retains the exact input and its credits for incremental retirement without allocating.")]
     pub fn try_new(mut input: PreparedRenderInput) -> Result<Self, PreparedRenderJobRejected> {
         let Some(receiver) = PreparedRenderReceiver::try_reserve() else {
             return Err(PreparedRenderJobRejected { fault: "prepared render packet mailbox exhausted", input: Some(input) });
@@ -3114,6 +3128,7 @@ impl PreparedRenderGate {
         Ok(())
     }
 
+    #[expect(clippy::result_large_err, reason = "A refused presentation returns the exact packet without allocating at the bounded presentation boundary.")]
     pub fn stage_presented(&mut self, packet: PreparedRenderPacket) -> Result<PreparedPresenterWitness, PreparedRenderPacket> {
         if self.closing || self.pending.is_some() {
             return Err(packet);

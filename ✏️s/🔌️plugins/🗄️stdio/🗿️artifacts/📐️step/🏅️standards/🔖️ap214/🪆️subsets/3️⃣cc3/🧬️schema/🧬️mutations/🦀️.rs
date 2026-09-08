@@ -126,7 +126,7 @@ pub(crate) fn rejected(message: String) -> protocol::MutationOutcome<StepDiff> {
 pub(crate) fn edited(base: &StepSnapshot, edit: &ClassEdit) -> Result<StepSnapshot, String> {
     let mut doc = base.to_part21_document();
     ladder::apply_class_edit(&mut doc, CLASS, MAX_RUNG, edit)?;
-    Ok(StepSnapshot::from_part21_document(doc))
+    Ok(StepSnapshot::from_part21_document(&doc))
 }
 //#endregion 🔖️Apply
 
@@ -191,7 +191,7 @@ mod tests {
     /// reads: the real `AUTOMOTIVE_DESIGN` declaration, the real `#821`/`#822`/`#827` product chain
     /// (formation as the ISO 10303-41 SUBTYPE a real exporter writes) and the real rung-6 `#13`.
     fn base() -> StepSnapshot {
-        StepSnapshot::from_part21_document(Part21Document {
+        StepSnapshot::from_part21_document(&Part21Document {
             header: Part21Header { file_schema: vec![Part21Value::List(vec![Part21Value::Str("AUTOMOTIVE_DESIGN".into())])], ..Part21Header::default() },
             instances: vec![
                 Part21Instance { id: 13, entities: vec![("ADVANCED_BREP_SHAPE_REPRESENTATION".into(), vec![Part21Value::Str("brep_rep_0".into()), Part21Value::List(vec![Part21Value::Ref(12), Part21Value::Ref(895)]), Part21Value::Ref(835)])] },
@@ -207,7 +207,7 @@ mod tests {
     fn conforming() -> StepSnapshot {
         let mut doc = base().to_part21_document();
         ladder::demote_shape_representation(&mut doc, 13, "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION").expect("the base carries a real representation");
-        StepSnapshot::from_part21_document(doc)
+        StepSnapshot::from_part21_document(&doc)
     }
 
     fn round_trip(start: StepSnapshot, mutation: StepCc3Mutation) {

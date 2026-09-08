@@ -18,13 +18,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioKitSnapshot {
-    serde_json::from_str(BEFORE).expect("change-representation-pin before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("change-representation-pin before snapshot decodes")
 }
 fn expected_after() -> SemioKitSnapshot {
-    serde_json::from_str(AFTER).expect("change-representation-pin after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("change-representation-pin after snapshot decodes")
 }
 fn mutation() -> SemioKitMutation {
-    serde_json::from_str(MUTATION).expect("change-representation-pin mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("change-representation-pin mutation decodes")
 }
 
 /// ▶️ The link stops tracking the target's live tip and freezes to a checkpoint instead.
@@ -59,12 +59,12 @@ async fn the_undo_change_representation_pin_restores_the_head_pin() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioKitSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: SemioKitSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-representation-pin/repins-the-representation-from-head-to-a-checkpoint: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("change-representation-pin mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("change-representation-pin mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-representation-pin mutation reparses");
     assert_eq!(reencoded, original, "change-representation-pin/repins-the-representation-from-head-to-a-checkpoint: committed mutation JSON is not canonical");
 }
@@ -83,7 +83,7 @@ async fn declared_outcome_holds_as_committed() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-representation-pin/repins-the-representation-from-head-to-a-checkpoint: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -92,12 +92,12 @@ async fn produces_committed_diff() {
 /// allowed to touch appears in it at all.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioKitDiff = serde_json::from_str(DIFF).expect("committed change-representation-pin diff decodes");
+    let decoded: SemioKitDiff = dsl::json::from_json_str(DIFF).expect("committed change-representation-pin diff decodes");
     let links = decoded.representations.as_ref().expect("change-representation-pin must write the representations slot");
     assert_eq!(links.values.len(), 1, "a repin never changes how many links there are");
     assert_eq!(links.values[0].role, before().representations[0].role, "the diff carries the whole link, role unchanged");
     assert!(decoded.types.is_none() && decoded.designs.is_none() && decoded.objects.is_none() && decoded.models.is_none() && decoded.properties.is_none(), "no other kit slot may appear in the diff");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-representation-pin/repins-the-representation-from-head-to-a-checkpoint: committed diff JSON is not canonical");
 }
@@ -105,7 +105,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioKitDiff = serde_json::from_str(DIFF).expect("committed change-representation-pin diff decodes");
+    let decoded: SemioKitDiff = dsl::json::from_json_str(DIFF).expect("committed change-representation-pin diff decodes");
     let produced = decoded.apply(&before()).expect("committed change-representation-pin diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-representation-pin/repins-the-representation-from-head-to-a-checkpoint: committed diff did not carry before to after");
 }

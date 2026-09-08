@@ -1036,8 +1036,7 @@ fn kernel_outcome_to_direct_wit_respond(result: RequestOutcome) -> direct::effec
 pub async fn log(level: &str, message: &str) {
     #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
     {
-        crate::component::component::semio::framework::pure::log(level, message);
-        return;
+        crate::component::wasip2::semio::framework::pure::log(level, message);
     }
     #[cfg(not(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2")))]
     eprintln!("[{level}] {message}");
@@ -1047,7 +1046,7 @@ pub async fn log(level: &str, message: &str) {
 pub async fn now_ms() -> i64 {
     #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
     {
-        return crate::component::component::semio::framework::pure::now_ms();
+        crate::component::wasip2::semio::framework::pure::now_ms()
     }
     #[cfg(not(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2")))]
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|elapsed| elapsed.as_millis() as i64).unwrap_or(0)
@@ -1057,8 +1056,7 @@ pub async fn now_ms() -> i64 {
 pub async fn trace_span(name: &str) {
     #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
     {
-        crate::component::component::semio::framework::pure::trace_span(name);
-        return;
+        crate::component::wasip2::semio::framework::pure::trace_span(name);
     }
     #[cfg(not(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2")))]
     let _ = name;

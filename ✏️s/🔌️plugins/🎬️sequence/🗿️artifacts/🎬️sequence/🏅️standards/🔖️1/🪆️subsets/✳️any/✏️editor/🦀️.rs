@@ -783,7 +783,7 @@ impl SequenceHost {
         };
         let width = sequence_computation_node_width(&name, &inputs, &outputs);
         let height = sequence_computation_node_height(inputs.len(), outputs.len(), false, false);
-        let mut node = DagNodeSpec::computation(step.id.clone(), name, abbreviation, icon, inputs, outputs, false, false, step.x, step.y, width, height);
+        let mut node = DagNodeSpec::computation(step.id.clone(), &name, &abbreviation, icon, inputs, outputs, false, false, step.x, step.y, width, height);
         node.operator_kind = Some(step.kind.clone());
         node.properties = property_bag_from_dictionary(&step.params);
         node
@@ -1527,7 +1527,8 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         (scene.steps.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS && scene.edges.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS && interaction.selection.get(SEQUENCE_INTERACTION_STEPS).is_none_or(|selection| selection.ids.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS)).then_some(SEQUENCE_RETAINED_MAXIMUM_UNITS)
     }
 
-    fn step(&mut self, command: &SequenceCommand, snapshot: &SequenceSnapshot, _config: &SequenceConfig, _history: &semio_framework_plugin::HistoryView, interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>, _operation: &semio_framework_plugin::AppOperationContext) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<SequencePlayApp>>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, Fault> {
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, history: _history, interaction, hover: _hover, context: _context, operation: _operation } = *input;
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || self.cursor >= SEQUENCE_RETAINED_MAXIMUM_UNITS || !sequence_retained_artifact_command_admitted(command) { return Err(Fault::from("sequence-retained-artifact-envelope")); }
         self.cursor += 1;
@@ -2010,7 +2011,8 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
     fn tool_id(&self) -> &'static str { self.tool_id }
     fn workspace_identity(&self) -> u64 { self.workspace_identity }
     fn extent(&self, _command: &SequenceCommand, snapshot: &SequenceSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>) -> Option<usize> { let scene = snapshot.content.local_owner::<SequenceWorkingScene>()?; (scene.steps.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS && scene.edges.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS).then_some(SEQUENCE_PERSISTENT_MAXIMUM_UNITS) }
-    fn step(&mut self, command: &SequenceCommand, snapshot: &SequenceSnapshot, config: &SequenceConfig, _history: &semio_framework_plugin::HistoryView, interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>, _operation: &semio_framework_plugin::AppOperationContext) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<SequencePlayApp>>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, Fault> {
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, history: _history, interaction, hover: _hover, context: _context, operation: _operation } = *input;
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || self.progress >= SEQUENCE_PERSISTENT_MAXIMUM_UNITS || command.command_id() != self.tool_id { return Err(Fault::from("sequence-persistent-progress-capacity")); }
         match self.workspace.advance(command, snapshot, config, interaction)? {
@@ -2105,17 +2107,8 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         Some(SEQUENCE_RETAINED_MAXIMUM_UNITS)
     }
 
-    fn step(
-        &mut self,
-        command: &SequenceCommand,
-        snapshot: &SequenceSnapshot,
-        config: &SequenceConfig,
-        history: &semio_framework_plugin::HistoryView,
-        _interaction: &protocol::InteractionState,
-        _hover: &semio_framework_plugin::app::InteractionHoverState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>,
-        operation: &semio_framework_plugin::AppOperationContext,
-    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<SequencePlayApp>>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, Fault> {
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, history, interaction: _interaction, hover: _hover, context: _context, operation } = *input;
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || self.cursor >= SEQUENCE_RETAINED_MAXIMUM_UNITS || !sequence_retained_config_command_admitted(command) {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("sequence.retained.config-command"), "Sequence retained config command exceeded its exact route or payload envelope"));
@@ -2380,16 +2373,8 @@ impl ArtifactEditor for SequencePlayApp {
         } else {
             Box::new(SequenceRetainedConfigWork::new(tool_id, &operation_context))
         };
-        let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new_with_context(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            request.context,
-            operation_context,
-            request.completion,
+        let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
             SequenceCommand::command_id,
             SEQUENCE_RETAINED_RAW_BYTES,
             if persistent_route { SEQUENCE_PERSISTENT_MAXIMUM_UNITS } else if artifact_route { SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS } else { 1 },
@@ -2592,7 +2577,7 @@ pub fn create_sequence_app() -> AppDefinition {
                     ActionArgOption::new("control.if", LocalizedLabel::native("If", "Wenn")),
                     ActionArgOption::new("control.while", LocalizedLabel::native("While", "Solange")),
                     ActionArgOption::new("math.add", LocalizedLabel::native("Add", "Addieren")),
-                ]).default_value("log.print"),
+                ]).default_value(&"log.print"),
             ])
             .action_args("setOrientation", vec![
                 ActionArgDef::select("orientation", LocalizedLabel::native("Orientation", "Ausrichtung"), vec![

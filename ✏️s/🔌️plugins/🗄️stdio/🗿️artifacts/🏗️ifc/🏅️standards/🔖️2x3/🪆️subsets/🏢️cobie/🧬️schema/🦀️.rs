@@ -133,7 +133,7 @@ pub mod derived_construction {
             let snapshot = Ifc2x3CobieBuilderConstruction::new().build().unwrap();
             let mut bad = snapshot.clone();
             bad.document.header.file_schema = vec![Part21Value::List(vec![Part21Value::Str("IFC4".into())])];
-            let (mutated, _diff) = Ifc2x3CobieBuilderConstruction::from_snapshot(Ifc2x3Snapshot::default()).mutate(Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: bad }));
+            let (mutated, _diff) = Ifc2x3CobieBuilderConstruction::from_snapshot(Ifc2x3Snapshot::default()).mutate(Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(bad) }));
             let err = mutated.build().expect_err("a non-IFC2X3 FILE_SCHEMA must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::ifc::standards::v2x3::subsets::cobie::schema::CODE_FILE_SCHEMA));
         }
@@ -170,11 +170,11 @@ pub mod derived_analysis {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn declares_schema(snapshot: &Ifc2x3Snapshot, name: &str) -> bool {
-        snapshot.document.header.file_schema.iter().any(|v| v.as_list().map(|items| items.iter().any(|item| item.as_str() == Some(name))).unwrap_or(false))
+        snapshot.document.header.file_schema.iter().any(|v| v.as_list().is_some_and(|items| items.iter().any(|item| item.as_str() == Some(name))))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn view_definition_names(snapshot: &Ifc2x3Snapshot, view: &str) -> bool {
-        snapshot.document.header.file_description.first().and_then(|v| v.as_list()).map(|items| items.iter().any(|item| item.as_str().map(|s| s.contains(view)).unwrap_or(false))).unwrap_or(false)
+        snapshot.document.header.file_description.first().and_then(|v| v.as_list()).is_some_and(|items| items.iter().any(|item| item.as_str().is_some_and(|s| s.contains(view))))
     }
 
     //#region 🔖️Conformance
@@ -193,7 +193,7 @@ pub mod derived_analysis {
 
         for space in snapshot.document.by_type("IFCSPACE") {
             let args = space.entity("IFCSPACE").expect("matched by_type");
-            let named = args.get(2).and_then(|v| v.as_str()).map(|s| !s.trim().is_empty()).unwrap_or(false);
+            let named = args.get(2).and_then(|v| v.as_str()).is_some_and(|s| !s.trim().is_empty());
             if !named {
                 out.push(soft(CODE_SPACE_NAME, format!("IFCSPACE #{} has no non-empty Name -- COBie's Space sheet is keyed by name", space.id)));
             }
@@ -208,7 +208,7 @@ pub mod derived_analysis {
             ));
         }
 
-        let has_type = snapshot.document.instances.iter().any(|i| i.primary().map(|(name, _)| name.ends_with("TYPE")).unwrap_or(false));
+        let has_type = snapshot.document.instances.iter().any(|i| i.primary().is_some_and(|(name, _)| name.ends_with("TYPE")));
         let has_type_rel = snapshot.document.by_type("IFCRELDEFINESBYTYPE").next().is_some();
         if !has_type || !has_type_rel {
             out.push(soft(CODE_TYPE_ASSIGNMENT, "no real IFC*TYPE + IFCRELDEFINESBYTYPE pairing found -- COBie's Type sheet needs maintainable products related to a type".into()));

@@ -84,7 +84,7 @@ USER vscode
 
 ENV BUN_INSTALL=/home/vscode/.bun
 ENV PATH=/home/vscode/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-ENV NX_WORKSPACE_DATA_DIRECTORY=/workspaces/semio/.nx/workspace-data-terminal
+ENV NX_WORKSPACE_DATA_DIRECTORY=/workspaces/semio/.nx/workspace-data
 ENV NEO4J_URI=bolt://localhost:7687
 ENV NEO4J_USERNAME=neo4j
 ENV NEO4J_PASSWORD=password

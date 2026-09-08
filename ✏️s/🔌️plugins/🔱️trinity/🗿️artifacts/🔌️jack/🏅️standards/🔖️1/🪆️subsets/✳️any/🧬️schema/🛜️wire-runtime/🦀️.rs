@@ -542,7 +542,7 @@ impl JackOwnedRetirement {
                     }
                     let value_type = match value.retire_value_type_step(maximum_bytes) {
                         Ok(value_type) => value_type,
-                        Err(()) => return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }),
+                        Err(_) => return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }),
                     };
                     if let Some(value_type) = value_type {
                         let released_bytes = value_type.len();
@@ -1812,7 +1812,7 @@ mod tests {
     use store::create_document_envelope;
 
     fn empty_jack_initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> JackStoreInitializationAuthority {
-        let envelope = store::create_document_envelope(crate::artifacts::jack::TRINITY_GRAPH_SCHEMA, "jack-retained-load", crate::artifacts::jack::schema::empty_jack_document(), None);
+        let envelope = create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-retained-load", crate::artifacts::jack::schema::empty_jack_document(), None);
         JackStoreInitializationAuthority::new(envelope, operation, generation)
     }
 
@@ -1920,8 +1920,8 @@ mod tests {
             y: 40.0,
             width: 80.0,
             height: 40.0,
-            properties: crate::artifacts::jack::PropertyBag::new(),
-            ports: vec![crate::artifacts::jack::Port { id: "p1".into(), kind: "Connector".into(), direction: crate::artifacts::jack::PortDirection::Out, properties: crate::artifacts::jack::PropertyBag::new() }],
+            properties: PropertyBag::new(),
+            ports: vec![Port { id: "p1".into(), kind: "Connector".into(), direction: crate::artifacts::jack::PortDirection::Out, properties: PropertyBag::new() }],
         }));
     }
 
@@ -1932,7 +1932,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_create_edge() {
-        let mut properties = crate::artifacts::jack::PropertyBag::new();
+        let mut properties = PropertyBag::new();
         properties.insert("u".into(), PropertyValue::Number(1.2));
         let mut nested = std::collections::BTreeMap::new();
         nested.insert("x".into(), PropertyValue::Number(0.0));

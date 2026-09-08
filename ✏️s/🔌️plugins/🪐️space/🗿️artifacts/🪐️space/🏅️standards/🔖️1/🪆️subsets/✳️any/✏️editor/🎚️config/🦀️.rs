@@ -6,6 +6,9 @@
 
 use protocol::Mutation;
 
+use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
+use semio_framework_os_kernel::os_directory::DirectoryIndexedDocumentViewV1;
+
 //#region 🔖️Member
 /// 🧑️ One space member, projected from `semio_framework_os::os_directory::MemberView` into the
 /// space app's own local view-state vocabulary (`role` kept as the wire string `"author"`/
@@ -55,16 +58,34 @@ pub struct SpaceIndexConfig {
     #[dsl(table)]
     pub members: Vec<SpaceIndexMember>,
     #[dsl(table)]
+    pub indexed_artifacts: Vec<SpaceArtifactRow>,
+    #[dsl(table)]
     pub presence: Vec<SpaceIndexArtifactPresence>,
 }
 
 impl Default for SpaceIndexConfig {
     fn default() -> Self {
-        Self { visibility: "private".into(), members: Vec::new(), presence: Vec::new() }
+        Self { visibility: "private".into(), members: Vec::new(), indexed_artifacts: Vec::new(), presence: Vec::new() }
     }
 }
 
 impl SpaceIndexConfig {
+    /// 📇️ Projects one Directory-owned indexed document into the Space app's bounded read-only row.
+    pub fn indexed_artifact_from_directory(row: &DirectoryIndexedDocumentViewV1) -> Option<SpaceArtifactRow> {
+        let created_at_ms = u64::try_from(row.created_at_ms).ok()?;
+        Some(SpaceArtifactRow {
+            id: row.descriptor.document_id.clone(),
+            name: row.entry.name.clone(),
+            kind_id: row.descriptor.artifact_kind.clone(),
+            schema: row.descriptor.artifact_schema.clone(),
+            dialect: SpaceArtifactDialect { artifact_kind: row.entry.dialect.artifact_kind.clone(), standard: row.entry.dialect.standard.clone(), subset: row.entry.dialect.subset.clone() },
+            created_at_ms,
+            created_by: row.created_by.clone(),
+            updated_at_ms: created_at_ms,
+            updated_by: row.created_by.clone(),
+        })
+    }
+
     /// 👥️ The live actor ids on `artifact_id`'s documents, empty when nothing is folded in yet.
     pub fn presence_for(&self, artifact_id: &str) -> Vec<&str> {
         self.presence.iter().find(|row| row.artifact_id == artifact_id).map(SpaceIndexArtifactPresence::actor_ids).unwrap_or_default()
@@ -231,6 +252,7 @@ mod tests {
         let config = SpaceIndexConfig::default();
         assert_eq!(config.visibility, "private");
         assert!(config.members.is_empty());
+        assert!(config.indexed_artifacts.is_empty());
         assert!(config.presence.is_empty());
     }
 
@@ -246,6 +268,7 @@ mod tests {
         let config = SpaceIndexConfig {
             visibility: "public".into(),
             members: vec![SpaceIndexMember { user_id: "u-1".into(), email: "a@example.com".into(), display_name: "Alice".into(), role: "author".into() }],
+            indexed_artifacts: Vec::new(),
             presence: vec![SpaceIndexArtifactPresence { artifact_id: "artifact-1".into(), actors_csv: "user:1".into() }],
         };
         store::os_store::test_support::assert_dsl_round_trip(&config);

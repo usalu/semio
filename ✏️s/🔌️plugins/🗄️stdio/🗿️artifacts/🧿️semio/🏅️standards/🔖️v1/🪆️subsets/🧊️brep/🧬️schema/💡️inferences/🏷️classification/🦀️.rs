@@ -300,7 +300,7 @@ fn surface_uv(surface: &Surface, p: Pnt3) -> Pnt2 {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn face_surface<'a>(body: &'a Body, face: FaceId) -> Result<&'a Surface, KernelError> {
+fn face_surface(body: &Body, face: FaceId) -> Result<&Surface, KernelError> {
     let face_ent = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity("face".into()))?;
     body.surfaces.get(face_ent.surface).ok_or_else(|| KernelError::MissingEntity("surface".into()))
 }
@@ -398,7 +398,7 @@ fn count_ray_crossings(body: &Body, bvh: &FaceBvh, origin: Pnt3, dir: Vec3, tol:
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn face_ray_hits(body: &Body, face: FaceId, ray: &Curve3, origin: Pnt3, dir: Vec3, tol: f64) -> Result<Option<Vec<f64>>, KernelError> {
     let surface = face_surface(body, face)?;
-    let flipped = body.faces.get(face).map(|f| f.flipped).unwrap_or(false);
+    let flipped = body.faces.get(face).is_some_and(|f| f.flipped);
     match surface {
         Surface::Plane { frame } => plane_face_hits(body, face, frame, flipped, origin, dir, tol),
         _ => general_face_hits(body, face, surface, ray, dir, tol),
@@ -471,7 +471,7 @@ fn point_in_face_trim_status(body: &Body, face: FaceId, hit: Pnt3, tol: f64) -> 
                 return Ok(UvStatus::Inside);
             }
             let mut normal = polygon_normal(&verts);
-            if body.faces.get(face).map(|f| f.flipped).unwrap_or(false) {
+            if body.faces.get(face).is_some_and(|f| f.flipped) {
                 normal = -normal;
             }
             Ok(if point_in_polygon_3d(hit, &verts, normal, tol) { UvStatus::Inside } else { UvStatus::Outside })

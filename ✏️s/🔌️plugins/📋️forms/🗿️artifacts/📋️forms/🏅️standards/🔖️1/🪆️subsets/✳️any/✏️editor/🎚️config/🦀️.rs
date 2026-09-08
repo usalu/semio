@@ -514,14 +514,14 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn config_mutations_apply_and_restore_every_field() {
         let base = FormsConfig::default();
-        assert_eq!(config_round_trip(&base, &FormsConfigMutation::SetStepIndex(crate::editor::forms::config::SetStepIndex { index: 2 })).current_step_index, 2);
+        assert_eq!(config_round_trip(&base, &FormsConfigMutation::SetStepIndex(SetStepIndex { index: 2 })).current_step_index, 2);
         let one_chunks = split_try_value_chunks("1", MAX_STAGED_TRY_VALUE_CHUNK_BYTES);
         let one_id = try_value_content_id(&one_chunks);
-        let staged = FormsConfigMutation::StageTryValueChunk(crate::editor::forms::config::StageTryValueChunk { staging_id: "one-stage".into(), index: 0, chunk: "1".into() }).diff(&base).diff().clone();
+        let staged = FormsConfigMutation::StageTryValueChunk(StageTryValueChunk { staging_id: "one-stage".into(), index: 0, chunk: "1".into() }).diff(&base).diff().clone();
         assert_eq!(staged, base);
-        assert_eq!(config_round_trip(&staged, &FormsConfigMutation::CommitTryValue(crate::editor::forms::config::CommitTryValue { key: "a".into(), staging_id: "one-stage".into(), content_id: one_id.clone(), chunk_count: 1 })).try_values.get_json("a"), Some(one_id.as_str()));
-        assert_eq!(config_round_trip(&base, &FormsConfigMutation::SetLocale(crate::editor::forms::config::SetLocale { value: "de-DE".into() })).locale, "de-DE");
-        assert_eq!(config_round_trip(&base, &FormsConfigMutation::SetContributions(crate::editor::forms::config::SetContributions { json: "[]".into() })).contributions_json, "[]");
+        assert_eq!(config_round_trip(&staged, &FormsConfigMutation::CommitTryValue(CommitTryValue { key: "a".into(), staging_id: "one-stage".into(), content_id: one_id.clone(), chunk_count: 1 })).try_values.get_json("a"), Some(one_id.as_str()));
+        assert_eq!(config_round_trip(&base, &FormsConfigMutation::SetLocale(SetLocale { value: "de-DE".into() })).locale, "de-DE");
+        assert_eq!(config_round_trip(&base, &FormsConfigMutation::SetContributions(SetContributions { json: "[]".into() })).contributions_json, "[]");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -529,9 +529,9 @@ mod tests {
         let chunks = split_try_value_chunks(r#""Ada""#, 4_096);
         let content_id = try_value_content_id(&chunks);
         let config = FormsConfig { current_step_index: 1, try_values: FormsTryValues::default().with_chunks("name", content_id, chunks.into()), locale: "de-DE".into(), contributions_json: "[]".into() };
-        store::os_store::test_support::assert_op_line_round_trip(&FormsConfigMutation::ReplaceConfig(crate::editor::forms::config::ReplaceConfig { config }));
-        store::os_store::test_support::assert_op_line_round_trip(&FormsConfigMutation::SetStepIndex(crate::editor::forms::config::SetStepIndex { index: 3 }));
-        store::os_store::test_support::assert_op_line_round_trip(&FormsConfigMutation::SetLocale(crate::editor::forms::config::SetLocale { value: "en-US".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&FormsConfigMutation::ReplaceConfig(ReplaceConfig { config }));
+        store::os_store::test_support::assert_op_line_round_trip(&FormsConfigMutation::SetStepIndex(SetStepIndex { index: 3 }));
+        store::os_store::test_support::assert_op_line_round_trip(&FormsConfigMutation::SetLocale(SetLocale { value: "en-US".into() }));
     }
 
     #[test]
@@ -560,14 +560,14 @@ mod tests {
         let raw = "x".repeat(4_096);
         let chunks = split_try_value_chunks(&raw, 4_096);
         let content_id = try_value_content_id(&chunks);
-        let stage = FormsConfigMutation::StageTryValueChunk(crate::editor::forms::config::StageTryValueChunk { staging_id: "timed-stage".into(), index: 0, chunk: raw });
+        let stage = FormsConfigMutation::StageTryValueChunk(StageTryValueChunk { staging_id: "timed-stage".into(), index: 0, chunk: raw });
         let started = std::time::Instant::now();
         let bytes = <FormsConfigMutation as protocol::OpBinary>::encode_op(&stage).expect("stage encode");
         let decoded = <FormsConfigMutation as protocol::OpBinary>::decode_op(&bytes).expect("stage decode");
         let staged = decoded.diff(&FormsConfig::default()).diff().clone();
         assert!(started.elapsed() < std::time::Duration::from_millis(8));
 
-        let commit = FormsConfigMutation::CommitTryValue(crate::editor::forms::config::CommitTryValue { key: "large".into(), staging_id: "timed-stage".into(), content_id: content_id.clone(), chunk_count: 1 });
+        let commit = FormsConfigMutation::CommitTryValue(CommitTryValue { key: "large".into(), staging_id: "timed-stage".into(), content_id: content_id.clone(), chunk_count: 1 });
         let started = std::time::Instant::now();
         let bytes = <FormsConfigMutation as protocol::OpBinary>::encode_op(&commit).expect("commit encode");
         let decoded = <FormsConfigMutation as protocol::OpBinary>::decode_op(&bytes).expect("commit decode");

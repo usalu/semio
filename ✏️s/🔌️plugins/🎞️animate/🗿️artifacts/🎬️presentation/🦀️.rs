@@ -250,8 +250,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: PRESENTATION_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.json", "stdio.md", "stdio.pdf", "stdio.png", "stdio.pptx", "stdio.svg"],
-        import_stdio_kinds: vec!["stdio.json", "stdio.md", "stdio.pdf", "stdio.png", "stdio.pptx", "stdio.svg"],
+        export_stdio_kinds: vec!["stdio.json".into(), "stdio.md".into(), "stdio.pdf".into(), "stdio.png".into(), "stdio.pptx".into(), "stdio.svg".into()],
+        import_stdio_kinds: vec!["stdio.json".into(), "stdio.md".into(), "stdio.pdf".into(), "stdio.png".into(), "stdio.pptx".into(), "stdio.svg".into()],
     }
 }
 //#endregion 🔖️ArtifactKind

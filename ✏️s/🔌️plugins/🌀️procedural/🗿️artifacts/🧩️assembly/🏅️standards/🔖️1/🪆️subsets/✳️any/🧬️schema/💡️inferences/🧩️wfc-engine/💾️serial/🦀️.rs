@@ -212,8 +212,8 @@ mod tests {
     fn source_model_doc_json_round_trips() {
         let (model, _topo) = checkerboard();
         let doc = SourceModelDoc::from_model(&model);
-        let json = serde_json::to_string(&doc).unwrap();
-        let back: SourceModelDoc = serde_json::from_str(&json).unwrap();
+        let json = dsl::json::to_json_string(&doc);
+        let back: SourceModelDoc = dsl::json::from_json_str(&json).unwrap();
         assert_eq!(back, doc);
         assert_eq!(back.compile().unwrap().fingerprint(), model.fingerprint());
     }
@@ -252,8 +252,8 @@ mod tests {
         let checkpoint = Checkpoint::new(domains, fingerprint, 5);
 
         let doc = CheckpointDoc::from_checkpoint(&checkpoint);
-        let json = serde_json::to_string(&doc).unwrap();
-        let back: CheckpointDoc = serde_json::from_str(&json).unwrap();
+        let json = dsl::json::to_json_string(&doc);
+        let back: CheckpointDoc = dsl::json::from_json_str(&json).unwrap();
         let restored = back.into_checkpoint(&model, topo.node_count()).unwrap();
         assert_eq!(restored.model_fingerprint, fingerprint);
         assert_eq!(restored.seed, 5);
@@ -297,7 +297,7 @@ mod tests {
         // its declared `len` in the `words` array — must be caught by `is_well_formed`, not panic.
         let (model, topo) = checkerboard();
         let json = format!(r#"{{"version":1,"domains":[{{"words":[999999],"len":2}}{}],"model_fingerprint":{},"seed":0}}"#, ",{\"words\":[3],\"len\":2}".repeat(topo.node_count() - 1), model.fingerprint());
-        let doc: CheckpointDoc = serde_json::from_str(&json).unwrap();
+        let doc: CheckpointDoc = dsl::json::from_json_str(&json).unwrap();
         assert_eq!(doc.into_checkpoint(&model, topo.node_count()).unwrap_err(), SolveError::CorruptCheckpoint { reason: "domain bitset failed structural well-formedness check" });
     }
 }

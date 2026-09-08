@@ -74,13 +74,13 @@ mod tests {
     use protocol::Inference;
 
     #[semio_framework_async_macros::async_test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = Din18599Snapshot::default();
         assert_eq!(Din18599Inference::infer(&snapshot), Din18599Inference::infer(&snapshot));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(Din18599Inference::infer(&Din18599Snapshot::default()), Din18599Inference::default());
     }
 }
@@ -141,14 +141,14 @@ mod compliance_report_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn balance_annual_includes_all_parts() {
+    async fn balance_annual_includes_all_parts() {
         let inputs = reference_100m2_inputs();
         let report = balance_annual(&inputs).unwrap();
         assert_eq!(report.checks.len(), 12);
     }
 
     #[semio_framework_async_macros::async_test]
-    fn part_1_check_reached_via_balance_annual() {
+    async fn part_1_check_reached_via_balance_annual() {
         let inputs = reference_100m2_inputs();
         let check = part_1::check(&inputs).unwrap();
         assert_eq!(check.clause.family, "DIN V 18599-1");

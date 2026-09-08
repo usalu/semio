@@ -358,7 +358,7 @@ pub type ProbeStore = store::ArtifactStore<ProbeSnapshot, ProbeMutation>;
 pub fn ensure_probe_codec_registered() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
-        store::register_document_codec_now(store::ArtifactCodec::of::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA)).expect("register MCP probe codec");
+        store::register_document_codec(store::ArtifactCodec::of::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA)).expect("register MCP probe codec");
     });
 }
 
@@ -2061,8 +2061,48 @@ impl HeadlessWorkspace {
             Err(crate::inference::hub_inference_binding_required("approve_gis_map_inference_job"))
         }
     }
+
+    /// ↩️ Resolves one session-private history member through the normal authenticated Hub undo route.
+    pub fn undo_gis_map_approval(&self, member: &crate::actions::HubGisMapApprovalUndoMemberV1) -> Result<semio_framework_os_kernel::os_directory::GisMapApprovalUndoReceiptV1, GatewayError> {
+        let scope = self.gis_map_inference_scope(&member.document_id)?;
+        let binding = self.hub_inference_binding()?;
+        if scope.space_id != member.space_id || binding.hub_origin() != member.hub_origin {
+            return Err(GatewayError::new(GatewayErrorCode::PermissionDenied, "durable undo authority does not belong to this Hub workspace"));
+        }
+        let request = semio_framework_os_kernel::os_directory::GisMapApprovalUndoRequestV1 {
+            schema: "semio.hub.gis-map-approval-undo/v1".into(),
+            version: 1,
+            target_id: member.target_id.clone(),
+            idempotency_key: member.idempotency_key.clone(),
+            expected_current: member.expected_current.clone(),
+        };
+        if !request.validate() {
+            return Err(GatewayError::new(GatewayErrorCode::InputInvalid, "invalid durable GIS approval undo member"));
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let driver = self.hub_inference_driver()?;
+            let cancel = semio_framework_async::CancelToken::root_now();
+            let label = crate::inference::inference_operation_label(&scope.space_id, &scope.document_id, None);
+            crate::inference::retain_inference_operation(&label, cancel.clone());
+            let receipt = driver.undo_gis_map_approval(&scope, binding.hub_origin(), &request, &cancel);
+            crate::inference::release_inference_operation(&label);
+            receipt.map_err(|error| error.to_gateway_error("history_undo"))
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            let _ = (scope, binding, request);
+            Err(crate::inference::hub_inference_binding_required("history_undo"))
+        }
+    }
 }
 //#endregion 💡️Inference
+
+impl crate::actions::HistoryUndoPort for HeadlessWorkspace {
+    fn undo_hub_gis_map_approval(&self, member: &crate::actions::HubGisMapApprovalUndoMemberV1) -> Result<(), GatewayError> {
+        self.undo_gis_map_approval(member).map(|_| ())
+    }
+}
 
 #[cfg(test)]
 mod quick {

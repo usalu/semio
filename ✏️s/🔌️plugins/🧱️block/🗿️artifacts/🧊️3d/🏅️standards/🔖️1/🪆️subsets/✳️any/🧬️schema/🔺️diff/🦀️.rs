@@ -8,9 +8,7 @@ use schema::ArtifactSchema;
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the block3d artifact.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[artifact_schema(id = "s.block.block3d")]
 pub struct Block3dDiff {
     #[state(artifact)]
@@ -63,36 +61,28 @@ pub struct Block3dDiff {
 //#region 🔖️DeltaHelpers
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct Block3dStringList {
     pub values: Vec<String>,
 }
 
 /// 👤️ Author-list wrapper.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct Block3dAuthorList {
     pub values: Vec<BlockAuthor>,
 }
 
 /// 🪟 Windows-list wrapper.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct Block3dWindowsList {
     pub values: Vec<Block3dWindowView>,
 }
 
 /// 📂 Identified-collection delta for Representations.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct Block3dRepresentationsDelta {
     pub added: Vec<BlockRepresentation>,
     pub removed: Vec<String>,
@@ -102,9 +92,7 @@ pub struct Block3dRepresentationsDelta {
 
 /// 🩹 One patched Representations entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Block3dRepresentationsPatchEntry {
     pub id: String,
     pub patch: Block3dRepresentationsPatch,
@@ -112,18 +100,14 @@ pub struct Block3dRepresentationsPatchEntry {
 
 /// 🩹 Sparse patch over Representations.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct Block3dRepresentationsPatch {
     pub replacement: Option<BlockRepresentation>,
 }
 
 /// 📂 Identified-collection delta for VortexKinds.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct Block3dVortexKindsDelta {
     pub added: Vec<Block3dVortexKind>,
     pub removed: Vec<String>,
@@ -133,9 +117,7 @@ pub struct Block3dVortexKindsDelta {
 
 /// 🩹 One patched VortexKinds entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Block3dVortexKindsPatchEntry {
     pub id: String,
     pub patch: Block3dVortexKindsPatch,
@@ -143,18 +125,14 @@ pub struct Block3dVortexKindsPatchEntry {
 
 /// 🩹 Sparse patch over VortexKinds.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct Block3dVortexKindsPatch {
     pub replacement: Option<Block3dVortexKind>,
 }
 
 /// 📂 Identified-collection delta for Vortices.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct Block3dVorticesDelta {
     pub added: Vec<Block3dVortexTemplate>,
     pub removed: Vec<String>,
@@ -164,9 +142,7 @@ pub struct Block3dVorticesDelta {
 
 /// 🩹 One patched Vortices entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Block3dVorticesPatchEntry {
     pub id: String,
     pub patch: Block3dVorticesPatch,
@@ -174,18 +150,14 @@ pub struct Block3dVorticesPatchEntry {
 
 /// 🩹 Sparse patch over Vortices.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct Block3dVorticesPatch {
     pub replacement: Option<Block3dVortexTemplate>,
 }
 
 /// 📂 Identified-collection delta for Compatibility.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct Block3dCompatibilityDelta {
     pub added: Vec<BlockCompatibilityRule>,
     pub removed: Vec<String>,
@@ -195,9 +167,7 @@ pub struct Block3dCompatibilityDelta {
 
 /// 🩹 One patched Compatibility entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Block3dCompatibilityPatchEntry {
     pub id: String,
     pub patch: Block3dCompatibilityPatch,
@@ -205,18 +175,14 @@ pub struct Block3dCompatibilityPatchEntry {
 
 /// 🩹 Sparse patch over Compatibility.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct Block3dCompatibilityPatch {
     pub replacement: Option<BlockCompatibilityRule>,
 }
 
 /// 📂 Identified-collection delta for Attributes.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct Block3dAttributesDelta {
     pub added: Vec<BlockAttribute>,
     pub removed: Vec<String>,
@@ -226,9 +192,7 @@ pub struct Block3dAttributesDelta {
 
 /// 🩹 One patched Attributes entry.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Block3dAttributesPatchEntry {
     pub id: String,
     pub patch: Block3dAttributesPatch,
@@ -236,9 +200,7 @@ pub struct Block3dAttributesPatchEntry {
 
 /// 🩹 Sparse patch over Attributes.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct Block3dAttributesPatch {
     pub replacement: Option<BlockAttribute>,
 }

@@ -5,15 +5,11 @@ use crate::artifacts::gisterrain::{gis_terrain_mesh_child_handle, gis_terrain_me
 use framework_surface::terrain::tiles;
 use schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Artifact
 /// 🧬️ Full GIS terrain artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gisterrain")]
 pub struct GisTerrainArtifact {
@@ -25,7 +21,6 @@ pub struct GisTerrainArtifact {
     /// from `(exaggeration, imported_features_json)` by `to_snapshot`, never independently set.
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.mesh")]
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
     #[state(config)]
@@ -339,7 +334,7 @@ mod relocated_engine_tests {
     #[semio_framework_async_macros::async_test]
     async fn terrain_descriptor_json_defaults_exaggeration_and_positions_when_absent() {
         let json = r#"{"schema":"gis.terrain","projectOrigin":{"lon":1.0,"lat":2.0}}"#;
-        let descriptor: TerrainDescriptorJson = serde_json::from_str(json).expect("valid descriptor json");
+        let descriptor: TerrainDescriptorJson = dsl::json::from_json_str(json).expect("valid descriptor json");
         assert_eq!(descriptor.exaggeration, 1.0);
         assert!(descriptor.positions.is_empty());
     }
@@ -347,7 +342,7 @@ mod relocated_engine_tests {
     #[semio_framework_async_macros::async_test]
     async fn terrain_position_data_omits_none_fields_when_serialized() {
         let position = TerrainPositionData { id: "p2".to_string(), lon: 1.0, lat: 2.0, label: None, icon: Some("pin".to_string()) };
-        let json = serde_json::to_string(&position).expect("serializes");
+        let json = dsl::json::to_json_string(&position);
         assert!(!json.contains("label"));
         assert!(json.contains("\"icon\":\"pin\""));
     }

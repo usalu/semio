@@ -2882,7 +2882,6 @@ mod flow_vcs_tests {
             let mut versions = 1usize;
             let mut active = 0usize;
             let mut revision = 1u64;
-            let mut parent_revision = 0u64;
             let mut document_generation = 1u64;
             let mut semantic_digest = flow_oracle_scalar_digest(&document);
             let mut results = Vec::new();
@@ -2914,7 +2913,7 @@ mod flow_vcs_tests {
                         }
                     }
                 }
-                parent_revision = revision;
+                let parent_revision = revision;
                 revision += 1;
                 document_generation += 1;
                 let widget_count = flow_oracle_collection_len(&document, "widgets");
@@ -3737,7 +3736,7 @@ mod flow_vcs_tests {
             let previous = expected.clone();
             let key = edit["id"].as_str().unwrap();
             if edit["layout"].is_null() { expected.as_object_mut().unwrap().remove(key); }
-            else { expected.as_object_mut().unwrap().insert(key.into(), edit["layout"].clone()); }
+            else { expected.as_object_mut().unwrap().insert(key.to_owned(), edit["layout"].clone()); }
             let mut source = FlowVcsSource::new(<FlowLayoutEntry as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&edit.clone())).unwrap());
             let handle = session.begin_set_layout(session.authority(), &mut source).unwrap();
             publish_and_close(&mut session, handle);

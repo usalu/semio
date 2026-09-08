@@ -82,7 +82,7 @@ pub(crate) fn agg_diff(this: &Ifc2x3Mutation, base: &Ifc2x3Snapshot) -> protocol
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_inverse(this: &Ifc2x3Mutation, base: &Ifc2x3Snapshot) -> Vec<Ifc2x3Mutation> {
     let _ = this;
-    vec![Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })]
+    vec![Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(base.clone()) })]
 }
 //#endregion 🔖️MutationTrait
 
@@ -135,7 +135,7 @@ fn parse_ifc2x3_mutation(line: &str) -> Result<Ifc2x3Mutation, String> {
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let (arg_key, arg_val) = rest.split_once('=').ok_or_else(|| format!("ifc2x3 mutation: missing arg for {keyword:?}"))?;
     match (keyword, arg_key) {
-        ("set-snapshot", "snapshot") => Ok(Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_ifc2x3_snapshot(arg_val)? })),
+        ("set-snapshot", "snapshot") => Ok(Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(dec_ifc2x3_snapshot(arg_val)?) })),
         ("upsert-instance", "instance") => Ok(Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: dec_part21_instance(arg_val)? })),
         ("remove-instance", "id") => Ok(Ifc2x3Mutation::RemoveInstance(remove_instance::RemoveInstance { id: arg_val.parse().map_err(|e: std::num::ParseIntError| e.to_string())? })),
         ("set-header", "header") => Ok(Ifc2x3Mutation::SetHeader(set_header::SetHeader { header: dec_part21_header(arg_val)? })),
@@ -226,7 +226,7 @@ impl protocol::OpBinary for Ifc2x3Mutation {
         let mutation = match tag {
             1 => {
                 let snapshot = dec_ifc2x3_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
-                Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })
+                Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(snapshot) })
             }
             2 => {
                 let instance = dec_part21_instance_bin(&mut reader).map_err(|e| malformed("op instance", reader.position(), e))?;
@@ -259,7 +259,7 @@ impl protocol::OpBinary for Ifc2x3Mutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<Ifc2x3Mutation> {
     vec![
-        Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::artifacts::ifc::standards::v2x3::engine::demo_ifc2x3_snapshot() }),
+        Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(crate::artifacts::ifc::standards::v2x3::engine::demo_ifc2x3_snapshot()) }),
         Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance {
             instance: Part21Instance {
                 id: 99,
@@ -324,7 +324,7 @@ mod tests {
         apply_ifc2x3_mutation(&mut snap, &mutation);
         assert_eq!(snap.document.instances.len(), 1);
         let inv = <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::inverse(&mutation, &base);
-        assert_eq!(inv, vec![Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base })]);
+        assert_eq!(inv, vec![Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(base) })]);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -336,7 +336,7 @@ mod tests {
         apply_ifc2x3_mutation(&mut snap, &mutation);
         assert!(snap.document.instances.is_empty());
         let inv = <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::inverse(&mutation, &base);
-        assert_eq!(inv, vec![Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base })]);
+        assert_eq!(inv, vec![Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(base) })]);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -448,12 +448,12 @@ mod tests {
             assert_exact("binary diff export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&applied).expect("binary diff export")).await;
         }
         {
-            let mutation = Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: imported.clone() });
+            let mutation = Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(imported.clone()) });
             let wire = mutation.print_op();
             drop(mutation);
             let decoded = Ifc2x3Mutation::parse_op(&wire).expect("op text decode");
             drop(wire);
-            assert!(matches!(&decoded, Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) if snapshot == &imported), "set-snapshot text codec must retain the logical IFC model");
+            assert!(matches!(&decoded, Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) if snapshot.as_ref() == &imported), "set-snapshot text codec must retain the logical IFC model");
             let diff = Mutation::diff(&decoded, &projection);
             drop(decoded);
             let applied = MutationDiff::apply(diff.diff(), &projection).expect("valid text mutation diff");
@@ -462,12 +462,12 @@ mod tests {
             assert_exact("set-snapshot text export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&applied).expect("set-snapshot text export")).await;
         }
         {
-            let mutation = Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: imported.clone() });
+            let mutation = Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(imported.clone()) });
             let wire = mutation.encode_op().expect("op binary encode");
             drop(mutation);
             let decoded = Ifc2x3Mutation::decode_op(&wire).expect("op binary decode");
             drop(wire);
-            assert!(matches!(&decoded, Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) if snapshot == &imported), "set-snapshot binary codec must retain the logical IFC model");
+            assert!(matches!(&decoded, Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) if snapshot.as_ref() == &imported), "set-snapshot binary codec must retain the logical IFC model");
             let diff = Mutation::diff(&decoded, &projection);
             drop(decoded);
             let applied = MutationDiff::apply(diff.diff(), &projection).expect("valid binary mutation diff");
@@ -513,7 +513,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn kinds_const_matches_enum_variants_in_declaration_order() {
         let one_per_variant = vec![
-            Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Ifc2x3Snapshot::default() }),
+            Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::default() }),
             Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: inst(1, "IFCWALL").await }),
             Ifc2x3Mutation::RemoveInstance(remove_instance::RemoveInstance { id: 1 }),
             Ifc2x3Mutation::SetHeader(set_header::SetHeader { header: Part21Header::default() }),
@@ -538,7 +538,7 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📸️set-snapshot/🧪️tests/✏️renames-the-ifcproject-instance/🦀️.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/✏️renames-the-7d2a8a/🦀️.rs"]
     mod tests_set_snapshot_renames_the_ifcproject_instance;
 }
 //#endregion 🧪️FixtureTests

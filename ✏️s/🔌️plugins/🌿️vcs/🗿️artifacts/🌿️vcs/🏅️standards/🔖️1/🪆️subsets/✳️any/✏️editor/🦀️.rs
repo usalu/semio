@@ -384,17 +384,8 @@ impl ArtifactCommandWork<EditorApp<VcsPlayApp>> for VcsEditCommandWork {
         vcs_edit_extent(command, snapshot, interaction)
     }
 
-    fn step(
-        &mut self,
-        command: &VcsCommand,
-        snapshot: &VcsSnapshot,
-        _config: &VcsDemoConfig,
-        _history: &semio_framework_plugin::HistoryView,
-        _interaction: &protocol::InteractionState,
-        _hover: &semio_framework_plugin::app::InteractionHoverState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<VcsPlayApp>>>,
-        _operation: &AppOperationContext,
-    ) -> Result<ArtifactCommandWorkStep<EditorApp<VcsPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<VcsPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<VcsPlayApp>>, Fault> {
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
         let replaying = self.steps < self.replay_target;
         match self.advance(command, snapshot)? {
             Some(_emit) if replaying => Err(Fault::from("vcs-edit-checkpoint-beyond-completion")),
@@ -814,16 +805,8 @@ impl ArtifactEditor for VcsPlayApp {
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
         };
-        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            request.context,
-            operation_context,
-            request.completion,
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
             VcsCommand::command_id,
             VCS_BOUNDED_RAW_BYTES,
             if bounded { VCS_BOUNDED_WORK_ITEMS } else { VCS_EDIT_MAXIMUM_WORK_ITEMS },
@@ -1041,7 +1024,7 @@ pub(crate) mod testkit {
     }
 
     pub async fn render(instance: &mut VcsApp, body_key: &str) -> String {
-        serde_json::to_string(&instance.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(instance.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
     }
 
     /// 📦️ Parses `document_pack()` (the full envelope) for tests that need to inspect raw
@@ -1217,6 +1200,7 @@ pub(crate) mod testkit {
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
+    use serde_json::{from_str as parse, Value};
     use super::*;
     use crate::editor::vcs::testkit::{action_args, app, dispatch, no_args, seeded_envelope};
     use semio_framework_plugin::testkit::meta;
@@ -1503,7 +1487,7 @@ mod tests {
             }
         }
         assert!(children_by_parent.values().any(|count| *count >= 2), "seed must contain a real fork (a checkpoint with >=2 children)");
-        let lanes: std::collections::HashSet<usize> = store::build_history_columns(&envelope).into_iter().map(|column: HistoryColumn| column.lane).collect();
+        let lanes: std::collections::HashSet<usize> = store::build_history_columns(&envelope).await.into_iter().map(|column: HistoryColumn| column.lane).collect();
         assert!(lanes.len() >= 3, "expected >=3 distinct swimlanes, got {lanes:?}");
     }
 

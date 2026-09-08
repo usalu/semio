@@ -481,6 +481,7 @@ pub struct ExtensionProps {
 // notes above.
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
+#[expect(clippy::large_enum_variant, reason = "Typed copy and retirement account for inline component bytes; boxing variants would require separate allocation credits.")]
 pub enum Component {
     Container(ContainerProps),
     Text(TextProps),

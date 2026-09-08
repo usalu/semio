@@ -1048,6 +1048,18 @@ impl NativeHubBindingDriver {
         self.runtime.block_on(crate::inference::approve_gis_map_job(self.inference_transport.as_ref(), &context, hub_origin, scope, request))
     }
 
+    /// ↩️ Sends one Hub-minted durable GIS approval undo through the authenticated transport.
+    pub fn undo_gis_map_approval(
+        &self,
+        scope: &DocumentScope,
+        hub_origin: &str,
+        request: &semio_framework_os_kernel::os_directory::GisMapApprovalUndoRequestV1,
+        cancel: &semio_framework_async::CancelToken,
+    ) -> Result<semio_framework_os_kernel::os_directory::GisMapApprovalUndoReceiptV1, crate::inference::InferenceRouteErrorV1> {
+        let (context, _) = self.operation_context(cancel, HUB_INFERENCE_OPERATION_TIMEOUT_MS);
+        self.runtime.block_on(crate::inference::undo_gis_map_approval(self.inference_transport.as_ref(), &context, hub_origin, scope, request))
+    }
+
     /// 🧊️ Mounts the P4-C canonical checkpoint pair for one scope and projects exactly the frozen
     /// base identity an inference job is compared against: descriptor digest, active checkpoint,
     /// catalog generation, etag and the verified baseline frontier.

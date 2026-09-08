@@ -18,13 +18,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioDrawingSnapshot {
-    serde_json::from_str(BEFORE).expect("create-node before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("create-node before snapshot decodes")
 }
 fn expected_after() -> SemioDrawingSnapshot {
-    serde_json::from_str(AFTER).expect("create-node after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("create-node after snapshot decodes")
 }
 fn mutation() -> SemioDrawingMutation {
-    serde_json::from_str(MUTATION).expect("create-node mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("create-node mutation decodes")
 }
 
 /// ▶️ The caption lands as the fourth child of the layer root; nothing else moves.
@@ -59,12 +59,12 @@ async fn the_undo_delete_node_addresses_the_path_the_node_landed_at() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioDrawingSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: SemioDrawingSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "create-node/appends-a-caption-text-node-to-the-layer-root: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("create-node mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("create-node mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("create-node mutation reparses");
     assert_eq!(reencoded, original, "create-node/appends-a-caption-text-node-to-the-layer-root: committed mutation JSON is not canonical");
 }
@@ -83,7 +83,7 @@ async fn declared_outcome_holds_as_committed() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-node/appends-a-caption-text-node-to-the-layer-root: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -92,7 +92,7 @@ async fn produces_committed_diff() {
 /// this subset ever writes — stays absent from it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioDrawingDiff = serde_json::from_str(DIFF).expect("committed create-node diff decodes");
+    let decoded: SemioDrawingDiff = dsl::json::from_json_str(DIFF).expect("committed create-node diff decodes");
     assert!(decoded.canvas.is_none(), "no drawing mutation writes the canvas slot");
     let layers = decoded.layers.as_ref().expect("the layers triple must be present");
     assert!(layers.removed.is_empty() && layers.added.is_empty(), "a node-level edit modifies its layer, never removes or re-adds it");
@@ -106,7 +106,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
     assert_eq!(children.added[0].index, 3, "the add carries its target position among the siblings");
     assert!(children.removed.is_empty() && children.modified.is_empty(), "a create neither removes nor modifies a sibling");
     assert!(decoded.styles.is_none(), "the style table must stay untouched");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "create-node/appends-a-caption-text-node-to-the-layer-root: committed diff JSON is not canonical");
 }
@@ -114,7 +114,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioDrawingDiff = serde_json::from_str(DIFF).expect("committed create-node diff decodes");
+    let decoded: SemioDrawingDiff = dsl::json::from_json_str(DIFF).expect("committed create-node diff decodes");
     let produced = decoded.apply(&before()).expect("committed create-node diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-node/appends-a-caption-text-node-to-the-layer-root: committed diff did not carry before to after");
 }

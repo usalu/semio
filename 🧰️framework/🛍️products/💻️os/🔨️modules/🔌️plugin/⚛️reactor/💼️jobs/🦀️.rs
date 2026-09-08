@@ -180,6 +180,7 @@ pub fn register_bounded_job_kind(kind: &'static str, factory: BoundedJobFactory)
 /// `Rc<RefCell<_>>` — `progress`/`checkpoint` are written by the job body (through `JobCtx`), read
 /// and cleared/kept by `step_job` (through the `JOBS` slot); `tick_budget`/`ticks_consumed` are
 /// `step_job`'s own slicing counters, read by `JobTick::poll`.
+#[derive(Default)]
 struct JobState {
     budget: JobBudget,
     /// ⏱️ Incremented by one on every `step_job` call — grants the job's task exactly one more
@@ -199,12 +200,6 @@ struct JobState {
     /// 🛑️ Stall guard bookkeeping — see `step_job`'s doc comment for the exact rule.
     last_budget_seen: Option<JobBudget>,
     stall_count: u32,
-}
-
-impl Default for JobState {
-    fn default() -> Self {
-        Self { budget: JobBudget::default(), tick_budget: 0, ticks_consumed: 0, progress: None, checkpoint: None, outcome: None, last_budget_seen: None, stall_count: 0 }
-    }
 }
 
 /// ⏳️ The per-job handle a `JobFn` runs with — see module doc for the slicing mechanics `tick()`
@@ -233,7 +228,7 @@ impl JobCtx {
     /// goes through this — see module doc's slicing-mechanics section for why the future itself
     /// needs no waker bookkeeping.
     pub async fn tick(&self) {
-        JobTick { state: self.state.clone() }.await
+        JobTick { state: self.state.clone() }.await;
     }
 
     /// 📈️ Surfaces as `JobStep::Running(Some(bytes))` → `Event::JobProgress` on the SAME slice this
@@ -296,6 +291,7 @@ enum JobBody {
     },
     Bounded(Box<dyn BoundedJob>),
     AdmissionFailed(Vec<u8>),
+    #[cfg(not(test))]
     ExplicitStateMachineRequired,
     /// 🧬️ `start_job` never rejects an unrecognised `kind` (matches the old hard-coded `match`'s own
     /// behaviour, and the existing `JobsGuest::start_job` lease contract: it always returns `Ok(())`
@@ -373,7 +369,6 @@ async fn spawn_job(job: u64, kind: &str, input: &[u8], restored: Option<Vec<u8>>
     {
         let _ = (run, restored);
         JOBS.with(|jobs| jobs.borrow_mut().insert(job, JobSlot { kind: kind.to_string(), input: input.to_vec(), body: JobBody::ExplicitStateMachineRequired }));
-        return;
     }
     #[cfg(test)]
     {
@@ -450,7 +445,9 @@ pub async fn step_job(job: u64, budget: JobBudget) -> JobStep {
     let Some((kind, running)) = JOBS.with(|jobs| {
         jobs.borrow().get(&job).map(|slot| {
             let running: Option<(super::executor::TaskId, Rc<RefCell<JobState>>)> = match &slot.body {
-                JobBody::UnknownKind | JobBody::AdmissionFailed(_) | JobBody::ExplicitStateMachineRequired | JobBody::Bounded(_) => None,
+                JobBody::UnknownKind | JobBody::AdmissionFailed(_) | JobBody::Bounded(_) => None,
+                #[cfg(not(test))]
+                JobBody::ExplicitStateMachineRequired => None,
                 #[cfg(test)]
                 JobBody::Running { task, state } => Some((super::executor::TaskId::clone(task), state.clone())),
             };
@@ -463,6 +460,7 @@ pub async fn step_job(job: u64, budget: JobBudget) -> JobStep {
         let code = JOBS
             .with(|jobs| {
                 jobs.borrow().get(&job).map(|slot| match &slot.body {
+                    #[cfg(not(test))]
                     JobBody::ExplicitStateMachineRequired => "job.explicit-state-machine-required",
                     JobBody::AdmissionFailed(_) => "job.admission-failed",
                     JobBody::UnknownKind | JobBody::Bounded(_) => "job.unknown-kind",
@@ -561,7 +559,9 @@ pub async fn checkpoint_jobs() -> Vec<JobCheckpointEntry> {
                     #[cfg(test)]
                     JobBody::Running { state, .. } => state.borrow().checkpoint.clone(),
                     JobBody::Bounded(owner) => owner.checkpoint(),
-                    JobBody::UnknownKind | JobBody::AdmissionFailed(_) | JobBody::ExplicitStateMachineRequired => None,
+                    JobBody::UnknownKind | JobBody::AdmissionFailed(_) => None,
+                    #[cfg(not(test))]
+                    JobBody::ExplicitStateMachineRequired => None,
                 };
                 JobCheckpointEntry { job: *job, kind: slot.kind.clone(), input: slot.input.clone(), checkpoint }
             })
@@ -682,7 +682,7 @@ async fn run_io_sniff(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     if source != carrier {
         return Ok(vec![semio_framework::io_schema::Confidence::None.rank().await]);
     }
-    let confidence = semio_framework::io::io_mechanism::io_identify(&payload).await.into_iter().find(|(dialect, _)| *dialect == target).map(|(_, confidence)| confidence).unwrap_or(semio_framework::io_schema::Confidence::None);
+    let confidence = semio_framework::io::io_mechanism::io_identify(&payload).await.into_iter().find(|(dialect, _)| *dialect == target).map_or(semio_framework::io_schema::Confidence::None, |(_, confidence)| confidence);
     Ok(vec![confidence.rank().await])
 }
 

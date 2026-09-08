@@ -1,0 +1,7 @@
+{
+  "documents": [
+    { "id": "zwischenbericht", "minPages": 2, "text": ["Entwerfen mit Bestand", "Ueli Saluz"] },
+    { "id": "forschungsbericht", "minPages": 2, "text": ["Entwerfen mit Bestand", "Ueli Saluz"] },
+    { "id": "kompaktbericht", "minPages": 1, "text": ["Entwerfen mit Bestand"] }
+  ]
+}

@@ -18,6 +18,8 @@ use crate::artifacts::generation2d::diff::Generation2dDiff;
 use crate::artifacts::generation2d::{widget_id, Generation2dSnapshot};
 use flow::playbook::GenerationMutation;
 use flow::FlowFixture;
+#[cfg(test)]
+use flow::{Widget, playbook::FormGeneration};
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::{ArtifactEnvelope, ArtifactStore};
@@ -188,7 +190,7 @@ mod tests {
     use super::*;
     use crate::artifacts::generation2d::schema::empty_generation2d_snapshot;
     use flow::{CameraJson, SynapseSpec, WidgetLayout};
-    use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use semio_framework_os_kernel::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::{Mutation, MutationDiff, SemanticMutation};
     use vcs::apply_mutation;
 
@@ -242,25 +244,25 @@ mod tests {
     #[test]
     fn generation_lifecycle_round_trips() {
         let before = empty_generation2d_snapshot();
-        let generation = FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
+        let generation = FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: Default::default() };
         let after = round_trip(&before, &create_generation(generation));
         assert_eq!(after.generation.generations.len(), 1);
     }
 
     //#region 🔖️MutationInverseLawTests
-    #[test]
-    fn create_widget_inverse_law() {
+    #[semio_framework_async_macros::async_test]
+    async fn create_widget_inverse_law() {
         let base = empty_generation2d_snapshot();
         let mutation = create_widget(0, Widget::InputNote { id: "brand-new".into(), text: String::new() });
-        assert_mutation_inverse_law(&base, &mutation);
+        assert_mutation_inverse_law(&base, &mutation).await;
     }
 
-    #[test]
-    fn replace_widget_inverse_law() {
+    #[semio_framework_async_macros::async_test]
+    async fn replace_widget_inverse_law() {
         let base = empty_generation2d_snapshot();
         let id = widget_id(&base.fixture.widgets[1]).to_string();
         let mutation = replace_widget(Widget::InputNote { id, text: "replaced".into() });
-        assert_mutation_inverse_law(&base, &mutation);
+        assert_mutation_inverse_law(&base, &mutation).await;
     }
 
     #[test]
@@ -270,12 +272,12 @@ mod tests {
         assert!(mutation.inverse(&base).is_empty());
     }
 
-    #[test]
-    fn delete_widget_inverse_law() {
+    #[semio_framework_async_macros::async_test]
+    async fn delete_widget_inverse_law() {
         let base = empty_generation2d_snapshot();
         let id = widget_id(&base.fixture.widgets[1]).to_string();
         let mutation = delete_widget(id);
-        assert_mutation_inverse_law(&base, &mutation);
+        assert_mutation_inverse_law(&base, &mutation).await;
     }
 
     #[test]
@@ -287,28 +289,28 @@ mod tests {
         assert_eq!(after, base);
     }
 
-    #[test]
-    fn connect_synapse_inverse_law() {
+    #[semio_framework_async_macros::async_test]
+    async fn connect_synapse_inverse_law() {
         let base = empty_generation2d_snapshot();
         let synapse = SynapseSpec { id: "brand-new-synapse".into(), from: "slider".into(), to: "add".into(), from_port: "number".into(), to_port: "b".into() };
         let mutation = connect_synapse(0, synapse);
-        assert_mutation_inverse_law(&base, &mutation);
+        assert_mutation_inverse_law(&base, &mutation).await;
     }
 
-    #[test]
-    fn replace_synapse_inverse_law() {
+    #[semio_framework_async_macros::async_test]
+    async fn replace_synapse_inverse_law() {
         let base = empty_generation2d_snapshot();
         let id = base.fixture.synapses[0].id.clone();
         let mutation = replace_synapse(SynapseSpec { id, from: "add".into(), to: "preview".into(), from_port: "sum".into(), to_port: "changed".into() });
-        assert_mutation_inverse_law(&base, &mutation);
+        assert_mutation_inverse_law(&base, &mutation).await;
     }
 
-    #[test]
-    fn disconnect_synapse_inverse_law() {
+    #[semio_framework_async_macros::async_test]
+    async fn disconnect_synapse_inverse_law() {
         let base = empty_generation2d_snapshot();
         let id = base.fixture.synapses[0].id.clone();
         let mutation = disconnect_synapse(id);
-        assert_mutation_inverse_law(&base, &mutation);
+        assert_mutation_inverse_law(&base, &mutation).await;
     }
 
     #[test]
@@ -318,13 +320,13 @@ mod tests {
         assert!(mutation.inverse(&base).is_empty());
     }
 
-    #[test]
-    fn move_widget_inverse_law_over_prior_layout() {
+    #[semio_framework_async_macros::async_test]
+    async fn move_widget_inverse_law_over_prior_layout() {
         let mut base = empty_generation2d_snapshot();
         let id = widget_id(&base.fixture.widgets[0]).to_string();
         base.fixture.layout.insert(id.clone(), WidgetLayout { x: 1.0, y: 1.0 });
         let mutation = move_widget(id, WidgetLayout { x: 9.0, y: 9.0 });
-        assert_mutation_inverse_law(&base, &mutation);
+        assert_mutation_inverse_law(&base, &mutation).await;
     }
 
     #[test]
@@ -336,12 +338,12 @@ mod tests {
         assert!(after.fixture.layout.contains_key("slider"));
     }
 
-    #[test]
-    fn clear_widget_layout_inverse_law() {
+    #[semio_framework_async_macros::async_test]
+    async fn clear_widget_layout_inverse_law() {
         let mut base = empty_generation2d_snapshot();
         base.fixture.layout.insert("slider".into(), WidgetLayout { x: 4.0, y: 5.0 });
         let mutation = clear_widget_layout("slider".into());
-        assert_mutation_inverse_law(&base, &mutation);
+        assert_mutation_inverse_law(&base, &mutation).await;
     }
 
     #[test]
@@ -351,42 +353,42 @@ mod tests {
         assert!(mutation.inverse(&base).is_empty());
     }
 
-    #[test]
-    fn update_camera_inverse_law() {
+    #[semio_framework_async_macros::async_test]
+    async fn update_camera_inverse_law() {
         let base = empty_generation2d_snapshot();
         let mutation = update_camera(CameraJson { x: 42.0, y: -3.0, zoom: 5.0 });
-        assert_mutation_inverse_law(&base, &mutation);
+        assert_mutation_inverse_law(&base, &mutation).await;
     }
 
-    #[test]
-    fn change_schema_inverse_law() {
+    #[semio_framework_async_macros::async_test]
+    async fn change_schema_inverse_law() {
         let base = empty_generation2d_snapshot();
         let mutation = change_schema("changed.schema".into());
-        assert_mutation_inverse_law(&base, &mutation);
+        assert_mutation_inverse_law(&base, &mutation).await;
     }
 
-    #[test]
-    fn create_generation_inverse_law() {
+    #[semio_framework_async_macros::async_test]
+    async fn create_generation_inverse_law() {
         let base = empty_generation2d_snapshot();
-        let generation = FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
-        assert_mutation_inverse_law(&base, &create_generation(generation));
+        let generation = FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: Default::default() };
+        assert_mutation_inverse_law(&base, &create_generation(generation)).await;
     }
 
-    #[test]
-    fn rename_generation_inverse_law() {
+    #[semio_framework_async_macros::async_test]
+    async fn rename_generation_inverse_law() {
         let mut base = empty_generation2d_snapshot();
-        base.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() });
-        assert_mutation_inverse_law(&base, &rename_generation("generation-1".into(), "Renamed".into()));
+        base.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: Default::default() });
+        assert_mutation_inverse_law(&base, &rename_generation("generation-1".into(), "Renamed".into())).await;
     }
 
-    #[test]
-    fn change_generation_value_diff_absorb_law() {
+    #[semio_framework_async_macros::async_test]
+    async fn change_generation_value_diff_absorb_law() {
         let mut base = empty_generation2d_snapshot();
-        base.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() });
-        let d1 = change_generation_value("generation-1".into(), "q1".into(), serde_json::json!(1)).diff(&base);
+        base.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: Default::default() });
+        let d1 = change_generation_value("generation-1".into(), "q1".into(), dsl::DslValue::float(1.0)).diff(&base).into_parts().0;
         let mid = d1.apply(&base).expect("valid mutation diff");
-        let d2 = change_generation_value("generation-1".into(), "q1".into(), serde_json::json!(2)).diff(&mid);
-        assert_mutation_diff_absorb_law(&base, d1, d2);
+        let d2 = change_generation_value("generation-1".into(), "q1".into(), dsl::DslValue::float(2.0)).diff(&mid).into_parts().0;
+        assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
     //#endregion 🔖️MutationInverseLawTests
 
@@ -448,7 +450,7 @@ mod tests {
     /// declared vocabulary and the measured one from drifting apart.
     #[test]
     fn kinds_match_the_enum_and_the_catalog() {
-        let descriptors = <Generation2dMutation as protocol::SemanticMutation<Generation2dSnapshot>>::kinds();
+        let descriptors = <Generation2dMutation as SemanticMutation<Generation2dSnapshot>>::kinds();
         assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared Generation2dMutation variant");
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");

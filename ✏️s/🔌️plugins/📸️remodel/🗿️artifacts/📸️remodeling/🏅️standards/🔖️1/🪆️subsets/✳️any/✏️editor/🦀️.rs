@@ -1022,16 +1022,8 @@ impl ArtifactEditor for RemodelingPlayApp {
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
         };
-        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            request.context,
-            operation_context,
-            request.completion,
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
             RemodelingCommand::command_id,
             REMODELING_RETAINED_RAW_BYTES,
             REMODELING_RETAINED_WORK_ITEMS,
@@ -1256,7 +1248,7 @@ pub fn create_remodeling_app() -> AppDefinition {
                     ActionArgOption::new("texturing", LocalizedLabel::native("Texturing", "Texturierung")),
                 ],
             )
-            .default_value("extracting-features")])
+            .default_value(&"extracting-features")])
             .action_args("retryStage", vec![ActionArgDef::select(
                 "stage",
                 LocalizedLabel::native("Stage", "Stufe"),
@@ -1271,7 +1263,7 @@ pub fn create_remodeling_app() -> AppDefinition {
                     ActionArgOption::new("texturing", LocalizedLabel::native("Texturing", "Texturierung")),
                 ],
             )
-            .default_value("extracting-features")])
+            .default_value(&"extracting-features")])
             // 📥️ Ingestion.
             .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::bounded_catalog("importFrames", LocalizedLabel::native("Import Frames", "Frames importieren"), ActionKind::Shell) })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importFramePayload", LocalizedLabel::native("Import Frame Payload", "Bild-Payload importieren"), ActionKind::Mutation) })
@@ -1281,39 +1273,39 @@ pub fn create_remodeling_app() -> AppDefinition {
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importVideoBytesPayload", LocalizedLabel::native("Import Video Bytes Payload", "Video-Byte-Payload importieren"), ActionKind::Mutation) })
             .mutation("addStream", LocalizedLabel::native("Add Stream", "Stream hinzufügen"))
             .action_args("addStream", vec![
-                ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).default_value("Stream"),
-                ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![ActionArgOption::new("image-sequence", LocalizedLabel::native("Image Sequence", "Bildsequenz")), ActionArgOption::new("video", LocalizedLabel::native("Video", "Video"))]).default_value("image-sequence"),
-                ActionArgDef::text("cameraId", LocalizedLabel::native("Camera Id", "Kamera-Id")).default_value("cam-0"),
+                ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).default_value(&"Stream"),
+                ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![ActionArgOption::new("image-sequence", LocalizedLabel::native("Image Sequence", "Bildsequenz")), ActionArgOption::new("video", LocalizedLabel::native("Video", "Video"))]).default_value(&"image-sequence"),
+                ActionArgDef::text("cameraId", LocalizedLabel::native("Camera Id", "Kamera-Id")).default_value(&"cam-0"),
             ])
             .mutation("removeStream", LocalizedLabel::native("Remove Stream", "Stream entfernen"))
             .action_args("removeStream", vec![ActionArgDef::text("streamId", LocalizedLabel::native("Stream Id", "Stream-Id")).required()])
             .mutation("setStreamSync", LocalizedLabel::native("Set Stream Sync", "Stream-Synchronisation festlegen"))
-            .action_args("setStreamSync", vec![ActionArgDef::text("streamId", LocalizedLabel::native("Stream Id", "Stream-Id")).required(), ActionArgDef::number("syncOffsetMs", LocalizedLabel::native("Sync Offset (ms)", "Sync-Versatz (ms)")).default_value(0)])
+            .action_args("setStreamSync", vec![ActionArgDef::text("streamId", LocalizedLabel::native("Stream Id", "Stream-Id")).required(), ActionArgDef::number("syncOffsetMs", LocalizedLabel::native("Sync Offset (ms)", "Sync-Versatz (ms)")).default_value(&0)])
             // 🎯️ Calibration / GCPs.
             .mutation("editCalibration", LocalizedLabel::native("Edit Calibration", "Kalibrierung bearbeiten"))
             .action_args("editCalibration", vec![
                 ActionArgDef::text("cameraId", LocalizedLabel::native("Camera Id", "Kamera-Id")).required(),
                 ActionArgDef::text("label", LocalizedLabel::native("Label", "Bezeichnung")),
-                ActionArgDef::select("model", LocalizedLabel::native("Model", "Modell"), vec![ActionArgOption::new("pinhole", LocalizedLabel::native("Pinhole", "Lochkamera")), ActionArgOption::new("brownConrady", LocalizedLabel::native("Brown-Conrady", "Brown-Conrady")), ActionArgOption::new("fisheye", LocalizedLabel::native("Fisheye", "Fischauge"))]).default_value("pinhole"),
-                ActionArgDef::number("fx", LocalizedLabel::native("fx", "fx")).default_value(1000),
-                ActionArgDef::number("fy", LocalizedLabel::native("fy", "fy")).default_value(1000),
-                ActionArgDef::number("cx", LocalizedLabel::native("cx", "cx")).default_value(0),
-                ActionArgDef::number("cy", LocalizedLabel::native("cy", "cy")).default_value(0),
-                ActionArgDef::number("skew", LocalizedLabel::native("Skew", "Scherung")).default_value(0),
-                ActionArgDef::number("k1", LocalizedLabel::native("k1", "k1")).default_value(0),
-                ActionArgDef::number("k2", LocalizedLabel::native("k2", "k2")).default_value(0),
-                ActionArgDef::number("k3", LocalizedLabel::native("k3", "k3")).default_value(0),
-                ActionArgDef::number("p1", LocalizedLabel::native("p1", "p1")).default_value(0),
-                ActionArgDef::number("p2", LocalizedLabel::native("p2", "p2")).default_value(0),
-                ActionArgDef::toggle("locked", LocalizedLabel::native("Locked", "Gesperrt")).default_value(false),
+                ActionArgDef::select("model", LocalizedLabel::native("Model", "Modell"), vec![ActionArgOption::new("pinhole", LocalizedLabel::native("Pinhole", "Lochkamera")), ActionArgOption::new("brownConrady", LocalizedLabel::native("Brown-Conrady", "Brown-Conrady")), ActionArgOption::new("fisheye", LocalizedLabel::native("Fisheye", "Fischauge"))]).default_value(&"pinhole"),
+                ActionArgDef::number("fx", LocalizedLabel::native("fx", "fx")).default_value(&1000),
+                ActionArgDef::number("fy", LocalizedLabel::native("fy", "fy")).default_value(&1000),
+                ActionArgDef::number("cx", LocalizedLabel::native("cx", "cx")).default_value(&0),
+                ActionArgDef::number("cy", LocalizedLabel::native("cy", "cy")).default_value(&0),
+                ActionArgDef::number("skew", LocalizedLabel::native("Skew", "Scherung")).default_value(&0),
+                ActionArgDef::number("k1", LocalizedLabel::native("k1", "k1")).default_value(&0),
+                ActionArgDef::number("k2", LocalizedLabel::native("k2", "k2")).default_value(&0),
+                ActionArgDef::number("k3", LocalizedLabel::native("k3", "k3")).default_value(&0),
+                ActionArgDef::number("p1", LocalizedLabel::native("p1", "p1")).default_value(&0),
+                ActionArgDef::number("p2", LocalizedLabel::native("p2", "p2")).default_value(&0),
+                ActionArgDef::toggle("locked", LocalizedLabel::native("Locked", "Gesperrt")).default_value(&false),
             ])
             .mutation("calibrateCameras", LocalizedLabel::native("Calibrate Cameras", "Kameras kalibrieren"))
             .mutation("addGcp", LocalizedLabel::native("Add Ground Control Point", "Passpunkt hinzufügen"))
             .action_args("addGcp", vec![
-                ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).default_value("GCP"),
-                ActionArgDef::number("worldX", LocalizedLabel::native("World X", "Welt X")).default_value(0),
-                ActionArgDef::number("worldY", LocalizedLabel::native("World Y", "Welt Y")).default_value(0),
-                ActionArgDef::number("worldZ", LocalizedLabel::native("World Z", "Welt Z")).default_value(0),
+                ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).default_value(&"GCP"),
+                ActionArgDef::number("worldX", LocalizedLabel::native("World X", "Welt X")).default_value(&0),
+                ActionArgDef::number("worldY", LocalizedLabel::native("World Y", "Welt Y")).default_value(&0),
+                ActionArgDef::number("worldZ", LocalizedLabel::native("World Z", "Welt Z")).default_value(&0),
             ])
             .mutation("removeGcp", LocalizedLabel::native("Remove Ground Control Point", "Passpunkt entfernen"))
             .action_args("removeGcp", vec![ActionArgDef::text("gcpId", LocalizedLabel::native("GCP Id", "Passpunkt-Id")).required()])
@@ -1328,74 +1320,74 @@ pub fn create_remodeling_app() -> AppDefinition {
             // ⚙️ 8 param-group setters, one per `ReconstructionParams` sub-struct.
             .mutation("setIngestParams", LocalizedLabel::native("Set Ingest Params", "Ingest-Parameter festlegen"))
             .action_args("setIngestParams", vec![
-                ActionArgDef::number("frameSampleStride", LocalizedLabel::native("Frame Sample Stride", "Frame-Abtastschrittweite")).default_value(5),
-                ActionArgDef::number("maxFrames", LocalizedLabel::native("Max Frames", "Max. Frames")).default_value(200),
-                ActionArgDef::number("downscaleLongEdgePx", LocalizedLabel::native("Downscale Long Edge (px)", "Verkleinerung lange Kante (px)")).default_value(1600),
-                ActionArgDef::slider("minSharpness", LocalizedLabel::native("Min Sharpness", "Min. Schärfe"), 0.0, 1.0).default_value(0.3),
+                ActionArgDef::number("frameSampleStride", LocalizedLabel::native("Frame Sample Stride", "Frame-Abtastschrittweite")).default_value(&5),
+                ActionArgDef::number("maxFrames", LocalizedLabel::native("Max Frames", "Max. Frames")).default_value(&200),
+                ActionArgDef::number("downscaleLongEdgePx", LocalizedLabel::native("Downscale Long Edge (px)", "Verkleinerung lange Kante (px)")).default_value(&1600),
+                ActionArgDef::slider("minSharpness", LocalizedLabel::native("Min Sharpness", "Min. Schärfe"), 0.0, 1.0).default_value(&0.3),
             ])
             .mutation("setFeatureParams", LocalizedLabel::native("Set Feature Params", "Feature-Parameter festlegen"))
             .action_args("setFeatureParams", vec![
-                ActionArgDef::select("detector", LocalizedLabel::native("Detector", "Detektor"), vec![ActionArgOption::new("orb", LocalizedLabel::native("ORB", "ORB")), ActionArgOption::new("akaze", LocalizedLabel::native("AKAZE", "AKAZE")), ActionArgOption::new("harris", LocalizedLabel::native("Harris", "Harris"))]).default_value("orb"),
-                ActionArgDef::number("targetCount", LocalizedLabel::native("Target Count", "Ziel-Anzahl")).default_value(4000),
-                ActionArgDef::number("octaves", LocalizedLabel::native("Octaves", "Oktaven")).default_value(4),
-                ActionArgDef::slider("edgeThreshold", LocalizedLabel::native("Edge Threshold", "Kanten-Schwelle"), 1.0, 50.0).default_value(10.0),
+                ActionArgDef::select("detector", LocalizedLabel::native("Detector", "Detektor"), vec![ActionArgOption::new("orb", LocalizedLabel::native("ORB", "ORB")), ActionArgOption::new("akaze", LocalizedLabel::native("AKAZE", "AKAZE")), ActionArgOption::new("harris", LocalizedLabel::native("Harris", "Harris"))]).default_value(&"orb"),
+                ActionArgDef::number("targetCount", LocalizedLabel::native("Target Count", "Ziel-Anzahl")).default_value(&4000),
+                ActionArgDef::number("octaves", LocalizedLabel::native("Octaves", "Oktaven")).default_value(&4),
+                ActionArgDef::slider("edgeThreshold", LocalizedLabel::native("Edge Threshold", "Kanten-Schwelle"), 1.0, 50.0).default_value(&10.0),
             ])
             .mutation("setMatchParams", LocalizedLabel::native("Set Match Params", "Match-Parameter festlegen"))
             .action_args("setMatchParams", vec![
-                ActionArgDef::select("matcher", LocalizedLabel::native("Matcher", "Matcher"), vec![ActionArgOption::new("brute-force", LocalizedLabel::native("Brute Force", "Brute Force")), ActionArgOption::new("kd-tree", LocalizedLabel::native("KD-Tree", "KD-Baum"))]).default_value("brute-force"),
-                ActionArgDef::slider("ratioTest", LocalizedLabel::native("Ratio Test", "Verhältnistest"), 0.1, 1.0).default_value(0.8),
-                ActionArgDef::toggle("crossCheck", LocalizedLabel::native("Cross Check", "Kreuzprüfung")).default_value(true),
-                ActionArgDef::number("sequentialWindow", LocalizedLabel::native("Sequential Window", "Sequenzielles Fenster")).default_value(8),
-                ActionArgDef::number("maxPairsPerFrame", LocalizedLabel::native("Max Pairs Per Frame", "Max. Paare pro Frame")).default_value(16),
-                ActionArgDef::toggle("loopClosure", LocalizedLabel::native("Loop Closure", "Schleifenschluss")).default_value(true),
+                ActionArgDef::select("matcher", LocalizedLabel::native("Matcher", "Matcher"), vec![ActionArgOption::new("brute-force", LocalizedLabel::native("Brute Force", "Brute Force")), ActionArgOption::new("kd-tree", LocalizedLabel::native("KD-Tree", "KD-Baum"))]).default_value(&"brute-force"),
+                ActionArgDef::slider("ratioTest", LocalizedLabel::native("Ratio Test", "Verhältnistest"), 0.1, 1.0).default_value(&0.8),
+                ActionArgDef::toggle("crossCheck", LocalizedLabel::native("Cross Check", "Kreuzprüfung")).default_value(&true),
+                ActionArgDef::number("sequentialWindow", LocalizedLabel::native("Sequential Window", "Sequenzielles Fenster")).default_value(&8),
+                ActionArgDef::number("maxPairsPerFrame", LocalizedLabel::native("Max Pairs Per Frame", "Max. Paare pro Frame")).default_value(&16),
+                ActionArgDef::toggle("loopClosure", LocalizedLabel::native("Loop Closure", "Schleifenschluss")).default_value(&true),
             ])
             .mutation("setSfmParams", LocalizedLabel::native("Set SfM Params", "SfM-Parameter festlegen"))
             .action_args("setSfmParams", vec![
-                ActionArgDef::number("ransacIterations", LocalizedLabel::native("RANSAC Iterations", "RANSAC-Iterationen")).default_value(1000),
-                ActionArgDef::slider("ransacThresholdPx", LocalizedLabel::native("RANSAC Threshold (px)", "RANSAC-Schwelle (px)"), 0.1, 10.0).default_value(2.0),
-                ActionArgDef::number("minTrackLength", LocalizedLabel::native("Min Track Length", "Min. Spurlänge")).default_value(3),
-                ActionArgDef::number("baMaxIterations", LocalizedLabel::native("BA Max Iterations", "BA Max. Iterationen")).default_value(50),
-                ActionArgDef::select("robustLoss", LocalizedLabel::native("Robust Loss", "Robuster Verlust"), vec![ActionArgOption::new("l2", LocalizedLabel::native("L2", "L2")), ActionArgOption::new("huber", LocalizedLabel::native("Huber", "Huber")), ActionArgOption::new("cauchy", LocalizedLabel::native("Cauchy", "Cauchy"))]).default_value("huber"),
-                ActionArgDef::slider("huberDeltaPx", LocalizedLabel::native("Huber Delta (px)", "Huber-Delta (px)"), 0.1, 10.0).default_value(1.5),
+                ActionArgDef::number("ransacIterations", LocalizedLabel::native("RANSAC Iterations", "RANSAC-Iterationen")).default_value(&1000),
+                ActionArgDef::slider("ransacThresholdPx", LocalizedLabel::native("RANSAC Threshold (px)", "RANSAC-Schwelle (px)"), 0.1, 10.0).default_value(&2.0),
+                ActionArgDef::number("minTrackLength", LocalizedLabel::native("Min Track Length", "Min. Spurlänge")).default_value(&3),
+                ActionArgDef::number("baMaxIterations", LocalizedLabel::native("BA Max Iterations", "BA Max. Iterationen")).default_value(&50),
+                ActionArgDef::select("robustLoss", LocalizedLabel::native("Robust Loss", "Robuster Verlust"), vec![ActionArgOption::new("l2", LocalizedLabel::native("L2", "L2")), ActionArgOption::new("huber", LocalizedLabel::native("Huber", "Huber")), ActionArgOption::new("cauchy", LocalizedLabel::native("Cauchy", "Cauchy"))]).default_value(&"huber"),
+                ActionArgDef::slider("huberDeltaPx", LocalizedLabel::native("Huber Delta (px)", "Huber-Delta (px)"), 0.1, 10.0).default_value(&1.5),
             ])
             .mutation("setDenseParams", LocalizedLabel::native("Set Dense Params", "Dense-Parameter festlegen"))
             .action_args("setDenseParams", vec![
-                ActionArgDef::select("resolution", LocalizedLabel::native("Resolution", "Auflösung"), vec![ActionArgOption::new("low", LocalizedLabel::native("Low", "Niedrig")), ActionArgOption::new("medium", LocalizedLabel::native("Medium", "Mittel")), ActionArgOption::new("high", LocalizedLabel::native("High", "Hoch"))]).default_value("medium"),
-                ActionArgDef::number("windowRadiusPx", LocalizedLabel::native("Window Radius (px)", "Fensterradius (px)")).default_value(3),
-                ActionArgDef::number("minViewConsistency", LocalizedLabel::native("Min View Consistency", "Min. Ansichtskonsistenz")).default_value(3),
-                ActionArgDef::slider("confidenceThreshold", LocalizedLabel::native("Confidence Threshold", "Konfidenzschwelle"), 0.0, 1.0).default_value(0.5),
-                ActionArgDef::number("maxPoints", LocalizedLabel::native("Max Points", "Max. Punkte")).default_value(500_000),
+                ActionArgDef::select("resolution", LocalizedLabel::native("Resolution", "Auflösung"), vec![ActionArgOption::new("low", LocalizedLabel::native("Low", "Niedrig")), ActionArgOption::new("medium", LocalizedLabel::native("Medium", "Mittel")), ActionArgOption::new("high", LocalizedLabel::native("High", "Hoch"))]).default_value(&"medium"),
+                ActionArgDef::number("windowRadiusPx", LocalizedLabel::native("Window Radius (px)", "Fensterradius (px)")).default_value(&3),
+                ActionArgDef::number("minViewConsistency", LocalizedLabel::native("Min View Consistency", "Min. Ansichtskonsistenz")).default_value(&3),
+                ActionArgDef::slider("confidenceThreshold", LocalizedLabel::native("Confidence Threshold", "Konfidenzschwelle"), 0.0, 1.0).default_value(&0.5),
+                ActionArgDef::number("maxPoints", LocalizedLabel::native("Max Points", "Max. Punkte")).default_value(&500_000),
             ])
             .mutation("setMeshParams", LocalizedLabel::native("Set Mesh Params", "Mesh-Parameter festlegen"))
             .action_args("setMeshParams", vec![
-                ActionArgDef::slider("tsdfVoxelSizeMm", LocalizedLabel::native("TSDF Voxel Size (mm)", "TSDF-Voxelgröße (mm)"), 1.0, 20.0).default_value(5.0),
-                ActionArgDef::slider("tsdfTruncationMm", LocalizedLabel::native("TSDF Truncation (mm)", "TSDF-Trunkierung (mm)"), 2.0, 60.0).default_value(20.0),
-                ActionArgDef::number("decimateTargetTriangles", LocalizedLabel::native("Decimate Target Triangles", "Ziel-Dreiecke (Dezimierung)")).default_value(200_000),
-                ActionArgDef::number("smoothingIterations", LocalizedLabel::native("Smoothing Iterations", "Glättungs-Iterationen")).default_value(2),
-                ActionArgDef::toggle("textureEnabled", LocalizedLabel::native("Texture Enabled", "Textur aktiviert")).default_value(true),
-                ActionArgDef::select("textureSize", LocalizedLabel::native("Texture Size", "Texturgröße"), vec![ActionArgOption::new("1024", LocalizedLabel::native("1024", "1024")), ActionArgOption::new("2048", LocalizedLabel::native("2048", "2048")), ActionArgOption::new("4096", LocalizedLabel::native("4096", "4096"))]).default_value("2048"),
-                ActionArgDef::toggle("guaranteeWatertight", LocalizedLabel::native("Guarantee Watertight", "Wasserdichtheit garantieren")).default_value(true),
-                ActionArgDef::number("holeFillMaxBoundaryVerts", LocalizedLabel::native("Hole Fill Max Boundary Verts", "Max. Randpunkte für Lochfüllung")).default_value(512),
-                ActionArgDef::toggle("selfIntersectionCheck", LocalizedLabel::native("Self-Intersection Check", "Selbstüberschneidungsprüfung")).default_value(false),
+                ActionArgDef::slider("tsdfVoxelSizeMm", LocalizedLabel::native("TSDF Voxel Size (mm)", "TSDF-Voxelgröße (mm)"), 1.0, 20.0).default_value(&5.0),
+                ActionArgDef::slider("tsdfTruncationMm", LocalizedLabel::native("TSDF Truncation (mm)", "TSDF-Trunkierung (mm)"), 2.0, 60.0).default_value(&20.0),
+                ActionArgDef::number("decimateTargetTriangles", LocalizedLabel::native("Decimate Target Triangles", "Ziel-Dreiecke (Dezimierung)")).default_value(&200_000),
+                ActionArgDef::number("smoothingIterations", LocalizedLabel::native("Smoothing Iterations", "Glättungs-Iterationen")).default_value(&2),
+                ActionArgDef::toggle("textureEnabled", LocalizedLabel::native("Texture Enabled", "Textur aktiviert")).default_value(&true),
+                ActionArgDef::select("textureSize", LocalizedLabel::native("Texture Size", "Texturgröße"), vec![ActionArgOption::new("1024", LocalizedLabel::native("1024", "1024")), ActionArgOption::new("2048", LocalizedLabel::native("2048", "2048")), ActionArgOption::new("4096", LocalizedLabel::native("4096", "4096"))]).default_value(&"2048"),
+                ActionArgDef::toggle("guaranteeWatertight", LocalizedLabel::native("Guarantee Watertight", "Wasserdichtheit garantieren")).default_value(&true),
+                ActionArgDef::number("holeFillMaxBoundaryVerts", LocalizedLabel::native("Hole Fill Max Boundary Verts", "Max. Randpunkte für Lochfüllung")).default_value(&512),
+                ActionArgDef::toggle("selfIntersectionCheck", LocalizedLabel::native("Self-Intersection Check", "Selbstüberschneidungsprüfung")).default_value(&false),
             ])
             .mutation("setMotionParams", LocalizedLabel::native("Set Motion Params", "Bewegungs-Parameter festlegen"))
             .action_args("setMotionParams", vec![
-                ActionArgDef::toggle("enabled", LocalizedLabel::native("Enabled", "Aktiviert")).default_value(false),
-                ActionArgDef::number("maxTracks", LocalizedLabel::native("Max Tracks", "Max. Spuren")).default_value(64),
-                ActionArgDef::number("trackWindowPx", LocalizedLabel::native("Track Window (px)", "Spurfenster (px)")).default_value(21),
-                ActionArgDef::slider("minTrackQuality", LocalizedLabel::native("Min Track Quality", "Min. Spurqualität"), 0.0, 1.0).default_value(0.3),
-                ActionArgDef::number("minTrackLengthFrames", LocalizedLabel::native("Min Track Length (frames)", "Min. Spurlänge (Frames)")).default_value(5),
+                ActionArgDef::toggle("enabled", LocalizedLabel::native("Enabled", "Aktiviert")).default_value(&false),
+                ActionArgDef::number("maxTracks", LocalizedLabel::native("Max Tracks", "Max. Spuren")).default_value(&64),
+                ActionArgDef::number("trackWindowPx", LocalizedLabel::native("Track Window (px)", "Spurfenster (px)")).default_value(&21),
+                ActionArgDef::slider("minTrackQuality", LocalizedLabel::native("Min Track Quality", "Min. Spurqualität"), 0.0, 1.0).default_value(&0.3),
+                ActionArgDef::number("minTrackLengthFrames", LocalizedLabel::native("Min Track Length (frames)", "Min. Spurlänge (Frames)")).default_value(&5),
             ])
             .mutation("setGeoParams", LocalizedLabel::native("Set Geo Params", "Geo-Parameter festlegen"))
             .action_args("setGeoParams", vec![
-                ActionArgDef::toggle("enabled", LocalizedLabel::native("Enabled", "Aktiviert")).default_value(false),
-                ActionArgDef::number("originLon", LocalizedLabel::native("Origin Longitude", "Ursprung Längengrad")).default_value(0),
-                ActionArgDef::number("originLat", LocalizedLabel::native("Origin Latitude", "Ursprung Breitengrad")).default_value(0),
-                ActionArgDef::number("originAlt", LocalizedLabel::native("Origin Altitude", "Ursprung Höhe")).default_value(0),
-                ActionArgDef::slider("gsdM", LocalizedLabel::native("Ground Sample Distance (m)", "Bodenauflösung (m)"), 0.01, 1.0).default_value(0.05),
-                ActionArgDef::slider("dsmCellM", LocalizedLabel::native("DSM Cell Size (m)", "DOM-Zellgröße (m)"), 0.01, 5.0).default_value(0.1),
-                ActionArgDef::slider("dtmFilterRadiusM", LocalizedLabel::native("DTM Filter Radius (m)", "DGM-Filterradius (m)"), 0.1, 10.0).default_value(2.0),
-                ActionArgDef::number("orthoMaxPx", LocalizedLabel::native("Ortho Max (px)", "Ortho Max. (px)")).default_value(4096),
+                ActionArgDef::toggle("enabled", LocalizedLabel::native("Enabled", "Aktiviert")).default_value(&false),
+                ActionArgDef::number("originLon", LocalizedLabel::native("Origin Longitude", "Ursprung Längengrad")).default_value(&0),
+                ActionArgDef::number("originLat", LocalizedLabel::native("Origin Latitude", "Ursprung Breitengrad")).default_value(&0),
+                ActionArgDef::number("originAlt", LocalizedLabel::native("Origin Altitude", "Ursprung Höhe")).default_value(&0),
+                ActionArgDef::slider("gsdM", LocalizedLabel::native("Ground Sample Distance (m)", "Bodenauflösung (m)"), 0.01, 1.0).default_value(&0.05),
+                ActionArgDef::slider("dsmCellM", LocalizedLabel::native("DSM Cell Size (m)", "DOM-Zellgröße (m)"), 0.01, 5.0).default_value(&0.1),
+                ActionArgDef::slider("dtmFilterRadiusM", LocalizedLabel::native("DTM Filter Radius (m)", "DGM-Filterradius (m)"), 0.1, 10.0).default_value(&2.0),
+                ActionArgDef::number("orthoMaxPx", LocalizedLabel::native("Ortho Max (px)", "Ortho Max. (px)")).default_value(&4096),
             ])
             // 🧹️ Clear/reset.
             .mutation("resetPlaceholderMesh", LocalizedLabel::native("Reset Placeholder Mesh", "Platzhalter-Mesh zurücksetzen"))
@@ -1429,7 +1421,7 @@ pub fn create_remodeling_app() -> AppDefinition {
                 LocalizedLabel::native("Example", "Beispiel"),
                 crate::editor::remodeling::examples::REMODELING_EXAMPLES.iter().map(|example| ActionArgOption::new(example.id, crate::editor::remodeling::examples::example_label(example))).collect(),
             )
-            .default_value(crate::editor::remodeling::examples::REMODELING_EXAMPLE_BOOT_ID)])
+            .default_value(&crate::editor::remodeling::examples::REMODELING_EXAMPLE_BOOT_ID)])
             // 🧵️ Phase-8 dispositions. Every declared row is `Migrated`: each is backed by the
             // exact-owner `RemodelingRetainedCommandJobFactory` proof in `🧵️RetainedCommands` and by the
             // document/config one-item store preparations in `📬️StorePreparation`, so UI dispatch (which
@@ -1845,7 +1837,7 @@ mod tests {
     /// and rejects anything else — the gap this migration closed (see `command_from_action`'s doc).
     #[semio_framework_async_macros::async_test]
     async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
-        testkit::assert_declared_actions_bridge_to_commands::<EditorApp<RemodelingPlayApp>>(remodeling_app_manifest_for_testkit);
+        testkit::assert_declared_actions_bridge_to_commands::<EditorApp<RemodelingPlayApp>>(remodeling_app_manifest_for_testkit).await;
         assert!(RemodelingPlayApp::command_from_action("nonsense", None).is_err());
     }
 
@@ -1919,7 +1911,7 @@ mod tests {
     async fn view_rows_dispatch_cleanly_against_the_real_registry() {
         let mut app = app_with_registry().await;
         let result = testkit::meta("local");
-        app.dispatch_typed(RemodelingCommand::SetReportTable(set_report_table::SetReportTable { table: "tracks".into() }), &result).expect("view dispatch");
+        app.dispatch_typed(RemodelingCommand::SetReportTable(set_report_table::SetReportTable { table: "tracks".into() }), &result).await.expect("view dispatch");
     }
     //#endregion 🔖️ManifestSanity
 
@@ -1937,7 +1929,7 @@ mod tests {
                 let projection = app.snapshot().expect("materialize projection");
                 (projection.params.feature.detector, projection.gcps.first().map(|gcp| gcp.name.clone()))
             },
-        );
+        ).await;
     }
 
     //#region 🔖️MediaPortTests
@@ -1949,7 +1941,6 @@ mod tests {
         let projection = app.snapshot().expect("projection");
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&projection, &history);
-        let inner = RemodelingPlayApp;
         let media = Media {
             media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
             payload: MediaPayload::Structured {
@@ -1979,7 +1970,7 @@ mod tests {
         let projection = app.snapshot().expect("projection");
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&projection, &history);
-        let media = semio_framework_plugin::resolve_ready(RemodelingPlayApp::export_media("mesh:out", &doc)).expect("mesh:out export");
+        let media = RemodelingPlayApp::export_media("mesh:out", &doc).expect("mesh:out export");
         assert_eq!(media.media_type.class, MediaClass::ThreeD);
         assert_eq!(media.media_type.form, MediaForm::Mesh);
         match media.payload {

@@ -103,15 +103,15 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_gis_map_scene() {
-        let mut app = app();
-        assert!(render_body(&mut app, GIS2D_PLAY_BODY_COMPOSITE).contains("tiled-map"));
+        let mut app = app().await;
+        assert!(render_body(&mut app, GIS2D_PLAY_BODY_COMPOSITE).await.contains("tiled-map"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn render_canvas_uses_absolute_tile_urls_when_env_set() {
         unsafe { std::env::set_var("SEMIO_ASSET_BASE_URL", "http://127.0.0.1:6141") };
-        let mut app = app();
-        let json = render_body(&mut app, GIS2D_PLAY_BODY_COMPOSITE);
+        let mut app = app().await;
+        let json = render_body(&mut app, GIS2D_PLAY_BODY_COMPOSITE).await;
         assert!(json.contains("http://127.0.0.1:6141/osm/{z}/{x}/{y}.png"));
         assert!(json.contains("http://127.0.0.1:6141/vt/{z}/{x}/{y}.pbf"));
         unsafe { std::env::remove_var("SEMIO_ASSET_BASE_URL") };
@@ -122,8 +122,8 @@ mod tests {
         let config = Gis2dConfig::default();
         let measures = window_measures(&config, gis2d_labels(&config));
         assert_eq!(measures.len(), 5, "3 selects + the layers and layer-weights groups");
-        let mut app = app();
-        assert_eq!(main_window_measures(&mut app).len(), measures.len(), "the app routes the same set under the window id");
+        let mut app = app().await;
+        assert_eq!(main_window_measures(&mut app).await.len(), measures.len(), "the app routes the same set under the window id");
     }
 
     #[semio_framework_async_macros::async_test]

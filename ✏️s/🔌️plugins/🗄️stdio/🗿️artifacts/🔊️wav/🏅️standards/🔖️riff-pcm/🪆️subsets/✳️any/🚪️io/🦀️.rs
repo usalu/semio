@@ -47,9 +47,9 @@ pub mod derived_composition {
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::wav_artifact_schema_descriptor());
         register_artifact_inferences();
-        let _ = store::register_document_codec(store::ArtifactCodec::of::<WavSnapshot, crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::mutations::WavMutation>(
+        store::register_document_codec(store::ArtifactCodec::of::<WavSnapshot, crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::mutations::WavMutation>(
             crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::STDIO_WAV_DOCUMENT_SCHEMA,
-        ));
+        )).expect("static Stdio registration must be available and conflict-free");
     }
 
     /// 💡️ Registers `s.stdio.wav.inference`'s facet leaves into the OS-wide inference
@@ -141,9 +141,9 @@ fn encode_fmt_chunk(fmt: &WavFmt) -> Vec<u8> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn decode_data_chunk(fmt: &WavFmt, body: &[u8]) -> WavData {
     match (fmt.audio_format, fmt.bits_per_sample) {
-        (1, 16) if body.len() % 2 == 0 => WavData::Pcm16(body.chunks_exact(2).map(|c| i16::from_le_bytes([c[0], c[1]])).collect()),
+        (1, 16) if body.len().is_multiple_of(2) => WavData::Pcm16(body.as_chunks::<2>().0.iter().map(|c| i16::from_le_bytes([c[0], c[1]])).collect()),
         (1, 8) => WavData::Pcm8(body.to_vec()),
-        (3, 32) if body.len() % 4 == 0 => WavData::Float32(body.chunks_exact(4).map(|c| f32::from_le_bytes([c[0], c[1], c[2], c[3]])).collect()),
+        (3, 32) if body.len().is_multiple_of(4) => WavData::Float32(body.as_chunks::<4>().0.iter().map(|c| f32::from_le_bytes([c[0], c[1], c[2], c[3]])).collect()),
         _ => WavData::Raw(body.to_vec()),
     }
 }

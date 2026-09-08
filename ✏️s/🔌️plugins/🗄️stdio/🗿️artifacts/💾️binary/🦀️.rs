@@ -29,7 +29,7 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 /// too is a follow-up, not required for the carrier law or for this tree to register cleanly
 /// (see `📓️w2-p-report.md` `## openQuestions`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-#[cfg(feature = "full-artifact-catalog")]
+#[cfg(feature = "component-app-assembly")]
 pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::plugin::StdioApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
@@ -79,7 +79,7 @@ pub mod io_registry {
     /// 📌️ Registers every entry into the OS-wide typed io registry. Called once from `🔌️plugin/🔧️setup`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        let _ = register_composer_entries(v_raw::entries());
+        register_composer_entries(v_raw::entries()).expect("static Stdio registration must be available and conflict-free");
     }
 
     //#region 🧪️Tests

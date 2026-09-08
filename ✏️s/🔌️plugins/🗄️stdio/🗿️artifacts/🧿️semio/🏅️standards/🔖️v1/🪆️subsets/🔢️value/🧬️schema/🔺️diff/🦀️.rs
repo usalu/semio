@@ -205,7 +205,7 @@ fn validate_added_positions(indices: impl IntoIterator<Item = usize>, mut length
     let mut previous = None;
     for index in indices {
         if index > length || previous == Some(index) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("add index {index} is out of range or duplicated")).at(target.clone()));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("add index {index} is out of range or duplicated")).at(target));
         }
         previous = Some(index);
         length += 1;
@@ -520,7 +520,7 @@ fn absorb_value_diff(d1: SemioValueDiff, d2: SemioValueDiff) -> SemioValueDiff {
         (SemioValueDiff::Str { .. }, SemioValueDiff::Str { value }) => SemioValueDiff::Str { value },
         (SemioValueDiff::Bytes { .. }, SemioValueDiff::Bytes { value }) => SemioValueDiff::Bytes { value },
         (SemioValueDiff::Ref { .. }, SemioValueDiff::Ref { id }) => SemioValueDiff::Ref { id },
-        (SemioValueDiff::List { diff: a1 }, SemioValueDiff::List { diff: a2 }) => SemioValueDiff::List { diff: absorb_indexed(a1, a2, &absorb_value_diff, &apply_value_diff, &is_value_diff_effectively_empty) },
+        (SemioValueDiff::List { diff: a1 }, SemioValueDiff::List { diff: a2 }) => SemioValueDiff::List { diff: absorb_indexed(a1, &a2, &absorb_value_diff, &apply_value_diff, &is_value_diff_effectively_empty) },
         (SemioValueDiff::Map { diff: o1 }, SemioValueDiff::Map { diff: o2 }) => {
             SemioValueDiff::Map { diff: absorb_named(o1, o2, &|e: &NamedAdded<SemioValueEntry>| e.item.key.clone(), &absorb_value_diff, &apply_value_diff_to_named_entry, &is_value_diff_effectively_empty) }
         }
@@ -536,7 +536,7 @@ fn absorb_value_diff(d1: SemioValueDiff, d2: SemioValueDiff) -> SemioValueDiff {
 /// doc comment for the full case-by-case citation), generalized so `List` is the only instantiation
 /// site needed at THIS level (`nodes`/`Map` reuse [`absorb_named`] below instead).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_indexed<D: Clone, T: Clone>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_d: &impl Fn(D, D) -> D, apply_d_to_t: &impl Fn(&D, &T) -> T, is_d_empty: &impl Fn(&D) -> bool) -> IndexedTripleDiff<D, T> {
+fn absorb_indexed<D: Clone, T: Clone>(d1: IndexedTripleDiff<D, T>, d2: &IndexedTripleDiff<D, T>, absorb_d: &impl Fn(D, D) -> D, apply_d_to_t: &impl Fn(&D, &T) -> T, is_d_empty: &impl Fn(&D) -> bool) -> IndexedTripleDiff<D, T> {
     #[derive(Clone, Copy)]
     enum Origin {
         Base(usize),
@@ -718,7 +718,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()

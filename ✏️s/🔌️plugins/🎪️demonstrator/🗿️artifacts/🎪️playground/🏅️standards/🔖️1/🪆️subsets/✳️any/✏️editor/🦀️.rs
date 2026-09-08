@@ -346,16 +346,8 @@ impl ArtifactEditor for PlaygroundEditor {
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
         };
-        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            request.context,
-            operation_context,
-            request.completion,
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
             PlaygroundCommand::command_id,
             PLAYGROUND_RETAINED_RAW_BYTES,
             PLAYGROUND_RETAINED_WORK_ITEMS,
@@ -486,15 +478,15 @@ mod tests {
         let interaction = protocol::InteractionState::default();
         assert_eq!(playground_retained_extent(&accepted, &snapshot, &interaction), Some(expected_items));
         assert_eq!(playground_retained_extent(&rejected, &snapshot, &interaction), None);
-        assert!(semio_framework_plugin::resolve_ready(PlaygroundEditor::command_from_action("changeSchema", Some(&dsl::DslValue::object([("newSchema".to_string(), dsl::DslValue::String("s".repeat(maximum)))])))).is_ok());
-        assert!(semio_framework_plugin::resolve_ready(PlaygroundEditor::command_from_action("changeSchema", Some(&dsl::DslValue::object([("newSchema".to_string(), dsl::DslValue::String("s".repeat(maximum + additional)))])))).is_err());
+        assert!(PlaygroundEditor::command_from_action("changeSchema", Some(&dsl::DslValue::object([("newSchema".to_string(), dsl::DslValue::String("s".repeat(maximum)))]))).is_ok());
+        assert!(PlaygroundEditor::command_from_action("changeSchema", Some(&dsl::DslValue::object([("newSchema".to_string(), dsl::DslValue::String("s".repeat(maximum + additional)))]))).is_err());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn change_schema_command_mutates_the_schema_field() {
         let document = empty_playground_snapshot();
-        let history = HistoryView::empty().await;
-        let doc = ArtifactView::new(&document, &history).await;
+        let history = HistoryView::empty();
+        let doc = ArtifactView::new(&document, &history);
         let config = NoConfig::default();
         let cfg = ConfigView { snapshot: &config };
         let command = PlaygroundCommand::ChangeSchema(change_schema::ChangeSchema { new_schema: "playground.custom".into() });
@@ -507,10 +499,10 @@ mod tests {
         let _app = semio_framework_plugin::testkit::new_app_with_registry::<EditorApp<PlaygroundEditor>>(testkit::playground_editor_manifest_for_testkit).await;
     }
 
-    #[test]
-    fn command_from_action_covers_the_declared_action_and_rejects_unknown_ones() {
-        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<PlaygroundEditor>>(testkit::playground_editor_manifest_for_testkit);
-        assert!(semio_framework_plugin::resolve_ready(PlaygroundEditor::command_from_action("noSuchAction", None)).is_err());
+    #[semio_framework_async_macros::async_test]
+    async fn command_from_action_covers_the_declared_action_and_rejects_unknown_ones() {
+        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<PlaygroundEditor>>(testkit::playground_editor_manifest_for_testkit).await;
+        assert!(PlaygroundEditor::command_from_action("noSuchAction", None).is_err());
     }
 }
 //#endregion 🧪️Tests

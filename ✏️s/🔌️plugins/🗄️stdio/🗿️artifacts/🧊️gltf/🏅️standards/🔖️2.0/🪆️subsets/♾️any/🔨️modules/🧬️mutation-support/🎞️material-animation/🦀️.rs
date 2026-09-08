@@ -31,7 +31,7 @@ pub fn permutation(order: &[usize], length: usize, path: impl Into<String>) -> R
     let mut seen = vec![false; length];
     for &value in order {
         if value >= length || std::mem::replace(&mut seen[value], true) {
-            return Err(GltfMaterialAnimationFailure { code: "gltf.mutation.invalid-permutation", path: path.clone(), detail: "the order must cover every current member exactly once" });
+            return Err(GltfMaterialAnimationFailure { code: "gltf.mutation.invalid-permutation", path, detail: "the order must cover every current member exactly once" });
         }
     }
     Ok(())

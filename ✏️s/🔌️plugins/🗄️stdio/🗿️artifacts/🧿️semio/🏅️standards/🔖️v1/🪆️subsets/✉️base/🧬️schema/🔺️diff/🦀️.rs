@@ -305,7 +305,7 @@ fn enc_replace_snapshot(snapshot: &SemioSnapshot) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_replace_snapshot(hex: &str) -> Result<SemioSnapshot, String> {
-    if hex.len() % 2 != 0 {
+    if !hex.len().is_multiple_of(2) {
         return Err("replace: odd hex length".to_string());
     }
     let mut bytes = Vec::with_capacity(hex.len() / 2);

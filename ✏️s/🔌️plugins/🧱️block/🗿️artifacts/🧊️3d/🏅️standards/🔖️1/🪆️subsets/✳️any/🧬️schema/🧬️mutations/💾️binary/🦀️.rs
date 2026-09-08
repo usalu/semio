@@ -31,8 +31,8 @@ mod tests {
     async fn block3d_document_vcs_replays_granular_operations() {
         use crate::artifacts::block3d::schema::mutations::{self as m, Block3dStore};
 
-        let mut store = Block3dStore::new(create_document_envelope(BLOCK_3D_SCHEMA, "block3d", Block3dSnapshot::default(), None)).expect("valid initial state");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![m::rename_object_kind("o1".into())], description: None }).expect("apply");
+        let mut store = Block3dStore::new(create_document_envelope(BLOCK_3D_SCHEMA, "block3d", Block3dSnapshot::default(), None)).await.expect("valid initial state");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![m::rename_object_kind("o1".into())], description: None }).await.expect("apply");
         let projection = store.snapshot().expect("snapshot");
         assert_eq!(projection.object_kind.name, "o1");
     }

@@ -571,7 +571,7 @@ repo_bootstrap() {
     return 0
   fi
   cd "$REPO_ROOT"
-  export NX_WORKSPACE_DATA_DIRECTORY="${REPO_ROOT}/.nx/workspace-data-terminal"
+  export NX_WORKSPACE_DATA_DIRECTORY="${REPO_ROOT}/.nx/workspace-data"
   mkdir -p "$NX_WORKSPACE_DATA_DIRECTORY"
   configure_git_safe_directories
   ensure_bun

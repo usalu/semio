@@ -9,7 +9,7 @@ use crate::artifacts::gisterrain::schema::{build_terrain_scene_json, TerrainDesc
 use crate::artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::parse_descriptor;
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
 use framework_surface::terrain::projection;
-use semio_framework_plugin::{scene_surface, world3d_scene_extended, world3d_selection_json, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{scene_surface, World3dScene, world3d_selection_json, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
 use serde_json::{json, Value};
 
@@ -68,35 +68,12 @@ fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
 
 /// 👁️ Pure `GisTerrainSnapshot -> UiNode` read: default camera (a viewer has no persisted per-session
 /// camera), the same real overlay pins/terrain descriptor the editor renders, no selection overlay.
-/// `world3d_scene_extended` takes 4 required args (camera/meshes/instances/selection) plus 17
-/// trailing `Option<String>` extension fields — the last two (`domain_id`/`domain_granularity_id`)
-/// bind this window to the "features"/"pin" interaction domain (read-only for a viewer, but still the
-/// correct domain so a future hover affordance is a pure addition here), every other extension `None`.
+/// The scene binds this window to the "features"/"pin" interaction domain and carries the terrain payload.
 pub fn render(document: &GisTerrainSnapshot) -> UiAssemblyResult<BuiltNode> {
     let descriptor = parse_descriptor(document);
-    let mut scene = world3d_scene_extended(
-        GIS_TERRAIN_VIEW_DEFAULT_CAMERA_JSON.into(),
-        "[]".into(),
-        instances_json(&descriptor),
-        world3d_selection_json("rectangle", &[], None),
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        Some("features".into()),
-        Some("pin".into()),
-    );
+    let mut scene = World3dScene::base(GIS_TERRAIN_VIEW_DEFAULT_CAMERA_JSON.into(), "[]".into(), instances_json(&descriptor), world3d_selection_json("rectangle", &[], None));
+    scene.domain_id = Some("features".into());
+    scene.domain_granularity_id = Some("pin".into());
     scene.terrain_json = Some(build_terrain_scene_json(&descriptor));
     scene_surface(SURFACE_ID, ContractSurfaceKind::World3d, &scene)
 }

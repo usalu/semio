@@ -40,7 +40,7 @@ pub(super) fn sample_path(body: &Body, wire: &Wire, min_per_edge: usize, max_per
             let point = curve.eval(t);
             let raw_tangent = curve.d1(t).normalized().unwrap_or(Vec3::X);
             let tangent = if forward { raw_tangent } else { -raw_tangent };
-            if prev.map(|p| (point - p).norm() > 1e-12).unwrap_or(true) {
+            if prev.is_none_or(|p| (point - p).norm() > 1e-12) {
                 stations.push(Station { point, tangent });
                 prev = Some(point);
             }
@@ -130,7 +130,7 @@ pub(super) fn frame_stations(body: &Body, path: &Wire, guide: Option<&Wire>, min
                 best = Some(cp.point);
             }
         }
-        let toward = best.map(|p| p - f.origin).unwrap_or(f.x);
+        let toward = best.map_or(f.x, |p| p - f.origin);
         let projected = toward - f.tangent * toward.dot(f.tangent);
         let x = projected.normalized().unwrap_or(f.x);
         out.push(Frame3 { origin: f.origin, x, y: f.tangent.cross(x), z: f.tangent });

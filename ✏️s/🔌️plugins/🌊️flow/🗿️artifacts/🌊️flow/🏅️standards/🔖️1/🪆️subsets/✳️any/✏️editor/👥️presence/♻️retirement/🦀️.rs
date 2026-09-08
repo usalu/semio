@@ -92,6 +92,7 @@ mod tests {
                             observed_blocked = true;
                         }
                         PluginCloseStep::Complete => { completed = true; break; }
+                        PluginCloseStep::AwaitingInput { reason } => panic!("fixture has no active worker input to await: {reason}"),
                     }
                 }
                 assert!(completed, "Flow presence must report completion within the fixed bound");

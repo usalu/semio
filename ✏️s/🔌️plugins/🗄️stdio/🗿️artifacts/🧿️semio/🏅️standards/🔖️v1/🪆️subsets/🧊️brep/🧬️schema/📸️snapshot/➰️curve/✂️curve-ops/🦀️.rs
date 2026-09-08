@@ -6,6 +6,9 @@
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/✂️curve-ops` in ticket
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL4, mounted locally
 //! under `➰️curve` per that file's own pre-mounted-stub note.
+/// ➰ Common knot vector with homogeneous controls for both curves.
+pub type HarmonizedCurveControls = (KnotVector, Vec<Vec<f64>>, Vec<Vec<f64>>);
+
 
 use super::bezier::RationalBezier3;
 use super::bspline::{basis_functions, de_boor, elevate_bezier_span_multi, elevate_degree, insert_knot, insert_knot_multi, KnotVector};
@@ -203,8 +206,8 @@ fn substitute_affine(coeffs: &[f64], lo: f64, hi: f64) -> Vec<f64> {
     let n = coeffs.len();
     let mut out = vec![0.0; n];
     for (k, &ck) in coeffs.iter().enumerate() {
-        for j in 0..=k {
-            out[j] += ck * binomial_usize(k, j) * lo.powi((k - j) as i32) * scale.powi(j as i32);
+        for (j, coefficient) in out[..=k].iter_mut().enumerate() {
+            *coefficient += ck * binomial_usize(k, j) * lo.powi((k - j) as i32) * scale.powi(j as i32);
         }
     }
     out
@@ -597,7 +600,7 @@ pub fn interpolate_curve(points: &[Pnt3], degree: usize, params_method: ParamMet
     }
     let params = parameterize(points, params_method);
     if let Some((d0, d1)) = ends {
-        return interpolate_curve_with_tangents(points, p.max(1), &params, d0, d1);
+        return Some(interpolate_curve_with_tangents(points, p.max(1), &params, d0, d1));
     }
     let p = p.min(n - 1);
     let knots = KnotVector::new(averaged_knot_vector(&params, p), p, n)?;
@@ -606,7 +609,7 @@ pub fn interpolate_curve(points: &[Pnt3], degree: usize, params_method: ParamMet
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn interpolate_curve_with_tangents(points: &[Pnt3], degree: usize, params: &[f64], d0: Vec3, d1: Vec3) -> Option<NurbsCurve3> {
+fn interpolate_curve_with_tangents(points: &[Pnt3], degree: usize, params: &[f64], d0: Vec3, d1: Vec3) -> NurbsCurve3 {
     let n = points.len();
     let extra = n + 2;
     let kv = KnotVector::clamped_uniform(extra, degree);
@@ -641,7 +644,7 @@ fn interpolate_curve_with_tangents(points: &[Pnt3], degree: usize, params: &[f64
     let ys = solve_axis(|p| p.y);
     let zs = solve_axis(|p| p.z);
     let controls = (0..extra).map(|i| Pnt3::new(xs[i], ys[i], zs[i])).collect();
-    Some(NurbsCurve3 { knots: kv, controls, weights: vec![1.0; extra] })
+    NurbsCurve3 { knots: kv, controls, weights: vec![1.0; extra] }
 }
 
 /// 📏️ Closed (periodic) global interpolation: builds an `n×n` system over
@@ -771,13 +774,13 @@ pub fn approximate_curve_with_count(points: &[Pnt3], degree: usize, n_controls: 
             let span = kv.find_span(uk);
             let basis = basis_functions(&kv, span, uk);
             let mut rk = points[k].to_vec();
-            for idx in 0..=p {
+            for (idx, &weight) in basis[..=p].iter().enumerate() {
                 let gi = span - p + idx;
                 if gi == 0 {
-                    rk = rk - points[0].to_vec() * basis[idx];
+                    rk = rk - points[0].to_vec() * weight;
                 }
                 if gi == n {
-                    rk = rk - points[m_idx].to_vec() * basis[idx];
+                    rk = rk - points[m_idx].to_vec() * weight;
                 }
             }
             for idx_i in 0..=p {
@@ -865,8 +868,8 @@ pub fn interpolate_surface_grid(points: &[Vec<Pnt3>], degree_u: usize, degree_v:
     let pu = degree_u.max(1).min(nu - 1);
     let pv = degree_v.max(1).min(nv - 1);
     let mut u_acc = vec![0.0; nu];
-    for j in 0..nv {
-        let column: Vec<Pnt3> = (0..nu).map(|i| points[i][j]).collect();
+    for (j, _) in points[0].iter().enumerate() {
+        let column: Vec<Pnt3> = points.iter().map(|row| row[j]).collect();
         let p = parameterize(&column, ParamMethod::Centripetal);
         for i in 0..nu {
             u_acc[i] += p[i];
@@ -910,7 +913,7 @@ fn to_homogeneous(curve: &NurbsCurve3) -> Vec<Vec<f64>> {
 /// interior knot multiplicities — after which their homogeneous control nets index the same basis
 /// functions, the precondition every later Coons step relies on.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn harmonize_pair(a: &NurbsCurve3, b: &NurbsCurve3) -> Option<(KnotVector, Vec<Vec<f64>>, Vec<Vec<f64>>)> {
+fn harmonize_pair(a: &NurbsCurve3, b: &NurbsCurve3) -> Option<HarmonizedCurveControls> {
     let target_degree = a.knots.degree.max(b.knots.degree);
     let (mut ak, mut ac) = (a.knots.clone(), to_homogeneous(a));
     let (mut bk, mut bc) = (b.knots.clone(), to_homogeneous(b));
@@ -1015,9 +1018,7 @@ pub fn coons_patch_nurbs(c0: &NurbsCurve3, c1: &NurbsCurve3, d0: &NurbsCurve3, d
     let mut ruled1 = vec![vec![vec![0.0; 4]; nv]; nu];
     for i in 0..nu {
         let row = linear_curve_to_target(&c0h[i], &c1h[i], &kv);
-        for j in 0..nv {
-            ruled1[i][j] = row[j].clone();
-        }
+        ruled1[i][..nv].clone_from_slice(&row[..nv]);
     }
     let mut ruled2 = vec![vec![vec![0.0; 4]; nv]; nu];
     for j in 0..nv {
@@ -1031,9 +1032,7 @@ pub fn coons_patch_nurbs(c0: &NurbsCurve3, c1: &NurbsCurve3, d0: &NurbsCurve3, d
     let mut bilinear = vec![vec![vec![0.0; 4]; nv]; nu];
     for i in 0..nu {
         let col = linear_curve_to_target(&bilinear_row_v0[i], &bilinear_row_v1[i], &kv);
-        for j in 0..nv {
-            bilinear[i][j] = col[j].clone();
-        }
+        bilinear[i][..nv].clone_from_slice(&col[..nv]);
     }
     let mut controls = vec![vec![Pnt3::new(0.0, 0.0, 0.0); nv]; nu];
     let mut weights = vec![vec![1.0; nv]; nu];

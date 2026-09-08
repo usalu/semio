@@ -26,13 +26,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> TsvSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> TsvSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> TsvMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// ▶️ `set-snapshot` carries the committed `before` TsvSnapshot to exactly the committed `after`.
@@ -72,12 +72,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: TsvSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: TsvSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "set-snapshot/renames-the-alpha-row-and-switches-to-crlf: committed {side} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "set-snapshot/renames-the-alpha-row-and-switches-to-crlf: committed mutation JSON is not canonical");
 }
@@ -95,7 +95,7 @@ async fn declared_outcome_holds() {
         .messages()
         .iter()
         .map(|message| {
-            let level = serde_json::to_value(message.level).expect("severity encodes");
+            let level = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&message.level)).expect("severity encodes");
             (level.as_str().unwrap_or_default().to_string(), message.code.0.clone())
         })
         .collect();
@@ -116,7 +116,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let raised = <TsvMutation as protocol::Mutation<TsvSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(raised.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(raised.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-snapshot/renames-the-alpha-row-and-switches-to-crlf: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert!(raised.diff().trailing_newline.is_none(), "set-snapshot/renames-the-alpha-row-and-switches-to-crlf: trailingNewline is unchanged and must stay absent from the sparse delta");
@@ -131,8 +131,8 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to TsvDiff.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: TsvDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let decoded: TsvDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-snapshot/renames-the-alpha-row-and-switches-to-crlf: committed diff JSON is not canonical");
     assert_eq!(decoded.line_ending, Some(LineEnding::Crlf), "set-snapshot/renames-the-alpha-row-and-switches-to-crlf: 'crlf' must decode back to tsv's own one-word Crlf variant");
@@ -142,7 +142,7 @@ async fn committed_diff_is_canonical() {
 /// a complete description of what this `set-snapshot` changed, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: TsvDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: TsvDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <TsvDiff as protocol::MutationDiff<TsvSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-snapshot/renames-the-alpha-row-and-switches-to-crlf: committed diff did not carry before to after");
 }

@@ -1871,20 +1871,20 @@ mod native_pool {
             self.inner.wheel.schedule_callback(
                 deadline_ms,
                 Box::new(move || {
-                    Self::submit_retained_timer_job(pool, lane, job);
+                    Self::submit_retained_timer_job(&pool, lane, job);
                 }),
             );
             self.inner.notify_idle();
         }
 
-        fn submit_retained_timer_job(pool: WorkerPool, lane: Lane, job: Job) {
+        fn submit_retained_timer_job(pool: &WorkerPool, lane: Lane, job: Job) {
             let Err(error) = pool.try_submit(lane, job) else { return };
             let kind = error.kind();
             let job = error.into_job();
             match kind {
                 WorkerSubmitErrorKind::Contended | WorkerSubmitErrorKind::Saturated => {
                     let retry = pool.clone();
-                    pool.callback_at(pool.now_ms().saturating_add(1), move || Self::submit_retained_timer_job(retry, lane, job));
+                    pool.callback_at(pool.now_ms().saturating_add(1), move || Self::submit_retained_timer_job(&retry, lane, job));
                 }
                 WorkerSubmitErrorKind::Shutdown | WorkerSubmitErrorKind::Poisoned => drop(job),
             }
@@ -2488,19 +2488,19 @@ mod wasm_pool {
             self.inner.wheel.schedule_callback(
                 deadline_ms,
                 Box::new(move || {
-                    Self::submit_retained_timer_job(pool, lane, job);
+                    Self::submit_retained_timer_job(&pool, lane, job);
                 }),
             );
         }
 
-        fn submit_retained_timer_job(pool: WorkerPool, lane: Lane, job: Job) {
+        fn submit_retained_timer_job(pool: &WorkerPool, lane: Lane, job: Job) {
             let Err(error) = pool.try_submit(lane, job) else { return };
             let kind = error.kind();
             let job = error.into_job();
             match kind {
                 WorkerSubmitErrorKind::Contended | WorkerSubmitErrorKind::Saturated => {
                     let retry = pool.clone();
-                    pool.callback_at(pool.now_ms().saturating_add(1), move || Self::submit_retained_timer_job(retry, lane, job));
+                    pool.callback_at(pool.now_ms().saturating_add(1), move || Self::submit_retained_timer_job(&retry, lane, job));
                 }
                 WorkerSubmitErrorKind::Shutdown | WorkerSubmitErrorKind::Poisoned => drop(job),
             }

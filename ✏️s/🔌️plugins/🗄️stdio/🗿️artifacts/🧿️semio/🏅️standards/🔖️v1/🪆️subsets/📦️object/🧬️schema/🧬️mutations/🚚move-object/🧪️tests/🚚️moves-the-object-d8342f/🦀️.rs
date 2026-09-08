@@ -18,13 +18,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioObjectSnapshot {
-    serde_json::from_str(BEFORE).expect("move-object before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("move-object before snapshot decodes")
 }
 fn expected_after() -> SemioObjectSnapshot {
-    serde_json::from_str(AFTER).expect("move-object after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("move-object after snapshot decodes")
 }
 fn move_object() -> SemioObjectMutation {
-    serde_json::from_str(MUTATION).expect("move-object mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("move-object mutation decodes")
 }
 
 /// ▶️ Translation is replaced outright (it is an absolute placement, not a delta); rotation and
@@ -61,12 +61,12 @@ async fn the_undo_move_object_restores_the_original_translation() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioObjectSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: SemioObjectSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "move-object/moves-the-object-to-a-new-translation: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(move_object()).expect("move-object mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(move_object()))).expect("move-object mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("move-object mutation reparses");
     assert_eq!(reencoded, original, "move-object/moves-the-object-to-a-new-translation: committed mutation JSON is not canonical");
 }
@@ -86,7 +86,7 @@ async fn declared_outcome_holds_with_neither_invariant_nor_no_op() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::diff(&move_object(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "move-object/moves-the-object-to-a-new-translation: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -94,19 +94,19 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is canonical and touches ONLY the `transform` slot.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_touches_only_the_transform_slot() {
-    let decoded: SemioObjectDiff = serde_json::from_str(DIFF).expect("committed move-object diff decodes");
+    let decoded: SemioObjectDiff = dsl::json::from_json_str(DIFF).expect("committed move-object diff decodes");
     assert!(decoded.transform.is_some(), "move-object must write the transform slot");
     assert!(decoded.brep.is_none() && decoded.mesh.is_none() && decoded.properties.is_none(), "move-object must leave all three child slots untouched");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(committed.as_object().map(|map| map.len()), Some(1), "the committed diff JSON must carry exactly the transform key");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     assert_eq!(reencoded, committed, "move-object/moves-the-object-to-a-new-translation: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioObjectDiff = serde_json::from_str(DIFF).expect("committed move-object diff decodes");
+    let decoded: SemioObjectDiff = dsl::json::from_json_str(DIFF).expect("committed move-object diff decodes");
     let produced = decoded.apply(&before()).expect("committed move-object diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "move-object/moves-the-object-to-a-new-translation: committed diff did not carry before to after");
 }

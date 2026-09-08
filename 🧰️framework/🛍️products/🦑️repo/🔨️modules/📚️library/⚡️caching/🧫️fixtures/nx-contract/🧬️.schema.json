@@ -13,9 +13,58 @@
     "validationPrerequisite",
     "bootstrap",
     "entrypoints",
-    "cancellation"
+    "cancellation",
+    "platformEnvironment",
+    "nativeBinaries",
+    "svgExport",
+    "watchCancellation",
+    "components",
+    "benchmarkRenderers",
+    "componentProfiles",
+    "rustDiscoveryCache",
+    "materialization",
+    "playgroundSessions",
+    "playgroundSelections",
+    "fontAssets",
+    "engineOutputs",
+    "playgroundPreparation",
+    "socketFrames",
+    "wasmProfiles",
+    "daemonEnvironment",
+    "daemonLog",
+    "daemonTaskEnvironment"
   ],
   "properties": {
+    "componentProfiles": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "profile",
+          "target",
+          "output"
+        ],
+        "properties": {
+          "profile": {
+            "enum": [
+              "dev",
+              "release"
+            ]
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "output": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
     "version": {
       "const": 1
     },
@@ -267,6 +316,570 @@
           "type": "integer",
           "minimum": 1
         }
+      }
+    },
+    "platformEnvironment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "project",
+        "keys",
+        "platforms"
+      ],
+      "properties": {
+        "project": {
+          "type": "string"
+        },
+        "keys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "platforms": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "darwin",
+              "linux",
+              "win32"
+            ]
+          }
+        }
+      }
+    },
+    "nativeBinaries": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "project",
+          "target",
+          "consumer",
+          "output"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "consumer": {
+            "type": "string",
+            "minLength": 1
+          },
+          "output": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "svgExport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "inputName",
+        "width",
+        "height",
+        "fps",
+        "durationSeconds",
+        "expectedFrames"
+      ],
+      "properties": {
+        "inputName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "fps": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "durationSeconds": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "expectedFrames": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "watchCancellation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "signal",
+        "shutdownMilliseconds",
+        "childIgnoresSignal"
+      ],
+      "properties": {
+        "signal": {
+          "const": "SIGTERM"
+        },
+        "shutdownMilliseconds": {
+          "type": "integer",
+          "minimum": 5000
+        },
+        "childIgnoresSignal": {
+          "const": true
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "project",
+          "target",
+          "output",
+          "filename",
+          "schemaInput",
+          "consumerProject",
+          "consumerTarget",
+          "magic"
+        ],
+        "properties": {
+          "project": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "output": {
+            "type": "string",
+            "minLength": 1
+          },
+          "filename": {
+            "type": "string",
+            "minLength": 1
+          },
+          "schemaInput": {
+            "type": "string",
+            "minLength": 1
+          },
+          "consumerProject": {
+            "type": "string",
+            "minLength": 1
+          },
+          "consumerTarget": {
+            "type": "string",
+            "minLength": 1
+          },
+          "magic": {
+            "type": "array",
+            "minItems": 8,
+            "maxItems": 8,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          }
+        }
+      }
+    },
+    "benchmarkRenderers": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "native",
+          "react",
+          "wgpu"
+        ]
+      }
+    },
+    "rustDiscoveryCache": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "limitBytes",
+        "entry",
+        "revisions",
+        "files"
+      ],
+      "properties": {
+        "limitBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "entry": {
+          "type": "string"
+        },
+        "files": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "revisions": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": [
+              "source",
+              "inputs"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "inputs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "materialization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "project",
+        "root",
+        "profiles",
+        "cancellation"
+      ],
+      "properties": {
+        "project": {
+          "type": "string"
+        },
+        "root": {
+          "type": "string"
+        },
+        "profiles": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "profile",
+              "target",
+              "component",
+              "support"
+            ],
+            "properties": {
+              "profile": {
+                "enum": [
+                  "dev",
+                  "release"
+                ]
+              },
+              "target": {
+                "type": "string"
+              },
+              "component": {
+                "type": "string"
+              },
+              "support": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "cancellation": {
+          "type": "object",
+          "required": [
+            "shutdownMilliseconds",
+            "maximumDiagnosticCharacters"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "shutdownMilliseconds": {
+              "type": "integer",
+              "minimum": 2000
+            },
+            "maximumDiagnosticCharacters": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    },
+    "playgroundSessions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "project",
+        "variants",
+        "prerequisite"
+      ],
+      "properties": {
+        "project": {
+          "type": "string"
+        },
+        "variants": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "string"
+          }
+        },
+        "prerequisite": {
+          "type": "string"
+        }
+      }
+    },
+    "playgroundSelections": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifest",
+        "text",
+        "variant",
+        "alias",
+        "ports"
+      ],
+      "properties": {
+        "manifest": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string"
+        },
+        "alias": {
+          "type": "string"
+        },
+        "ports": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          }
+        }
+      }
+    },
+    "fontAssets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "project",
+        "tool",
+        "producer",
+        "toolOutput",
+        "output"
+      ],
+      "properties": {
+        "project": {
+          "type": "string"
+        },
+        "tool": {
+          "type": "string"
+        },
+        "producer": {
+          "type": "string"
+        },
+        "toolOutput": {
+          "type": "string"
+        },
+        "output": {
+          "type": "string"
+        }
+      }
+    },
+    "engineOutputs": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "project",
+          "directory",
+          "outputs"
+        ],
+        "properties": {
+          "project": {
+            "type": "string"
+          },
+          "directory": {
+            "type": "string"
+          },
+          "outputs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "playgroundPreparation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "project",
+        "renderer",
+        "profiles",
+        "engines",
+        "fonts"
+      ],
+      "properties": {
+        "project": {
+          "type": "string"
+        },
+        "renderer": {
+          "type": "string"
+        },
+        "fonts": {
+          "type": "string"
+        },
+        "profiles": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "string"
+          }
+        },
+        "engines": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "socketFrames": {
+      "type": "object",
+      "required": [
+        "messages",
+        "chunkSizes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "messages": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object"
+          }
+        },
+        "chunkSizes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "wasmProfiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "profile",
+          "pack",
+          "cargo"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "profile": {
+            "type": "string"
+          },
+          "pack": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cargo": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "daemonEnvironment": {
+      "type": "object",
+      "required": [
+        "NX_VERBOSE_LOGGING",
+        "NX_PERF_LOGGING",
+        "NX_NATIVE_LOGGING"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "NX_VERBOSE_LOGGING": {
+          "type": "string"
+        },
+        "NX_PERF_LOGGING": {
+          "type": "string"
+        },
+        "NX_NATIVE_LOGGING": {
+          "type": "string"
+        }
+      }
+    },
+    "daemonLog": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "limit",
+        "size",
+        "marker"
+      ],
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "marker": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "daemonTaskEnvironment": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string"
       }
     }
   }

@@ -41,6 +41,13 @@ describe("canonical checkpoint pair neutral contract", () => {
     const validate = new Ajv2020({ strict: true }).compile(schema);
     expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     expect(validate({ ...fixture, locator: "private" })).toBe(false);
+    const exactFrontier = (row: { documentId: string; headEditOrdinal: number; headEditId: string; lastCommitSeq: number; chainHash: string }): boolean => {
+      const scopeBound = row.documentId === fixture.selection.documentId;
+      const zeroChain = row.chainHash === "0".repeat(64);
+      return scopeBound && ((row.headEditOrdinal === 0 && row.headEditId === "" && row.lastCommitSeq === 0 && zeroChain)
+        || (Number.isSafeInteger(row.headEditOrdinal) && row.headEditOrdinal > 0 && row.headEditId.length > 0 && Number.isSafeInteger(row.lastCommitSeq) && row.lastCommitSeq > 0 && /^[0-9a-f]{64}$/u.test(row.chainHash) && !zeroChain));
+    };
+    for (const row of fixture.frontierCases) expect(exactFrontier(row), row.id).toBe(row.accepted);
 
     const generated = (part: { length: number; multiplier: number; increment: number }): Buffer =>
       Buffer.from(Array.from({ length: part.length }, (_, index) => (index * part.multiplier + part.increment) % 256));
@@ -226,7 +233,9 @@ describe("hub harness quick contract", () => {
     const catalogRoot = join(root, "🌎️hub", "🗿️artifact-authority", "🔏️trusted-catalog");
     const fixture = JSON.parse(readFileSync(join(catalogRoot, "🧪️fixtures", "👥️two-package", "🔣️.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(catalogRoot, "🧬️schema", "🔣️bundle.schema.json"), "utf8"));
-    const validate = new Ajv2020({ strict: true }).compile(schema);
+    const ajv = new Ajv2020({ strict: true });
+    ajv.addSchema(JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🔣️.schema.json"), "utf8")));
+    const validate = ajv.compile(schema);
     expect(validate(fixture.bundle), JSON.stringify(validate.errors)).toBe(true);
     expect(fixture.bundle.packages[0].pluginId).not.toBe(fixture.bundle.packages[0].packageId);
 
@@ -247,12 +256,34 @@ describe("hub harness quick contract", () => {
       }
       const profile = bundle.profiles.find((entry: any) => entry.id === profileId);
       if (!profile) throw new Error("missing profile");
+      const selected = new Map<string, any>();
+      const count = Buffer.alloc(4);
+      count.writeUInt32BE(profile.selectedClosure.length);
+      const digest = createHash("sha256").update("semio/hub/trusted-profile-selected-closure/v1\0").update(count);
+      let prior = "";
+      for (const identity of profile.selectedClosure) {
+        if (prior >= identity.pluginId) throw new Error("noncanonical closure order");
+        prior = identity.pluginId;
+        const entry = packages.get(identity.pluginId);
+        if (!entry || entry.packageId !== identity.packageId || entry.version !== identity.version) throw new Error("incomplete or conflicting closure");
+        selected.set(identity.pluginId, identity);
+        for (const value of [identity.pluginId, identity.packageId, identity.version]) {
+          const bytes = Buffer.from(value);
+          const length = Buffer.alloc(8);
+          length.writeBigUInt64BE(BigInt(bytes.length));
+          digest.update(length).update(bytes);
+        }
+      }
+      if (digest.digest("hex") !== profile.selectedClosureSha256) throw new Error("selected closure digest differs");
+      const target = packages.get(profile.openTarget.package.pluginId);
+      if (!selected.has(target?.pluginId) || target.packageId !== profile.openTarget.package.packageId || target.version !== profile.openTarget.package.version
+        || !target.openTargets.some((candidate: any) => JSON.stringify(candidate) === JSON.stringify(profile.openTarget.target))) throw new Error("open target outside selected closure");
       const visiting = new Set<string>();
       const visited = new Set<string>();
       const order: string[] = [];
       const visit = (required: any): void => {
         const entry = packages.get(required.pluginId);
-        if (!entry || entry.packageId !== required.packageId || entry.version !== required.version) throw new Error("incomplete or conflicting closure");
+        if (!entry || !selected.has(required.pluginId) || entry.packageId !== required.packageId || entry.version !== required.version) throw new Error("incomplete or conflicting closure");
         if (visiting.has(entry.pluginId)) throw new Error("dependency cycle");
         if (visited.has(entry.pluginId)) return;
         visiting.add(entry.pluginId);
@@ -261,7 +292,7 @@ describe("hub harness quick contract", () => {
         visited.add(entry.pluginId);
         order.push(entry.pluginId);
       };
-      for (const required of profile.roots) visit(required);
+      for (const required of profile.selectedClosure) visit(required);
       return order;
     };
     expect(dependencyFirst(fixture.bundle, "fixture")).toEqual(["fixture.base", "fixture.editor"]);
@@ -269,8 +300,17 @@ describe("hub harness quick contract", () => {
     incomplete.packages.pop();
     expect(() => dependencyFirst(incomplete, "fixture")).toThrow("incomplete");
     const lossy = structuredClone(fixture.bundle);
-    lossy.profiles[0].roots[0].packageId = lossy.profiles[0].roots[0].pluginId;
+    lossy.profiles[0].selectedClosure[0].packageId = lossy.profiles[0].selectedClosure[0].pluginId;
     expect(() => dependencyFirst(lossy, "fixture")).toThrow("conflicting");
+    const reordered = structuredClone(fixture.bundle);
+    reordered.profiles[0].selectedClosure.reverse();
+    expect(() => dependencyFirst(reordered, "fixture")).toThrow("noncanonical");
+    const changedDigest = structuredClone(fixture.bundle);
+    changedDigest.profiles[0].selectedClosureSha256 = "2".repeat(64);
+    expect(() => dependencyFirst(changedDigest, "fixture")).toThrow("digest");
+    const changedTarget = structuredClone(fixture.bundle);
+    changedTarget.profiles[0].openTarget.package.packageId = "unselected";
+    expect(() => dependencyFirst(changedTarget, "fixture")).toThrow("outside selected closure");
 
     const componentMaximum = structuredClone(fixture.bundle);
     componentMaximum.packages[0].component.byteLength = fixture.limits.componentBytesMax;
@@ -317,8 +357,19 @@ describe("hub harness quick contract", () => {
       return bytes;
     };
     const field = (bytes: Uint8Array): Buffer => Buffer.concat([u64(bytes.byteLength), Buffer.from(bytes)]);
+    const version = Buffer.alloc(4);
+    version.writeUInt32BE(fixture.descriptor.bootstrapVersion);
+    const d = fixture.descriptor;
+    const descriptorEncoding = Buffer.concat([
+      Buffer.from("semio.document-descriptor.digest.v1\0"),
+      ...[d.spaceId, d.documentId, d.artifactKind, d.artifactSchema, d.owner.pluginId, d.owner.packageId, d.owner.version].map(value => field(Buffer.from(value))),
+      ...[d.owner.packageHash, d.packSchemaHash].map(value => field(Buffer.from(value, "hex"))),
+      field(version), ...[d.bootstrapFrontier.headSeq, d.bootstrapFrontier.commitSeq, d.bootstrapFrontier.epoch].map(value => field(u64(value))),
+      field(Buffer.from(d.bootstrapSnapshotHash, "hex")),
+    ]);
+    const descriptorDigest = [...createHash("sha256").update(descriptorEncoding).digest()];
     const identity = (checkpoint: any): Buffer => Buffer.concat([
-      Buffer.from("semio.hub.artifact-checkpoint.v1\0"),
+      Buffer.from(checkpoint.baselineFrontier.headEditOrdinal === 0 ? "semio.hub.artifact-genesis.v1\0" : "semio.hub.artifact-checkpoint.v1\0"),
       field(Buffer.from(checkpoint.scope.spaceId)),
       field(Buffer.from(checkpoint.scope.documentId)),
       field(Uint8Array.from(checkpoint.parentCheckpointId ?? [])),
@@ -334,9 +385,22 @@ describe("hub harness quick contract", () => {
       field(u64(checkpoint.spr.byteLength)),
       field(Uint8Array.from(checkpoint.aggregateSha256)),
     ]);
-    for (const checkpoint of [fixture.checkpoint1, fixture.checkpoint2]) {
+    for (const checkpoint of [fixture.genesis, fixture.checkpoint1, fixture.checkpoint2]) {
+      expect(checkpoint.descriptorDigestV1).toEqual(descriptorDigest);
+      expect(validateEvent({ kind: "artifact.checkpoint-published", checkpoint }), JSON.stringify(validateEvent.errors)).toBe(true);
       expect([...createHash("sha256").update(identity(checkpoint)).digest()]).toEqual(checkpoint.checkpointId);
     }
+    for (const kind of ["pack", "spr"] as const) {
+      expect([...createHash("sha256").update(Uint8Array.from(fixture.genesisPair[kind])).digest()]).toEqual(fixture.genesis[kind].sha256);
+      expect(fixture.genesis[kind].byteLength).toBe(fixture.genesisPair[kind].length);
+    }
+    expect(fixture.descriptor.bootstrapFrontier).toEqual({ headSeq: 0, commitSeq: 0, epoch: 0 });
+    expect(fixture.descriptor.bootstrapSnapshotHash).toBe(Buffer.from(fixture.genesis.pack.sha256).toString("hex"));
+    expect(fixture.genesis.baselineFrontier).toEqual({ documentId: fixture.descriptor.documentId, headEditOrdinal: 0, headEditId: "", lastCommitSeq: 0, chainHash: Array(32).fill(0) });
+    expect(fixture.genesis.parentCheckpointId).toBeUndefined();
+    expect(fixture.checkpoint1.parentCheckpointId).toEqual(fixture.genesis.checkpointId);
+    expect(fixture.checkpoint2.parentCheckpointId).toEqual(fixture.checkpoint1.checkpointId);
+    expect(validateEvent({ kind: "document.indexed", scope: fixture.genesis.scope, descriptorDigestV1: descriptorDigest, entry: fixture.indexEntry }), JSON.stringify(validateEvent.errors)).toBe(true);
     expect(Number.isSafeInteger(fixture.wireIntegerMaximum)).toBe(true);
     expect(Number.isSafeInteger(fixture.wireIntegerMaximum + 1)).toBe(false);
     expect(Buffer.byteLength("x".repeat(fixture.privateLocatorMaximumBytes))).toBe(4096);

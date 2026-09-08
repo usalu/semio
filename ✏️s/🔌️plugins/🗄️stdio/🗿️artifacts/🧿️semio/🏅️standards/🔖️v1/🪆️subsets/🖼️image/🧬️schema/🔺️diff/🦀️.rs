@@ -180,13 +180,13 @@ fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdd
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn absorb_indexed<T: Clone, D: Clone>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T> {
     let d1_ref_max = d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).max();
-    let mut base_len = d1_ref_max.map(|m| m + 1).unwrap_or(0);
+    let mut base_len = d1_ref_max.map_or(0, |m| m + 1);
     let mid_len_needed_by_d1 = d1.added.iter().map(|a| a.index + 1).max().unwrap_or(0);
     while base_len.saturating_sub(d1.removed.len()) + d1.added.len() < mid_len_needed_by_d1 {
         base_len += 1;
     }
     let d2_ref_max = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max();
-    let required_mid_len = d2_ref_max.map(|m| m + 1).unwrap_or(0);
+    let required_mid_len = d2_ref_max.map_or(0, |m| m + 1);
     while base_len.saturating_sub(d1.removed.len()) + d1.added.len() < required_mid_len {
         base_len += 1;
     }
@@ -243,9 +243,7 @@ fn absorb_indexed<T: Clone, D: Clone>(d1: IndexedTripleDiff<D, T>, d2: IndexedTr
         let final_index = transform_index(add.index, &d2.removed, &d2.added);
         added.push(IndexAdded { index: final_index, item: add.item });
     }
-    for a2 in &d2.added {
-        added.push(a2.clone());
-    }
+    added.extend(d2.added);
     added.sort_by_key(|a| a.index);
 
     IndexedTripleDiff { removed, modified, added }
@@ -342,11 +340,11 @@ fn absorb_named<K: PartialEq + Clone, T: Clone, D: Clone>(d1: NamedTripleDiff<K,
             None => modified.push(NamedModified { key: m2.key.clone(), diff: m2.diff.clone() }),
         }
     }
-    for a2 in &d2.added {
-        let k2 = key_of(a2);
+    for a2 in d2.added {
+        let k2 = key_of(&a2);
         match working_added.iter_mut().find(|a| key_of(a) == k2) {
-            Some(existing) => *existing = a2.clone(),
-            None => working_added.push(a2.clone()),
+            Some(existing) => *existing = a2,
+            None => working_added.push(a2),
         }
     }
     NamedTripleDiff { removed, modified, added: working_added }
@@ -549,7 +547,7 @@ fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()

@@ -30,7 +30,7 @@ fn compare_bytes(left: &[u8], right: &[u8], position: &mut usize, remembered: &m
     let mut compared = 0;
     while compared < grant && *position / 2 < left.len() {
         let offset = *position / 2;
-        let equal = if *position % 2 == 0 { *remembered = left[offset]; true } else { *remembered == right[offset] };
+        let equal = if (*position).is_multiple_of(2) { *remembered = left[offset]; true } else { *remembered == right[offset] };
         *position += 1;
         compared += 1;
         if !equal { return UiComponentCompareProgress { compared_bytes: compared, ..result(false) }; }
@@ -162,7 +162,8 @@ impl ValueFrame {
     }
     fn new(left: usize, right: usize) -> Result<Self, &'static str> { Ok(Self { left: Self::checked_page(left)?, right: Self::checked_page(right)?, ..Self::EMPTY }) }
 }
-const _: () = assert!(UI_VALUE_AGGREGATE_ITEMS < u16::MAX as usize && 2 * UI_TEXT_MAX_BYTES <= u16::MAX as usize);
+const _: () = assert!(UI_VALUE_AGGREGATE_ITEMS < u16::MAX as usize);
+const _: () = assert!(2 * UI_TEXT_MAX_BYTES <= u16::MAX as usize);
 
 struct ValueComparison { frames: [ValueFrame; UI_VALUE_ADMISSION_SLOTS], length: usize, position: usize, remembered: u8 }
 impl Default for ValueComparison { fn default() -> Self { Self { frames: [ValueFrame::EMPTY; UI_VALUE_ADMISSION_SLOTS], length: 0, position: 0, remembered: 0 } } }

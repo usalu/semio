@@ -384,19 +384,19 @@ fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdd
 /// `D` onto a `T` (needed when `d2` modifies an item `d1` just added).
 #[allow(clippy::too_many_arguments)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_indexed<T, D>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T>
+fn absorb_indexed<T, D>(d1: IndexedTripleDiff<D, T>, d2: &IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T>
 where
     T: Clone,
     D: Clone,
 {
     let d1_ref_max = d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).max();
-    let mut base_len = d1_ref_max.map(|m| m + 1).unwrap_or(0);
+    let mut base_len = d1_ref_max.map_or(0, |m| m + 1);
     let mid_len_needed_by_d1 = d1.added.iter().map(|a| a.index + 1).max().unwrap_or(0);
     while base_len.saturating_sub(d1.removed.len()) + d1.added.len() < mid_len_needed_by_d1 {
         base_len += 1;
     }
     let d2_ref_max = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max();
-    let required_mid_len = d2_ref_max.map(|m| m + 1).unwrap_or(0);
+    let required_mid_len = d2_ref_max.map_or(0, |m| m + 1);
     while base_len.saturating_sub(d1.removed.len()) + d1.added.len() < required_mid_len {
         base_len += 1;
     }
@@ -597,11 +597,11 @@ where
             None => modified.push(NamedModified { key: m2.key.clone(), diff: m2.diff.clone() }),
         }
     }
-    for a2 in &d2.added {
-        let k2 = key_of(a2);
+    for a2 in d2.added {
+        let k2 = key_of(&a2);
         match working_added.iter_mut().find(|a| key_of(a) == k2) {
-            Some(existing) => *existing = a2.clone(),
-            None => working_added.push(a2.clone()),
+            Some(existing) => *existing = a2,
+            None => working_added.push(a2),
         }
     }
     NamedTripleDiff { removed, modified, added: working_added }
@@ -623,7 +623,7 @@ fn diff_run(old: &PptxRun, new: &PptxRun) -> Option<PptxRunDiff> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_run(run: &mut PptxRun, diff: &PptxRunDiff) -> MutationApplyResult<()> {
+fn apply_run(run: &mut PptxRun, diff: &PptxRunDiff) {
     if let Some(v) = &diff.text {
         run.text = v.clone();
     }
@@ -636,7 +636,6 @@ fn apply_run(run: &mut PptxRun, diff: &PptxRunDiff) -> MutationApplyResult<()> {
     if let Some(v) = diff.font_size {
         run.font_size = v;
     }
-    Ok(())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -685,7 +684,7 @@ fn diff_paragraph(old: &PptxParagraph, new: &PptxParagraph) -> Option<PptxParagr
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_paragraph(p: &mut PptxParagraph, diff: &PptxParagraphDiff) -> MutationApplyResult<()> {
     if let Some(rd) = &diff.runs {
-        apply_indexed(&mut p.runs, rd, apply_run).map_err(|error| error.under(["runs"]))?;
+        apply_indexed(&mut p.runs, rd, |item, diff| { apply_run(item, diff); Ok(()) }).map_err(|error| error.under(["runs"]))?;
     }
     Ok(())
 }
@@ -700,7 +699,7 @@ fn absorb_paragraph_diff(mut a: PptxParagraphDiff, b: PptxParagraphDiff) -> Pptx
     a.runs = match (a.runs.take(), b.runs) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ra), Some(rb)) => Some(absorb_indexed(ra, rb, absorb_run_diff, run_with_diff_applied)),
+        (Some(ra), Some(rb)) => Some(absorb_indexed(ra, &rb, absorb_run_diff, run_with_diff_applied)),
     };
     a
 }
@@ -891,7 +890,7 @@ fn absorb_text_box_diff(mut a: PptxTextBoxDiff, b: PptxTextBoxDiff) -> PptxTextB
     a.text_frame = match (a.text_frame.take(), b.text_frame) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ta), Some(tb)) => Some(absorb_indexed(ta, tb, absorb_paragraph_diff, paragraph_with_diff_applied)),
+        (Some(ta), Some(tb)) => Some(absorb_indexed(ta, &tb, absorb_paragraph_diff, paragraph_with_diff_applied)),
     };
     a
 }
@@ -918,7 +917,7 @@ fn absorb_placeholder_diff(mut a: PptxPlaceholderDiff, b: PptxPlaceholderDiff) -
     a.text_frame = match (a.text_frame.take(), b.text_frame) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ta), Some(tb)) => Some(absorb_indexed(ta, tb, absorb_paragraph_diff, paragraph_with_diff_applied)),
+        (Some(ta), Some(tb)) => Some(absorb_indexed(ta, &tb, absorb_paragraph_diff, paragraph_with_diff_applied)),
     };
     a
 }
@@ -985,7 +984,7 @@ fn absorb_slide_diff(mut a: PptxSlideDiff, b: PptxSlideDiff) -> PptxSlideDiff {
     a.shapes = match (a.shapes.take(), b.shapes) {
         (None, x) => x,
         (x, None) => x,
-        (Some(sa), Some(sb)) => Some(absorb_indexed(sa, sb, absorb_shape_diff, shape_with_diff_applied)),
+        (Some(sa), Some(sb)) => Some(absorb_indexed(sa, &sb, absorb_shape_diff, shape_with_diff_applied)),
     };
     a
 }
@@ -1019,7 +1018,7 @@ fn absorb_presentation_diff(a: PptxPresentationDiff, b: PptxPresentationDiff) ->
         slides: match (a.slides, b.slides) {
             (None, x) => x,
             (x, None) => x,
-            (Some(sa), Some(sb)) => Some(absorb_indexed(sa, sb, absorb_slide_diff, slide_with_diff_applied)),
+            (Some(sa), Some(sb)) => Some(absorb_indexed(sa, &sb, absorb_slide_diff, slide_with_diff_applied)),
         },
     }
 }
@@ -1488,16 +1487,16 @@ pub fn diff_remove_shape(slide_index: usize, shape_index: usize) -> PptxDiff {
 /// (`PptxDiff::default()`) if the shape doesn't exist or doesn't carry a text frame (`Picture`,
 /// `Other`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_shape_text(presentation: &PptxPresentation, slide_index: usize, shape_index: usize, text_frame: Vec<PptxParagraph>) -> PptxDiff {
+pub fn diff_set_shape_text(presentation: &PptxPresentation, slide_index: usize, shape_index: usize, text_frame: &[PptxParagraph]) -> PptxDiff {
     let Some(slide) = presentation.slides.get(slide_index) else { return PptxDiff::default() };
     let Some(shape) = slide.shapes.get(shape_index) else { return PptxDiff::default() };
     let shape_diff = match shape {
         PptxShape::TextBox { text_frame: old_tf, .. } => {
-            let Some(tf_diff) = between_indexed(old_tf, &text_frame, diff_paragraph) else { return PptxDiff::default() };
+            let Some(tf_diff) = between_indexed(old_tf, text_frame, diff_paragraph) else { return PptxDiff::default() };
             PptxShapeDiff::TextBox(PptxTextBoxDiff { text_frame: Some(tf_diff), position: None })
         }
         PptxShape::Placeholder { text_frame: old_tf, .. } => {
-            let Some(tf_diff) = between_indexed(old_tf, &text_frame, diff_paragraph) else { return PptxDiff::default() };
+            let Some(tf_diff) = between_indexed(old_tf, text_frame, diff_paragraph) else { return PptxDiff::default() };
             PptxShapeDiff::Placeholder(PptxPlaceholderDiff { kind: None, text_frame: Some(tf_diff), position: None })
         }
         PptxShape::Picture { .. } | PptxShape::Other { .. } => return PptxDiff::default(),
@@ -1525,115 +1524,7 @@ pub fn diff_set_shape_position(presentation: &PptxPresentation, slide_index: usi
 //#endregion 🔖️SetSnapshot
 
 //#region 🔖️HandcraftedDiffCodec
-/// 🧪️ F6: **hand-rolled** `protocol::DiffCodec` for `PptxDiff` — `#[derive(dsl::DslDiff)]`
-/// confirmed rejected for THREE independent reasons (all captured verbatim from a real
-/// `cargo check`, see `f6-pptx-report.md`): (1) `PptxShapeDiff` is a genuine data-carrying enum
-/// (`TextBox`/`Picture`/`Placeholder`/`Replace`) reached through `PptxSlideDiff.shapes` — no
-/// `DslField` impl exists for it (matches `SvgNodeDiff`'s blocker, svg's `🔺️diff/🦀️.rs`);
-/// (2) `PptxRunDiff.font_size: Option<Option<u32>>` is tri-state — same blocker as `GifFrameDiff`;
-/// (3) a THIRD, previously-undocumented blocker beyond `f6-recon-report.md` §3: this artifact's
-/// (and `📜️docx`'s) generic `IndexedTripleDiff<D, T>`/`NamedTripleDiff<K, D, T>` collection-diff
-/// engine cannot be `#[derive(dsl::DslRecord)]`d AT ALL — the derive macro has no generics support
-/// (confirmed: attempting it on `IndexedTripleDiff<D, T>` emits literally malformed codegen,
-/// `struct IndexedTripleDiff<D, T><D, T>`, `error[E0107]: missing generics for struct`). Even a
-/// pptx snapshot/diff tree with zero enums and zero tri-state fields would still be blocked by this
-/// alone, since EVERY collection field in this recipe's shape routes through one of these two
-/// generic engines. Same grammar style `GifDiff`/`SvgDiff`'s hand-rolled codecs use
-/// (bracket-depth-aware split, hex for strings/bytes, `[0]`/`[1,x]` for `Option<T>`, single-letter
-/// tag prefix for data-carrying enums, `[removed];[modified];[added]` for collection triples) — see
-/// `SvgDiff`'s doc comment for the primitive rationale; this file re-derives its own copies (no
-/// shared "hand-roll helpers" module exists yet).
-//#region 🔖️Primitives
-
-//#endregion 🔖️Primitives
-
-//#region 🔖️GenericTripleCodecs
-/// 🌳 Index-keyed collection triple, generic codec: `[removed];[modified];[added]`, `modified`
-/// entries `idx:diff`, `added` entries `idx:item` — reused by every `IndexedTripleDiff<D, T>`
-/// instantiation in this artifact (`PptxSlidesDiff`/`PptxShapesDiff`/`PptxParagraphsDiff`/`PptxRunsDiff`).
-
-/// 🏷️ Name-keyed collection triple, generic codec: `[removed];[modified];[added]`, `removed`/
-/// `modified.key` hex-encoded string keys, `added` entries the whole item (already carrying its own
-/// key, per `NamedTripleDiff`'s own shape) — reused by every `NamedTripleDiff<String, D, T>`
-/// instantiation (`PptxOpc*Diff`'s content-types/parts/relationships triples).
-//#endregion 🔖️GenericTripleCodecs
-
-//#region 🔖️PptxValueCodecs
-/// 🌱 `PptxParagraph` has exactly one field (`runs: Vec<PptxRun>`) — its positional tuple collapses
-/// to that field's own list encoding, no extra wrapping bracket.
-/// 🖼️ `PptxShape` (full item): a genuine data-carrying enum — single-uppercase-tag prefix (`B`=
-/// TextBox, `P`=Picture, `H`=Placeholder, `O`=Other), same convention as `enc_xml_node`.
-/// 🌱 `PptxSlide` has exactly one field (`shapes: Vec<PptxShape>`) — same collapse as `PptxParagraph`.
-//#endregion 🔖️PptxValueCodecs
-
-//#region 🔖️PptxDiffValueCodecs
-/// 🌱 `PptxParagraphDiff` has exactly one field (`runs: Option<PptxRunsDiff>`) — collapses to that
-/// field's own `encode_option`.
-/// 🌳 `PptxShapeDiff` needs its own tag (same 4 letters `enc_shape` uses for `B`/`P`/`H`, plus `R`
-/// for `Replace` — never mixed in the same parse context, so reuse is unambiguous) since, unlike
-/// `PptxShape`, it appears standalone at the `PptxShapesDiff` `modified` entry position.
-/// 🌱 `PptxSlideDiff` has exactly one field (`shapes: Option<PptxShapesDiff>`) — same collapse as
-/// `PptxParagraphDiff`.
-/// 🌱 `PptxPresentationDiff` has exactly one field (`slides: Option<PptxSlidesDiff>`) — same
-/// collapse.
-//#endregion 🔖️PptxDiffValueCodecs
-
-//#region 🔖️OpcValueCodecs
-/// 🌱 A relationships-owner `added` entry carries `(owner, whole rel list)` — `owner` itself IS
-/// the `NamedTripleDiff` key, matching `enc_ct_entry`'s `(key, value)` shape.
-//#endregion 🔖️OpcValueCodecs
-
-//#region 🔖️OpcDiffValueCodecs
-//#endregion 🔖️OpcDiffValueCodecs
-
-//#region 🔖️BinaryCodecs
-/// 🧪️ FG-wave: real recursive BINARY twins of every text-form codec above, backing the upgraded
-/// `DiffCodec::encode_diff`/`decode_diff` below (and, via re-export, `../🧬️mutations/🦀️.rs`'s
-/// own upgraded `OpBinary`) — replaces F1's `print_diff().into_bytes()` text-as-binary shortcut.
-/// Real LEB128-varint-framed length-prefixed strings/bytes (`store::pack_rt::write_varint_u64` +
-/// `store::ByteReader`), fixed 8-byte little-endian `i64` fields (`PptxTransform`'s EMU
-/// coordinates — no signed-varint writer is exported from `store::pack_rt`, so these use the same
-/// fixed-width primitive `u16`/`u32` protocol fields already use, just wider), 1-byte tri-state
-/// presence tags, and 1-byte enum-variant tags — genuinely structured binary, never hex-ASCII text
-/// reused as "binary". Same shape `📜️docx/…/🔺️diff/🦀️.rs`'s own `BinaryPrimitives`/
-/// `ValueBinaryCodecs`/`DiffValueBinaryCodecs` regions establish; duplicated here (not imported)
-/// per this repo's per-artifact hand-roll convention (no shared "hand-roll helpers" module exists
-/// yet, see this file's own `HandcraftedDiffCodec` doc comment).
-//#region 🔖️BinaryPrimitives
-/// 🌱 `PptxTransform`'s four EMU coordinates are `i64` (theoretically signed, off-canvas shapes
-/// notwithstanding) — fixed 8-byte little-endian, same width class the protocol dialect's own
-/// `u64`/`i64` `Prim` already uses, just hand-rolled here since no signed-varint writer is
-/// exported from `store::pack_rt` (only `write_varint_u64`).
-//#endregion 🔖️BinaryPrimitives
-
-//#region 🔖️ValueBinaryCodecs
-/// 🌳️ Full-item (non-diff) binary codecs, mirrored one-for-one against `../🔖️PptxValueCodecs`'s
-/// text forms above. `pub(crate)` so `../🧬️mutations/🦀️.rs` reuses these rather than
-/// re-deriving its own copies (same intra-artifact reuse pattern the text codecs already use).
-
-/// 🖼️ `PptxShape` (full item): `0`=TextBox, `1`=Picture, `2`=Placeholder, `3`=Other — same
-/// declaration order as the enum itself, tag-prefixed like `enc_xml_node_bin`'s own convention.
-
-//#endregion 🔖️ValueBinaryCodecs
-
-//#region 🔖️GenericTripleBinaryCodecs
-/// 🌳️ Binary twin of `enc_indexed`/`dec_indexed` -- three varint-counted sections (removed
-/// indices / modified index+diff pairs / added index+item pairs), generic over `D`/`T`.
-
-/// 🏷️ Binary twin of `enc_named`/`dec_named` -- three varint-counted sections (removed keys /
-/// modified key+diff pairs / added whole items), generic over `K`/`D`/`T`.
-//#endregion 🔖️GenericTripleBinaryCodecs
-
-//#region 🔖️DiffValueBinaryCodecs
-
-/// 🌳️ `PptxShapeDiff` -- `0`=TextBox, `1`=Picture, `2`=Placeholder, `3`=Replace, same tag
-/// numbering `enc_shape_bin` uses for the full-item form (never mixed in the same binary stream).
-
-//#endregion 🔖️DiffValueBinaryCodecs
-//#endregion 🔖️BinaryCodecs
-
-//#region 🔖️TopLevel
-
+/// 📨️ Carries the sparse presentation diff through its typed DSL record.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 struct PptxDiffRecord {
     value: dsl::DslValue,

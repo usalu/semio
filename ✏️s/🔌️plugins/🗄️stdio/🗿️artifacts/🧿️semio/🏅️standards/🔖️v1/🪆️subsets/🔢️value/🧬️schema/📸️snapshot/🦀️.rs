@@ -58,7 +58,9 @@ pub struct SemioValueEntry {
 /// (identical citation in `json`'s own `JsonValue` doc comment).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
+#[derive(Default)]
 pub enum SemioValue {
+    #[default]
     Null,
     Bool { value: bool },
     Int { lexeme: String },
@@ -70,11 +72,6 @@ pub enum SemioValue {
     Ref { id: ValueId },
 }
 
-impl Default for SemioValue {
-    fn default() -> Self {
-        SemioValue::Null
-    }
-}
 //#endregion 🔖️SemioValue
 
 //#region 🔖️ValueGraph

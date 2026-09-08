@@ -2133,7 +2133,7 @@ mod tests {
             ActionDefinition {
                 args: vec![
                     ActionArgDef::text("name", LocalizedLabel::data("Name")).required(),
-                    ActionArgDef { default: Some(semio_framework::to_dsl_value(&serde_json::json!(true)).expect("toggle default")), ..ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")) },
+                    ActionArgDef { default: Some(semio_framework::to_dsl_value(&true).expect("toggle default")), ..ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")) },
                 ],
                 keys: Some("mod+e".into()),
                 ..ActionDefinition::bounded_catalog("withArgs", LocalizedLabel::data("With Args"), ActionKind::View)
@@ -2287,15 +2287,15 @@ mod tests {
                 children: vec![],
             },
         ];
-        let (general, utility_options) = partition_window_measures(&measures, Some("utility.a"));
+        let ui_wgpu::wgpu::component::layout::WindowMeasurePartition { general, utility_options } = partition_window_measures(&measures, Some("utility.a")).expect("bounded fixture measure partition");
         assert_eq!(utility_options.len(), 1, "matching utility surfaces the tagged group in utility options");
-        assert!(matches!(&utility_options[0], WindowMeasure::Toggle { id, .. } if id == "brush-size"));
+        assert!(matches!(utility_options.get(0).copied(), Some(WindowMeasure::Toggle { id, .. }) if id == "brush-size"));
         assert_eq!(general.len(), 1, "untagged group stays in the general measures rail");
-        assert!(matches!(&general[0], WindowMeasure::Group { id, .. } if id == "grid"));
-        let (general_other, utility_options_other) = partition_window_measures(&measures, Some("utility.b"));
+        assert!(matches!(general.get(0).copied(), Some(WindowMeasure::Group { id, .. }) if id == "grid"));
+        let ui_wgpu::wgpu::component::layout::WindowMeasurePartition { general: general_other, utility_options: utility_options_other } = partition_window_measures(&measures, Some("utility.b")).expect("bounded fixture measure partition");
         assert!(utility_options_other.is_empty(), "wrong active utility drops the tagged group");
         assert_eq!(general_other.len(), 1, "untagged group unaffected by active utility");
-        let (general_none, utility_options_none) = partition_window_measures(&measures, None);
+        let ui_wgpu::wgpu::component::layout::WindowMeasurePartition { general: general_none, utility_options: utility_options_none } = partition_window_measures(&measures, None).expect("bounded fixture measure partition");
         assert!(utility_options_none.is_empty(), "no active utility drops the tagged group");
         assert_eq!(general_none.len(), 1);
     }

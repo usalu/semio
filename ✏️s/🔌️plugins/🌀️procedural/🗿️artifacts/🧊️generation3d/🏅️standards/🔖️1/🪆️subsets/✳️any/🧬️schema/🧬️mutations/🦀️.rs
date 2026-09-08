@@ -299,7 +299,7 @@ mod tests {
     use flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
     use move_widget::MoveWidget;
     use protocol::Mutation;
-    use protocol::SemanticMutation;
+    
     use rename_generation::RenameGeneration;
     use update_camera::UpdateCamera;
     use update_synapse::UpdateSynapse;
@@ -329,10 +329,10 @@ mod tests {
             Generation3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: "extrude".into() }),
             Generation3dMutation::UpdateCamera(UpdateCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } }),
             Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.fixture.v2".into() }),
-            Generation3dMutation::CreateGeneration(CreateGeneration { generation: FormGeneration { id: "generation-fresh".into(), name: "Generation".into(), values: serde_json::Map::new() } }),
+            Generation3dMutation::CreateGeneration(CreateGeneration { generation: FormGeneration { id: "generation-fresh".into(), name: "Generation".into(), values: Default::default() } }),
             Generation3dMutation::DeleteGeneration(DeleteGeneration { id: "generation-1".into() }),
             Generation3dMutation::RenameGeneration(RenameGeneration { id: "generation-1".into(), new_name: "Renamed".into() }),
-            Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue { id: "generation-1".into(), question_id: "q1".into(), new_value: serde_json::json!(42) }),
+            Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue { id: "generation-1".into(), question_id: "q1".into(), new_value: serde_json::json!(42).into() }),
         ]
     }
 
@@ -345,11 +345,11 @@ mod tests {
         assert_eq!(<Generation3dMutation as protocol::SemanticMutation<Generation3dSnapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
     }
 
-    #[test]
-    fn store_applies_widget_create() {
+    #[semio_framework_async_macros::async_test]
+    async fn store_applies_widget_create() {
         let mut store = ArtifactStore::<Generation3dSnapshot, Generation3dMutation>::new(store::create_document_envelope(crate::artifacts::generation3d::GENERATION_3D_SCHEMA, "generation3d", empty_generation3d_snapshot(), None))
-            .expect("valid artifact store fixture");
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![Generation3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], description: None }).expect("apply");
+            .await.expect("valid artifact store fixture");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![Generation3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], description: None }).await.expect("apply");
         assert!(store.snapshot().expect("snapshot").fixture.widgets.iter().any(|w| widget_id(w) == "note-9"));
     }
 
@@ -363,20 +363,20 @@ mod tests {
     #[test]
     fn generation_op_round_trips() {
         let before = empty_generation3d_snapshot();
-        let generation = FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
+        let generation = FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: Default::default() };
         let after = round_trip(&before, &Generation3dMutation::CreateGeneration(CreateGeneration { generation }));
         assert_eq!(after.generation.generations.len(), 1);
     }
 
     #[test]
     fn generation_mutation_bridge_covers_every_variant() {
-        let generation = FormGeneration { id: "g1".into(), name: "G1".into(), values: serde_json::Map::new() };
+        let generation = FormGeneration { id: "g1".into(), name: "G1".into(), values: Default::default() };
         assert_eq!(generation_mutation_to_generation3d(GenerationMutation::Add { generation: generation.clone() }), Generation3dMutation::CreateGeneration(CreateGeneration { generation }));
         assert_eq!(generation_mutation_to_generation3d(GenerationMutation::Remove { id: "g1".into() }), Generation3dMutation::DeleteGeneration(DeleteGeneration { id: "g1".into() }));
         assert_eq!(generation_mutation_to_generation3d(GenerationMutation::Rename { id: "g1".into(), name: "New".into() }), Generation3dMutation::RenameGeneration(RenameGeneration { id: "g1".into(), new_name: "New".into() }));
         assert_eq!(
-            generation_mutation_to_generation3d(GenerationMutation::UpdateValues { id: "g1".into(), question_id: "q1".into(), value: serde_json::json!(1) }),
-            Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue { id: "g1".into(), question_id: "q1".into(), new_value: serde_json::json!(1) })
+            generation_mutation_to_generation3d(GenerationMutation::UpdateValues { id: "g1".into(), question_id: "q1".into(), value: serde_json::json!(1).into() }),
+            Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue { id: "g1".into(), question_id: "q1".into(), new_value: serde_json::json!(1).into() })
         );
     }
 
@@ -501,30 +501,30 @@ mod tests {
     async fn create_widget_satisfies_the_inverse_and_absorb_laws() {
         let base = empty_generation3d_snapshot();
         let mutation = Generation3dMutation::CreateWidget(CreateWidget { index: 0, widget: Widget::InputNote { id: "note-fresh".into(), text: String::new() } });
-        protocol::testkit::assert_mutation_inverse_law(&base, &mutation).await;
-        let d1 = mutation.diff(&base);
-        let d2 = Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.fixture.v2".into() }).diff(&base);
-        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+        semio_framework_os_kernel::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+        let d1 = mutation.diff(&base).into_parts().0;
+        let d2 = Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.fixture.v2".into() }).diff(&base).into_parts().0;
+        semio_framework_os_kernel::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn connect_synapse_satisfies_the_inverse_and_absorb_laws() {
         let base = empty_generation3d_snapshot();
         let mutation = Generation3dMutation::ConnectSynapse(ConnectSynapse { index: 0, synapse: SynapseSpec { id: "e-fresh".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() } });
-        protocol::testkit::assert_mutation_inverse_law(&base, &mutation).await;
-        let d1 = mutation.diff(&base);
-        let d2 = Generation3dMutation::UpdateCamera(UpdateCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } }).diff(&base);
-        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+        semio_framework_os_kernel::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+        let d1 = mutation.diff(&base).into_parts().0;
+        let d2 = Generation3dMutation::UpdateCamera(UpdateCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } }).diff(&base).into_parts().0;
+        semio_framework_os_kernel::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn update_camera_satisfies_the_inverse_and_absorb_laws() {
         let base = empty_generation3d_snapshot();
         let mutation = Generation3dMutation::UpdateCamera(UpdateCamera { camera: CameraJson { x: 4.0, y: 5.0, zoom: 6.0 } });
-        protocol::testkit::assert_mutation_inverse_law(&base, &mutation).await;
-        let d1 = mutation.diff(&base);
-        let d2 = Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.fixture.v3".into() }).diff(&base);
-        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+        semio_framework_os_kernel::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
+        let d1 = mutation.diff(&base).into_parts().0;
+        let d2 = Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.fixture.v3".into() }).diff(&base).into_parts().0;
+        semio_framework_os_kernel::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
     //#endregion 🧪️MutationLaws
 

@@ -230,7 +230,7 @@ impl store::InferredField<SemioDrawingSnapshot> for DrawFlattenedScene {
 
     fn compute(snapshot: &SemioDrawingSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
         let np = node_path_from_key(key);
-        let parent_transform = parents.first().map(|p| p.world_transform).unwrap_or_else(SemioTransform::identity);
+        let parent_transform = parents.first().map_or_else(SemioTransform::identity, |p| p.world_transform);
         match node_at(snapshot, &np) {
             Some(DrawNode::Group { transform, .. }) => FlattenedNode { world_transform: compose_transform(parent_transform, *transform), resolved_style: None },
             Some(DrawNode::Path { style, .. }) | Some(DrawNode::Text { style, .. }) => FlattenedNode { world_transform: parent_transform, resolved_style: resolve_style(snapshot, style) },

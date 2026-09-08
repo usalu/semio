@@ -2,7 +2,7 @@
 name = "semio-framework-async"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Async-runtime interface layer AND the process-wide CPU substrate: OperationContext/CancelToken/Scope/ChannelPolicy vocabulary, the HostAsyncRuntime trait, and (Phase 1 packet P1a, INTERACTIVE-JOB-RUNTIME-REFACTOR) WorkerPool — the one process-wide work-stealing thread pool every subsystem schedules onto, replacing ThreadPlan/ThreadBudget and per-role OS threads. The future-polling executor itself (tokio today) still lives in a sibling crate (design ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet R2/P1b)."
 
 [package.metadata.semio]

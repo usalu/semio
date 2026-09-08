@@ -414,6 +414,7 @@ pub const GIS_MAP_INFERENCE_APPROVAL_SCHEMA: &str = "semio.hub.inference-approva
 pub const GIS_MAP_INFERENCE_RECEIPT_SCHEMA: &str = "semio.hub.inference-job-receipt/v1";
 pub const GIS_MAP_INFERENCE_EVENTS_SCHEMA: &str = "semio.hub.inference-job-events/v1";
 pub const GIS_MAP_INFERENCE_APPROVAL_RECEIPT_SCHEMA: &str = "semio.hub.inference-approval-receipt/v1";
+pub const GIS_MAP_APPROVAL_UNDO_RECEIPT_SCHEMA: &str = "semio.hub.gis-map-approval-undo-receipt/v1";
 pub const GIS_MAP_INFERENCE_ERROR_SCHEMA: &str = "semio.hub.inference-error/v1";
 pub const GIS_MAP_INFERENCE_PREVIEW_SCHEMA: &str = "semio.hub.gis-map-inference-preview/v1";
 pub const GIS_MAP_INFERENCE_PREVIEW_RING_POINTS: usize = 5;
@@ -770,6 +771,7 @@ pub struct GisMapInferenceApprovalReceiptV1 {
     pub command_hash: String,
     pub proposal_hash: String,
     pub applied: bool,
+    pub undo: semio_framework_os_kernel::os_directory::GisMapApprovalUndoHandleV1,
 }
 
 /// 🧾️ The two-field closed body every failing inference route publishes.
@@ -802,6 +804,13 @@ impl InferenceHubBodyV1 for GisMapInferenceEventPageV1 {
 
 impl InferenceHubBodyV1 for GisMapInferenceApprovalReceiptV1 {
     const SCHEMA: &'static str = GIS_MAP_INFERENCE_APPROVAL_RECEIPT_SCHEMA;
+    fn declared_schema(&self) -> &str {
+        &self.schema
+    }
+}
+
+impl InferenceHubBodyV1 for semio_framework_os_kernel::os_directory::GisMapApprovalUndoReceiptV1 {
+    const SCHEMA: &'static str = GIS_MAP_APPROVAL_UNDO_RECEIPT_SCHEMA;
     fn declared_schema(&self) -> &str {
         &self.schema
     }
@@ -902,6 +911,10 @@ pub fn gis_map_job_approval_path(scope: &DocumentScope, job_id: &str) -> String 
     format!("{}/{}/approval", gis_map_jobs_path(scope), percent_encode(job_id))
 }
 
+pub fn gis_map_approval_undo_path(scope: &DocumentScope) -> String {
+    format!("/spaces/{}/documents/{}/inference/gis-map/approval-undos", percent_encode(&scope.space_id), percent_encode(&scope.document_id))
+}
+
 /// 🔓️ Decodes one hub reply: a 2xx must be the exact declared schema, anything else resolves
 /// through the closed `{schema, code}` body and only falls back to the status when that body is
 /// itself undecodable.
@@ -974,7 +987,48 @@ pub async fn approve_gis_map_job<T: InferenceHubTransport>(transport: &T, contex
     let body = request.encode()?;
     let wire = InferenceHubRequestV1 { hub_origin: hub_origin.to_string(), method: InferenceHubMethodV1::Post, path: gis_map_job_approval_path(scope, &request.job_id), body, maximum_response_bytes: INFERENCE_RESPONSE_MAX_BYTES };
     let response = transport.request(context, &wire).await?;
-    decode_inference_reply(&response)
+    let receipt: GisMapInferenceApprovalReceiptV1 = decode_inference_reply(&response)?;
+    if receipt.job_id != request.job_id
+        || receipt.proposal_hash != request.proposal_hash
+        || !is_lower_hex(&receipt.mutation_id, 32)
+        || !is_lower_hex(&receipt.command_hash, 64)
+        || !is_lower_hex(&receipt.undo.target_id, 32)
+        || !receipt.undo.expected_current.validate()
+        || receipt.undo.expected_current.document_id != scope.document_id
+    {
+        return Err(InferenceRouteErrorV1::Conflict);
+    }
+    Ok(receipt)
+}
+
+/// ↩️ `POST …/approval-undos` carries only the Hub-minted target, exact current frontier and retry identity.
+pub async fn undo_gis_map_approval<T: InferenceHubTransport>(
+    transport: &T,
+    context: &OperationContext,
+    hub_origin: &str,
+    scope: &DocumentScope,
+    request: &semio_framework_os_kernel::os_directory::GisMapApprovalUndoRequestV1,
+) -> Result<semio_framework_os_kernel::os_directory::GisMapApprovalUndoReceiptV1, InferenceRouteErrorV1> {
+    if !request.validate() || request.expected_current.document_id != scope.document_id {
+        return Err(InferenceRouteErrorV1::Invalid);
+    }
+    let body = serde_json::to_vec(request).map_err(|_| InferenceRouteErrorV1::Invalid)?;
+    if body.len() > INFERENCE_REQUEST_MAX_BYTES {
+        return Err(InferenceRouteErrorV1::Bounds);
+    }
+    let wire = InferenceHubRequestV1 {
+        hub_origin: hub_origin.to_string(),
+        method: InferenceHubMethodV1::Post,
+        path: gis_map_approval_undo_path(scope),
+        body,
+        maximum_response_bytes: INFERENCE_RESPONSE_MAX_BYTES,
+    };
+    let response = transport.request(context, &wire).await?;
+    let receipt: semio_framework_os_kernel::os_directory::GisMapApprovalUndoReceiptV1 = decode_inference_reply(&response)?;
+    if receipt.target_id != request.target_id || !receipt.applied || !receipt.frontier.validate() || receipt.frontier.document_id != scope.document_id {
+        return Err(InferenceRouteErrorV1::Conflict);
+    }
+    Ok(receipt)
 }
 //#endregion 💡️InferenceHubClient
 
@@ -1248,6 +1302,7 @@ fn inference_page_value(page: &GisMapInferenceEventPageV1) -> serde_json::Value 
 
 struct InferenceToolContext<'a> {
     workspace: Option<&'a Arc<HeadlessWorkspace>>,
+    actions: &'a crate::actions::ActionAdapter,
     policy: &'a PolicyEngine,
     handles: &'a crate::handles::HandleTable,
     principal: &'a AgentPrincipal,
@@ -1398,8 +1453,16 @@ fn inference_approve_handler(context: &InferenceToolContext<'_>, arguments: serd
     }
     match workspace.approve_gis_map_inference_job(&payload.document_id, &request) {
         Ok(receipt) => {
+            let scope = DocumentScope::new(payload.space_id.clone(), payload.document_id.clone());
+            let Some(base) = payload.base.as_ref() else {
+                return CallToolResult::tool_error(&GatewayError::new(GatewayErrorCode::PreconditionFailed, "approved inference job has no retained canonical base binding"));
+            };
+            let undo_token = match context.actions.retain_hub_gis_map_approval_undo(&context.session, &base.hub_origin, &scope, &receipt.undo, inference_wall_now_ms()) {
+                Ok(token) => token,
+                Err(error) => return CallToolResult::tool_error(&error),
+            };
             let text = format!("approval of job {} produced mutation {} (applied: {})", receipt.job_id, receipt.mutation_id, receipt.applied);
-            CallToolResult::ok(vec![ContentBlock::Text { text }], Some(serde_json::json!({ "jobHandle": handle, "receipt": serde_json::to_value(&receipt).unwrap_or(serde_json::Value::Null), "baseBinding": payload.base })))
+            CallToolResult::ok(vec![ContentBlock::Text { text }], Some(serde_json::json!({ "jobHandle": handle, "undoToken": undo_token, "receipt": serde_json::to_value(&receipt).unwrap_or(serde_json::Value::Null), "baseBinding": payload.base })))
         }
         Err(error) => CallToolResult::tool_error(&error),
     }
@@ -1420,7 +1483,7 @@ pub fn register_inference_job_tools(registry: &mut InMemoryToolRegistry, workspa
         let (tool_workspace, tool_actions, tool_principal, tool_session) = (workspace.clone(), actions.clone(), principal.clone(), session.clone());
         registry
             .register(tool, move |arguments| {
-                let context = InferenceToolContext { workspace: tool_workspace.as_ref(), policy: tool_actions.policy(), handles: tool_actions.handles().as_ref(), principal: &tool_principal, session: tool_session.clone() };
+                let context = InferenceToolContext { workspace: tool_workspace.as_ref(), actions: tool_actions.as_ref(), policy: tool_actions.policy(), handles: tool_actions.handles().as_ref(), principal: &tool_principal, session: tool_session.clone() };
                 handler(&context, arguments)
             })
             .expect("inference job tool names are valid");
@@ -2085,6 +2148,82 @@ mod inference_jobs {
             let approval = GisMapInferenceApprovalRequestV1::new(sample_job_id(), sample_proposal_hash());
             assert_eq!(block_on(approve_gis_map_job(&transport, &context(&cancel), "https://hub.invalid", &scope(), &approval)).unwrap_err(), expected, "{transport_error:?}");
         }
+    }
+
+    #[test]
+    fn an_approval_receipt_must_bind_the_exact_job_proposal_and_durable_undo_scope() {
+        let scope = scope();
+        let request = GisMapInferenceApprovalRequestV1::new(sample_job_id(), sample_proposal_hash());
+        let exact = serde_json::json!({
+            "schema": GIS_MAP_INFERENCE_APPROVAL_RECEIPT_SCHEMA,
+            "jobId": request.job_id.clone(),
+            "mutationId": "aa".repeat(16),
+            "commandHash": "bb".repeat(32),
+            "proposalHash": request.proposal_hash.clone(),
+            "applied": true,
+            "undo": {
+                "targetId": "cc".repeat(16),
+                "expectedCurrent": {
+                    "documentId": scope.document_id.clone(),
+                    "headEditOrdinal": 2,
+                    "headEditId": "aa".repeat(16),
+                    "lastCommitSeq": 2,
+                    "chainSha256": "dd".repeat(32),
+                },
+            },
+        });
+        let transport = ScriptedTransport::ok(200, exact.clone());
+        let cancel = CancelToken::root_now();
+        let receipt = block_on(approve_gis_map_job(&transport, &context(&cancel), "https://hub.invalid", &scope, &request)).expect("exact approval receipt");
+        assert_eq!(receipt.undo.target_id, "cc".repeat(16));
+
+        for (name, candidate) in [
+            ("foreign-job", { let mut value = exact.clone(); value["jobId"] = serde_json::json!("11".repeat(16)); value }),
+            ("foreign-proposal", { let mut value = exact.clone(); value["proposalHash"] = serde_json::json!("11".repeat(32)); value }),
+            ("long-mutation", { let mut value = exact.clone(); value["mutationId"] = serde_json::json!("11".repeat(32)); value }),
+            ("malformed-command", { let mut value = exact.clone(); value["commandHash"] = serde_json::json!("g".repeat(64)); value }),
+            ("guessed-target", { let mut value = exact.clone(); value["undo"]["targetId"] = serde_json::json!("short"); value }),
+            ("foreign-document", { let mut value = exact.clone(); value["undo"]["expectedCurrent"]["documentId"] = serde_json::json!("other-document"); value }),
+        ] {
+            let transport = ScriptedTransport::ok(200, candidate);
+            assert_eq!(
+                block_on(approve_gis_map_job(&transport, &context(&CancelToken::root_now()), "https://hub.invalid", &scope, &request)),
+                Err(InferenceRouteErrorV1::Conflict),
+                "{name}",
+            );
+        }
+    }
+
+    #[test]
+    fn a_durable_approval_undo_posts_only_the_hub_target_frontier_and_retry_identity() {
+        let undo_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🌎️hub/🧪️fixtures/↩️gis-map-approval-undo-v1/🔣️.json")).expect("undo fixture");
+        let request: semio_framework_os_kernel::os_directory::GisMapApprovalUndoRequestV1 = serde_json::from_value(undo_fixture["request"].clone()).expect("closed request");
+        let scope = DocumentScope::new("space-a", "map-a");
+        let response = serde_json::json!({
+            "schema": GIS_MAP_APPROVAL_UNDO_RECEIPT_SCHEMA,
+            "targetId": request.target_id.clone(),
+            "originalJobId": undo_fixture["target"]["originalJobId"],
+            "mutationId": "aa".repeat(16),
+            "commandHash": "bb".repeat(32),
+            "applied": true,
+            "replayed": false,
+            "frontier": {
+                "documentId": "map-a",
+                "headEditOrdinal": 5,
+                "headEditId": "aa".repeat(16),
+                "lastCommitSeq": 5,
+                "chainSha256": "cc".repeat(32),
+            },
+        });
+        let transport = ScriptedTransport::ok(200, response);
+        let cancel = CancelToken::root_now();
+        let receipt = block_on(undo_gis_map_approval(&transport, &context(&cancel), "https://hub.invalid", &scope, &request)).expect("typed durable receipt");
+        assert_eq!(receipt.target_id, request.target_id);
+        let seen = transport.requests();
+        assert_eq!(seen.len(), 1);
+        assert_eq!(seen[0].path, gis_map_approval_undo_path(&scope));
+        assert_eq!(serde_json::from_slice::<serde_json::Value>(&seen[0].body).expect("request json"), undo_fixture["request"]);
+        assert!(!String::from_utf8_lossy(&seen[0].body).contains("inverse"));
     }
 
     #[test]

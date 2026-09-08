@@ -2,7 +2,7 @@
 name = "semio-framework-compiler"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "The semio incremental document compiler — syntax, fonts, layout, and SVG emission in one crate, replacing Typst"
 
 [package.metadata.semio]

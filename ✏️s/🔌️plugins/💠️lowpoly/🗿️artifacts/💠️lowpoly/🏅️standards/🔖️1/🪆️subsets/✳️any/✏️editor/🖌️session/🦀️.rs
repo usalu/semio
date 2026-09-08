@@ -677,15 +677,6 @@ impl LowpolyTransient {
         Self { state: Arc::new(state) }
     }
 
-    #[cfg(test)]
-    pub(crate) fn with_test_mesh_workspace(object_id: &str, mesh_json: String) -> Self {
-        let mut state = LowpolyTransientState::default();
-        let workspace = Arc::make_mut(&mut state.mesh_workspace);
-        workspace.clear();
-        workspace.insert(object_id.to_string(), mesh_json);
-        Self { state: Arc::new(state) }
-    }
-
     pub(crate) fn begin_stroke_drag(&self) -> Self {
         Self {
             state: Arc::new(LowpolyTransientState {

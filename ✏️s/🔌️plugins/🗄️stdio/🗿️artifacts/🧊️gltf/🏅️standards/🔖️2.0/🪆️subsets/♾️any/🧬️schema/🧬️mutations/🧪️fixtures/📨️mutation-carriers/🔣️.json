@@ -1,0 +1,135 @@
+{
+  "maximumInlineBytes": 256,
+  "apply": {
+    "mutation": "bindDefaultScene",
+    "payload": {
+      "phase": "apply",
+      "value": {
+        "scene": 1
+      }
+    }
+  },
+  "restore": {
+    "mutation": "bindDefaultScene",
+    "payload": {
+      "phase": "restore",
+      "value": {
+        "scene": 0
+      }
+    }
+  },
+  "rejections": [
+    {
+      "code": "gltf.mutation.no-observable-change",
+      "path": "/document/scenes/",
+      "detail": "unchanged",
+      "outcome": {
+        "diff": {},
+        "messages": [
+          {
+            "level": "warning",
+            "code": "mutation.no-op",
+            "message": "unchanged"
+          }
+        ]
+      }
+    },
+    {
+      "code": "gltf.mutation.duplicate-id",
+      "path": "/document/nodes/",
+      "detail": "duplicate",
+      "outcome": {
+        "diff": {},
+        "messages": [
+          {
+            "level": "fatal",
+            "code": "mutation.duplicate-id",
+            "message": "duplicate",
+            "target": [
+              "document",
+              "nodes"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "code": "gltf.mutation.index-out-of-range",
+      "path": "document/scenes",
+      "detail": "index",
+      "outcome": {
+        "diff": {},
+        "messages": [
+          {
+            "level": "error",
+            "code": "mutation.target-missing",
+            "message": "index",
+            "target": [
+              "document",
+              "scenes"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "code": "gltf.mutation.missing",
+      "path": "document/nodes",
+      "detail": "missing",
+      "outcome": {
+        "diff": {},
+        "messages": [
+          {
+            "level": "error",
+            "code": "mutation.target-missing",
+            "message": "missing",
+            "target": [
+              "document",
+              "nodes"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "code": "gltf.mutation.not-found",
+      "path": "document/meshes",
+      "detail": "absent",
+      "outcome": {
+        "diff": {},
+        "messages": [
+          {
+            "level": "error",
+            "code": "mutation.target-missing",
+            "message": "absent",
+            "target": [
+              "document",
+              "meshes"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "code": "gltf.mutation.invalid-transform",
+      "path": "document/nodes/0/transform",
+      "detail": "nonfinite",
+      "outcome": {
+        "diff": {},
+        "messages": [
+          {
+            "level": "fatal",
+            "code": "mutation.invariant",
+            "message": "gltf.mutation.invalid-transform: nonfinite",
+            "target": [
+              "document",
+              "nodes",
+              "0",
+              "transform"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

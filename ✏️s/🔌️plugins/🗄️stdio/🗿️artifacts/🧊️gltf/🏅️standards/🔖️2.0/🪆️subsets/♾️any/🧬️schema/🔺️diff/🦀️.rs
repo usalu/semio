@@ -14,6 +14,9 @@
 //! frames/comments/appExtensions triples -- one real generic collection algebra, instantiated per
 //! entity, not a shortcut around per-entity semantics.
 
+/// 🧩 Ordered removed keys, modified values, and inserted items.
+pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>);
+
 use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
 use crate::artifacts::gltf::schema::snapshot::{
     GltfAccessor, GltfAlphaMode, GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAnimationSampler, GltfAsset, GltfBuffer, GltfBufferView, GltfCamera, GltfCameraProjection, GltfImage, GltfInterpolation,
@@ -73,12 +76,12 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
     added2: Vec<(usize, T)>,
     mut absorb_diff: impl FnMut(&mut D, D),
     apply_diff_to_item: impl Fn(&D, &T) -> T,
-) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
-    let mut removed1_sorted = removed1.clone();
+) -> IndexedDiffParts<D, T> {
+    let mut removed1_sorted = removed1;
     removed1_sorted.sort_unstable();
     let mut added1_index_sorted: Vec<usize> = added1.iter().map(|(i, _)| *i).collect();
     added1_index_sorted.sort_unstable();
-    let mut removed2_sorted = removed2.clone();
+    let mut removed2_sorted = removed2;
     removed2_sorted.sort_unstable();
     let mut added2_index_sorted: Vec<usize> = added2.iter().map(|(i, _)| *i).collect();
     added2_index_sorted.sort_unstable();
@@ -149,7 +152,7 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
 
 /// ↩️ Diff-level inverse for an index-keyed collection triple, given the ORIGINAL base items.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
+fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> IndexedDiffParts<D, T> {
     let mut removed_sorted = removed.to_vec();
     removed_sorted.sort_unstable();
     let mut added_index_sorted: Vec<usize> = added.iter().map(|(i, _)| *i).collect();
@@ -280,16 +283,14 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
                 return Err(protocol::MutationApplyError::new("mutation.apply.invalid-modify-index", format!("modify index {} is absent, removed, or duplicated", entry.index)).at([target]));
             }
         }
-        let mut length = base_len - removed.len();
         let mut additions: Vec<usize> = self.added.iter().map(|entry| entry.index).collect();
         additions.sort_unstable();
         let mut previous = None;
-        for index in additions {
+        for (length, index) in (base_len - removed.len()..).zip(additions) {
             if index > length || previous == Some(index) {
                 return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("add index {index} is out of range or duplicated")).at([target]));
             }
             previous = Some(index);
-            length += 1;
         }
         Ok(())
     }
@@ -298,10 +299,8 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
     pub fn apply(&self, base: &[T]) -> Vec<T> {
         let mut next: Vec<Option<T>> = base.iter().cloned().map(Some).collect();
         for m in &self.modified {
-            if let Some(slot) = next.get_mut(m.index) {
-                if let Some(item) = slot {
-                    *item = m.diff.apply(item);
-                }
+            if let Some(Some(item)) = next.get_mut(m.index) {
+                *item = m.diff.apply(item);
             }
         }
         let mut removed_sorted = self.removed.clone();
@@ -1177,22 +1176,22 @@ pub struct GltfDiff {
 impl GltfDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty_diff(&self) -> bool {
-        self.asset.as_ref().map(GltfAssetDiff::is_empty).unwrap_or(true)
+        self.asset.as_ref().is_none_or(GltfAssetDiff::is_empty)
             && self.scene.is_none()
-            && self.scenes.as_ref().map(GltfScenesDiff::is_empty).unwrap_or(true)
-            && self.nodes.as_ref().map(GltfNodesDiff::is_empty).unwrap_or(true)
-            && self.meshes.as_ref().map(GltfMeshesDiff::is_empty).unwrap_or(true)
-            && self.accessors.as_ref().map(GltfAccessorsDiff::is_empty).unwrap_or(true)
-            && self.buffer_views.as_ref().map(GltfBufferViewsDiff::is_empty).unwrap_or(true)
-            && self.buffers.as_ref().map(GltfBuffersDiff::is_empty).unwrap_or(true)
-            && self.buffer_bytes.as_ref().map(GltfBufferBytesDiff::is_empty).unwrap_or(true)
-            && self.materials.as_ref().map(GltfMaterialsDiff::is_empty).unwrap_or(true)
-            && self.textures.as_ref().map(GltfTexturesDiff::is_empty).unwrap_or(true)
-            && self.images.as_ref().map(GltfImagesDiff::is_empty).unwrap_or(true)
-            && self.samplers.as_ref().map(GltfSamplersDiff::is_empty).unwrap_or(true)
-            && self.skins.as_ref().map(GltfSkinsDiff::is_empty).unwrap_or(true)
-            && self.animations.as_ref().map(GltfAnimationsDiff::is_empty).unwrap_or(true)
-            && self.cameras.as_ref().map(GltfCamerasDiff::is_empty).unwrap_or(true)
+            && self.scenes.as_ref().is_none_or(GltfScenesDiff::is_empty)
+            && self.nodes.as_ref().is_none_or(GltfNodesDiff::is_empty)
+            && self.meshes.as_ref().is_none_or(GltfMeshesDiff::is_empty)
+            && self.accessors.as_ref().is_none_or(GltfAccessorsDiff::is_empty)
+            && self.buffer_views.as_ref().is_none_or(GltfBufferViewsDiff::is_empty)
+            && self.buffers.as_ref().is_none_or(GltfBuffersDiff::is_empty)
+            && self.buffer_bytes.as_ref().is_none_or(GltfBufferBytesDiff::is_empty)
+            && self.materials.as_ref().is_none_or(GltfMaterialsDiff::is_empty)
+            && self.textures.as_ref().is_none_or(GltfTexturesDiff::is_empty)
+            && self.images.as_ref().is_none_or(GltfImagesDiff::is_empty)
+            && self.samplers.as_ref().is_none_or(GltfSamplersDiff::is_empty)
+            && self.skins.as_ref().is_none_or(GltfSkinsDiff::is_empty)
+            && self.animations.as_ref().is_none_or(GltfAnimationsDiff::is_empty)
+            && self.cameras.as_ref().is_none_or(GltfCamerasDiff::is_empty)
             && self.extensions_used.is_none()
             && self.extensions_required.is_none()
             && self.extensions.is_none()
@@ -1630,7 +1629,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -1848,7 +1847,7 @@ pub(crate) fn enc_accessor_type(t: GltfAccessorType) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_accessor_type(s: &str) -> Result<GltfAccessorType, String> {
-    GltfAccessorType::from_str(s)
+    s.parse()
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_alpha_mode(m: GltfAlphaMode) -> String {
@@ -2063,7 +2062,7 @@ pub(crate) fn enc_primitive(p: &GltfPrimitive) -> String {
         encode_option(&p.indices, |v| v.to_string()),
         encode_option(&p.material, |v| v.to_string()),
         encode_option(&p.mode, |v| enc_u64(*v)),
-        format!("[{}]", p.targets.iter().map(|target| enc_attr_pairs(&target.0)).collect::<Vec<_>>().join(",")),
+        format_args!("[{}]", p.targets.iter().map(|target| enc_attr_pairs(&target.0)).collect::<Vec<_>>().join(",")),
         encode_option(&p.extensions, enc_json),
         encode_option(&p.extras, enc_json),
     )
@@ -2079,7 +2078,7 @@ pub(crate) fn dec_primitive(s: &str) -> Result<GltfPrimitive, String> {
         indices: decode_option(indices, parse_usize)?,
         material: decode_option(material, parse_usize)?,
         mode: decode_option(mode, dec_u64)?,
-        targets: split_top_level(strip_brackets(targets)?, ',').into_iter().filter(|value| !value.is_empty()).map(|value| dec_attr_pairs(&value).map(GltfMorphTarget)).collect::<Result<Vec<_>, _>>()?,
+        targets: split_top_level(strip_brackets(targets)?, ',').into_iter().filter(|value| !value.is_empty()).map(|value| dec_attr_pairs(value).map(GltfMorphTarget)).collect::<Result<Vec<_>, _>>()?,
         extensions: decode_option(extensions, dec_json)?,
         extras: decode_option(extras, dec_json)?,
     })
@@ -2577,8 +2576,8 @@ pub(crate) fn dec_animation_sampler(s: &str) -> Result<GltfAnimationSampler, Str
 pub(crate) fn enc_animation(a: &GltfAnimation) -> String {
     format!(
         "[{},{},{},{},{}]",
-        format!("[{}]", a.channels.iter().map(enc_animation_channel).collect::<Vec<_>>().join(",")),
-        format!("[{}]", a.samplers.iter().map(enc_animation_sampler).collect::<Vec<_>>().join(",")),
+        format_args!("[{}]", a.channels.iter().map(enc_animation_channel).collect::<Vec<_>>().join(",")),
+        format_args!("[{}]", a.samplers.iter().map(enc_animation_sampler).collect::<Vec<_>>().join(",")),
         encode_option(&a.name, |v| enc_str(v)),
         encode_option(&a.extensions, enc_json),
         encode_option(&a.extras, enc_json),
@@ -2831,7 +2830,7 @@ pub(crate) fn read_bin_attr_pairs(r: &mut dsl::ByteReader<'_>) -> Result<Vec<(St
     read_bin_vec(r, |r| Ok((read_bin_str(r)?, r.read_varint_u64()? as usize)))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn gltf_bin_err(e: dsl::PackError) -> protocol::ProtocolError {
+pub(crate) fn gltf_bin_err(e: &dsl::PackError) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "gltf binary", offset: 0, detail: e.to_string() }
 }
 //#endregion 🔖️RealBinaryPrimitives
@@ -3049,10 +3048,10 @@ pub(crate) fn write_bin_node(w: &mut dsl::ByteWriter, n: &GltfNode) {
     write_bin_option(w, &n.mesh, |w, v| w.write_varint_u64(*v as u64));
     write_bin_option(w, &n.camera, |w, v| w.write_varint_u64(*v as u64));
     write_bin_option(w, &n.skin, |w, v| w.write_varint_u64(*v as u64));
-    write_bin_option(w, &n.matrix, |w, v| write_bin_f64_array::<16>(w, v));
-    write_bin_option(w, &n.translation, |w, v| write_bin_f64_array::<3>(w, v));
-    write_bin_option(w, &n.rotation, |w, v| write_bin_f64_array::<4>(w, v));
-    write_bin_option(w, &n.scale, |w, v| write_bin_f64_array::<3>(w, v));
+    write_bin_option(w, &n.matrix, write_bin_f64_array::<16>);
+    write_bin_option(w, &n.translation, write_bin_f64_array::<3>);
+    write_bin_option(w, &n.rotation, write_bin_f64_array::<4>);
+    write_bin_option(w, &n.scale, write_bin_f64_array::<3>);
     write_bin_f64_vec(w, &n.weights);
     write_bin_option(w, &n.name, |w, v| write_bin_str(w, v));
     write_bin_json_opt(w, &n.extensions);
@@ -3081,10 +3080,10 @@ pub(crate) fn write_bin_node_diff(w: &mut dsl::ByteWriter, d: &GltfNodeDiff) {
     write_bin_tri(w, &d.mesh, |w, v| w.write_varint_u64(*v as u64));
     write_bin_tri(w, &d.camera, |w, v| w.write_varint_u64(*v as u64));
     write_bin_tri(w, &d.skin, |w, v| w.write_varint_u64(*v as u64));
-    write_bin_tri(w, &d.matrix, |w, v| write_bin_f64_array::<16>(w, v));
-    write_bin_tri(w, &d.translation, |w, v| write_bin_f64_array::<3>(w, v));
-    write_bin_tri(w, &d.rotation, |w, v| write_bin_f64_array::<4>(w, v));
-    write_bin_tri(w, &d.scale, |w, v| write_bin_f64_array::<3>(w, v));
+    write_bin_tri(w, &d.matrix, write_bin_f64_array::<16>);
+    write_bin_tri(w, &d.translation, write_bin_f64_array::<3>);
+    write_bin_tri(w, &d.rotation, write_bin_f64_array::<4>);
+    write_bin_tri(w, &d.scale, write_bin_f64_array::<3>);
     write_bin_option(w, &d.weights, |w, v| write_bin_f64_vec(w, v));
     write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
     write_bin_tri(w, &d.extensions, write_bin_json);
@@ -3357,7 +3356,7 @@ pub(crate) fn write_bin_material_diff(w: &mut dsl::ByteWriter, d: &GltfMaterialD
     write_bin_tri(w, &d.normal_texture, write_bin_normal_texture_info);
     write_bin_tri(w, &d.occlusion_texture, write_bin_occlusion_texture_info);
     write_bin_tri(w, &d.emissive_texture, write_bin_texture_info);
-    write_bin_option(w, &d.emissive_factor, |w, v| write_bin_f64_array::<3>(w, v));
+    write_bin_option(w, &d.emissive_factor, write_bin_f64_array::<3>);
     write_bin_option(w, &d.alpha_mode, |w, v| write_bin_alpha_mode(w, *v));
     write_bin_option(w, &d.alpha_cutoff, |w, v| w.write_f64_le(*v));
     write_bin_option(w, &d.double_sided, |w, v| w.write_u8(if *v { 1 } else { 0 }));
@@ -3846,7 +3845,7 @@ impl protocol::DiffCodec for GltfDiff {
                 let mut inner = dsl::ByteWriter::new();
                 write_bin_asset_diff(&mut inner, v);
                 inner.into_bytes()
-            })
+            });
         });
         write_bin_tri(&mut w, &self.scene, |w, v| w.write_varint_u64(*v as u64));
         write_bin_option(&mut w, &self.scenes, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_scene, write_bin_scene_diff)));
@@ -3868,28 +3867,28 @@ impl protocol::DiffCodec for GltfDiff {
                 let mut inner = dsl::ByteWriter::new();
                 write_bin_string_vec(&mut inner, v);
                 inner.into_bytes()
-            })
+            });
         });
         write_bin_option(&mut w, &self.extensions_required, |w, v| {
             write_bin_blob(w, &{
                 let mut inner = dsl::ByteWriter::new();
                 write_bin_string_vec(&mut inner, v);
                 inner.into_bytes()
-            })
+            });
         });
         write_bin_tri(&mut w, &self.extensions, |w, v| {
             write_bin_blob(w, &{
                 let mut inner = dsl::ByteWriter::new();
                 write_bin_json(&mut inner, v);
                 inner.into_bytes()
-            })
+            });
         });
         write_bin_tri(&mut w, &self.extras, |w, v| {
             write_bin_blob(w, &{
                 let mut inner = dsl::ByteWriter::new();
                 write_bin_json(&mut inner, v);
                 inner.into_bytes()
-            })
+            });
         });
         write_bin_option(&mut w, &self.source_form, |w, v| write_bin_source_form(w, *v));
         Ok(w.into_bytes())
@@ -3901,103 +3900,103 @@ impl protocol::DiffCodec for GltfDiff {
             let mut inner = dsl::ByteReader::new(&b);
             read_bin_asset_diff(&mut inner)
         })
-        .map_err(gltf_bin_err)?;
-        let scene = read_bin_tri(&mut r, |r| Ok(r.read_varint_u64()? as usize)).map_err(gltf_bin_err)?;
+        .map_err(|error| gltf_bin_err(&error))?;
+        let scene = read_bin_tri(&mut r, |r| Ok(r.read_varint_u64()? as usize)).map_err(|error| gltf_bin_err(&error))?;
         let scenes = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_scene, read_bin_scene_diff)
         })
-        .map_err(gltf_bin_err)?;
+        .map_err(|error| gltf_bin_err(&error))?;
         let nodes = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_node, read_bin_node_diff)
         })
-        .map_err(gltf_bin_err)?;
+        .map_err(|error| gltf_bin_err(&error))?;
         let meshes = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_mesh, read_bin_mesh_diff)
         })
-        .map_err(gltf_bin_err)?;
+        .map_err(|error| gltf_bin_err(&error))?;
         let accessors = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_accessor, read_bin_accessor_diff)
         })
-        .map_err(gltf_bin_err)?;
+        .map_err(|error| gltf_bin_err(&error))?;
         let buffer_views = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_buffer_view, read_bin_buffer_view)
         })
-        .map_err(gltf_bin_err)?;
+        .map_err(|error| gltf_bin_err(&error))?;
         let buffers = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_buffer, read_bin_buffer_diff)
         })
-        .map_err(gltf_bin_err)?;
+        .map_err(|error| gltf_bin_err(&error))?;
         let buffer_bytes = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_blob, read_bin_blob)
         })
-        .map_err(gltf_bin_err)?;
+        .map_err(|error| gltf_bin_err(&error))?;
         let materials = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_material, read_bin_material_diff)
         })
-        .map_err(gltf_bin_err)?;
+        .map_err(|error| gltf_bin_err(&error))?;
         let textures = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_texture, read_bin_texture)
         })
-        .map_err(gltf_bin_err)?;
+        .map_err(|error| gltf_bin_err(&error))?;
         let images = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_image, read_bin_image)
         })
-        .map_err(gltf_bin_err)?;
+        .map_err(|error| gltf_bin_err(&error))?;
         let samplers = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_sampler, read_bin_sampler)
         })
-        .map_err(gltf_bin_err)?;
+        .map_err(|error| gltf_bin_err(&error))?;
         let skins = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_skin, read_bin_skin)
         })
-        .map_err(gltf_bin_err)?;
+        .map_err(|error| gltf_bin_err(&error))?;
         let animations = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_animation, read_bin_animation)
         })
-        .map_err(gltf_bin_err)?;
+        .map_err(|error| gltf_bin_err(&error))?;
         let cameras = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             read_bin_collection_blob(&b, read_bin_camera, read_bin_camera)
         })
-        .map_err(gltf_bin_err)?;
+        .map_err(|error| gltf_bin_err(&error))?;
         let extensions_used = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             let mut inner = dsl::ByteReader::new(&b);
             read_bin_string_vec(&mut inner)
         })
-        .map_err(gltf_bin_err)?;
+        .map_err(|error| gltf_bin_err(&error))?;
         let extensions_required = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
             let mut inner = dsl::ByteReader::new(&b);
             read_bin_string_vec(&mut inner)
         })
-        .map_err(gltf_bin_err)?;
+        .map_err(|error| gltf_bin_err(&error))?;
         let extensions = read_bin_tri(&mut r, |r| {
             let b = read_bin_blob(r)?;
             let mut inner = dsl::ByteReader::new(&b);
             read_bin_json(&mut inner)
         })
-        .map_err(gltf_bin_err)?;
+        .map_err(|error| gltf_bin_err(&error))?;
         let extras = read_bin_tri(&mut r, |r| {
             let b = read_bin_blob(r)?;
             let mut inner = dsl::ByteReader::new(&b);
             read_bin_json(&mut inner)
         })
-        .map_err(gltf_bin_err)?;
-        let source_form = read_bin_option(&mut r, read_bin_source_form).map_err(gltf_bin_err)?;
+        .map_err(|error| gltf_bin_err(&error))?;
+        let source_form = read_bin_option(&mut r, read_bin_source_form).map_err(|error| gltf_bin_err(&error))?;
         Ok(GltfDiff { asset, scene, scenes, nodes, meshes, accessors, buffer_views, buffers, buffer_bytes, materials, textures, images, samplers, skins, animations, cameras, extensions_used, extensions_required, extensions, extras, source_form })
     }
 }

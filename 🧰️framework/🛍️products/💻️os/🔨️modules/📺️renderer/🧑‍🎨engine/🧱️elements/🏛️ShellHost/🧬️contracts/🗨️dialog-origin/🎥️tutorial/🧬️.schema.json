@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.shell.tutorial-run-fixture.v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "events",
+          "started",
+          "restores"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "events": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "enum": [
+                "resolve",
+                "stop",
+                "switch",
+                "replace"
+              ]
+            }
+          },
+          "started": {
+            "type": "boolean"
+          },
+          "restores": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    }
+  }
+}

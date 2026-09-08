@@ -6,9 +6,9 @@ pub(crate) use mutations::{SetSurfaceCount, SurfaceMutation};
 use crate::app::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates, meta, new_app, new_viewer};
 use crate::app::{
     ArtifactEditor, ArtifactView, ArtifactViewer, ConfigView, DraftView, EditorApp, Emit, Media, MediaClass, MediaForm, MediaPayload, MediaType, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PluginApp,
-    REVERT_TO_COMMAND_ACTION_ID, UiAssemblyResult, ViewEmit, ViewerApp, built_text_to_component_tree,
+    REVERT_TO_COMMAND_ACTION_ID, UiAssemblyResult, ViewEmit, built_text_to_component_tree,
 };
-use protocol::{Mutation, MutationDiff};
+use protocol::MutationDiff;
 use semio_framework::{Dialect, Fault, FaultOrigin, StandardId, SubsetId};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};

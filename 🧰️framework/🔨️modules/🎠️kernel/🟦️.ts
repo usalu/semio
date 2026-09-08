@@ -105,6 +105,11 @@ export function ephemeralWeakMap<K extends object, V>(key: string): WeakMap<K, V
 
 //#region 📇️DescriptorAdmission
 /** 📇️ Requires a published descriptor with the requested owner before any actor runtime is started. */
+/** @emoji 📏️ Admission ceiling for one plugin's `🔣️.json`, measured on the response text the parse
+ * already needs — so the bound costs nothing, where re-serializing the parsed manifest to measure it cost a
+ * full 5.4 MB `JSON.stringify` per plugin per boot and blew the frame budget on `puzzle` alone. */
+export const PLUGIN_DESCRIPTOR_CODE_UNIT_CAPACITY = 16 * 1024 * 1024;
+
 export async function fetchDescriptorManifest(pluginId: string, moduleUrl: string, signal?: AbortSignal): Promise<PluginManifest> {
   signal?.throwIfAborted();
   const path = moduleUrl.split(/[?#]/u)[0]!;
@@ -117,8 +122,11 @@ export async function fetchDescriptorManifest(pluginId: string, moduleUrl: strin
   signal?.throwIfAborted();
   if (!response.ok) throw fault("plugin.descriptor-unavailable", `${descriptorUrl} (HTTP ${response.status})`);
   if (response.headers?.get?.("content-type")?.toLowerCase().includes("text/html")) throw fault("plugin.descriptor-invalid", `${descriptorUrl} returned HTML`);
+  const descriptorText = await response.text();
+  signal?.throwIfAborted();
+  if (descriptorText.length > PLUGIN_DESCRIPTOR_CODE_UNIT_CAPACITY) throw fault("plugin.descriptor-oversized", `${descriptorUrl} is ${descriptorText.length} code units against a ${PLUGIN_DESCRIPTOR_CODE_UNIT_CAPACITY} ceiling`);
   let descriptor: unknown;
-  try { descriptor = await response.json(); }
+  try { descriptor = JSON.parse(descriptorText); }
   catch {
     signal?.throwIfAborted();
     throw fault("plugin.descriptor-invalid", `${descriptorUrl} is not JSON`);

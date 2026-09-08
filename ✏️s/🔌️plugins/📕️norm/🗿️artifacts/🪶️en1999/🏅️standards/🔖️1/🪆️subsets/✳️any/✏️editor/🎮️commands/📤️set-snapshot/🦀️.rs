@@ -37,7 +37,7 @@ mod tests {
     use semio_framework_plugin::HistoryView;
 
     #[semio_framework_async_macros::async_test]
-    fn handle_commits_the_payload_document_under_its_action_id() {
+    async fn handle_commits_the_payload_document_under_its_action_id() {
         let projection = En1999Snapshot::default();
         let config = NormConfig::default();
         let emit = handle(&ReplaceSnapshot { snapshot: En1999Snapshot::default() }, &ArtifactView::new(&projection, &HistoryView::empty()), &ConfigView { snapshot: &config }).expect("handle");

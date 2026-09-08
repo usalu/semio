@@ -4,7 +4,18 @@
   "namedInputs": {
     "default": [
       "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/**/*.rs",
-      "{projectRoot}/**/*"
+      "{projectRoot}/**/*",
+      "nativeAssets"
+    ],
+    "nativeAssets": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/**/*.svg",
+      "!{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🤖️generated/**/*.svg"
+    ],
+    "nativeSources": [
+      "nativeAssets"
+    ],
+    "nativeTestSources": [
+      "nativeAssets"
     ]
   },
   "targets": {

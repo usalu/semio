@@ -161,7 +161,7 @@ pub(super) fn translate_lateral(curve: &Curve3, range: (f64, f64), offset: Vec3)
         Curve3::Nurbs { .. } => {
             let nc = curve.to_nurbs(range);
             let top: Vec<Pnt3> = nc.controls.iter().map(|&p| p + offset).collect();
-            let surface = Surface::Nurbs { u_knots: nc.knots.clone(), v_knots: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector::new(vec![0.0, 0.0, 1.0, 1.0], 1, 2).unwrap(), controls: nc.controls.iter().cloned().zip(top).map(|(a, b)| vec![a, b]).collect(), weights: nc.weights.iter().map(|&w| vec![w, w]).collect() };
+            let surface = Surface::Nurbs { u_knots: nc.knots.clone(), v_knots: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector::new(vec![0.0, 0.0, 1.0, 1.0], 1, 2).unwrap(), controls: nc.controls.iter().copied().zip(top).map(|(a, b)| vec![a, b]).collect(), weights: nc.weights.iter().map(|&w| vec![w, w]).collect() };
             Ok(LateralSurface { surface, u_domain: range, v_bottom: 0.0, v_top: 1.0 })
         }
     }
@@ -312,7 +312,7 @@ pub(super) fn general_lateral(curve: &Curve3, range: (f64, f64), map: &Affine3) 
         Curve3::Line { .. } | Curve3::Nurbs { .. } => {
             let nc = curve.to_nurbs(range);
             let top: Vec<Pnt3> = nc.controls.iter().map(|&p| map.apply_point(p)).collect();
-            let surface = Surface::Nurbs { u_knots: nc.knots.clone(), v_knots: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector::new(vec![0.0, 0.0, 1.0, 1.0], 1, 2).unwrap(), controls: nc.controls.iter().cloned().zip(top).map(|(a, b)| vec![a, b]).collect(), weights: nc.weights.iter().map(|&w| vec![w, w]).collect() };
+            let surface = Surface::Nurbs { u_knots: nc.knots.clone(), v_knots: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector::new(vec![0.0, 0.0, 1.0, 1.0], 1, 2).unwrap(), controls: nc.controls.iter().copied().zip(top).map(|(a, b)| vec![a, b]).collect(), weights: nc.weights.iter().map(|&w| vec![w, w]).collect() };
             Ok(LateralSurface { surface, u_domain: range, v_bottom: 0.0, v_top: 1.0 })
         }
         _ => Err(KernelError::Operation("sweep: only line and free-form (already-NURBS) profile edges have a certified pcurve along a general path station (circle/ellipse profile edges are refused, not mis-parametrized)".into())),

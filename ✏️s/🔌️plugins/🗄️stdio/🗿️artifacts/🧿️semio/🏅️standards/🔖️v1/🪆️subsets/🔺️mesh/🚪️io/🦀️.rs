@@ -136,11 +136,11 @@ pub mod derived_composition {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::mesh::schema::semio_mesh_artifact_schema_descriptor());
-        let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioMeshSnapshot, crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation>(
+        store::register_document_codec(store::ArtifactCodec::of::<SemioMeshSnapshot, crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation>(
             crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::STDIO_SEMIOMESH_DOCUMENT_SCHEMA,
-        ));
-        let _ = register_subset_validator(validator_entry());
-        let _ = register_composer_entries(io_bridge_entries());
+        )).expect("static Stdio registration must be available and conflict-free");
+        register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
+        register_composer_entries(io_bridge_entries()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
 
@@ -404,7 +404,7 @@ pub mod derived_composition {
         async fn cube_subset_integrated_roundtrip() {
             let text = include_str!("../📚️examples/🧊️cube/🖼️assets/🗣️.dsl.semio");
             let asset = store::os_store::test_support::ExampleAsset { bytes: text.as_bytes(), text: Some(text), provenance: "🔺️mesh/📚️examples/🧊️cube/🖼️assets/🗣️.dsl.semio" };
-            store::os_store::test_support::assert_subset_roundtrip::<SemioMeshRoundtrip>(&asset, None);
+            store::os_store::test_support::assert_subset_roundtrip::<SemioMeshRoundtrip>(&asset, None).await;
         }
         //#endregion 🧪️SubsetRoundtrip
     }

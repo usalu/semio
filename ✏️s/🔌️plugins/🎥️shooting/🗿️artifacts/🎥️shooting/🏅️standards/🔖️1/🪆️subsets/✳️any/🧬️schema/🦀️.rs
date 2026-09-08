@@ -559,7 +559,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn export_svg_uses_scene_render_not_title_card() {
         let snapshot = default_snapshot();
-        let document = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&snapshot));
+        let document = json::from_dsl_value(&dsl::ToValue::to_value(&snapshot));
         let (svg, _width, _height) = shooting_document_json_to_svg(&document).expect("export svg");
         let asset = active_asset(&snapshot).expect("default fixture asset");
         assert!(svg.contains(&asset.name));

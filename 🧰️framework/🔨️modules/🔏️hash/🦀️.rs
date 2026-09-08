@@ -217,8 +217,8 @@ fn blake3_compress(chaining_value: &[u32; 8], block_words: &[u32; 16], counter: 
 
 fn blake3_words_from_le_bytes(block: &[u8; BLAKE3_BLOCK_LEN]) -> [u32; 16] {
     let mut words = [0u32; 16];
-    for (word, chunk) in words.iter_mut().zip(block.chunks_exact(4)) {
-        *word = u32::from_le_bytes(chunk.try_into().expect("BLAKE3 word width"));
+    for (word, chunk) in words.iter_mut().zip(block.as_chunks::<4>().0) {
+        *word = u32::from_le_bytes(*chunk);
     }
     words
 }

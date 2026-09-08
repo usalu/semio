@@ -5,7 +5,6 @@ use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::super::modules::measurement_contracts::*;
-use super::compactness;
 use super::{adjacency::*, area_volume::*, clearance::*, compactness::*, concavity::*, curvature::*, mass_distribution::*, orientation::*, proportion::*, roughness::*, size::*, symmetry::*, thickness::*, topology::*};
 
 //#region 🔖️PublicRecords
@@ -137,7 +136,7 @@ pub const GLTF_INFERENCE_LEAF_SERVICE_DESCRIPTORS: &[GltfInferenceLeafServiceDes
     GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.enclosed-volume.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.enclosed-volume.v1:geometry-v2", encode: enclosed_volume::encode_result },
     GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.material-volume.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.material-volume.v1:geometry-v2", encode: material_volume::encode_result },
     GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.void-volume.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.void-volume.v1:geometry-v2", encode: void_volume::encode_result },
-    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.compactness.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.compactness.v1:geometry-v2", encode: compactness::compactness::encode_result },
+    GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.compactness.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.compactness.v1:geometry-v2", encode: measure::encode_result },
     GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.surface-to-volume-ratio.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.surface-to-volume-ratio.v1:geometry-v2", encode: surface_to_volume_ratio::encode_result },
     GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.sphericity.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.sphericity.v1:geometry-v2", encode: sphericity::encode_result },
     GltfInferenceLeafServiceDescriptor { id: "s.stdio.gltf.inference.compactness-index.v1", algorithm_version: 1, cache_key: "s.stdio.gltf.inference.compactness-index.v1:geometry-v2", encode: compactness_index::encode_result },

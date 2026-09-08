@@ -2,7 +2,7 @@
 /** 🖥️ `semio-framework-server` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`. */
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
-import { buildCargoArtifacts } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts";
+import { buildCargoArtifacts } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts";
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {

@@ -933,8 +933,8 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         let primary_id = members
             .iter()
             .min_by(|a, b| {
-                let da = self.nodes.get(a).map(|n| distance_between(point, n.center)).unwrap_or(f64::INFINITY);
-                let db = self.nodes.get(b).map(|n| distance_between(point, n.center)).unwrap_or(f64::INFINITY);
+                let da = self.nodes.get(a).map_or(f64::INFINITY, |n| distance_between(point, n.center));
+                let db = self.nodes.get(b).map_or(f64::INFINITY, |n| distance_between(point, n.center));
                 da.partial_cmp(&db).unwrap_or(std::cmp::Ordering::Equal)
             })
             .copied()
@@ -1427,7 +1427,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             let pos = handle_position(node, handle);
             let d = distance(cursor, pos);
             let tol = self.wire_snap_drag_tolerance_world(handle.radius);
-            if d <= tol && best.as_ref().map(|(best_d, _)| d < *best_d).unwrap_or(true) {
+            if d <= tol && best.as_ref().is_none_or(|(best_d, _)| d < *best_d) {
                 best = Some((d, candidate));
             }
         }
@@ -1757,7 +1757,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                     let tgt_pos = handle_position(target_node, target_handle);
                     let d = distance(src_pos, tgt_pos);
                     let tol = self.active_proximity_distance_world() + source_handle.radius + target_handle.radius;
-                    if d <= tol && best.as_ref().map(|(best_d, _)| d < *best_d).unwrap_or(true) {
+                    if d <= tol && best.as_ref().is_none_or(|(best_d, _)| d < *best_d) {
                         best = Some((d, ProximityConnection { source: source_hid, target: target_hid }));
                     }
                 }

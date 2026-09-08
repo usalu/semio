@@ -47,8 +47,8 @@ pub fn contribute(base: &JpgSnapshot, quality: Option<u8>) -> JpgDiff {
 
 #[cfg(test)]
 pub(crate) fn test_case() -> JpgMutation {
-    serde_json::from_str(include_str!("🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-re-encode-quality payload")
+    dsl::json::from_json_str(include_str!("🧪️tests/🎯️direct-behavior-36d334/🦠️mutation/🔣️.json")).expect("committed change-re-encode-quality payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
+#[path = "🧪️tests/🎯️direct-behavior-36d334/🦀️.rs"]
 mod tests_direct_behavior;

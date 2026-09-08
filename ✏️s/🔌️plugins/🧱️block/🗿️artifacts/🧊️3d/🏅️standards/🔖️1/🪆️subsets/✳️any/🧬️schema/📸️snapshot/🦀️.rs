@@ -8,9 +8,7 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema:
 //#region 🔖️Snapshot
 /// 📸️ Persisted block3d document snapshot (persistent fields of the artifact).
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, ArtifactSchema)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(id = "block.block3d", layout = "lines")]
 #[artifact_schema(id = "s.block.block3d")]
 pub struct Block3dSnapshot {
@@ -20,7 +18,6 @@ pub struct Block3dSnapshot {
     #[state(artifact)]
     pub object_kind: BlockKindIdentity,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub representations: Vec<BlockRepresentation>,
@@ -28,38 +25,31 @@ pub struct Block3dSnapshot {
     #[child(kind = "s.stdio.semio.kit")]
     pub catalog: store::ArtifactChild<SemioKitSnapshot>,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub vortex_kind_extra: Vec<Block3dVortexKindExtra>,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub vortices: Vec<Block3dVortexTemplate>,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub compatibility: Vec<BlockCompatibilityRule>,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub attributes: Vec<BlockAttribute>,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     #[dsl(table)]
     #[state(artifact)]
     pub authors: Vec<BlockAuthor>,
     #[dsl(block)]
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     #[state(artifact)]
     pub camera3d: BlockCamera3d,
     #[dsl(block)]
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     #[state(artifact)]
     pub meta: BlockMeta,
 }

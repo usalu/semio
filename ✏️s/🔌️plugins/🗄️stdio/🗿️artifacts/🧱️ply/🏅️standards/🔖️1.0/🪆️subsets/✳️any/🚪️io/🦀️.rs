@@ -488,7 +488,7 @@ mod tests {
     use super::*;
     use crate::artifacts::ply::schema::diff::PlyElementsDiff;
     use crate::artifacts::ply::schema::mutations::apply_ply_mutation;
-    use crate::artifacts::ply::schema::mutations::{add_element, insert_comment, insert_row, remove_comment, remove_element, remove_row, set_format, set_row_property, set_snapshot};
+    use crate::artifacts::ply::schema::mutations::{add_element, insert_comment, insert_row, remove_element, remove_row, set_format, set_row_property, set_snapshot};
     use crate::artifacts::ply::schema::{demo_ply_snapshot, empty_ply_snapshot};
     use crate::artifacts::ply::{PlyDiff, PlyMutation};
     use protocol::command::DiffAlgebra;

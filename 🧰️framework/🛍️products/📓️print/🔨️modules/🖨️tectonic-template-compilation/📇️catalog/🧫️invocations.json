@@ -1,0 +1,17 @@
+{
+  "valid": [
+    { "input": ["run", "@semio-tech/print:build"], "args": ["run", "@semio-tech/print:build"] },
+    { "input": ["run", "@semio-tech/print:build", "--", "report"], "args": ["run", "@semio-tech/print:build-report"] },
+    { "input": ["run", "@semio-tech/print:build", "--", "viz", "api"], "args": ["run", "@semio-tech/print:build-viz-api"] },
+    { "input": ["run", "@semio-tech/print:build-viz", "--", "api"], "args": ["run", "@semio-tech/print:build-viz-api"] },
+    { "input": ["run", "@semio-tech/print:build", "--", "report", "paper"], "args": ["run-many", "--projects=@semio-tech/print", "--targets=build-report,build-paper"] },
+    { "input": ["run", "@semio-tech/print:watch", "--", "viz", "api"], "args": ["run", "@semio-tech/print:watch-viz-api"], "watch": "@semio-tech/print:build-viz-api" },
+    { "input": ["run", "@semio-tech/print:watch-report"], "args": ["run", "@semio-tech/print:watch-report"], "watch": "@semio-tech/print:build-report" },
+    { "input": ["run", "@semio-tech/print:watch-viz", "--graph=stdout"], "args": ["run", "@semio-tech/print:watch-viz", "--graph=stdout"] }
+  ],
+  "invalid": [
+    ["run", "@semio-tech/print:build", "--", "unknown"],
+    ["run", "@semio-tech/print:build-report", "--", "paper"],
+    ["run", "@semio-tech/print:watch", "--", "report", "paper"]
+  ]
+}

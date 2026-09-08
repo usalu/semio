@@ -3,7 +3,14 @@
   "root": "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust",
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale",
   "projectType": "library",
-  "tags": ["lang:rust", "role:testkit", "family:scale-fixture"],
+  "namedInputs": {
+    "default": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/**/*.wit"]
+  },
+  "tags": [
+    "lang:rust",
+    "role:testkit",
+    "family:scale-fixture"
+  ],
   "targets": {
     "check": {
       "executor": "nx:run-commands",
@@ -24,7 +31,16 @@
       "options": {
         "command": "bun 📜️script.ts build-wasm",
         "cwd": "{projectRoot}"
-      }
+      },
+      "cache": true,
+      "parallelism": false,
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/component"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",

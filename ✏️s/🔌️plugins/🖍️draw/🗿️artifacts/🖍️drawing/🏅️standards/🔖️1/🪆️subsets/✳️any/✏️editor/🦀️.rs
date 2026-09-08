@@ -771,7 +771,7 @@ mod gesture_operation_owner_tests {
     #[test]
     fn drawing_completion_rejection_retires_child_before_decoder_without_redispatch() {
         let mut emit: Emit<DrawingMutation, DrawingConfigMutation, NoDraftMutation> = Emit::default();
-        emit.child_emits.push(semio_framework_plugin::app::ChildEmit::of::<DrawingSnapshot, DrawingMutation>("member", "drawing-child", Vec::new()));
+        emit.child_emits.push(semio_framework_plugin::app::ChildEmit::of::<DrawingSnapshot, DrawingMutation>("member", "drawing-child", &[]));
         let rejected = semio_framework_plugin::app::ArtifactToolCompletionRejection::<semio_framework_plugin::EditorApp<DrawingPlayApp>> {
             emit: Ok(emit),
             ephemeral: semio_framework_plugin::EphemeralEmit::default(),
@@ -1093,14 +1093,7 @@ fn drawing_bounded_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJo
         canonical_base_revision: request.canonical_base_revision,
     };
     let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
-        *request.command,
-        request.snapshot,
-        request.config,
-        request.history,
-        request.interaction_state,
-        request.interaction_hover,
-        operation_context,
-        request.completion,
+        semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
         DrawingCommand::command_id,
         DRAWING_BOUNDED_RAW_BYTES,
         DRAWING_BOUNDED_WORK_ITEMS,
@@ -1968,7 +1961,7 @@ mod tests {
         let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
         bytes[..first.len()].copy_from_slice(first);
         let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled Drawing first page");
-        app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled Drawing page admission failed: {fault}"));
+        app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled Drawing page admission failed: {fault:?}"));
         app.cancel_artifact_envelope_load(handle).expect("cancel Drawing ingress");
         assert_eq!(drive_drawing_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
         assert_eq!(app.artifact_generation_now(), base_generation);
@@ -2385,7 +2378,7 @@ mod tests {
         let mut app = drawing_app().await;
         let id = first_layer_id(&app);
         let targets = serde_json::to_string(&vec![serde_json::json!({ "granularity": DRAWING_INTERACTION_GRANULARITY, "id": id })]).unwrap();
-        app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&dsl::json!({ "domainId": DRAWING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace" })), &fw_testkit::meta("local")).await.expect("select");
+        app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&dsl::json::to_dsl_value(&dsl::json!({ "domainId": DRAWING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace" }))), &fw_testkit::meta("local")).await.expect("select");
         let result = app.dispatch_typed(DrawingCommand::SetSelectedOpacity(set_selected_opacity::SetSelectedOpacity { value: 0.25 }), &fw_testkit::meta("local")).await.expect("opacity");
         assert_eq!(result.mutations.len(), 1);
         assert!((crate::artifacts::drawing::schema::layer_base(&app.snapshot().unwrap().layers[0]).opacity - 0.25).abs() < f64::EPSILON);

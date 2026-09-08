@@ -2,7 +2,7 @@
 name = "semio-framework-plugin"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Declarative app plugin SDK for semio framework WASM components"
 
 [lints]

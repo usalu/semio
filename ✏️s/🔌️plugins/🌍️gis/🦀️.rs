@@ -24,10 +24,14 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET) replace the retired `.document_app()` — each
 /// subset now registers an independent editor and viewer surface.
 pub fn plugin() -> Result<Plugin<GisApps>, PluginAssemblyError> {
+    let dependency = semio_s_plugin_stdio::registry::native_artifact_catalog_dependency()?;
+    let catalog = semio_s_plugin_stdio::registry::native_artifact_catalog_contribution()?;
     Plugin::<GisApps>::builder("gis")
         .label("GIS")
         .version("0.1.0")
         .package_id("semio:gis")
+        .depends_on(dependency.plugin_id, dependency.version)
+        .contributes_topic(catalog)
         .artifact_kind(crate::artifacts::gismap::artifact_kind())
         .artifact(crate::artifacts::gismap::declaration().map_err(PluginAssemblyError::definition)?)
         .artifact(crate::artifacts::gisterrain::declaration().map_err(PluginAssemblyError::definition)?)
@@ -110,22 +114,22 @@ mod surface_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn gismap_viewer_never_mutates() {
-        assert_viewer_never_mutates::<GisMapViewer>();
+        assert_viewer_never_mutates::<GisMapViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn gismap_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<Gis2dPlayApp, GisMapViewer>();
+        assert_editor_and_viewer_share_dialect::<Gis2dPlayApp, GisMapViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn gisterrain_viewer_never_mutates() {
-        assert_viewer_never_mutates::<GisTerrainViewer>();
+        assert_viewer_never_mutates::<GisTerrainViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn gisterrain_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<Gis3dPlayApp, GisTerrainViewer>();
+        assert_editor_and_viewer_share_dialect::<Gis3dPlayApp, GisTerrainViewer>().await;
     }
 }
 //#endregion 🧪️SurfaceTests

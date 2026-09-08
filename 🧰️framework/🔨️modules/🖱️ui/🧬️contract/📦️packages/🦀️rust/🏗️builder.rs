@@ -48,16 +48,11 @@ struct BuiltChildRetireKey {
     epoch: u64,
 }
 
+#[derive(Default)]
 struct BuiltChildRetireSlot {
     epoch: u64,
     reserved: bool,
     owner: Option<BuiltChildRetireOwner>,
-}
-
-impl Default for BuiltChildRetireSlot {
-    fn default() -> Self {
-        Self { epoch: 0, reserved: false, owner: None }
-    }
 }
 
 struct BuiltChildRetireOwner {
@@ -123,7 +118,7 @@ impl BuiltChildRetireAuthority {
             let Some(owner) = entry.owner.as_mut() else { continue };
             while owner.cursor < owner.len {
                 let cursor = owner.cursor;
-                let Some(next) = owner.cursor.checked_add(1) else { return None };
+                let next = owner.cursor.checked_add(1)?;
                 owner.cursor = next;
                 if let Some(node) = owner.backing[cursor].take() {
                     self.close_cursor = slot;
@@ -149,16 +144,11 @@ pub fn close_built_node_page_one() -> bool {
     with_built_child_retire_authority(|authority| authority.is_terminal_empty())
 }
 
+#[derive(Default)]
 pub struct BuiltChildren {
     backing: Option<BuiltChildBacking>,
     len: usize,
     handback: Option<BuiltChildRetireKey>,
-}
-
-impl Default for BuiltChildren {
-    fn default() -> Self {
-        Self { backing: None, len: 0, handback: None }
-    }
 }
 
 impl fmt::Debug for BuiltChildren {
@@ -168,6 +158,7 @@ impl fmt::Debug for BuiltChildren {
 }
 
 impl BuiltChildren {
+    #[expect(clippy::result_large_err, reason = "A refused child admission returns the exact unboxed node before obtaining backing or retirement credit.")]
     pub fn try_push(&mut self, node: BuiltNode) -> Result<(), BuiltNode> {
         if self.len == UI_BUILT_CHILDREN_MAX {
             return Err(node);
@@ -281,7 +272,7 @@ impl Iterator for BuiltChildrenIntoIter {
     fn next(&mut self) -> Option<Self::Item> {
         while self.cursor < self.len {
             let cursor = self.cursor;
-            let Some(next) = self.cursor.checked_add(1) else { return None };
+            let next = self.cursor.checked_add(1)?;
             self.cursor = next;
             if let Some(node) = self.backing.as_mut()?.get_mut(cursor)?.take() {
                 return Some(*node);
@@ -297,7 +288,7 @@ impl Iterator for BuiltChildrenIntoIter {
 
 impl ExactSizeIterator for BuiltChildrenIntoIter {
     fn len(&self) -> usize {
-        self.len.checked_sub(self.cursor).unwrap_or(0)
+        self.len.saturating_sub(self.cursor)
     }
 }
 
@@ -389,6 +380,7 @@ pub struct BuiltNode {
 }
 
 impl BuiltNode {
+    #[expect(clippy::result_large_err, reason = "An oversized key returns its component unchanged without introducing an allocation on the error path.")]
     pub fn try_new(key: impl AsRef<str>, component: crate::Component) -> Result<Self, crate::Component> {
         let Some(key) = crate::UiText::try_from_str(key.as_ref()) else { return Err(component) };
         Ok(Self {
@@ -406,6 +398,7 @@ impl BuiltNode {
         })
     }
 
+    #[expect(clippy::result_large_err, reason = "A rejected positional identity returns the original component without a new heap owner.")]
     pub fn try_at(position: usize, component: crate::Component) -> Result<Self, crate::Component> {
         let Some(key) = positional_key(position) else { return Err(component) };
         Self::try_new(key, component)
@@ -427,6 +420,7 @@ impl BuiltNode {
         }
     }
 
+    #[expect(clippy::result_large_err, reason = "Child admission hands back the partial parent and exact rejected child for explicit retirement.")]
     pub fn try_with_children(mut self, children: impl IntoIterator<Item = BuiltNode>) -> Result<Self, (Self, BuiltNode)> {
         for mut child in children {
             if child.key.is_empty() {
@@ -607,6 +601,7 @@ pub trait HasBase: Sized {
 
     /// 🎬️ Binds `trigger` to `action` with no args.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    #[expect(clippy::result_large_err, reason = "A full binding list returns the builder and exact binding without allocating for rejection.")]
     fn try_on(mut self, trigger: crate::Trigger, action: crate::ActionId) -> Result<Self, (Self, crate::ActionBinding)> {
         let binding = crate::ActionBinding { trigger, action, args: None, capability: None };
         match self.base_mut().bindings.try_push(binding) {
@@ -617,6 +612,7 @@ pub trait HasBase: Sized {
 
     /// 🎬️ Binds `trigger` to `action`, carrying `args` for the action to consume.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    #[expect(clippy::result_large_err, reason = "A refused binding retains the builder and argument owner together for caller-directed retirement.")]
     fn try_on_with(mut self, trigger: crate::Trigger, action: crate::ActionId, args: crate::UiValue) -> Result<Self, (Self, crate::ActionBinding)> {
         let binding = crate::ActionBinding { trigger, action, args: Some(args), capability: None };
         match self.base_mut().bindings.try_push(binding) {
@@ -650,6 +646,7 @@ pub trait HasChildren: HasBase {
     /// siblings do not change, which is why a node whose position can shift (a reorderable list row,
     /// for instance) should carry an explicit [`HasBase::id`] instead.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    #[expect(clippy::result_large_err, reason = "The rejected child and partial builder retain their original ownership without an extra error allocation.")]
     fn try_child(mut self, child: impl Into<BuiltNode>) -> Result<Self, (Self, BuiltNode)> {
         let mut node = child.into();
         if node.key.is_empty() {
@@ -662,6 +659,7 @@ pub trait HasChildren: HasBase {
         Ok(self)
     }
 
+    #[expect(clippy::result_large_err, reason = "A rejected child preserves the exact builder, rejected node, and remaining iterator without allocating.")]
     fn try_children<T: Into<BuiltNode>, I: IntoIterator<Item = T>>(mut self, children: I) -> Result<Self, RetainedChildren<Self, I::IntoIter>> {
         let mut remaining = children.into_iter();
         while let Some(child) = remaining.next() {
@@ -756,6 +754,7 @@ pub trait HasStackLayout: HasBase {
 /// at compile time, rather than present but panicking.
 pub trait Buildable: Into<BuiltNode> {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    #[expect(clippy::result_large_err, reason = "A failed positional-key assignment returns the already-built node directly for explicit retirement.")]
     fn try_build(self) -> Result<BuiltNode, BuiltNode>
     where
         Self: Sized,
@@ -1144,6 +1143,7 @@ pub fn select(value: crate::UiText) -> SelectBuilder {
 impl SelectBuilder {
     /// ➕️ Appends one option.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    #[expect(clippy::result_large_err, reason = "A full select returns its builder and exact bounded option without allocating on refusal.")]
     pub fn try_item(mut self, value: crate::UiText, label: crate::Label) -> Result<Self, (Self, crate::SelectItem)> {
         let item = crate::SelectItem { value, label };
         match self.items.try_push(item) {
@@ -1385,6 +1385,7 @@ impl TreeItemBuilder {
 
     /// 🎬️ Appends one row action.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    #[expect(clippy::result_large_err, reason = "A full row-action list returns its builder and original action owner for caller-directed retirement.")]
     pub fn try_row_action(mut self, row_action: crate::RowAction) -> Result<Self, (Self, crate::RowAction)> {
         match self.row_actions.try_push(row_action) {
             Ok(()) => Ok(self),
@@ -1441,6 +1442,7 @@ pub struct HasAlt(ImageAlt);
 /// 🖼️ Whether an [`ImageBuilder`] carries real accessible text or has deliberately opted out —
 /// `ImageBuilder<HasAlt>` stores this value directly in its typestate payload, so no optional runtime
 /// invariant or panicking owner transition exists.
+#[expect(clippy::large_enum_variant, reason = "Image accessibility typestate owns its bounded label inline without an extra allocation during construction.")]
 enum ImageAlt {
     Text(crate::Label),
     Decorative,

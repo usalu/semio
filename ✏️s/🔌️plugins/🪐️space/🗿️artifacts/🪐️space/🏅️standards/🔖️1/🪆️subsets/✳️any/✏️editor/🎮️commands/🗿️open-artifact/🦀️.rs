@@ -17,26 +17,25 @@ pub struct OpenArtifact {
     pub id: String,
 }
 
-pub fn handle(payload: &OpenArtifact, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
-    let row = doc.snapshot.artifacts.iter().find(|row| row.id == payload.id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.mutation.target-missing"), format!("artifact `{}` not found", payload.id)))?;
+pub fn handle(payload: &OpenArtifact, doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
+    let row = cfg.snapshot.indexed_artifacts.iter().find(|row| row.id == payload.id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.index.target-missing"), format!("indexed artifact `{}` not found", payload.id)))?;
     let artifact_ref = format!("{}@{}/{}", row.dialect.artifact_kind, row.dialect.standard, row.dialect.subset);
-    Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.open-artifact".into(), args: Some(pack::json_to_dsl_value(&pack::json!({ "artifactRef": artifact_ref, "documentId": row.id.clone(), "spaceId": doc.snapshot.space_id.clone(), "schema": row.schema.clone() }))) }))
+    Ok(Emit::effect(Effect::ReplayShellCommand {
+        action_id: "os.open-artifact".into(),
+        args: Some(pack::json_to_dsl_value(&pack::json!({ "artifactRef": artifact_ref, "documentId": row.id.clone(), "spaceId": doc.snapshot.space_id.clone(), "schema": row.schema.clone() }))),
+    }))
 }
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::space_index::commands::create_artifact;
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
 
     #[semio_framework_async_macros::async_test]
     async fn open_artifact_relays_with_document_and_space_ids() {
-        let mut app = testkit::new_app().await;
-        app.dispatch_typed(SpaceIndexCommand::CreateArtifact(create_artifact::CreateArtifact { name: "First".into(), kind_id: "draw".into(), now_ms: 1, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local"))
-            .await.expect("create artifact");
-        let id = app.snapshot().unwrap().artifacts[0].id.clone();
-        let result = app.dispatch_typed(SpaceIndexCommand::OpenArtifact(OpenArtifact { id: id.clone() }), &semio_framework_plugin::testkit::meta("local")).await.expect("open artifact");
+        let (mut app, id) = testkit::new_app_with_indexed_artifact().await;
+        let result = app.dispatch_typed(SpaceIndexCommand::OpenArtifact(OpenArtifact { id: id.clone() }), &semio_framework_plugin::testkit::meta("local")).await.expect("open indexed artifact");
         assert!(result.mutations.is_empty());
         assert_eq!(result.requested_effects.len(), 1);
         match &result.requested_effects[0] {
@@ -55,7 +54,7 @@ mod tests {
     async fn open_artifact_of_a_missing_row_faults() {
         let mut app = testkit::new_app().await;
         let error = app.dispatch_typed(SpaceIndexCommand::OpenArtifact(OpenArtifact { id: "ghost".into() }), &semio_framework_plugin::testkit::meta("local")).await.expect_err("missing row must fault");
-        assert_eq!(error.code.0, "s.space.mutation.target-missing");
+        assert_eq!(error.code.0, "s.space.index.target-missing");
     }
 }
 //#endregion 🧪️Tests

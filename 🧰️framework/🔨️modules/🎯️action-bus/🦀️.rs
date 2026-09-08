@@ -126,6 +126,7 @@ impl RetainedToolWireInput {
         Ok(Self { pages, declared_bytes, admitted_bytes: 0, maximum_bytes, sealed: false, closing: false })
     }
 
+    #[expect(clippy::result_large_err, reason = "Refusal returns the exact fixed wire page without allocating or dropping its bytes.")]
     pub fn admit_page(&mut self, page: ToolWirePage) -> Result<(), (ToolJobFactoryError, ToolWirePage)> {
         if self.sealed || self.closing {
             return Err((ToolJobFactoryError::new("tool wire input is sealed or closing"), page));
@@ -717,7 +718,7 @@ impl ActionBus {
     /// domain decode incrementally before it starts the prepared reducer payload.
     pub fn dispatch_wire_retained_with_spec(
         &self,
-        admission: ToolWireAdmission,
+        admission: &ToolWireAdmission,
         input: RetainedToolWireInput,
         checkpoint: Option<RetainedToolWireInput>,
         mut spec: ToolOperationSpec,
@@ -1230,7 +1231,7 @@ mod tests {
         let operation = Operation::new(allocate_operation_id(), RevisionId(1), Generation(2), 3);
         let payload = RetainedNumberJob { input: None, bytes: [0; 8], cursor: 0, output: None, closing: false };
         let spec = ToolOperationSpec::new("number", "retained", "test.retained-number.v1", payload, operation);
-        let mut dispatch = match bus.dispatch_wire_retained_with_spec(admission, input, None, spec) {
+        let mut dispatch = match bus.dispatch_wire_retained_with_spec(&admission, input, None, spec) {
             Ok(dispatch) => dispatch,
             Err(_) => panic!("production retained payload dispatch was rejected"),
         };

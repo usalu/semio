@@ -171,7 +171,7 @@ pub mod derived_construction {
             let violating = Part21Instance { id: 99, entities: vec![("IFCSTRUCTURALANALYSISMODEL".into(), vec![])] };
             let mut snapshot = Ifc2x3Cv20BuilderConstruction::new().build().unwrap();
             snapshot.document.instances.push(violating);
-            let (mutated, _diff) = Ifc2x3Cv20BuilderConstruction::from_snapshot(Ifc2x3Snapshot::default()).mutate(Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }));
+            let (mutated, _diff) = Ifc2x3Cv20BuilderConstruction::from_snapshot(Ifc2x3Snapshot::default()).mutate(Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(snapshot) }));
             let err = mutated.build().expect_err("a structural entity must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::ifc::standards::v2x3::subsets::cv20::schema::CODE_STRUCTURAL_ENTITY));
         }
@@ -220,12 +220,12 @@ pub mod derived_analysis {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn declares_schema(snapshot: &Ifc2x3Snapshot, name: &str) -> bool {
-        snapshot.document.header.file_schema.iter().any(|v| v.as_list().map(|items| items.iter().any(|item| item.as_str() == Some(name))).unwrap_or(false))
+        snapshot.document.header.file_schema.iter().any(|v| v.as_list().is_some_and(|items| items.iter().any(|item| item.as_str() == Some(name))))
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn view_definition_names(snapshot: &Ifc2x3Snapshot, view: &str) -> bool {
-        snapshot.document.header.file_description.first().and_then(|v| v.as_list()).map(|items| items.iter().any(|item| item.as_str().map(|s| s.contains(view)).unwrap_or(false))).unwrap_or(false)
+        snapshot.document.header.file_description.first().and_then(|v| v.as_list()).is_some_and(|items| items.iter().any(|item| item.as_str().is_some_and(|s| s.contains(view))))
     }
     //#endregion 🔖️Shared
 
@@ -255,7 +255,7 @@ pub mod derived_analysis {
             out.push(soft(CODE_PROJECT_UNITS, format!("expected exactly one IFCPROJECT, found {}", projects.len())));
         } else {
             let args = projects[0].entity("IFCPROJECT").expect("matched by_type");
-            let has_units = args.get(8).map(|v| !v.is_unset()).unwrap_or(false);
+            let has_units = args.get(8).is_some_and(|v| !v.is_unset());
             if !has_units {
                 out.push(soft(CODE_PROJECT_UNITS, format!("IFCPROJECT #{} has no UnitsInContext (IfcUnitAssignment)", projects[0].id)));
             }
@@ -264,7 +264,7 @@ pub mod derived_analysis {
         for ty in GEOMETRY_BEARING_PRODUCT_TYPES {
             for inst in snapshot.document.by_type(ty) {
                 let args = inst.entity(ty).expect("matched by_type");
-                let placed = args.get(5).and_then(|v| v.as_ref_id()).and_then(|id| snapshot.document.instance(id)).map(|placement| placement.is_type("IFCLOCALPLACEMENT")).unwrap_or(false);
+                let placed = args.get(5).and_then(|v| v.as_ref_id()).and_then(|id| snapshot.document.instance(id)).is_some_and(|placement| placement.is_type("IFCLOCALPLACEMENT"));
                 if !placed {
                     out.push(soft(CODE_PRODUCT_PLACEMENT, format!("{ty} instance #{} does not resolve ObjectPlacement to an IFCLOCALPLACEMENT", inst.id)));
                 }

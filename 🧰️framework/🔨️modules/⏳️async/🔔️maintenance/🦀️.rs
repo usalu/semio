@@ -88,7 +88,7 @@ impl PoolWork {
             Self::Job(job) => job(),
             Self::Maintenance(invocation) => {
                 let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| (invocation.callback)(invocation.context))).unwrap_or(WorkerMaintenanceStep::Fault);
-                registry.finish(invocation, result);
+                registry.finish(&invocation, result);
             }
             Self::DeferredWake(invocation) => invocation.run(),
         }
@@ -197,7 +197,7 @@ impl WorkerMaintenanceRegistry {
         Some(PoolWork::Maintenance(Invocation { ticket: WorkerMaintenanceTicket { pool: self.identity, slot: slot as u8, generation: entry.generation }, callback: entry.callback, context: entry.context }))
     }
 
-    fn finish(&self, invocation: Invocation, step: WorkerMaintenanceStep) {
+    fn finish(&self, invocation: &Invocation, step: WorkerMaintenanceStep) {
         let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
         let closed = state.closed;
         let slot = usize::from(invocation.ticket.slot);
@@ -270,7 +270,7 @@ mod tests {
                         "finish-fault" => WorkerMaintenanceStep::Fault,
                         _ => unreachable!(),
                     };
-                    registry.finish(running.take().unwrap(), disposition);
+                    registry.finish(&running.take().unwrap(), disposition);
                     if registry.has_pending(None) {
                         "requested"
                     } else {
@@ -319,7 +319,7 @@ mod tests {
             panic!("requested self-retiring hook was not selected");
         };
         assert_eq!(registry.request(ticket), Ok(WorkerMaintenanceRequest::Requested));
-        registry.finish(invocation, WorkerMaintenanceStep::Retire);
+        registry.finish(&invocation, WorkerMaintenanceStep::Retire);
         assert_eq!(registry.request(ticket), Err(WorkerMaintenanceError::Stale));
         let replacement = registry.install(Lane::Io, idle, [0; 2]).unwrap();
         assert_ne!(replacement.generation, ticket.generation);

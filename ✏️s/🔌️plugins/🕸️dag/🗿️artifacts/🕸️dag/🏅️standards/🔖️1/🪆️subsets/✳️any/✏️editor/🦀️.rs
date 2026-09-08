@@ -419,9 +419,11 @@ impl ArtifactEditor for DagPlayApp {
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
         };
-        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
-            *request.command, request.snapshot, request.config, request.history, request.interaction_state, request.interaction_hover, request.context,
-            operation_context, request.completion, DagCommand::command_id, DAG_RETAINED_RAW_BYTES, 1,
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
+            DagCommand::command_id,
+            DAG_RETAINED_RAW_BYTES,
+            1,
             Box::new(BoundedArtifactCommandWork::new(tool_id, dag_retained_config_reduce, dag_retained_config_extent)),
         )?;
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
@@ -575,7 +577,7 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
                     ActionArgOption::new("screen", LocalizedLabel::native("Screen", "Bildschirm")),
                     ActionArgOption::new("note", LocalizedLabel::native("Note", "Notiz")),
                     ActionArgOption::new("preview", LocalizedLabel::native("Preview", "Vorschau")),
-                ]).default_value("computation"),
+                ]).default_value(&"computation"),
             ])
             // 🕹️ First-class hover/selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
             // one `graph` domain over the node graph, node/edge granularities, `HierarchyProvider::Topology`
@@ -818,7 +820,7 @@ mod tests {
     /// target, and for transitive hover to cover a node's downstream nodes and edges.
     #[semio_framework_async_macros::async_test]
     async fn interaction_topology_covers_every_node_and_edge_via_their_edges() {
-        let mut app: DagApp = new_app_with_registry().await;
+        let app: DagApp = new_app_with_registry().await;
         let snapshot = app.snapshot().expect("snapshot");
         let node_id = snapshot.nodes().first().expect("seed node").id.clone();
         let history = semio_framework_plugin::HistoryView::empty();
@@ -885,7 +887,7 @@ mod tests {
     /// contain BOTH via a `MemoryBackbone` — impossible with whole-document snapshots.
     #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_disjoint_edits_via_backbone() {
-        semio_framework_plugin::testkit::assert_two_instances_converge::<semio_framework_plugin::EditorApp<DagPlayApp>, (bool, bool)>(
+        semio_framework_plugin::testkit::assert_two_instances_converge::<EditorApp<DagPlayApp>, (bool, bool)>(
             "mem://dag-convergence",
             DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }),
             DagCommand::AddNode(add_node::AddNode { kind: "slider".into(), x: None, y: None }),
@@ -899,7 +901,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent_for_dag() {
-        semio_framework_plugin::testkit::assert_ingest_idempotent::<semio_framework_plugin::EditorApp<DagPlayApp>, usize>(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), |app| {
+        semio_framework_plugin::testkit::assert_ingest_idempotent::<EditorApp<DagPlayApp>, usize>(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), |app| {
             app.snapshot().expect("projection").nodes().len()
         }).await;
     }

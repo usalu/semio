@@ -1,0 +1,29 @@
+{
+  "schema": "semio.shell.admitted-instance-fixture.v1",
+  "cases": [
+    {
+      "id": "already-retired",
+      "before": false,
+      "after": false,
+      "creates": 0,
+      "retires": 0,
+      "accepted": false
+    },
+    {
+      "id": "retired-during-create",
+      "before": true,
+      "after": false,
+      "creates": 1,
+      "retires": 1,
+      "accepted": false
+    },
+    {
+      "id": "exact-handoff",
+      "before": true,
+      "after": true,
+      "creates": 1,
+      "retires": 0,
+      "accepted": true
+    }
+  ]
+}

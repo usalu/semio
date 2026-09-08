@@ -147,7 +147,7 @@ fn absorb_pair(d1: &TxtLinesDiff, d2: &TxtLinesDiff) -> TxtLinesDiff {
     // this exact formula had until byte-splice fuzz-testing caught its twin in `BinaryDiff`).
     let max_ref =
         d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).chain(d1.added.iter().map(|a| a.index)).chain(d2.removed.iter().copied()).chain(d2.modified.iter().map(|m| m.index)).chain(d2.added.iter().map(|a| a.index)).max();
-    let l1 = max_ref.map(|m| m + 2).unwrap_or(0);
+    let l1 = max_ref.map_or(0, |m| m + 2);
 
     let base_labels: Vec<Lbl> = (0..l1).map(Lbl::Base).collect();
     let d1_added: Vec<(usize, Lbl)> = d1.added.iter().enumerate().map(|(j, a)| (a.index, Lbl::Added1(j))).collect();
@@ -325,7 +325,7 @@ impl DiffAlgebra<TxtSnapshot> for TxtDiff {
     }
 
     fn is_empty(&self) -> bool {
-        self.trailing_newline.is_none() && self.line_ending.is_none() && self.lines.as_ref().map_or(true, TxtLinesDiff::is_empty)
+        self.trailing_newline.is_none() && self.line_ending.is_none() && self.lines.as_ref().is_none_or(TxtLinesDiff::is_empty)
     }
 }
 

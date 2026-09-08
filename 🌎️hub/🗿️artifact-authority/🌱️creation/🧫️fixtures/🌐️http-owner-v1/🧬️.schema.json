@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://hub/artifact-creation-http-owner-fixture/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "limits", "routes", "authorities", "responses"],
+  "properties": {
+    "schema": { "const": "semio.test.artifact-creation-http-owner/v1" },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bodyBytes", "liveOperations", "lifetimeMs"],
+      "properties": {
+        "bodyBytes": { "const": 4096 },
+        "liveOperations": { "const": 8 },
+        "lifetimeMs": { "const": 30000 }
+      }
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "method", "path", "accepted"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "method": { "enum": ["GET", "POST"] },
+          "path": { "type": "string", "minLength": 1, "maxLength": 512 },
+          "accepted": { "type": "boolean" }
+        }
+      }
+    },
+    "authorities": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "authenticated", "sessionCurrent", "member", "role", "backendAvailable", "expected"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "authenticated": { "type": "boolean" },
+          "sessionCurrent": { "type": "boolean" },
+          "member": { "type": "boolean" },
+          "role": { "enum": ["author", "spectator", "none"] },
+          "backendAvailable": { "type": "boolean" },
+          "expected": { "enum": ["admitted", "unauthorized", "forbidden", "unavailable"] }
+        }
+      }
+    },
+    "responses": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["phase", "status"],
+        "properties": {
+          "phase": { "enum": ["accepted", "preparing", "ready", "indeterminate", "failed", "cancelled"] },
+          "status": { "enum": [200, 202] }
+        }
+      }
+    }
+  }
+}

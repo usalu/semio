@@ -574,6 +574,46 @@
         "command": "bun ./📜️script.ts checkpoint-publication-check source"
       }
     },
+    "space-artifact-creation-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts space-artifact-creation-check source"
+      }
+    },
+    "space-artifact-creation-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts space-artifact-creation-check native"
+      }
+    },
+    "space-artifact-creation-sqlite-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts space-artifact-creation-check sqlite"
+      }
+    },
+    "space-artifact-creation-postgres-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts space-artifact-creation-check postgres"
+      }
+    },
+    "space-artifact-creation-neo4j-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts space-artifact-creation-check neo4j"
+      }
+    },
     "checkpoint-publication-native-check": {
       "executor": "nx:run-commands",
       "cache": false,

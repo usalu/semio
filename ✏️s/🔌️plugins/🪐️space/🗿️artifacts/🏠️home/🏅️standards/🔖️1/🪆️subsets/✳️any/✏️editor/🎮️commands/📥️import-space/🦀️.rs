@@ -18,7 +18,7 @@ pub fn handle(payload: &ImportSpace, doc: &ArtifactView<'_, SHomeSnapshot>, _cfg
     let generation = doc.snapshot.catalog_generation;
     match &payload.dsl {
         Some(dsl) => {
-            if import_os_space_from_dsl(dsl, semio_framework_plugin::resolve_ready(crate::catalog_port())).is_ok() {
+            if import_os_space_from_dsl(dsl, &semio_framework_plugin::resolve_ready(crate::catalog_port())).is_ok() {
                 Ok(Emit::mutations(vec![change_catalog_generation(generation + 1)]))
             } else {
                 Ok(Emit::default())

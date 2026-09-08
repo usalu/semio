@@ -29,3 +29,11 @@ Cargo documents adjacent `.d` files as the artifact dependency record and warns 
 Build-script stdout is retained separately in the build directory; rerun declarations can reference entire directories and environment variables. That output needs its own bounded capture and directory-membership witnesses. [Cargo Build Scripts](https://doc.rust-lang.org/cargo/reference/build-scripts.html)
 
 Rust's current dep-info writer emits all output rules over the same input list, fake targets for those inputs, and optional environment comments. Its filename escaping replaces spaces; environment escaping handles backslash, LF, and CR. The parser contract is intentionally this writer's grammar, not a general Makefile evaluator. [Rust Dep-Info Writer](https://raw.githubusercontent.com/rust-lang/rust/master/compiler/rustc_interface/src/passes.rs)
+
+## End-to-End Admission Versus Compiler Provenance
+
+The current read-only audit separates two requirements. Actual component bytes, their guest-produced canonical descriptors, selected exact dependencies, catalog semantics, and final publication CAS are end-to-end admission requirements. A complete source/build-script/toolchain input epoch is a stronger reproducibility/provenance feature; it is not evidence that a functioning compiled pair exists and is not presently wired into publication.
+
+The next implementation packet is a compiled Stdio dependency commitment in GIS/VCS descriptors, produced by each consumer's actual linked Stdio crate and checked against the same private native expectation used to check the Stdio guest. Exact manifest dependencies and bundle generation dependencies must agree before any provider factory preview. The generic builder must retain topics before completing assembly. This directly addresses cross-component semantic agreement without pretending a semantic catalog attests all executable algorithms or compiler inputs.
+
+The audit's full four-leg probe/final compiler-observation protocol remains the design for genuine source-epoch qualification. Its missing directory/build-script/OUT_DIR observations are not silently accepted. The existing physical epoch and dep-info tests remain valid limited tests; no production provenance claim is made.

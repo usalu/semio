@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "wire", "bridge", "cases"],
+  "properties": {
+    "schema": {"const": "semio.pack.value-record-materialization.v1"},
+    "wire": {"const": "SPK/1.0-record-body"},
+    "bridge": {"const": {"fieldId": 1, "rootTag": "11", "exact": true}},
+    "cases": {
+      "type": "array",
+      "minItems": 21,
+      "maxItems": 21,
+      "uniqueItems": true,
+      "items": {"$ref": "#/definitions/case"}
+    }
+  },
+  "definitions": {
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "rawHex", "limits", "expect"],
+      "properties": {
+        "id": {
+          "enum": [
+            "canonical-null",
+            "interned-repeat-at-limit",
+            "interned-repeat-over-limit",
+            "inline-string-at-limit",
+            "inline-string-over-limit",
+            "array-slots-at-limit",
+            "array-slots-over-limit",
+            "map-slots-at-limit",
+            "map-slots-over-limit",
+            "nested-array-map-at-depth",
+            "nested-array-map-over-depth",
+            "list-count-over-items",
+            "map-count-over-items",
+            "field-count-zero",
+            "field-count-two",
+            "duplicate-field-id",
+            "foreign-field-id",
+            "non-value-root-tag",
+            "trailing-byte",
+            "symbol-count-over-limit",
+            "symbol-bytes-over-materialization"
+          ]
+        },
+        "rawHex": {"type": "string", "pattern": "^(?:[0-9a-f]{2})+$"},
+        "limits": {"$ref": "#/definitions/limits"},
+        "expect": {"oneOf": [{"$ref": "#/definitions/accepted"}, {"$ref": "#/definitions/rejected"}]}
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxFileLen", "maxSegmentLen", "maxSymbols", "maxDepth", "maxItems", "maxTotalAlloc"],
+      "properties": {
+        "maxFileLen": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "maxSegmentLen": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "maxSymbols": {"type": "integer", "minimum": 0, "maximum": 4294967295},
+        "maxDepth": {"type": "integer", "minimum": 0, "maximum": 65535},
+        "maxItems": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "maxTotalAlloc": {"type": "integer", "minimum": 0, "maximum": 9007199254740991}
+      }
+    },
+    "accepted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outcome", "value"],
+      "properties": {"outcome": {"const": "accepted"}, "value": {}}
+    },
+    "rejected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outcome"],
+      "properties": {"outcome": {"enum": ["limit", "malformed"]}}
+    }
+  }
+}

@@ -13,11 +13,19 @@
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts build"
-      }
+      },
+      "parallelism": false,
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/build"
+      ]
     },
     "check": {
       "executor": "nx:run-commands",
@@ -131,7 +139,13 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts dev"
-      }
+      },
+      "cache": false,
+      "continuous": true,
+      "dependsOn": [
+        "build"
+      ],
+      "outputs": []
     }
   }
 }

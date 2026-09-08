@@ -10,30 +10,23 @@
 //! convention for its own structured (non-child) fields.
 
 use crate::artifacts::gismap::{gis_map_drawing_child_handle, gis_map_value_child_handle, GisMapDrawingChild, GisMapImageChild, GisMapValueChild, MapFeature};
+use dsl::{FromValue, ToValue};
 use schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
-use dsl::{FromValue, ToValue};
 
 //#region 🔹Snapshot
 /// 📸️ Persisted GIS map document snapshot (persistent fields of the artifact).
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gismap")]
 pub struct GisMapSnapshot {
     #[state(artifact)]
-    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub positions: Vec<MapFeature>,
     #[state(artifact)]
-    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub routes: Vec<MapFeature>,
     #[state(artifact)]
-    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub regions: Vec<MapFeature>,
     /// 🕸️ Composed `s.stdio.semio.drawing` child — see `crate::artifacts::gismap::🦀️.rs`'s
@@ -44,7 +37,6 @@ pub struct GisMapSnapshot {
     /// 🕸️ Composed `s.stdio.semio.image` child — always absent today (see `🔖️Composition`'s doc).
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.image")]
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub image: Option<GisMapImageChild>,
     /// 🕸️ Composed `s.stdio.semio.value` child — the lossless `{positions,routes,regions}` mirror.
@@ -242,6 +234,22 @@ fn decode_gis_map_snapshot_binary(bytes: &[u8]) -> Result<GisMapSnapshot, String
 //#endregion 🔖️BinaryPrimitives
 
 //#region 🔹HandcraftedArtifactCodecs
+/// 🧬 Describes the six fields owned by the handcrafted GIS map pack body.
+fn gis_map_pack_record_spec() -> dsl::RecordSpec {
+    dsl::RecordSpec::new(
+        Some("gismap"),
+        dsl::RecordLayout::Inline,
+        vec![
+            dsl::FieldSpec::new(1, "positions", <Vec<MapFeature> as dsl::DslField>::shape()),
+            dsl::FieldSpec::new(2, "routes", <Vec<MapFeature> as dsl::DslField>::shape()),
+            dsl::FieldSpec::new(3, "regions", <Vec<MapFeature> as dsl::DslField>::shape()),
+            dsl::FieldSpec::new(4, "drawing", <GisMapDrawingChild as dsl::DslField>::shape()),
+            dsl::FieldSpec::new(5, "image", <GisMapImageChild as dsl::DslField>::shape()).optional(),
+            dsl::FieldSpec::new(6, "value", <GisMapValueChild as dsl::DslField>::shape()),
+        ],
+    )
+}
+
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits — see this
 /// file's module doc comment).
 impl store::ArtifactDsl for GisMapSnapshot {
@@ -277,6 +285,9 @@ impl store::ArtifactPack for GisMapSnapshot {
         }
         let _ = options;
         decode_gis_map_snapshot_binary(&inner).map_err(store::PackError::Schema)
+    }
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(gis_map_pack_record_spec())
     }
 }
 //#endregion 🔹HandcraftedArtifactCodecs

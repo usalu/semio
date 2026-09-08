@@ -2,7 +2,7 @@
 name = "semio-framework-os-services"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Where tokio lives, and nowhere else. Host-side async services built ON TOP of semio-framework-async's HostAsyncRuntime/WorkerPool: the runtime impl (TokioHostRuntime, re-hosted onto the shared process-wide WorkerPool by INTERACTIVE-JOB-RUNTIME-REFACTOR Phase 1 packet P1b), scope table, a single host timer wheel, a bounded blocking-compute pool, an HTTP connection pool, a storage scheduler and an indexed event router. tokio is confined to this crate (sync/macros only — no owned thread pool) — its public API names only semio-framework-async types and this crate's own types, never a tokio type, exactly as wasmtime is confined behind GuestRuntime in the plugin-host crate (design ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet R2)."
 
 [package.metadata.semio]

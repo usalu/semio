@@ -273,7 +273,7 @@ semio_framework_plugin::derive_artifact_facets!(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::txt::schema::mutations::{InsertLineMutation, InsertLinePayload};
+    use crate::artifacts::txt::schema::mutations::InsertLineMutation;
     use crate::artifacts::txt::{TxtDiff, TxtMutation, STDIO_TXT_DOCUMENT_SCHEMA};
 
     #[semio_framework_async_macros::async_test]

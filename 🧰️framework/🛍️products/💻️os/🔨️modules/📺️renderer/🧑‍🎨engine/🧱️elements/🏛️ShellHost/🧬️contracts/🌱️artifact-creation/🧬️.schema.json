@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schemas/os/artifact-creation-progress-ui-v1.json",
+  "title": "Artifact Creation Progress UI V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "locales", "cases", "catalogCases", "unsupportedLocales"],
+  "properties": {
+    "schema": { "const": "semio.os.artifact-creation-progress-ui/v1" },
+    "locales": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {
+        "en": { "$ref": "#/$defs/copy" },
+        "de": { "$ref": "#/$defs/copy" }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 16,
+      "items": { "$ref": "#/$defs/case" }
+    },
+    "catalogCases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 6,
+      "items": { "$ref": "#/$defs/catalogCase" }
+    },
+    "unsupportedLocales": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 32 }
+    }
+  },
+  "$defs": {
+    "copy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["heading", "cancel", "cancelling", "phases", "catalog"],
+      "properties": {
+        "heading": { "type": "string", "minLength": 1 },
+        "cancel": { "type": "string", "minLength": 1 },
+        "cancelling": { "type": "string", "minLength": 1 },
+        "catalog": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["loading", "ready", "unavailable"],
+          "properties": {
+            "loading": { "type": "string", "minLength": 1 },
+            "ready": { "type": "string", "minLength": 1 },
+            "unavailable": { "type": "string", "minLength": 1 }
+          }
+        },
+        "phases": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["accepted", "preparing", "ready", "indeterminate", "failed", "cancelled"],
+          "properties": {
+            "accepted": { "type": "string", "minLength": 1 },
+            "preparing": { "type": "string", "minLength": 1 },
+            "ready": { "type": "string", "minLength": 1 },
+            "indeterminate": { "type": "string", "minLength": 1 },
+            "failed": { "type": "string", "minLength": 1 },
+            "cancelled": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "locale", "phase", "cancelRequested", "role", "live", "cancellable", "opens"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+        "locale": { "enum": ["en", "de"] },
+        "phase": { "enum": ["accepted", "preparing", "ready", "indeterminate", "failed", "cancelled"] },
+        "cancelRequested": { "type": "boolean" },
+        "role": { "enum": ["status", "alert"] },
+        "live": { "enum": ["polite", "assertive"] },
+        "cancellable": { "type": "boolean" },
+        "opens": { "type": "boolean" }
+      }
+    },
+    "catalogCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "locale", "phase", "role", "live"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+        "locale": { "enum": ["en", "de"] },
+        "phase": { "enum": ["loading", "ready", "unavailable"] },
+        "role": { "enum": ["status", "alert"] },
+        "live": { "enum": ["polite", "assertive"] }
+      }
+    }
+  }
+}

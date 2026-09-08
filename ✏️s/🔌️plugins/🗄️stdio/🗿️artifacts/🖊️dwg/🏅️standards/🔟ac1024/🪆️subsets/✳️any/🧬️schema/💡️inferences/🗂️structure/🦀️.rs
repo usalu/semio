@@ -6,6 +6,7 @@ use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::
 /// 🗂️ Dwg (ac1024) logical drawing statistics.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
+#[derive(Default)]
 pub struct DwgStructure {
     pub layer_count: u32,
     pub entity_count: u32,
@@ -16,11 +17,6 @@ pub struct DwgStructure {
     pub version: String,
 }
 
-impl Default for DwgStructure {
-    fn default() -> Self {
-        Self { layer_count: 0, entity_count: 0, geometry_value_count: 0, geometry_index_count: 0, text_character_count: 0, codepage: 0, version: String::new() }
-    }
-}
 
 /// 🗂️ Computes [`DwgStructure`] from standard logical drawing concepts.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

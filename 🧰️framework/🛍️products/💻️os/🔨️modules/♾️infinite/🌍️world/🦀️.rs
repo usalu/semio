@@ -1,5 +1,8 @@
 //! 🌐️ Application-neutral 3D world canvas: mesh loading, orbit camera, picking, and marquee selection.
 
+#[cfg(test)]
+use ui_wgpu::wgpu::{gizmo, pick_closest_mesh_url, ray_pick_instance, ray_pick_mesh_detail};
+
 use crate::framework_surface_terrain::TerrainSessionCore;
 // 🧩️ Every name below is target-neutral (ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS's
 // wgpu-tier split): `draw_text`/`WidgetContext`/the paint half of `gizmo` are genuinely GPU-adjacent
@@ -10,8 +13,8 @@ use ui_wgpu::wgpu::{World3dSnapshotItem, screen_select_components, screen_select
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use ui_wgpu::wgpu::{LineDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, aabb_intersects_frustum, frustum_planes, grid_placement_anchor, paint_selection_marquee, transform_aabb};
 use ui_wgpu::wgpu::{
-    axis_rotate_angle, gizmo, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_progressive_grid_layers,
-    marquee_is_crossing_from_path, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_seal, mesh3d_terminal_is_empty, mesh3d_write_u32, mesh3d_write_vec3, pick_closest_mesh_url, quat_from_basis, ray_aabb_slab, ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rotate_vector, world3d_snapshot_claim_draw_permit, world3d_snapshot_with_page, ActionDescriptor, Camera3d, HitKind, HitTarget, Instance3d, LineVertex3d, LocalizedLabel, Mat4, Mesh3dField, Mesh3dLease, Mesh3dSchema,
+    axis_rotate_angle, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_progressive_grid_layers,
+    marquee_is_crossing_from_path, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_seal, mesh3d_terminal_is_empty, mesh3d_write_u32, mesh3d_write_vec3, quat_from_basis, ray_aabb_slab, ray_plane_point, ray_segment_distance, rotate_vector, world3d_snapshot_claim_draw_permit, world3d_snapshot_with_page, ActionDescriptor, Camera3d, HitKind, HitTarget, Instance3d, LineVertex3d, LocalizedLabel, Mat4, Mesh3dField, Mesh3dLease, Mesh3dSchema,
     Mesh3dWriteToken, OrbitController, PointerModifiers, PreparedRasterProducer, PreparedRasterRejected, PreparedRenderEviction, PreparedRenderUpload, Rect, Rgba, SceneDraw3d, UiComponentSceneNode,
     Vec3, World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotLease, World3dSnapshotPageKind,
 };
@@ -356,6 +359,7 @@ fn dsl_string_vec(value: &semio_framework::DslValue) -> Vec<String> {
 #[derive(Clone, Debug, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[cfg(test)]
 struct WorldMeshLodEntry {
     lod: f64,
     url: String,
@@ -761,6 +765,7 @@ impl<T, const N: usize> WorldDynamicRegistry<T, N> {
         self.slots.iter().flatten().find(|entry| entry.id == id).map(|entry| &entry.value)
     }
 
+    #[cfg(test)]
     fn get_mut(&mut self, id: &str) -> Option<&mut T> {
         self.slots.iter_mut().flatten().find(|entry| entry.id == id).map(|entry| &mut entry.value)
     }
@@ -773,6 +778,7 @@ impl<T, const N: usize> WorldDynamicRegistry<T, N> {
         self.slots.iter().flatten().map(|entry| &entry.id)
     }
 
+    #[cfg(test)]
     fn iter(&self) -> impl Iterator<Item = (&String, &T)> {
         self.slots.iter().flatten().map(|entry| (&entry.id, &entry.value))
     }
@@ -781,10 +787,12 @@ impl<T, const N: usize> WorldDynamicRegistry<T, N> {
         self.len == 0
     }
 
+    #[cfg(test)]
     fn len(&self) -> usize {
         usize::from(self.len)
     }
 
+    #[cfg(test)]
     fn token(&self, id: &str) -> Option<WorldDynamicToken> {
         self.slots.iter().enumerate().find_map(|(slot, entry)| entry.as_ref().filter(|entry| entry.id == id).map(|entry| WorldDynamicToken { slot: slot as u16, epoch: entry.epoch }))
     }
@@ -1289,17 +1297,27 @@ pub struct World3dState {
     brush_preview: Option<WorldBrushPreviewRecord>,
     active_utility: String,
     hovered_vortex_id: Option<String>,
+    #[cfg(test)]
     drag_object_id: Option<String>,
+    #[cfg(test)]
     drag_object_z: f32,
+    #[cfg(test)]
     drag_last_position: Option<[f32; 3]>,
     selected_ids: Vec<String>,
     transform_mode: String,
+    #[cfg(test)]
     gumball_handle: Option<GumballHandle>,
+    #[cfg(test)]
     gumball_pivot: Vec3,
+    #[cfg(test)]
     gumball_drag_anchor: f32,
+    #[cfg(test)]
     gumball_drag_start_vec: Vec3,
+    #[cfg(test)]
     gumball_preview_translate: Vec3,
+    #[cfg(test)]
     gumball_preview_angle: f32,
+    #[cfg(test)]
     gumball_preview_scale: Vec3,
     pending_image_urls: HashSet<String>,
     reference_pixels: WorldDynamicRegistry<(u32, u32, Vec<u8>), WORLD_DYNAMIC_PIXEL_CAPACITY>,
@@ -1315,12 +1333,15 @@ pub struct World3dState {
     show_edges: bool,
     selection_targets: WorldSelectionTargets,
     active_object_id: Option<String>,
+    #[cfg(test)]
     press_object_id: Option<String>,
     mesh_paint_textures: WorldDynamicRegistry<(u32, u32, Vec<u8>), WORLD_DYNAMIC_PIXEL_CAPACITY>,
     lod: WorldLodRecord,
     chunking: Option<WorldChunkingRecord>,
     visible_chunks: HashSet<(i64, i64, i64)>,
+    #[cfg(test)]
     mesh_lod_catalog: HashMap<String, Vec<WorldMeshLodEntry>>,
+    #[cfg(test)]
     mesh_url_fallback: HashMap<String, String>,
     instance_positions: HashMap<String, [f64; 3]>,
     mesh_pool: RefCountPool<String>,
@@ -1333,6 +1354,7 @@ pub struct World3dState {
     terrain_visible_tiles: HashSet<(u32, u32, u32)>,
     terrain_built_tiles: HashSet<(u32, u32, u32)>,
     pending_terrain_tile_urls: HashMap<String, (u32, u32, u32)>,
+    #[cfg(test)]
     right_press_point: Option<[f32; 2]>,
     gizmo_hovered_tip: Option<usize>,
     interaction_revision: u64,
@@ -1389,17 +1411,27 @@ impl World3dState {
             brush_preview: None,
             active_utility: "select".into(),
             hovered_vortex_id: None,
+            #[cfg(test)]
             drag_object_id: None,
+            #[cfg(test)]
             drag_object_z: 0.0,
+            #[cfg(test)]
             drag_last_position: None,
             selected_ids: Vec::new(),
             transform_mode: "translate".into(),
+            #[cfg(test)]
             gumball_handle: None,
+            #[cfg(test)]
             gumball_pivot: Vec3::ZERO,
+            #[cfg(test)]
             gumball_drag_anchor: 0.0,
+            #[cfg(test)]
             gumball_drag_start_vec: Vec3::ZERO,
+            #[cfg(test)]
             gumball_preview_translate: Vec3::ZERO,
+            #[cfg(test)]
             gumball_preview_angle: 0.0,
+            #[cfg(test)]
             gumball_preview_scale: Vec3::new(1.0, 1.0, 1.0),
             pending_image_urls: HashSet::new(),
             reference_pixels: WorldDynamicRegistry::default(),
@@ -1415,12 +1447,15 @@ impl World3dState {
             show_edges: true,
             selection_targets: WorldSelectionTargets::default(),
             active_object_id: None,
+            #[cfg(test)]
             press_object_id: None,
             mesh_paint_textures: WorldDynamicRegistry::default(),
             lod: WorldLodRecord { automatic: true, manual: default_manual_lod(), distance_reference: default_distance_reference(), depth_variable: false, grid_factor: default_grid_factor(), show_grid: true, grid_datum: Some([0.0, 0.0, 0.0]) },
             chunking: None,
             visible_chunks: HashSet::new(),
+            #[cfg(test)]
             mesh_lod_catalog: HashMap::new(),
+            #[cfg(test)]
             mesh_url_fallback: HashMap::new(),
             instance_positions: HashMap::new(),
             mesh_pool: RefCountPool::new(),
@@ -1433,6 +1468,7 @@ impl World3dState {
             terrain_visible_tiles: HashSet::new(),
             terrain_built_tiles: HashSet::new(),
             pending_terrain_tile_urls: HashMap::new(),
+            #[cfg(test)]
             right_press_point: None,
             gizmo_hovered_tip: None,
             interaction_revision: 0,
@@ -1997,6 +2033,7 @@ impl WorldInteractionMeshRegistry {
         Ok(WorldInteractionMeshToken { slot: plan.slot, generation: plan.value.generation })
     }
 
+    #[cfg(test)]
     fn admit(&mut self, id: &str, version: u64, mesh: Mesh3dLease) -> Option<WorldInteractionMeshToken> {
         let plan = match self.plan_admit(id, version, mesh) {
             Ok(plan) => plan,
@@ -2402,9 +2439,6 @@ enum WorldFlatActionKind {
     Hover,
     ComponentSelect,
     ComponentHover,
-    Relocate,
-    GumballCommit,
-    BrushObject,
     ContextMenu,
     Camera,
 }
@@ -6230,7 +6264,6 @@ pub fn publish_world3d_plan_step(
             builder.end_container()?;
             reservation.publish()?;
         }
-        _ => return Ok(WorldInteractionStep::Fault),
     }
     plan.actions[usize::from(plan.cursor)] = None;
     plan.cursor += 1;
@@ -6362,6 +6395,7 @@ fn scene_lod(state: &World3dState) -> f64 {
     }
 }
 
+#[cfg(test)]
 fn resolve_physical_mesh_id(state: &World3dState, logical_id: &str, desired_lod: f64) -> String {
     if let Some(lods) = state.mesh_lod_catalog.get(logical_id) {
         let entries: Vec<(f64, &str)> = lods.iter().map(|entry| (entry.lod, entry.url.as_str())).collect();
@@ -6414,6 +6448,7 @@ fn sync_mesh_pool(state: &mut World3dState, needed_mesh_keys: &HashSet<String>, 
     }
 }
 
+#[cfg(test)]
 fn queue_lod_mesh_fetch(state: &mut World3dState, logical_id: &str, scene_lod: f64) {
     let url = {
         let entries: Vec<(f64, &str)> = state.mesh_lod_catalog.get(logical_id).map(|lods| lods.iter().map(|entry| (entry.lod, entry.url.as_str())).collect()).unwrap_or_default();
@@ -7362,6 +7397,7 @@ fn step_world_placeholder_mesh(state: &mut World3dState) {
 #[derive(Clone, Debug, PartialEq, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[cfg(test)]
 struct WorldMeshBuffers {
     #[serde(default)]
     #[value(default)]
@@ -7396,6 +7432,7 @@ struct WorldMeshBuffers {
     paint_texture_base64: Option<String>,
 }
 
+#[cfg(test)]
 impl WorldMeshBuffers {
     fn vertex_count(&self) -> usize {
         self.positions.len() / 3
@@ -7597,6 +7634,7 @@ fn placeholder_ico_sphere(radius: f32, subdivisions: u32) -> WorldMeshBuffers {
 }
 //#endregion PlaceholderMesh
 
+#[cfg(test)]
 fn selection_mode_label(state: &World3dState) -> &'static str {
     match state.granularity.as_str() {
         "vertex" | "edge" | "face" => "component",
@@ -7641,6 +7679,7 @@ fn pick_targets_instance(state: &World3dState, instance_id: &str) -> bool {
     state.active_object_id.as_deref().is_none_or(|active_id| active_id == instance_id)
 }
 
+#[cfg(test)]
 fn pointer_drag_distance(state: &World3dState, x: f32, y: f32) -> f32 {
     let Some(start) = state.marquee_points.first() else {
         return 0.0;
@@ -7650,6 +7689,7 @@ fn pointer_drag_distance(state: &World3dState, x: f32, y: f32) -> f32 {
     (dx * dx + dy * dy).sqrt()
 }
 
+#[cfg(test)]
 fn is_click_gesture(state: &World3dState, x: f32, y: f32) -> bool {
     pointer_drag_distance(state, x, y) <= CLICK_DRAG_THRESHOLD_PX
 }
@@ -8319,6 +8359,7 @@ fn selection_centroid(state: &World3dState) -> Option<Vec3> {
     }
 }
 
+#[cfg(test)]
 fn pick_gumball_handle_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<GumballHandle> {
     let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let pivot = selection_centroid(state)?;
@@ -8531,12 +8572,14 @@ fn retained_gumball_preview_model(state: &World3dState, draw_index: usize, insta
     preview
 }
 
+#[cfg(test)]
 fn reset_gumball_preview(state: &mut World3dState) {
     state.gumball_preview_translate = Vec3::ZERO;
     state.gumball_preview_angle = 0.0;
     state.gumball_preview_scale = Vec3::new(1.0, 1.0, 1.0);
 }
 
+#[cfg(test)]
 fn gumball_commit_action(state: &World3dState) -> Option<ActionDescriptor> {
     let handle = state.gumball_handle?;
     let ids = state.selected_ids.clone();
@@ -8670,6 +8713,7 @@ fn retain_world_blocked_owner(state: &mut World3dState, owner: WorldOpaqueOwner)
     state.dynamic_blocked_owner = Some(owner);
 }
 
+#[cfg(test)]
 fn set_world_mesh_version(state: &mut World3dState, id: String, version: u64) {
     match state.mesh_versions.insert(id, version) {
         Ok((_, previous)) => drop(previous),
@@ -9260,6 +9304,7 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
 `.🧬semio/🦑️repo/🎫️tickets/26/08/05/FRAMEWORK-BUILDER-PASSTHROUGHS-APP-COMMANDS-MACRO-WIDGET-EXTRACTION`) — this
 region now only keeps the `World3dState`-specific hover-state plumbing (app config, not paint), calling
 through to `gizmo::orbit_view_gizmo_placement`/`gizmo::orbit_view_gizmo_tips`/`gizmo::orbit_view_gizmo_hit_test`. */
+#[cfg(test)]
 fn update_world_orbit_view_gizmo_hover(state: &mut World3dState, x: f32, y: f32, inner: Rect) {
     let (margin_x, margin_y) = gizmo::orbit_view_gizmo_placement(inner);
     let origin_x = inner.x + inner.w - margin_x;
@@ -9279,7 +9324,6 @@ pub fn world3d_hit_target(scene: &UiComponentSceneNode, bounds: Rect) -> HitTarg
     HitTarget { rect: bounds, event: None, control_id: Some(scene.surface_id.clone()), kind: HitKind::World3d, drag_axis: None, drag_data: None }
 }
 
-#[cfg(test)]
 #[cfg(test)]
 fn handle_world3d_pointer_move(state: &mut World3dState, x: f32, y: f32, down: bool, button: i16) -> Option<ActionDescriptor> {
     let inner = world_pick_rect(state);
@@ -9345,7 +9389,6 @@ fn handle_world3d_paint_actions(state: &mut World3dState, x: f32, y: f32, down: 
     Vec::new()
 }
 
-#[cfg(test)]
 #[cfg(test)]
 fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, down: bool, button: i16, modifiers: &PointerModifiers) -> Option<ActionDescriptor> {
     let inner = world_pick_rect(state);
@@ -9528,6 +9571,7 @@ fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, down:
 /// first, then a hovered mesh component (vertex/edge/face — reported as kind `"object"`, the
 /// component's owning instance, matching the React source's own naming), then a hovered reference
 /// image plane; `None` (no context menu) if nothing is currently hovered.
+#[cfg(test)]
 fn resolve_world_context_menu_target(state: &World3dState) -> Option<(&'static str, String)> {
     if let Some(vortex_id) = state.hovered_vortex_id.clone() {
         return Some(("vortex", vortex_id));
@@ -9578,7 +9622,6 @@ fn handle_world3d_pointer_drag(state: &mut World3dState, x: f32, y: f32, dx: f32
     }
 }
 
-#[cfg(test)]
 #[cfg(test)]
 fn handle_world3d_wheel(state: &mut World3dState, delta: f32) {
     state.orbit.zoom(delta);
@@ -9670,6 +9713,7 @@ fn resolved_domain_granularity_id(state: &World3dState) -> &str {
     state.bound_domain_granularity_id.as_deref().unwrap_or(WORLD_ITEM_GRANULARITY_ID)
 }
 
+#[cfg(test)]
 fn world_item_target_id(surface_id: &str, object_id: &str) -> String {
     format!("{surface_id}{WORLD_ITEM_PATH_DELIMITER}{object_id}")
 }
@@ -9684,6 +9728,7 @@ fn world_item_id_for_surface<'a>(state: &World3dState, target_id: &'a str) -> Op
 /// 🧮️ Builds the wire target id for a plain pick/hover hit: a bare object id when a real app domain is
 /// bound (`HierarchyProvider::Flat`-style, single-surface-scoped), else `world_item_target_id`'s
 /// `"surfaceId/id"` `PathDelimited` shape for the shared `world` domain.
+#[cfg(test)]
 fn resolved_item_id(state: &World3dState, object_id: &str) -> String {
     if state.bound_domain_id.is_some() {
         object_id.to_string()
@@ -9797,6 +9842,7 @@ pub fn apply_world_action_preview(state: &mut World3dState, action: &ActionDescr
     }
 }
 
+#[cfg(test)]
 fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> Option<ActionDescriptor> {
     if state.active_utility == "surfaceBrush" {
         if let Some((object_id, position, normal)) = pick_surface_at(state, x, y, inner) {
@@ -9867,6 +9913,7 @@ fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> O
     Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "interactionHover".into(), args: action_args(json!({ "domainId": resolved_domain_id(state), "channel": "pointer", "targets": targets })) })
 }
 
+#[cfg(test)]
 fn pick_select_action(state: &World3dState, x: f32, y: f32, inner: Rect, shift: bool, ctrl: bool) -> Option<ActionDescriptor> {
     // 🕹️ Canonical `MergeMode` wire labels (see `merge_mode_wire_str`) — `merge_string_ids` accepts
     // these directly for both `worldPick` (unconverted, component-level picking) and the `interactionSelect`
@@ -9933,6 +9980,7 @@ fn pick_select_action(state: &World3dState, x: f32, y: f32, inner: Rect, shift: 
     })
 }
 
+#[cfg(test)]
 fn instance_object_index(state: &World3dState, object_id: &str) -> Option<u32> {
     let mut index = 0u32;
     for draw in &state.draws {
@@ -9946,6 +9994,7 @@ fn instance_object_index(state: &World3dState, object_id: &str) -> Option<u32> {
     None
 }
 
+#[cfg(test)]
 fn merge_u32_ids(existing: &[String], incoming: &[String], merge: &str) -> Vec<u32> {
     let parse = |ids: &[String]| -> Vec<u32> { ids.iter().filter_map(|id| id.parse().ok()).collect() };
     let existing_ids = parse(existing);
@@ -10078,6 +10127,7 @@ fn gumball_drag_update(state: &mut World3dState, x: f32, y: f32, inner: Rect) {
     apply_gumball_preview(state);
 }
 
+#[cfg(test)]
 fn start_gumball_drag(state: &mut World3dState, handle: GumballHandle, x: f32, y: f32, inner: Rect) {
     let Some(pivot) = selection_centroid(state) else {
         return;
@@ -10102,6 +10152,7 @@ fn start_gumball_drag(state: &mut World3dState, handle: GumballHandle, x: f32, y
     }
 }
 
+#[cfg(test)]
 fn pick_component_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<(String, String, String)> {
     let (local_x, local_y, rect) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
@@ -10206,6 +10257,7 @@ fn pick_component_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Opti
     None
 }
 
+#[cfg(test)]
 fn pick_paint_hit(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<(String, f32, f32)> {
     let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
@@ -10229,6 +10281,7 @@ fn pick_paint_hit(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<
     best.map(|(_, object_id, u, v)| (object_id, u, v))
 }
 
+#[cfg(test)]
 fn marquee_local_polygon(state: &World3dState, rect: Rect) -> (Vec<[f32; 2]>, bool, bool) {
     let rectangle = state.selection_method != "lasso";
     let crossing = marquee_is_crossing_from_path(&state.marquee_points, !rectangle);
@@ -10266,6 +10319,7 @@ fn legacy_geometry_fixture(state: &World3dState) -> (HashMap<String, Mesh3dLease
     (state.meshes.iter().map(|(id, mesh)| (id.clone(), *mesh)).collect(), state.draws.iter().cloned().collect())
 }
 
+#[cfg(test)]
 fn pick_instance_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<String> {
     let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
@@ -10287,6 +10341,7 @@ fn pick_instance_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Optio
     best.map(|(_, id)| id)
 }
 
+#[cfg(test)]
 fn pick_surface_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<(String, [f64; 3], [f64; 3])> {
     let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
@@ -10422,6 +10477,7 @@ fn append_vortex_arrow_draws(state: &mut World3dState, gpu: &mut World3dBuildCon
 }
 //#endregion VortexArrow
 
+#[cfg(test)]
 fn pick_vortex_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<String> {
     let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
@@ -10447,6 +10503,7 @@ fn pick_vortex_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<
 /// reference's `url` (used as its hover/context-menu identifier, since `WorldReferenceRecord` has
 /// no separate id field). References are flat rectangles lying in the local XY plane (normal +Z,
 /// width along X, height along Y) centered at `origin` — matching this renderer's Z-up convention.
+#[cfg(test)]
 fn pick_reference_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<String> {
     let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
@@ -10481,6 +10538,7 @@ fn pick_reference_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Opti
     best.map(|(_, url)| url)
 }
 
+#[cfg(test)]
 fn object_world_position(state: &World3dState, object_id: &str) -> Option<[f32; 3]> {
     for draw in &state.draws {
         for instance in &draw.instances {
@@ -10493,6 +10551,7 @@ fn object_world_position(state: &World3dState, object_id: &str) -> Option<[f32; 
     None
 }
 
+#[cfg(test)]
 fn update_dragged_instance_position(state: &mut World3dState, object_id: &str, position: [f32; 3]) {
     for draw in &mut state.draws {
         for instance in &mut draw.instances {
@@ -10503,6 +10562,7 @@ fn update_dragged_instance_position(state: &mut World3dState, object_id: &str, p
     }
 }
 
+#[cfg(test)]
 fn ground_plane_pick(state: &World3dState, x: f32, y: f32, _inner: Rect, plane_z: f32) -> Option<[f32; 3]> {
     let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();

@@ -817,16 +817,8 @@ impl ArtifactApp for SpaceApp {
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
         };
-        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            request.context,
-            operation_context,
-            request.completion,
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
             SpaceCommand::command_id,
             SPACE_BOUNDED_RAW_BYTES,
             SPACE_BOUNDED_WORK_ITEMS,
@@ -1140,13 +1132,13 @@ pub async fn create_space_app() -> App {
         .action_interactive_job("setAppRegistrations", InteractiveJobClassification::Migrated).await
         // 📝️ Staged argument form for parameter creation (spawnApp/exportMedia stay context/registry-driven).
         .action_args("addParameter", vec![
-            ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).default_value("Parameter"),
+            ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).default_value(&"Parameter"),
             ActionArgDef::select("type", LocalizedLabel::native("Type", "Typ"), vec![
                 ActionArgOption::new("numeric", LocalizedLabel::native("Numeric", "Numerisch")),
                 ActionArgOption::new("categorical", LocalizedLabel::native("Categorical", "Kategorisch")),
                 ActionArgOption::new("toggle", LocalizedLabel::native("Toggle", "Schalter")),
                 ActionArgOption::new("text", LocalizedLabel::native("Text", "Text")),
-            ]).default_value("numeric"),
+            ]).default_value(&"numeric"),
         ]).await
         // 📇️ Per-window action scoping — the Workflow (NodeGraph) window owns all graph/instance/
         // parameter editing plus the per-instance media import/export; the Media VFS
@@ -1234,18 +1226,7 @@ pub(crate) mod testkit {
 
     pub type SpaceVcsApp = semio_framework_plugin::VcsArtifactApp<SpaceApp>;
 
-    /// 🕹️ A fresh, real `VcsArtifactApp<SpaceApp>` — the only way a downstream crate can obtain a
-    /// genuine `InteractionView` (its fields are framework-crate-private; ticket
-    /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), so any test exercising the `graph`
-    /// domain's real selection/hover state must go through this, not `studio_emit`.
-    pub(crate) async fn app() -> SpaceVcsApp {
-        semio_framework_plugin::testkit::new_app::<SpaceApp>().await
-    }
-
-    /// 🕹️ Registry-backed counterpart of `app()` — carries the manifest's real `AppActionRegistry`
-    /// (including the declared `graph` interaction domain), needed by any test that dispatches a
-    /// framework interaction verb (`interactionSelect`/`interactionHover`/…) via `handle_action`, which
-    /// faults with "undeclared interaction domain" against the bare, registry-less `app()`.
+    /// 🕹️ Creates a fixture with the real manifest registry and graph interaction domain.
     pub(crate) async fn app_with_registry() -> SpaceVcsApp {
         semio_framework_plugin::testkit::new_registered_app::<SpaceApp, _>(create_space_app()).await
     }

@@ -17,13 +17,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioTableSnapshot {
-    serde_json::from_str(BEFORE).expect("insert-row before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("insert-row before snapshot decodes")
 }
 fn expected_after() -> SemioTableSnapshot {
-    serde_json::from_str(AFTER).expect("insert-row after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("insert-row after snapshot decodes")
 }
 fn insert_row() -> SemioTableMutation {
-    serde_json::from_str(MUTATION).expect("insert-row mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("insert-row mutation decodes")
 }
 
 /// ▶️ The Hamburg row lands between the two existing rows and is aligned with both columns.
@@ -58,12 +58,12 @@ async fn the_undo_remove_row_takes_the_hamburg_row_back_out() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioTableSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: SemioTableSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "insert-row/inserts-a-row-between-the-two-existing-rows: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(insert_row()).expect("insert-row mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(insert_row()))).expect("insert-row mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("insert-row mutation reparses");
     assert_eq!(reencoded, original, "insert-row/inserts-a-row-between-the-two-existing-rows: committed mutation JSON is not canonical");
 }
@@ -83,7 +83,7 @@ async fn declared_outcome_holds_without_a_clamp_warning() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioTableMutation as Mutation<SemioTableSnapshot>>::diff(&insert_row(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "insert-row/inserts-a-row-between-the-two-existing-rows: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -92,19 +92,19 @@ async fn produces_committed_diff() {
 /// schema.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_omits_columns_entirely() {
-    let decoded: SemioTableDiff = serde_json::from_str(DIFF).expect("committed insert-row diff decodes");
+    let decoded: SemioTableDiff = dsl::json::from_json_str(DIFF).expect("committed insert-row diff decodes");
     assert!(decoded.columns.is_none(), "insert-row must leave the columns slot untouched");
     assert_eq!(decoded.rows.as_ref().map(|list| list.values.len()), Some(3), "the diff must carry all three rows of the final sequence");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert!(committed.get("columns").is_none(), "the committed diff JSON must not carry a columns key at all");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     assert_eq!(reencoded, committed, "insert-row/inserts-a-row-between-the-two-existing-rows: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioTableDiff = serde_json::from_str(DIFF).expect("committed insert-row diff decodes");
+    let decoded: SemioTableDiff = dsl::json::from_json_str(DIFF).expect("committed insert-row diff decodes");
     let produced = decoded.apply(&before()).expect("committed insert-row diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "insert-row/inserts-a-row-between-the-two-existing-rows: committed diff did not carry before to after");
 }

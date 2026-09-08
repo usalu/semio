@@ -67,6 +67,39 @@ CREATE TABLE IF NOT EXISTS inference_approval_outbox_v1 (
  phase TEXT NOT NULL CHECK(phase IN ('prepared','committed','abandoned')),
  CHECK(phase='prepared' OR length(command)=0)
 );
+CREATE TABLE IF NOT EXISTS inference_approval_undo_v1 (
+ target_id TEXT PRIMARY KEY CHECK(length(target_id)=32),
+ job_id TEXT NOT NULL UNIQUE REFERENCES inference_job_v1(job_id),
+ original_mutation_id TEXT NOT NULL CHECK(length(original_mutation_id)=32),
+ original_command_hash TEXT NOT NULL CHECK(length(original_command_hash)=64),
+ committed_witness_digest TEXT NOT NULL UNIQUE CHECK(length(committed_witness_digest)=64),
+ user_id TEXT NOT NULL,
+ session_id TEXT NOT NULL,
+ authorization_generation INTEGER NOT NULL,
+ space_id TEXT NOT NULL,
+ document_id TEXT NOT NULL,
+ after_head_ordinal INTEGER NOT NULL,
+ after_head_edit_id TEXT NOT NULL,
+ after_commit_seq INTEGER NOT NULL,
+ after_chain_sha256 TEXT NOT NULL CHECK(length(after_chain_sha256)=64),
+ descriptor_digest TEXT NOT NULL CHECK(length(descriptor_digest)=64),
+ after_base_digest TEXT NOT NULL CHECK(length(after_base_digest)=64),
+ original_command BLOB NOT NULL CHECK(length(original_command)<=8192),
+ undo_idempotency_key TEXT,
+ undo_job_id TEXT,
+ undo_proposal_hash TEXT,
+ undo_mutation_id TEXT,
+ undo_command_hash TEXT,
+ undo_command BLOB NOT NULL DEFAULT X'' CHECK(length(undo_command)<=8192),
+ undo_frontier_head_ordinal INTEGER,
+ undo_frontier_head_edit_id TEXT,
+ undo_frontier_commit_seq INTEGER,
+ undo_frontier_chain_sha256 TEXT,
+ phase TEXT NOT NULL CHECK(phase IN ('available','prepared','committed')),
+ CHECK((phase='available' AND undo_idempotency_key IS NULL) OR (phase<>'available' AND length(undo_idempotency_key)=32)),
+ CHECK(phase<>'prepared' OR length(undo_command)>0),
+ CHECK(phase<>'committed' OR (length(original_command)=0 AND length(undo_command)=0 AND length(undo_frontier_chain_sha256)=64))
+);
 ";
 
 pub struct InferenceJobLedgerV1 {
@@ -100,6 +133,47 @@ pub struct InferenceApprovalOutboxV1 {
 pub struct InferenceApprovalPageV1 {
     pub rows: Vec<InferenceApprovalOutboxV1>,
     pub next_cursor: Option<String>,
+}
+
+/// ↩️ Exact private inverse authority retained from the original committed approval.
+pub(crate) struct GisMapApprovalUndoTargetV1 {
+    pub target_id: String,
+    pub original_job_id: String,
+    pub original_mutation_id: String,
+    pub original_command_hash: String,
+    pub committed_witness_digest: String,
+    pub user_id: String,
+    pub session_id: String,
+    pub authorization_generation: u64,
+    pub scope: directory::os_directory::DocumentScope,
+    pub after_frontier: directory::os_directory::CheckpointPublicationFrontierV1,
+    pub descriptor_digest: String,
+    pub after_base_digest: String,
+    pub original_command: InferencePrivateBytesV1,
+}
+
+/// 🧾️ Approval reconciliation returns the durable undo handle from the same transaction.
+pub(crate) struct InferenceApprovalReconciliationV1 {
+    pub applied: bool,
+    pub undo: directory::os_directory::GisMapApprovalUndoHandleV1,
+}
+
+/// 🎫️ Durable undo idempotency admission or exact terminal replay.
+pub(crate) enum GisMapApprovalUndoAdmissionV1 {
+    Prepared,
+    Replayed(directory::os_directory::GisMapApprovalUndoReceiptV1),
+}
+
+/// 🧊 One exact retained undo identity needed to resume a committed Store journal after restart.
+pub(crate) struct GisMapApprovalUndoRecoveryV1 {
+    pub target: GisMapApprovalUndoTargetV1,
+    pub idempotency_key: String,
+    pub operation_id: String,
+    pub proposal_hash: String,
+    pub mutation_id: String,
+    pub command_hash: String,
+    pub command: InferencePrivateBytesV1,
+    pub ledger_applied: bool,
 }
 
 /// 🎟️ One exclusive execution turn: only this epoch may append progress or a terminal outcome.
@@ -715,22 +789,52 @@ impl InferenceJobLedgerV1 {
         Ok(Some((outbox, accepted, phase == "committed")))
     }
 
-    pub(crate) fn reconcile_committed_approval(&self, job_id: &str, witness: &super::wal::CommittedInferenceWalWitnessV1, document_generation: u64, now: u64) -> Result<bool, InferenceErrorV1> {
-        if !hex(job_id, 32) || document_generation > SAFE_INTEGER_MAX || now > SAFE_INTEGER_MAX {
+    pub(crate) fn reconcile_committed_approval(
+        &self,
+        job_id: &str,
+        witness: &super::wal::CommittedInferenceWalWitnessV1,
+        document_generation: u64,
+        after_frontier: &directory::os_directory::CheckpointPublicationFrontierV1,
+        descriptor_digest: &str,
+        after_base_digest: &str,
+        now: u64,
+    ) -> Result<InferenceApprovalReconciliationV1, InferenceErrorV1> {
+        if !hex(job_id, 32) || !hex(descriptor_digest, 64) || !hex(after_base_digest, 64) || document_generation > SAFE_INTEGER_MAX || now > SAFE_INTEGER_MAX || !after_frontier.validate() {
             return Err(InferenceErrorV1::Bounds);
         }
         let mut connection = self.connection.lock().map_err(|_| InferenceErrorV1::Storage)?;
         let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate).map_err(storage)?;
-        let existing: Option<(String, String, String, String)> =
-            tx.query_row("SELECT mutation_id,command_hash,proposal_hash,phase FROM inference_approval_outbox_v1 WHERE job_id=?1", [job_id], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?))).optional().map_err(storage)?;
-        let (accepted_mutation, accepted_command, accepted_proposal, phase) = existing.ok_or(InferenceErrorV1::Denied)?;
+        let existing: Option<(String, String, String, Vec<u8>, String)> = tx
+            .query_row("SELECT mutation_id,command_hash,proposal_hash,command,phase FROM inference_approval_outbox_v1 WHERE job_id=?1", [job_id], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?)))
+            .optional()
+            .map_err(storage)?;
+        let (accepted_mutation, accepted_command, accepted_proposal, command, phase) = existing.ok_or(InferenceErrorV1::Denied)?;
         let accepted = identity(&tx, job_id)?;
         let scope = directory::os_directory::DocumentScope::new(accepted.space_id, accepted.document_id);
-        if !witness.matches(&scope, document_generation, job_id, &accepted_proposal, &accepted_mutation, &accepted_command) {
+        if !witness.matches(&scope, document_generation, job_id, &accepted_proposal, &accepted_mutation, &accepted_command)
+            || after_frontier.document_id != scope.document_id
+            || after_frontier.head_edit_id != accepted_mutation
+            || after_frontier.head_edit_ordinal != accepted.head_ordinal.checked_add(1).ok_or(InferenceErrorV1::Bounds)?
+            || after_frontier.last_commit_seq != accepted.last_commit_seq.checked_add(1).ok_or(InferenceErrorV1::Bounds)?
+        {
             return Err(InferenceErrorV1::Conflict);
         }
+        let witness_digest = witness.approval_undo_witness_digest();
+        let target_id = sha256(format!("semio.hub.gis-map-approval-undo-target/v1\0{witness_digest}").as_bytes())[..32].to_owned();
+        let undo = directory::os_directory::GisMapApprovalUndoHandleV1 { target_id: target_id.clone(), expected_current: after_frontier.clone() };
         if phase == "committed" {
-            return Ok(false);
+            let retained: bool = tx
+                .query_row(
+                    "SELECT EXISTS(SELECT 1 FROM inference_approval_undo_v1 WHERE target_id=?1 AND job_id=?2 AND original_mutation_id=?3 AND original_command_hash=?4 AND committed_witness_digest=?5 AND user_id=?6 AND session_id=?7 AND authorization_generation=?8 AND space_id=?9 AND document_id=?10 AND after_head_ordinal=?11 AND after_head_edit_id=?12 AND after_commit_seq=?13 AND after_chain_sha256=?14 AND descriptor_digest=?15 AND after_base_digest=?16)",
+                    params![target_id, job_id, accepted_mutation, accepted_command, witness_digest, accepted.user_id, accepted.session_id, sql_integer(accepted.authorization_generation)?, scope.space_id, scope.document_id, sql_integer(after_frontier.head_edit_ordinal)?, after_frontier.head_edit_id, sql_integer(after_frontier.last_commit_seq)?, after_frontier.chain_sha256, descriptor_digest, after_base_digest],
+                    |row| row.get(0),
+                )
+                .map_err(storage)?;
+            if !retained {
+                return Err(InferenceErrorV1::Conflict);
+            }
+            tx.commit().map_err(storage)?;
+            return Ok(InferenceApprovalReconciliationV1 { applied: false, undo });
         }
         if phase != "prepared" {
             return Err(InferenceErrorV1::Conflict);
@@ -739,11 +843,368 @@ impl InferenceJobLedgerV1 {
         if job_phase != "succeeded" || proposal_phase != "offered" {
             return Err(InferenceErrorV1::Conflict);
         }
+        if command.is_empty() || command.len() > 8192 || sha256(&command) != accepted_command {
+            return Err(InferenceErrorV1::Conflict);
+        }
+        tx.execute(
+            "INSERT INTO inference_approval_undo_v1(target_id,job_id,original_mutation_id,original_command_hash,committed_witness_digest,user_id,session_id,authorization_generation,space_id,document_id,after_head_ordinal,after_head_edit_id,after_commit_seq,after_chain_sha256,descriptor_digest,after_base_digest,original_command,phase) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,'available')",
+            params![target_id, job_id, accepted_mutation, accepted_command, witness_digest, accepted.user_id, accepted.session_id, sql_integer(accepted.authorization_generation)?, scope.space_id, scope.document_id, sql_integer(after_frontier.head_edit_ordinal)?, after_frontier.head_edit_id, sql_integer(after_frontier.last_commit_seq)?, after_frontier.chain_sha256, descriptor_digest, after_base_digest, command],
+        )
+        .map_err(storage)?;
         tx.execute("UPDATE inference_approval_outbox_v1 SET phase='committed',command=X'' WHERE job_id=?1", [job_id]).map_err(storage)?;
         tx.execute("UPDATE inference_job_v1 SET proposal_state='approved',proposal=X'' WHERE job_id=?1", [job_id]).map_err(storage)?;
         event(&tx, job_id, "approved", now)?;
         tx.commit().map_err(storage)?;
+        Ok(InferenceApprovalReconciliationV1 { applied: true, undo })
+    }
+
+    /// 🔎️ Reads the exact private undo authority only for its original authenticated owner.
+    pub(crate) fn gis_map_approval_undo_target(&self, target_id: &str, reader: &InferenceReaderV1<'_>) -> Result<GisMapApprovalUndoTargetV1, InferenceErrorV1> {
+        if !hex(target_id, 32) {
+            return Err(InferenceErrorV1::Bounds);
+        }
+        let connection = self.connection.lock().map_err(|_| InferenceErrorV1::Storage)?;
+        let row = connection
+            .query_row(
+                "SELECT job_id,original_mutation_id,original_command_hash,committed_witness_digest,user_id,session_id,authorization_generation,space_id,document_id,after_head_ordinal,after_head_edit_id,after_commit_seq,after_chain_sha256,descriptor_digest,after_base_digest,original_command FROM inference_approval_undo_v1 WHERE target_id=?1 AND phase IN ('available','prepared')",
+                [target_id],
+                |row| {
+                    Ok((
+                        row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?, row.get::<_, String>(3)?, row.get::<_, String>(4)?, row.get::<_, String>(5)?, read_integer(row, 6)?, row.get::<_, String>(7)?,
+                        row.get::<_, String>(8)?, read_integer(row, 9)?, row.get::<_, String>(10)?, read_integer(row, 11)?, row.get::<_, String>(12)?, row.get::<_, String>(13)?, row.get::<_, String>(14)?, row.get::<_, Vec<u8>>(15)?,
+                    ))
+                },
+            )
+            .optional()
+            .map_err(storage)?
+            .ok_or(InferenceErrorV1::Denied)?;
+        if reader.user_id != row.4 || reader.session_id != row.5 || reader.authorization_generation != row.6 || reader.space_id != row.7 || reader.document_id != row.8 {
+            return Err(InferenceErrorV1::Denied);
+        }
+        let after_frontier = directory::os_directory::CheckpointPublicationFrontierV1 { document_id: row.8.clone(), head_edit_ordinal: row.9, head_edit_id: row.10, last_commit_seq: row.11, chain_sha256: row.12 };
+        if !after_frontier.validate() || !hex(&row.13, 64) || !hex(&row.14, 64) || sha256(&row.15) != row.2 {
+            return Err(InferenceErrorV1::Conflict);
+        }
+        Ok(GisMapApprovalUndoTargetV1 {
+            target_id: target_id.to_owned(),
+            original_job_id: row.0,
+            original_mutation_id: row.1,
+            original_command_hash: row.2,
+            committed_witness_digest: row.3,
+            user_id: row.4,
+            session_id: row.5,
+            authorization_generation: row.6,
+            scope: directory::os_directory::DocumentScope::new(row.7, row.8),
+            after_frontier,
+            descriptor_digest: row.13,
+            after_base_digest: row.14,
+            original_command: InferencePrivateBytesV1::new(row.15, 8192)?,
+        })
+    }
+
+    /// 🪪️ Resolves only the original owner's private job identity for live authorization recheck.
+    pub(crate) fn gis_map_approval_undo_job_id(&self, target_id: &str, reader: &InferenceReaderV1<'_>) -> Result<String, InferenceErrorV1> {
+        if !hex(target_id, 32) {
+            return Err(InferenceErrorV1::Bounds);
+        }
+        let connection = self.connection.lock().map_err(|_| InferenceErrorV1::Storage)?;
+        let row: (String, String, String, u64, String, String) = connection
+            .query_row("SELECT job_id,user_id,session_id,authorization_generation,space_id,document_id FROM inference_approval_undo_v1 WHERE target_id=?1", [target_id], |row| {
+                Ok((row.get(0)?, row.get(1)?, row.get(2)?, read_integer(row, 3)?, row.get(4)?, row.get(5)?))
+            })
+            .optional()
+            .map_err(storage)?
+            .ok_or(InferenceErrorV1::Denied)?;
+        if reader.user_id != row.1 || reader.session_id != row.2 || reader.authorization_generation != row.3 || reader.space_id != row.4 || reader.document_id != row.5 {
+            return Err(InferenceErrorV1::Denied);
+        }
+        Ok(row.0)
+    }
+
+    /// 🔁️ Replays only the exact committed target/idempotency tuple to its original owner.
+    pub(crate) fn replayed_gis_map_approval_undo(&self, target_id: &str, idempotency_key: &str, reader: &InferenceReaderV1<'_>) -> Result<Option<directory::os_directory::GisMapApprovalUndoReceiptV1>, InferenceErrorV1> {
+        if !hex(target_id, 32) || !hex(idempotency_key, 32) {
+            return Err(InferenceErrorV1::Bounds);
+        }
+        let connection = self.connection.lock().map_err(|_| InferenceErrorV1::Storage)?;
+        let row: (String, String, String, u64, String, String, String, Option<String>, Option<String>, Option<String>, Option<u64>, Option<String>, Option<u64>, Option<String>) = connection
+            .query_row(
+                "SELECT phase,user_id,session_id,authorization_generation,space_id,document_id,job_id,undo_idempotency_key,undo_mutation_id,undo_command_hash,undo_frontier_head_ordinal,undo_frontier_head_edit_id,undo_frontier_commit_seq,undo_frontier_chain_sha256 FROM inference_approval_undo_v1 WHERE target_id=?1",
+                [target_id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, read_integer(row, 3)?, row.get(4)?, row.get(5)?, row.get(6)?, row.get(7)?, row.get(8)?, row.get(9)?, row.get::<_, Option<i64>>(10)?.map(|value| u64::try_from(value).unwrap_or(u64::MAX)), row.get(11)?, row.get::<_, Option<i64>>(12)?.map(|value| u64::try_from(value).unwrap_or(u64::MAX)), row.get(13)?)),
+            )
+            .optional()
+            .map_err(storage)?
+            .ok_or(InferenceErrorV1::Denied)?;
+        if reader.user_id != row.1 || reader.session_id != row.2 || reader.authorization_generation != row.3 || reader.space_id != row.4 || reader.document_id != row.5 {
+            return Err(InferenceErrorV1::Denied);
+        }
+        match row.0.as_str() {
+            "available" => Ok(None),
+            "prepared" if row.7.as_deref() == Some(idempotency_key) => Ok(None),
+            "committed" if row.7.as_deref() == Some(idempotency_key) => {
+                let frontier = directory::os_directory::CheckpointPublicationFrontierV1 {
+                    document_id: row.5,
+                    head_edit_ordinal: row.10.ok_or(InferenceErrorV1::Storage)?,
+                    head_edit_id: row.11.ok_or(InferenceErrorV1::Storage)?,
+                    last_commit_seq: row.12.ok_or(InferenceErrorV1::Storage)?,
+                    chain_sha256: row.13.ok_or(InferenceErrorV1::Storage)?,
+                };
+                if !frontier.validate() {
+                    return Err(InferenceErrorV1::Storage);
+                }
+                Ok(Some(directory::os_directory::GisMapApprovalUndoReceiptV1 {
+                    schema: "semio.hub.gis-map-approval-undo-receipt/v1".into(),
+                    target_id: target_id.to_owned(),
+                    original_job_id: row.6,
+                    mutation_id: row.8.ok_or(InferenceErrorV1::Storage)?,
+                    command_hash: row.9.ok_or(InferenceErrorV1::Storage)?,
+                    applied: true,
+                    replayed: true,
+                    frontier,
+                }))
+            }
+            _ => Err(InferenceErrorV1::Conflict),
+        }
+    }
+
+    /// 🎫️ Persists one exact server-derived inverse identity before any Store/WAL effect.
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn prepare_gis_map_approval_undo(
+        &self,
+        target: &GisMapApprovalUndoTargetV1,
+        idempotency_key: &str,
+        operation_id: &str,
+        proposal_hash: &str,
+        mutation_id: &str,
+        command_hash: &str,
+        command: &InferencePrivateBytesV1,
+    ) -> Result<GisMapApprovalUndoAdmissionV1, InferenceErrorV1> {
+        if !hex(idempotency_key, 32)
+            || !hex(operation_id, 32)
+            || !hex(proposal_hash, 64)
+            || !hex(mutation_id, 32)
+            || !hex(command_hash, 64)
+            || command.as_slice().is_empty()
+            || sha256(command.as_slice()) != command_hash
+        {
+            return Err(InferenceErrorV1::Bounds);
+        }
+        let mut connection = self.connection.lock().map_err(|_| InferenceErrorV1::Storage)?;
+        let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate).map_err(storage)?;
+        let row: (String, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>, Option<u64>, Option<String>, Option<u64>, Option<String>, Vec<u8>) = tx
+            .query_row(
+                "SELECT phase,undo_idempotency_key,undo_job_id,undo_proposal_hash,undo_mutation_id,undo_command_hash,undo_frontier_head_ordinal,undo_frontier_head_edit_id,undo_frontier_commit_seq,undo_frontier_chain_sha256,undo_command FROM inference_approval_undo_v1 WHERE target_id=?1 AND job_id=?2 AND committed_witness_digest=?3",
+                params![target.target_id, target.original_job_id, target.committed_witness_digest],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?, row.get(5)?, row.get::<_, Option<i64>>(6)?.map(|value| u64::try_from(value).unwrap_or(u64::MAX)), row.get(7)?, row.get::<_, Option<i64>>(8)?.map(|value| u64::try_from(value).unwrap_or(u64::MAX)), row.get(9)?, row.get(10)?)),
+            )
+            .optional()
+            .map_err(storage)?
+            .ok_or(InferenceErrorV1::Denied)?;
+        let exact = row.1.as_deref() == Some(idempotency_key) && row.2.as_deref() == Some(operation_id) && row.3.as_deref() == Some(proposal_hash) && row.4.as_deref() == Some(mutation_id) && row.5.as_deref() == Some(command_hash);
+        match row.0.as_str() {
+            "available" => {
+                let updated = tx.execute(
+                    "UPDATE inference_approval_undo_v1 SET undo_idempotency_key=?2,undo_job_id=?3,undo_proposal_hash=?4,undo_mutation_id=?5,undo_command_hash=?6,undo_command=?7,phase='prepared' WHERE target_id=?1 AND phase='available'",
+                    params![target.target_id, idempotency_key, operation_id, proposal_hash, mutation_id, command_hash, command.as_slice()],
+                )
+                .map_err(storage)?;
+                if updated != 1 {
+                    return Err(InferenceErrorV1::Conflict);
+                }
+                tx.commit().map_err(storage)?;
+                Ok(GisMapApprovalUndoAdmissionV1::Prepared)
+            }
+            "prepared" if exact && row.10 == command.as_slice() => {
+                tx.commit().map_err(storage)?;
+                Ok(GisMapApprovalUndoAdmissionV1::Prepared)
+            }
+            "committed" if exact => {
+                let frontier = directory::os_directory::CheckpointPublicationFrontierV1 {
+                    document_id: target.scope.document_id.clone(),
+                    head_edit_ordinal: row.6.ok_or(InferenceErrorV1::Storage)?,
+                    head_edit_id: row.7.ok_or(InferenceErrorV1::Storage)?,
+                    last_commit_seq: row.8.ok_or(InferenceErrorV1::Storage)?,
+                    chain_sha256: row.9.ok_or(InferenceErrorV1::Storage)?,
+                };
+                if !frontier.validate() {
+                    return Err(InferenceErrorV1::Storage);
+                }
+                tx.commit().map_err(storage)?;
+                Ok(GisMapApprovalUndoAdmissionV1::Replayed(directory::os_directory::GisMapApprovalUndoReceiptV1 {
+                    schema: "semio.hub.gis-map-approval-undo-receipt/v1".into(),
+                    target_id: target.target_id.clone(),
+                    original_job_id: target.original_job_id.clone(),
+                    mutation_id: mutation_id.to_owned(),
+                    command_hash: command_hash.to_owned(),
+                    applied: true,
+                    replayed: true,
+                    frontier,
+                }))
+            }
+            _ => Err(InferenceErrorV1::Conflict),
+        }
+    }
+
+    /// 🧾️ Finalizes an undo only from its exact second committed-WAL witness.
+    pub(crate) fn reconcile_committed_gis_map_approval_undo(
+        &self,
+        target_id: &str,
+        witness: &super::wal::CommittedInferenceWalWitnessV1,
+        document_generation: u64,
+        frontier: &directory::os_directory::CheckpointPublicationFrontierV1,
+    ) -> Result<bool, InferenceErrorV1> {
+        if !hex(target_id, 32) || !frontier.validate() {
+            return Err(InferenceErrorV1::Bounds);
+        }
+        let mut connection = self.connection.lock().map_err(|_| InferenceErrorV1::Storage)?;
+        let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate).map_err(storage)?;
+        let row: (String, String, String, u64, String, u64, String, String, String, String, String, Option<u64>, Option<String>, Option<u64>, Option<String>) = tx
+            .query_row(
+                "SELECT phase,space_id,document_id,after_head_ordinal,after_head_edit_id,after_commit_seq,undo_idempotency_key,undo_job_id,undo_proposal_hash,undo_mutation_id,undo_command_hash,undo_frontier_head_ordinal,undo_frontier_head_edit_id,undo_frontier_commit_seq,undo_frontier_chain_sha256 FROM inference_approval_undo_v1 WHERE target_id=?1",
+                [target_id],
+                |row| {
+                    Ok((
+                        row.get(0)?,
+                        row.get(1)?,
+                        row.get(2)?,
+                        read_integer(row, 3)?,
+                        row.get(4)?,
+                        read_integer(row, 5)?,
+                        row.get(6)?,
+                        row.get(7)?,
+                        row.get(8)?,
+                        row.get(9)?,
+                        row.get(10)?,
+                        row.get::<_, Option<i64>>(11)?.map(|value| u64::try_from(value).unwrap_or(u64::MAX)),
+                        row.get(12)?,
+                        row.get::<_, Option<i64>>(13)?.map(|value| u64::try_from(value).unwrap_or(u64::MAX)),
+                        row.get(14)?,
+                    ))
+                },
+            )
+            .optional()
+            .map_err(storage)?
+            .ok_or(InferenceErrorV1::Denied)?;
+        let scope = directory::os_directory::DocumentScope::new(row.1, row.2);
+        if !witness.matches(&scope, document_generation, &row.7, &row.8, &row.9, &row.10)
+            || frontier.document_id != scope.document_id
+            || frontier.head_edit_id != row.9
+            || frontier.head_edit_ordinal != row.3.checked_add(1).ok_or(InferenceErrorV1::Bounds)?
+            || frontier.last_commit_seq != row.5.checked_add(1).ok_or(InferenceErrorV1::Bounds)?
+        {
+            return Err(InferenceErrorV1::Conflict);
+        }
+        if row.0 == "committed" {
+            let exact_terminal = row.11 == Some(frontier.head_edit_ordinal)
+                && row.12.as_deref() == Some(frontier.head_edit_id.as_str())
+                && row.13 == Some(frontier.last_commit_seq)
+                && row.14.as_deref() == Some(frontier.chain_sha256.as_str());
+            return if exact_terminal { Ok(false) } else { Err(InferenceErrorV1::Conflict) };
+        }
+        if row.0 != "prepared" {
+            return Err(InferenceErrorV1::Conflict);
+        }
+        tx.execute(
+            "UPDATE inference_approval_undo_v1 SET original_command=X'',undo_command=X'',undo_frontier_head_ordinal=?2,undo_frontier_head_edit_id=?3,undo_frontier_commit_seq=?4,undo_frontier_chain_sha256=?5,phase='committed' WHERE target_id=?1 AND phase='prepared'",
+            params![target_id, sql_integer(frontier.head_edit_ordinal)?, frontier.head_edit_id, sql_integer(frontier.last_commit_seq)?, frontier.chain_sha256],
+        )
+        .map_err(storage)?;
+        tx.commit().map_err(storage)?;
         Ok(true)
+    }
+
+    /// 🧰 Restores only the exact prepared or committed undo identity addressed by its WAL mutation.
+    pub(crate) fn gis_map_approval_undo_recovery_by_mutation(&self, mutation_id: &str) -> Result<Option<GisMapApprovalUndoRecoveryV1>, InferenceErrorV1> {
+        if !hex(mutation_id, 32) {
+            return Err(InferenceErrorV1::Bounds);
+        }
+        let connection = self.connection.lock().map_err(|_| InferenceErrorV1::Storage)?;
+        let row = connection
+            .query_row(
+                "SELECT target_id,job_id,original_mutation_id,original_command_hash,committed_witness_digest,user_id,session_id,authorization_generation,space_id,document_id,after_head_ordinal,after_head_edit_id,after_commit_seq,after_chain_sha256,descriptor_digest,after_base_digest,original_command,undo_idempotency_key,undo_job_id,undo_proposal_hash,undo_mutation_id,undo_command_hash,undo_command,phase FROM inference_approval_undo_v1 WHERE undo_mutation_id=?1 AND phase IN ('prepared','committed')",
+                [mutation_id],
+                |row| {
+                    Ok((
+                        row.get::<_, String>(0)?,
+                        row.get::<_, String>(1)?,
+                        row.get::<_, String>(2)?,
+                        row.get::<_, String>(3)?,
+                        row.get::<_, String>(4)?,
+                        row.get::<_, String>(5)?,
+                        row.get::<_, String>(6)?,
+                        read_integer(row, 7)?,
+                        row.get::<_, String>(8)?,
+                        row.get::<_, String>(9)?,
+                        read_integer(row, 10)?,
+                        row.get::<_, String>(11)?,
+                        read_integer(row, 12)?,
+                        row.get::<_, String>(13)?,
+                        row.get::<_, String>(14)?,
+                        row.get::<_, String>(15)?,
+                        row.get::<_, Vec<u8>>(16)?,
+                        row.get::<_, String>(17)?,
+                        row.get::<_, String>(18)?,
+                        row.get::<_, String>(19)?,
+                        row.get::<_, String>(20)?,
+                        row.get::<_, String>(21)?,
+                        row.get::<_, Vec<u8>>(22)?,
+                        row.get::<_, String>(23)?,
+                    ))
+                },
+            )
+            .optional()
+            .map_err(storage)?;
+        let Some(row) = row else { return Ok(None) };
+        let after_frontier = directory::os_directory::CheckpointPublicationFrontierV1 {
+            document_id: row.9.clone(),
+            head_edit_ordinal: row.10,
+            head_edit_id: row.11.clone(),
+            last_commit_seq: row.12,
+            chain_sha256: row.13.clone(),
+        };
+        let prepared = row.23 == "prepared";
+        if !after_frontier.validate()
+            || !hex(&row.0, 32)
+            || !hex(&row.2, 32)
+            || !hex(&row.3, 64)
+            || !hex(&row.4, 64)
+            || !hex(&row.14, 64)
+            || !hex(&row.15, 64)
+            || !hex(&row.17, 32)
+            || !hex(&row.18, 32)
+            || !hex(&row.19, 64)
+            || row.20 != mutation_id
+            || !hex(&row.21, 64)
+            || prepared && (row.16.is_empty() || sha256(&row.16) != row.3 || row.22.is_empty() || sha256(&row.22) != row.21)
+            || !prepared && (!row.16.is_empty() || !row.22.is_empty())
+        {
+            return Err(InferenceErrorV1::Conflict);
+        }
+        Ok(Some(GisMapApprovalUndoRecoveryV1 {
+            target: GisMapApprovalUndoTargetV1 {
+                target_id: row.0,
+                original_job_id: row.1,
+                original_mutation_id: row.2,
+                original_command_hash: row.3,
+                committed_witness_digest: row.4,
+                user_id: row.5,
+                session_id: row.6,
+                authorization_generation: row.7,
+                scope: directory::os_directory::DocumentScope::new(row.8, row.9),
+                after_frontier,
+                descriptor_digest: row.14,
+                after_base_digest: row.15,
+                original_command: InferencePrivateBytesV1::new(row.16, 8192)?,
+            },
+            idempotency_key: row.17,
+            operation_id: row.18,
+            proposal_hash: row.19,
+            mutation_id: row.20,
+            command_hash: row.21,
+            command: InferencePrivateBytesV1::new(row.22, 8192)?,
+            ledger_applied: !prepared,
+        }))
     }
 
     pub fn read(&self, job_id: &str, reader: &InferenceReaderV1<'_>, now: u64) -> Result<InferenceJobViewV1, InferenceErrorV1> {
@@ -1037,11 +1498,36 @@ mod tests {
         #[cfg(feature = "native-artifact-execution")]
         {
             let (witness, fence) = super::super::wal::tests::committed_fixture_witness().await;
-            assert_eq!(reopened.reconcile_committed_approval(&receipt.job_id, &witness, 18, receipt.expires_at_ms), Err(InferenceErrorV1::Conflict));
-            assert!(reopened.reconcile_committed_approval(&receipt.job_id, &witness, 17, receipt.expires_at_ms).unwrap());
-            assert!(!reopened.reconcile_committed_approval(&receipt.job_id, &witness, 17, receipt.expires_at_ms).unwrap());
+            let frontier = directory::os_directory::CheckpointPublicationFrontierV1 {
+                document_id: selected.document_id.clone(),
+                head_edit_ordinal: selected.head_ordinal + 1,
+                head_edit_id: prepared.mutation_id.clone(),
+                last_commit_seq: selected.last_commit_seq + 1,
+                chain_sha256: "44".repeat(32),
+            };
+            let descriptor_digest = selected.descriptor_digest.clone();
+            let after_base_digest = "11".repeat(32);
+            assert_eq!(reopened.reconcile_committed_approval(&receipt.job_id, &witness, 18, &frontier, &descriptor_digest, &after_base_digest, receipt.expires_at_ms).map(|value| value.applied), Err(InferenceErrorV1::Conflict));
+            let reconciled = reopened.reconcile_committed_approval(&receipt.job_id, &witness, 17, &frontier, &descriptor_digest, &after_base_digest, receipt.expires_at_ms).unwrap();
+            assert!(reconciled.applied);
+            let undo_target = reopened.gis_map_approval_undo_target(&reconciled.undo.target_id, &reader(&selected)).expect("original owner reads the retained command");
+            assert_eq!(undo_target.original_command.as_slice(), command.as_slice());
+            assert_eq!(undo_target.after_frontier, frontier);
+            let foreign_target = InferenceReaderV1 { session_id: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", ..reader(&selected) };
+            assert!(matches!(reopened.gis_map_approval_undo_target(&reconciled.undo.target_id, &foreign_target), Err(InferenceErrorV1::Denied)));
+            assert!(!reopened.reconcile_committed_approval(&receipt.job_id, &witness, 17, &frontier, &descriptor_digest, &after_base_digest, receipt.expires_at_ms).unwrap().applied);
+            let undo_command = InferencePrivateBytesV1::new(vec![9], 8192).unwrap();
+            let undo_command_hash = sha256(undo_command.as_slice());
+            assert!(matches!(
+                reopened.prepare_gis_map_approval_undo(&undo_target, &"55".repeat(16), &"66".repeat(16), &"77".repeat(32), &"88".repeat(16), &undo_command_hash, &undo_command),
+                Ok(GisMapApprovalUndoAdmissionV1::Prepared)
+            ));
+            assert!(
+                matches!(reopened.prepare_gis_map_approval_undo(&undo_target, &"aa".repeat(16), &"66".repeat(16), &"77".repeat(32), &"88".repeat(16), &undo_command_hash, &undo_command), Err(InferenceErrorV1::Conflict)),
+                "a distinct retry identity cannot take over the durable target",
+            );
             fence.invalidate();
-            assert_eq!(reopened.reconcile_committed_approval(&receipt.job_id, &witness, 17, receipt.expires_at_ms), Err(InferenceErrorV1::Conflict));
+            assert_eq!(reopened.reconcile_committed_approval(&receipt.job_id, &witness, 17, &frontier, &descriptor_digest, &after_base_digest, receipt.expires_at_ms).map(|value| value.applied), Err(InferenceErrorV1::Conflict));
             assert!(reopened.pending_approvals(None, &control).unwrap().rows.is_empty());
             assert_eq!(
                 reopened.abandon_prepared_approval(&reader(&selected), &receipt.job_id, &prepared.mutation_id, &prepared.command_hash, &prepared.proposal_hash),

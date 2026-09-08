@@ -14,12 +14,12 @@ pub fn encode_payload(payload: &RemoveTextChunkMutation) -> Result<Vec<u8>, prot
     w.write_varint_u64(*index as u64);
     Ok(w.into_bytes())
 }
-fn op_pack_err(error: dsl::PackError) -> protocol::ProtocolError {
+fn op_pack_err(error: &dsl::PackError) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "remove-text-chunk", offset: 0, detail: error.to_string() }
 }
 pub fn decode(bytes: &[u8]) -> Result<PngMutation, protocol::ProtocolError> {
     let mut r = dsl::ByteReader::new(bytes);
-    let result: Result<PngMutation, protocol::ProtocolError> = Ok(PngMutation::RemoveTextChunk(RemoveTextChunkMutation { index: r.read_varint_u64().map_err(op_pack_err)? as usize }));
+    let result: Result<PngMutation, protocol::ProtocolError> = Ok(PngMutation::RemoveTextChunk(RemoveTextChunkMutation { index: r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize }));
     let position = r.position();
     if position != bytes.len() {
         return Err(protocol::ProtocolError::Malformed { what: "remove-text-chunk", offset: position as u64, detail: "trailing payload bytes".into() });

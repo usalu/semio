@@ -22,7 +22,7 @@ fn create_folder_studio(name: &str, folder_path: &str, owner_id: &str, owner_nam
     use semio_framework_os::{create_os_space, SpaceKind, SpaceRole, SpaceUser, SpaceVisibility};
     let port = semio_framework_os::open_folder_space_backbone(folder_path)?;
     let owner = SpaceUser { id: if owner_id.is_empty() { "local".into() } else { owner_id.into() }, name: if owner_name.is_empty() { name.into() } else { owner_name.into() }, avatar: None, role: SpaceRole::Author };
-    let entry = create_os_space(name, SpaceKind::Atelier, SpaceVisibility::Private, owner, port.clone())?;
+    let entry = create_os_space(name, SpaceKind::Atelier, SpaceVisibility::Private, owner, &port)?;
     semio_framework_plugin::resolve_ready(crate::register_studio_port(&entry.id, port));
     Ok(entry)
 }
@@ -87,10 +87,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn creates_studio_via_home_action() {
         let port = crate::catalog_port().await;
-        let before = list_os_space_catalog_entries(port.clone()).expect("list").len();
+        let before = list_os_space_catalog_entries(&port).expect("list").len();
         let mut home: VcsArtifactApp<EditorApp<crate::editor::home::HomeApp>> = VcsArtifactApp::new(EditorApp::<crate::editor::home::HomeApp>::default()).await;
         home.dispatch_typed(crate::editor::home::HomeCommand::CreateStudio(CreateStudio { name: "Test Studio".into(), kind: "catalog".into(), folder_path: None }), &testkit::meta("local")).await.expect("create");
-        let after = list_os_space_catalog_entries(port).expect("list").len();
+        let after = list_os_space_catalog_entries(&port).expect("list").len();
         assert!(after >= before);
     }
 
@@ -104,9 +104,9 @@ mod tests {
         let emit = handle(&CreateStudio { name: "Temp Studio".into(), kind: "temporary".into(), folder_path: None }, &doc, &cfg).expect("handle");
         assert!(emit.effects.iter().any(|effect| matches!(effect, Effect::Navigate { .. })));
         assert!(!emit.effects.iter().any(|effect| matches!(effect, Effect::DownloadMediaExport { .. })), "ephemeral create must not download");
-        let persistent = list_os_space_catalog_entries(crate::catalog_port().await).expect("list");
+        let persistent = list_os_space_catalog_entries(&crate::catalog_port().await).expect("list");
         assert!(!persistent.iter().any(|entry| entry.name == "Temp Studio"));
-        let ephemeral_catalog = list_os_space_catalog_entries(crate::temp_catalog_port().await).unwrap_or_default();
+        let ephemeral_catalog = list_os_space_catalog_entries(&crate::temp_catalog_port().await).unwrap_or_default();
         assert!(!ephemeral_catalog.iter().any(|entry| entry.name == "Temp Studio"));
         let uri = emit
             .effects

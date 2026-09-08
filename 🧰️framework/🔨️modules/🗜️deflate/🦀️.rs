@@ -416,9 +416,7 @@ impl Inflater {
                         return Ok(InflateOutcome::NeedInput);
                     }
                     let repeat = self.reader.take(bits) + base;
-                    for _ in 0..repeat {
-                        lengths.push(0);
-                    }
+                    lengths.extend(std::iter::repeat_n(0, repeat as usize));
                     self.phase = Phase::DynamicCodeLengths { clc, hlit, hdist, lengths };
                 }
                 Phase::DecodeSymbol { lit_len, dist } => {

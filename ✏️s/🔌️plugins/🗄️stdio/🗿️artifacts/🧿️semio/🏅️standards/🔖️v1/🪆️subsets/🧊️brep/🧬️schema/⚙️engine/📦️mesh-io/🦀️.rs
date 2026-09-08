@@ -54,11 +54,11 @@ pub struct TriangleMesh {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn triangle_mesh_from_transfer(transfer: &MeshTransfer) -> TriangleMesh {
     let mut positions = Vec::with_capacity(transfer.position.len() / 3);
-    for chunk in transfer.position.chunks_exact(3) {
+    for chunk in transfer.position.as_chunks::<3>().0 {
         positions.push(Pnt3::new(chunk[0] as f64, chunk[1] as f64, chunk[2] as f64));
     }
     let mut normals = Vec::with_capacity(transfer.normal.len() / 3);
-    for chunk in transfer.normal.chunks_exact(3) {
+    for chunk in transfer.normal.as_chunks::<3>().0 {
         normals.push(Vec3::new(chunk[0] as f64, chunk[1] as f64, chunk[2] as f64));
     }
     TriangleMesh { positions, normals, indices: transfer.index.clone() }
@@ -82,12 +82,12 @@ pub fn mesh_to_mesh_data(mesh: &TriangleMesh) -> MeshData {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn mesh_from_mesh_data(data: &MeshData) -> TriangleMesh {
     let mut positions = Vec::with_capacity(data.vertex_count());
-    for chunk in data.positions.chunks_exact(3) {
+    for chunk in data.positions.as_chunks::<3>().0 {
         positions.push(Pnt3::new(chunk[0] as f64, chunk[1] as f64, chunk[2] as f64));
     }
     let mut normals = Vec::with_capacity(positions.len());
     if data.normals.len() == data.positions.len() {
-        for chunk in data.normals.chunks_exact(3) {
+        for chunk in data.normals.as_chunks::<3>().0 {
             normals.push(Vec3::new(chunk[0] as f64, chunk[1] as f64, chunk[2] as f64));
         }
     }
@@ -116,7 +116,7 @@ pub fn import_stl_to_body(body: &mut Body, data: &[u8], tolerance: f64) -> Resul
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn export_solid_obj(body: &Body, solid: SolidId, deflection: f64) -> Result<String, KernelError> {
     let transfer = tessellate_solid(body, solid, deflection)?;
-    export_obj(&triangle_mesh_from_transfer(&transfer))
+    Ok(export_obj(&triangle_mesh_from_transfer(&transfer)))
 }
 
 /// 📦 Decodes OBJ text into `body` as a single solid.
@@ -176,8 +176,8 @@ pub fn import_stl(data: &[u8]) -> Result<TriangleMesh, KernelError> {
 
 /// 📦 Encodes OBJ text from a [`TriangleMesh`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn export_obj(mesh: &TriangleMesh) -> Result<String, KernelError> {
-    Ok(mesh_to_obj(&mesh_to_mesh_data(mesh), "mesh"))
+pub fn export_obj(mesh: &TriangleMesh) -> String {
+    mesh_to_obj(&mesh_to_mesh_data(mesh), "mesh")
 }
 
 /// 📦 Parses OBJ text into a [`TriangleMesh`].
@@ -224,7 +224,7 @@ pub fn import_triangle_mesh_to_body(body: &mut Body, mesh: &TriangleMesh, tolera
     let has_normals = mesh.normals.len() >= mesh.positions.len();
     let mut face_ids = Vec::new();
     let mut rec = OpRecorder::new();
-    for tri in mesh.indices.chunks_exact(3) {
+    for tri in mesh.indices.as_chunks::<3>().0 {
         let i0 = tri[0] as usize;
         let i1 = tri[1] as usize;
         let i2 = tri[2] as usize;
@@ -328,7 +328,7 @@ fn should_flip_winding(mesh: &TriangleMesh) -> bool {
         return false;
     }
     let mut total = 0.0;
-    for tri in mesh.indices.chunks_exact(3) {
+    for tri in mesh.indices.as_chunks::<3>().0 {
         let p0 = mesh.positions[tri[0] as usize];
         let p1 = mesh.positions[tri[1] as usize];
         let p2 = mesh.positions[tri[2] as usize];

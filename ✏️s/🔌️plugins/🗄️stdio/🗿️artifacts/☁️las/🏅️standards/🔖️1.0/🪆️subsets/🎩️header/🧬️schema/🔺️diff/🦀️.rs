@@ -4,6 +4,9 @@
 //! a top-level `Option<T>` scalar plus an index-keyed `vlrs` triple and an index-keyed `points`
 //! triple, each entity individually patchable.
 
+/// 🧩 Ordered removed keys, modified values, and inserted items.
+pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>);
+
 use std::collections::{BTreeSet, HashMap, HashSet};
 
 use crate::artifacts::las::schema::snapshot::{LasHeader, LasPoint, LasVlr};
@@ -26,16 +29,14 @@ fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified
             return Err(MutationApplyError::new("invalid-modify-index", "modification target must exist exactly once and remain present").at([target, &index.to_string()]));
         }
     }
-    let mut length = base_len - removed.len();
     let mut additions: Vec<usize> = added_indices.into_iter().collect();
     additions.sort_unstable();
     let mut previous = None;
-    for index in additions {
+    for (length, index) in (base_len - removed.len()..).zip(additions) {
         if index > length || previous == Some(index) {
             return Err(MutationApplyError::new("invalid-add-index", "addition target must be unique and within the evolving sequence").at([target, &index.to_string()]));
         }
         previous = Some(index);
-        length += 1;
     }
     Ok(())
 }
@@ -69,24 +70,18 @@ fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) 
     survivors
 }
 
+/// 🔺️ Borrowed removal, modification, and addition views for one indexed diff.
+type IndexedDiffRef<'a, D, T> = (&'a [usize], &'a [(usize, D)], &'a [(usize, T)]);
+
 /// ➕️ Generic index-keyed collection-triple absorb: `self` is base→mid (`d1`), `other` is
 /// mid→after (`d2`). `merge_field_diff`/`patch_item` are the only per-entity-type logic —
 /// everything else (index transport, annihilate-on-remove, patch-into-added) is the recipe's
 /// normative algorithm, identical for `vlrs` and `points`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_indexed_triple<Item: Clone, D: Clone + Default + PartialEq>(
-    d1_removed: &[usize],
-    d1_modified: &[(usize, D)],
-    d1_added: &[(usize, Item)],
-    d2_removed: &[usize],
-    d2_modified: &[(usize, D)],
-    d2_added: &[(usize, Item)],
-    absorb_field: impl Fn(&mut D, D),
-    patch_item: impl Fn(&mut Item, &D),
-) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, Item)>) {
+fn absorb_indexed_triple<Item: Clone, D: Clone + Default + PartialEq>((d1_removed, d1_modified, d1_added): IndexedDiffRef<'_, D, Item>, (d2_removed, d2_modified, d2_added): IndexedDiffRef<'_, D, Item>, absorb_field: impl Fn(&mut D, D), patch_item: impl Fn(&mut Item, &D)) -> IndexedDiffParts<D, Item> {
     let max_ref =
         d1_removed.iter().copied().chain(d1_modified.iter().map(|(i, _)| *i)).chain(d1_added.iter().map(|(i, _)| *i)).chain(d2_removed.iter().copied()).chain(d2_modified.iter().map(|(i, _)| *i)).chain(d2_added.iter().map(|(i, _)| *i)).max();
-    let l1 = max_ref.map(|m| m + 2).unwrap_or(0);
+    let l1 = max_ref.map_or(0, |m| m + 2);
 
     let base_labels: Vec<Lbl> = (0..l1).map(Lbl::Base).collect();
     let d1_added_lbl: Vec<(usize, Lbl)> = d1_added.iter().enumerate().map(|(j, (idx, _))| (*idx, Lbl::Added1(j))).collect();
@@ -124,8 +119,8 @@ fn absorb_indexed_triple<Item: Clone, D: Clone + Default + PartialEq>(
             Lbl::Base(i) if i != usize::MAX => {
                 present_base.insert(i);
                 let mid_pos = mid_pos_of_base.get(&i).copied();
-                let d1v = d1_modified_at.get(&i).cloned().cloned();
-                let d2v = mid_pos.and_then(|m| d2_modified_at.get(&m)).cloned().cloned();
+                let d1v = d1_modified_at.get(&i).copied().cloned();
+                let d2v = mid_pos.and_then(|m| d2_modified_at.get(&m)).copied().cloned();
                 let merged = match (d1v, d2v) {
                     (None, None) => None,
                     (Some(a), None) => Some(a),
@@ -310,7 +305,7 @@ fn absorb_vlrs(d1: Option<LasVlrsDiff>, d2: Option<LasVlrsDiff>) -> Option<LasVl
     let d1a: Vec<(usize, LasVlr)> = d1.added.iter().map(|a| (a.index, a.vlr.clone())).collect();
     let d2m: Vec<(usize, LasVlrDiff)> = d2.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
     let d2a: Vec<(usize, LasVlr)> = d2.added.iter().map(|a| (a.index, a.vlr.clone())).collect();
-    let (removed, modified, added) = absorb_indexed_triple(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a, absorb_vlr_diff, apply_vlr_diff);
+    let (removed, modified, added) = absorb_indexed_triple((&d1.removed, &d1m, &d1a), (&d2.removed, &d2m, &d2a), absorb_vlr_diff, apply_vlr_diff);
     let merged = LasVlrsDiff { removed, modified: modified.into_iter().map(|(index, diff)| LasVlrModified { index, diff }).collect(), added: added.into_iter().map(|(index, vlr)| LasVlrAdded { index, vlr }).collect() };
     if merged.is_empty() {
         None
@@ -424,7 +419,7 @@ fn point_between(a: &LasPoint, b: &LasPoint) -> LasPointDiff {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_point_diff(base: &mut LasPointDiff, other: LasPointDiff) {
+fn absorb_point_diff(base: &mut LasPointDiff, other: &LasPointDiff) {
     if other.x.is_some() {
         base.x = other.x;
     }
@@ -556,7 +551,7 @@ fn absorb_points(d1: Option<LasPointsDiff>, d2: Option<LasPointsDiff>) -> Option
     let d1a: Vec<(usize, LasPoint)> = d1.added.iter().map(|a| (a.index, a.point.clone())).collect();
     let d2m: Vec<(usize, LasPointDiff)> = d2.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
     let d2a: Vec<(usize, LasPoint)> = d2.added.iter().map(|a| (a.index, a.point.clone())).collect();
-    let (removed, modified, added) = absorb_indexed_triple(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a, absorb_point_diff, apply_point_diff);
+    let (removed, modified, added) = absorb_indexed_triple((&d1.removed, &d1m, &d1a), (&d2.removed, &d2m, &d2a), |base, other| absorb_point_diff(base, &other), apply_point_diff);
     let merged = LasPointsDiff { removed, modified: modified.into_iter().map(|(index, diff)| LasPointModified { index, diff }).collect(), added: added.into_iter().map(|(index, point)| LasPointAdded { index, point }).collect() };
     if merged.is_empty() {
         None
@@ -1023,10 +1018,10 @@ pub fn diff_remove_point(base: &LasSnapshot, index: usize) -> LasDiff {
     LasDiff { number_of_point_records: Some((base.points.len() - 1) as u32), points: Some(LasPointsDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_point(base: &LasSnapshot, index: usize, point: LasPoint) -> LasDiff {
+pub fn diff_set_point(base: &LasSnapshot, index: usize, point: &LasPoint) -> LasDiff {
     match base.points.get(index) {
         Some(existing) => {
-            let d = point_between(existing, &point);
+            let d = point_between(existing, point);
             if d == LasPointDiff::default() {
                 LasDiff::default()
             } else {
@@ -1080,7 +1075,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -1360,7 +1355,7 @@ fn enc_collection_triple(name: &str, removed: &[usize], modified: &[(usize, Stri
     format!("{name}{{[{removed}];[{modified}];[{added}]}}")
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_collection_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<(usize, String)>), String> {
+fn dec_collection_triple(body: &str) -> Result<IndexedDiffParts<String, String>, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("collection: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;

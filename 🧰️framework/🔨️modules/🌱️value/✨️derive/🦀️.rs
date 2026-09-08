@@ -956,7 +956,7 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                         // 🛡️ Internally-tagged unit variant: the whole entries object is nothing
                         // but the tag, so `deny_unknown_fields` allows exactly `{tag}`.
                         let deny_check = if container.deny_unknown_fields {
-                            deny_unknown_keys(&quote! { __entries }, &[tag.clone()], &value_crate)
+                            deny_unknown_keys(&quote! { __entries }, std::slice::from_ref(tag), &value_crate)
                         } else {
                             quote! {}
                         };
@@ -992,10 +992,10 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                         }).collect();
                         let deny_check = if container.deny_unknown_fields {
                             let allowed: Vec<String> = if content_key.is_some() {
-                                field_wire_names.clone()
+                                field_wire_names
                             } else {
                                 let mut allowed = vec![tag.clone()];
-                                allowed.extend(field_wire_names.clone());
+                                allowed.extend(field_wire_names);
                                 allowed
                             };
                             deny_unknown_keys(&quote! { __variant_entries }, &allowed, &value_crate)

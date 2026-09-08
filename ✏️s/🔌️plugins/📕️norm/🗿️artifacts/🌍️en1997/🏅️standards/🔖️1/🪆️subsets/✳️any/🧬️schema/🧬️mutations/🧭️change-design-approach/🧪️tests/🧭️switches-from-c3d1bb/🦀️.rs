@@ -35,17 +35,17 @@ fn built_outcome() -> protocol::MutationOutcome<En1997Diff> {
 /// every declared action value must ride through untouched, because factoring happens in the check, not in
 /// the document.
 #[semio_framework_async_macros::async_test]
-fn switches_from_design_approach_1_to_design_approach_2() {
+async fn switches_from_design_approach_1_to_design_approach_2() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-design-approach applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-design-approach/switches-from-design-approach-1-to-design-approach-2: the applied state differs from the committed after-snapshot");
-    assert_eq!(applied.design_approach, "da2", "change-design-approach/switches-from-design-approach-1-to-design-approach-2: design_approach must read "da2" once the change lands");
+    assert_eq!(applied.design_approach, "da2", r#"change-design-approach/switches-from-design-approach-1-to-design-approach-2: design_approach must read "da2" once the change lands"#);
     assert_eq!(applied.v_ed_kn, before().v_ed_kn, "change-design-approach/switches-from-design-approach-1-to-design-approach-2: characteristic actions are entered unfactored and must survive an approach switch byte for byte");
 }
 
 /// ↩️ `change-design-approach`'s inverse reads the OLD "da1str" out of BASE, so replaying it puts the "da1str"
 /// approach back on `design_approach`.
 #[semio_framework_async_macros::async_test]
-fn returning_to_design_approach_1_restores_before() {
+async fn returning_to_design_approach_1_restores_before() {
     let base = before();
     let forward = <En1997Mutation as protocol::Mutation<En1997Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-design-approach applies");
@@ -55,7 +55,7 @@ fn returning_to_design_approach_1_restores_before() {
         let undo = <En1997Mutation as protocol::Mutation<En1997Snapshot>>::diff(step, &snapshot);
         snapshot = protocol::MutationDiff::apply(undo.diff(), &snapshot).expect("the change-design-approach inverse step applies");
     }
-    assert_eq!(snapshot.design_approach, base.design_approach, "change-design-approach/switches-from-design-approach-1-to-design-approach-2: the inverse must put the "da1str" approach back on `design_approach`");
+    assert_eq!(snapshot.design_approach, base.design_approach, r#"change-design-approach/switches-from-design-approach-1-to-design-approach-2: the inverse must put the "da1str" approach back on `design_approach`"#);
     assert_eq!(snapshot, base, "change-design-approach/switches-from-design-approach-1-to-design-approach-2: replaying the inverse did not restore the whole before-snapshot");
 }
 
@@ -63,7 +63,7 @@ fn returning_to_design_approach_1_restores_before() {
 /// → encode is a fixed point, so `newDesignApproach`, a plain JSON string (the field is an unvalidated
 /// `String`, not an enum) is spelled here exactly as this artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-fn committed_json_is_canonical() {
+async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1997Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -78,11 +78,11 @@ fn committed_json_is_canonical() {
 /// 🎯️ "da2" differs from the committed "da1str", so the equality guard — the only guard
 /// `change-design-approach` has — does not degrade this to a `mutation.no-op` warning.
 #[semio_framework_async_macros::async_test]
-fn declared_outcome_holds() {
+async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-design-approach/switches-from-design-approach-1-to-design-approach-2: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, "change-design-approach/switches-from-design-approach-1-to-design-approach-2: `change-design-approach` has no finiteness guard — the field is a `String` — and "da2" differs from the committed "da1str", so its only guard, the equality one, stays shut");
+    assert_eq!(produced.worst_level(), None, r#"change-design-approach/switches-from-design-approach-1-to-design-approach-2: `change-design-approach` has no finiteness guard — the field is a `String` — and "da2" differs from the committed "da1str", so its only guard, the equality one, stays shut"#);
     assert!(produced.messages().is_empty(), "change-design-approach/switches-from-design-approach-1-to-design-approach-2: an accepted change-design-approach emits no diagnostics at all");
 }
 
@@ -90,7 +90,7 @@ fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `designApproach` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-fn produces_committed_diff() {
+async fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-design-approach diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-design-approach/switches-from-design-approach-1-to-design-approach-2: the produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -99,9 +99,9 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1997Diff`, re-encodes unchanged, and carries the design approach and
 /// nothing else.
 #[semio_framework_async_macros::async_test]
-fn committed_diff_is_canonical() {
+async fn committed_diff_is_canonical() {
     let decoded: En1997Diff = serde_json::from_str(DIFF).expect("the committed change-design-approach diff decodes");
-    assert_eq!(decoded.design_approach, Some("da2".to_string()), "change-design-approach/switches-from-design-approach-1-to-design-approach-2: the committed diff must carry designApproach = "da2"");
+    assert_eq!(decoded.design_approach, Some("da2".to_string()), r#"change-design-approach/switches-from-design-approach-1-to-design-approach-2: the committed diff must carry designApproach = "da2""#);
     assert!(decoded.annex.is_none(), "change-design-approach/switches-from-design-approach-1-to-design-approach-2: change-design-approach writes designApproach and must leave `annex` untouched");
     assert!(decoded.v_ed_kn.is_none(), "change-design-approach/switches-from-design-approach-1-to-design-approach-2: change-design-approach writes designApproach and must leave `v_ed_kn` untouched");
     assert!(decoded.artifact.is_none(), "change-design-approach/switches-from-design-approach-1-to-design-approach-2: a field-scoped change must never fall back to a whole-artifact replacement");
@@ -113,9 +113,9 @@ fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the design-approach switch, not a summary of it.
 #[semio_framework_async_macros::async_test]
-fn committed_diff_applies_to_after() {
+async fn committed_diff_applies_to_after() {
     let decoded: En1997Diff = serde_json::from_str(DIFF).expect("the committed change-design-approach diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-design-approach/switches-from-design-approach-1-to-design-approach-2: the committed diff did not carry before to after");
-    assert_eq!(produced.design_approach, "da2", "change-design-approach/switches-from-design-approach-1-to-design-approach-2: applying the committed diff must land design_approach on "da2"");
+    assert_eq!(produced.design_approach, "da2", r#"change-design-approach/switches-from-design-approach-1-to-design-approach-2: applying the committed diff must land design_approach on "da2""#);
 }

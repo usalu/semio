@@ -43,7 +43,7 @@ mod renderer {
     use geometry::{Affine, Arc, BezPath, Circle, CubicBez, Line, Rect, RoundedRect, ShapeRef};
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     use geometry::{PathEl, Point};
-    use std::mem::ManuallyDrop;
+    use std::mem::{size_of, ManuallyDrop};
     use std::sync::{Arc as SharedArc, Mutex, OnceLock};
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     use vello_backend as backend;
@@ -95,7 +95,6 @@ mod renderer {
         fn path_elements(&self, tolerance: f64) -> Self::PathElementsIter<'_> {
             shape_path_elements(self.0, tolerance).into_iter().map(path_element_to_kurbo).collect::<Vec<_>>().into_iter()
         }
-
         fn area(&self) -> f64 {
             kurbo::Shape::area(&self.to_path(0.1))
         }
@@ -176,6 +175,12 @@ mod renderer {
         }
         pub fn set_end_cap(&mut self, cap: Cap) {
             self.end_cap = cap;
+        }
+        fn retirement_step(&mut self) -> bool {
+            self.dash_pattern.pop().is_none()
+        }
+        fn retirement_backing_bytes(&self) -> usize {
+            self.dash_pattern.capacity().saturating_mul(size_of::<f64>())
         }
     }
 
@@ -330,6 +335,16 @@ mod renderer {
         pub fn rgba8(width: u32, height: u32, data: SharedArc<Vec<u8>>) -> Self {
             Self { width, height, data }
         }
+        fn retirement_step(&mut self) -> bool {
+            SharedArc::get_mut(&mut self.data).is_none_or(|data| data.pop().is_none())
+        }
+        fn retirement_backing_bytes(&self) -> usize {
+            if SharedArc::strong_count(&self.data) == 1 {
+                self.data.capacity()
+            } else {
+                0
+            }
+        }
         pub fn clone_data(&self) -> Self {
             Self { width: self.width, height: self.height, data: SharedArc::clone(&self.data) }
         }
@@ -473,6 +488,22 @@ mod renderer {
         BezPath(BezPath),
     }
 
+    impl RecordedShape {
+        fn retirement_step(&mut self) -> bool {
+            match self {
+                Self::BezPath(path) => path.retirement_step(),
+                Self::Rect(_) | Self::RoundedRect(_) | Self::Circle(_) | Self::Line(_) | Self::Arc(_) | Self::CubicBez(_) => true,
+            }
+        }
+
+        fn retirement_backing_bytes(&self) -> usize {
+            match self {
+                Self::BezPath(path) => path.retirement_backing_bytes(),
+                Self::Rect(_) | Self::RoundedRect(_) | Self::Circle(_) | Self::Line(_) | Self::Arc(_) | Self::CubicBez(_) => 0,
+            }
+        }
+    }
+
     /// 🖥️ Host/browser-only: the `ShapeRef` view is needed only to drive `geometry::with_shape_ref!`
     /// inside `SceneCommand::replay_into` below.
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
@@ -554,12 +585,80 @@ mod renderer {
     }
 
     impl SceneCommand {
+        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+        fn retire_vello_fragment(scene: &mut SharedArc<backend::Scene>) -> bool {
+            let Some(scene) = SharedArc::get_mut(scene) else {
+                return true;
+            };
+            let encoding = scene.encoding_mut();
+            encoding.resources.patches.pop().is_none()
+                && encoding.resources.color_stops.pop().is_none()
+                && encoding.resources.glyphs.pop().is_none()
+                && encoding.resources.glyph_runs.pop().is_none()
+                && encoding.resources.normalized_coords.pop().is_none()
+                && encoding.path_tags.pop().is_none()
+                && encoding.path_data.pop().is_none()
+                && encoding.draw_tags.pop().is_none()
+                && encoding.draw_data.pop().is_none()
+                && encoding.transforms.pop().is_none()
+                && encoding.styles.pop().is_none()
+        }
+
+        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+        #[allow(clippy::ptr_arg, reason = "retirement accounts allocation capacity, which a slice erases")]
+        fn vector_backing_bytes<T>(values: &Vec<T>) -> usize {
+            values.capacity().saturating_mul(size_of::<T>())
+        }
+
+        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+        fn vello_fragment_backing_bytes(scene: &SharedArc<backend::Scene>) -> usize {
+            if SharedArc::strong_count(scene) != 1 {
+                return 0;
+            }
+            let encoding = scene.encoding();
+            Self::vector_backing_bytes(&encoding.resources.patches)
+                .saturating_add(Self::vector_backing_bytes(&encoding.resources.color_stops))
+                .saturating_add(Self::vector_backing_bytes(&encoding.resources.glyphs))
+                .saturating_add(Self::vector_backing_bytes(&encoding.resources.glyph_runs))
+                .saturating_add(Self::vector_backing_bytes(&encoding.resources.normalized_coords))
+                .saturating_add(Self::vector_backing_bytes(&encoding.path_tags))
+                .saturating_add(Self::vector_backing_bytes(&encoding.path_data))
+                .saturating_add(Self::vector_backing_bytes(&encoding.draw_tags))
+                .saturating_add(Self::vector_backing_bytes(&encoding.draw_data))
+                .saturating_add(Self::vector_backing_bytes(&encoding.transforms))
+                .saturating_add(Self::vector_backing_bytes(&encoding.styles))
+        }
+
+        fn retirement_step(&mut self) -> bool {
+            match self {
+                Self::Fill { shape, .. } => shape.retirement_step(),
+                Self::Stroke { stroke, shape, .. } => stroke.retirement_step() && shape.retirement_step(),
+                Self::DrawImage { image, .. } => image.retirement_step(),
+                Self::PushLayer { clip, .. } | Self::PushClipLayer { clip, .. } => clip.retirement_step(),
+                Self::PopLayer => true,
+                #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+                Self::VelloFragment { scene, .. } => Self::retire_vello_fragment(scene),
+            }
+        }
+
+        fn retirement_backing_bytes(&self) -> usize {
+            match self {
+                Self::Fill { shape, .. } => shape.retirement_backing_bytes(),
+                Self::Stroke { stroke, shape, .. } => stroke.retirement_backing_bytes().saturating_add(shape.retirement_backing_bytes()),
+                Self::DrawImage { image, .. } => image.retirement_backing_bytes(),
+                Self::PushLayer { clip, .. } | Self::PushClipLayer { clip, .. } => clip.retirement_backing_bytes(),
+                Self::PopLayer => 0,
+                #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+                Self::VelloFragment { scene, .. } => Self::vello_fragment_backing_bytes(scene),
+            }
+        }
+
         /// 🔁️ Rewrites this command's own transform(s) as `outer * existing` — the same
         /// "child-space-then-outer" composition `vello::Scene::append` itself performs on its
         /// internal per-op transform stack, applied here one first-party command at a time so
         /// `Scene::append` can flatten `other`'s commands directly into `self`'s list (keeping
-        /// every command independently poppable by `retirement_step`, instead of nesting a whole
-        /// sub-scene behind one non-incremental drop).
+        /// every command independently transferable into the retained retirement cursor, instead
+        /// of nesting a whole sub-scene behind one non-incremental drop).
         fn transformed(self, outer: Affine) -> Self {
             match self {
                 Self::Fill { rule, transform, paint, brush_transform, shape } => Self::Fill { rule, transform: outer * transform, paint, brush_transform: brush_transform.map(|bt| outer * bt), shape },
@@ -637,6 +736,9 @@ mod renderer {
         occupied: bool,
         credited_bytes: usize,
         scene: Option<ManuallyDrop<Scene>>,
+        command: Option<ManuallyDrop<SceneCommand>>,
+        command_backing_bytes: usize,
+        command_credited_bytes: usize,
     }
 
     struct OpaqueSceneRetirementRegistry {
@@ -646,7 +748,7 @@ mod renderer {
 
     impl Default for OpaqueSceneRetirementRegistry {
         fn default() -> Self {
-            Self { slots: Box::new(std::array::from_fn(|_| OpaqueSceneRetirementSlot { generation: 0, occupied: false, credited_bytes: 0, scene: None })), faulted: false }
+            Self { slots: Box::new(std::array::from_fn(|_| OpaqueSceneRetirementSlot { generation: 0, occupied: false, credited_bytes: 0, scene: None, command: None, command_backing_bytes: 0, command_credited_bytes: 0 })), faulted: false }
         }
     }
 
@@ -658,7 +760,10 @@ mod renderer {
             };
             let slot = &mut self.slots[index];
             assert!(slot.scene.is_none(), "released opaque scene slot owns no scene");
+            assert!(slot.command.is_none(), "released opaque scene slot owns no command");
             assert_eq!(slot.credited_bytes, 0, "released opaque scene slot owns no byte credit");
+            assert_eq!(slot.command_backing_bytes, 0, "released opaque scene slot owns no command backing");
+            assert_eq!(slot.command_credited_bytes, 0, "released opaque scene slot owns no command byte credit");
             slot.generation = slot.generation.wrapping_add(1).max(1);
             slot.occupied = true;
             Some(OpaqueSceneRetirementToken { slot: index as u16, generation: slot.generation })
@@ -687,9 +792,27 @@ mod renderer {
             let Some(scene) = slot.scene.as_mut() else {
                 return OpaqueSceneRetirementStep::Blocked;
             };
-            if !scene.retirement_is_empty() {
-                assert!(!scene.retirement_step(), "nonempty opaque scene retires one exact command");
-                return OpaqueSceneRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 };
+            if let Some(command) = slot.command.as_mut() {
+                let remaining_bytes = slot.command_backing_bytes.saturating_sub(slot.command_credited_bytes);
+                let credited_bytes = maximum_bytes.min(remaining_bytes);
+                slot.command_credited_bytes = slot.command_credited_bytes.saturating_add(credited_bytes);
+                if slot.command_credited_bytes != slot.command_backing_bytes {
+                    return OpaqueSceneRetirementStep::Pending { released_items: 0, credited_bytes, released_bytes: 0 };
+                }
+                if !command.retirement_step() {
+                    return OpaqueSceneRetirementStep::Pending { released_items: 1, credited_bytes, released_bytes: 0 };
+                }
+                let command = slot.command.take().expect("terminal opaque scene command remains retained");
+                drop(ManuallyDrop::into_inner(command));
+                let released_bytes = slot.command_backing_bytes;
+                slot.command_backing_bytes = 0;
+                slot.command_credited_bytes = 0;
+                return OpaqueSceneRetirementStep::Pending { released_items: 1, credited_bytes, released_bytes };
+            }
+            if let Some(command) = scene.take_retirement_command() {
+                slot.command_backing_bytes = command.retirement_backing_bytes();
+                slot.command = Some(ManuallyDrop::new(command));
+                return OpaqueSceneRetirementStep::Pending { released_items: 0, credited_bytes: 0, released_bytes: 0 };
             }
             let released_bytes = scene.retirement_backing_bytes();
             let remaining_bytes = released_bytes.saturating_sub(slot.credited_bytes);
@@ -702,6 +825,9 @@ mod renderer {
             drop(ManuallyDrop::into_inner(scene));
             slot.occupied = false;
             slot.credited_bytes = 0;
+            debug_assert!(slot.command.is_none());
+            debug_assert_eq!(slot.command_backing_bytes, 0);
+            debug_assert_eq!(slot.command_credited_bytes, 0);
             OpaqueSceneRetirementStep::Complete { released_items: 1, credited_bytes, released_bytes }
         }
 
@@ -739,14 +865,9 @@ mod renderer {
         pub fn new() -> Self {
             Self(Vec::new())
         }
-        /// 🐌️ Retires (drops) exactly one recorded command per call — O(1) per call, same
-        /// "spread a big drop across ticks" contract the 11-buffer `vello_encoding::Encoding`
-        /// version had, just at first-party command granularity instead of sub-command buffer
-        /// granularity (glyph-run buffers never populated on `wasm32-wasip2` per
-        /// `🔍️research/📓️infinite-vello-image-split.md`, so no guest-side representation for
-        /// them was ever needed here).
-        pub fn retirement_step(&mut self) -> bool {
-            self.0.pop().is_none()
+        /// 🎬️ Transfers one exact command into the retained retirement cursor.
+        fn take_retirement_command(&mut self) -> Option<SceneCommand> {
+            self.0.pop()
         }
 
         pub fn retirement_is_empty(&self) -> bool {
@@ -766,7 +887,7 @@ mod renderer {
         }
         /// 🔗️ Flattens `other`'s commands directly into `self` (composing `transform` into each,
         /// see `SceneCommand::transformed`) rather than nesting a sub-scene, so every appended
-        /// command stays independently poppable by `retirement_step`.
+        /// command stays independently transferable into the retained retirement cursor.
         pub fn append(&mut self, other: &Scene, transform: Option<Affine>) {
             match transform {
                 Some(outer) => self.0.extend(other.0.iter().cloned().map(|command| command.transformed(outer))),
@@ -869,6 +990,7 @@ mod renderer {
                 let mut scene = Scene::new();
                 scene.pop_layer();
                 registry.publish(token, scene);
+                assert_eq!(registry.advance(token, 1, usize::MAX), OpaqueSceneRetirementStep::Pending { released_items: 0, credited_bytes: 0, released_bytes: 0 });
                 assert_eq!(registry.advance(token, 1, usize::MAX), OpaqueSceneRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 });
                 assert!(matches!(registry.advance(token, 1, usize::MAX), OpaqueSceneRetirementStep::Complete { released_items: 1, .. }));
                 assert_eq!(registry.active(), 0);
@@ -1922,13 +2044,13 @@ pub mod gpu_session {
                 renderer.render_to_texture(&dh.device, &dh.queue, &vello_scene, &surface.target_view, &params).map_err(|err| JsValue::from_str(&format!("{err:?}")))?;
 
                 let surface_tex = match surface.surface.get_current_texture() {
-                    Ok(t) => t,
-                    Err(wgpu::SurfaceError::Outdated) => {
+                    wgpu::CurrentSurfaceTexture::Success(frame) | wgpu::CurrentSurfaceTexture::Suboptimal(frame) => frame,
+                    wgpu::CurrentSurfaceTexture::Outdated => {
                         surface.surface.configure(&dh.device, &surface.config);
                         continue;
                     }
-                    Err(wgpu::SurfaceError::Timeout) | Err(wgpu::SurfaceError::Other) => return Ok(()),
-                    Err(wgpu::SurfaceError::Lost) | Err(wgpu::SurfaceError::OutOfMemory) => {
+                    wgpu::CurrentSurfaceTexture::Timeout | wgpu::CurrentSurfaceTexture::Occluded => return Ok(()),
+                    wgpu::CurrentSurfaceTexture::Lost | wgpu::CurrentSurfaceTexture::Validation => {
                         return Err(JsValue::from_str("surface lost or validation error"));
                     }
                 };
@@ -2092,7 +2214,7 @@ pub mod icon_codec {
         if let Some(svg) = resolve_inline_svg(t) {
             return Some(Icon::Svg { svg });
         }
-        if let Some(key) = MetabolismIconName::from_str(t) {
+        if let Some(key) = MetabolismIconName::parse(t) {
             return Some(Icon::Themed { key });
         }
         if let Some(key) = IconName::from_str(t) {

@@ -203,7 +203,7 @@ async fn run_interactive_inference(ctx: JobCtx, request: crate::app::WireArtifac
     let operation = Operation::new(OperationId(ctx.id().await), RevisionId(request.revision), Generation(request.generation), 0);
     let mut bridge = InferenceBridge::new(operation);
     ctx.tick().await;
-    bridge.publish_preview(dsl::os_pack::json::to_json_string(&(request.artifact_kind.clone(), request.inference_schema.clone())).into_bytes()).map_err(bridge_fault)?;
+    bridge.publish_preview(dsl::os_pack::json::to_json_string(&(request.artifact_kind.clone(), request.inference_schema.clone())).into_bytes()).map_err(|error| bridge_fault(&error))?;
     if let Some(item) = bridge.take_preview() {
         ctx.progress(encode_bridge_item(&item)).await;
     }
@@ -220,12 +220,12 @@ async fn run_interactive_inference(ctx: JobCtx, request: crate::app::WireArtifac
         config: semio_framework_job::BatchDriveConfig {
             site: "semio.infer.action-bus",
             stage: semio_framework_job::InteractiveStage::UserVisibleSimStep,
-            fuel_per_step: request.budgets.work_units.min(semio_framework_job::USER_VISIBLE_LANE_FUEL).max(1),
+            fuel_per_step: request.budgets.work_units.clamp(1, semio_framework_job::USER_VISIBLE_LANE_FUEL),
             step_budget_us: semio_framework_job::USER_VISIBLE_LANE_WALL_US,
         },
         now_us: semio_framework_job::default_now_us,
     };
-    let cores = std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1);
+    let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
     let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores));
     let mut session = match semio_framework_job::MountedWorkerJobSession::try_new(dispatch.job, params) {
         Ok(session) => session,
@@ -259,7 +259,7 @@ async fn run_interactive_inference(ctx: JobCtx, request: crate::app::WireArtifac
             StepOutcome::Yield => None,
             StepOutcome::PreviewReady(payload) => {
                 let bytes = copy_retained_payload(payload, PREVIEW_MAX_BYTES)?;
-                bridge.publish_preview(bytes).map_err(bridge_fault)?;
+                bridge.publish_preview(bytes).map_err(|error| bridge_fault(&error))?;
                 if let Some(item) = bridge.take_preview() {
                     ctx.progress(encode_bridge_item(&item)).await;
                 }
@@ -279,7 +279,7 @@ async fn run_interactive_inference(ctx: JobCtx, request: crate::app::WireArtifac
                 if let Some(item) = bridge.latest_diagnostic() {
                     ctx.progress(encode_bridge_item(item)).await;
                 }
-                let detail = bridge.latest_diagnostic().map(|item| String::from_utf8_lossy(&item.payload).into_owned()).unwrap_or_else(|| "interactive inference failed without retained diagnostic bytes".to_string());
+                let detail = bridge.latest_diagnostic().map_or_else(|| "interactive inference failed without retained diagnostic bytes".to_string(), |item| String::from_utf8_lossy(&item.payload).into_owned());
                 Some(Err(super::fault("job.infer.interactive", detail)))
             }
         };
@@ -322,7 +322,7 @@ fn copy_retained_payload(payload: &semio_framework_job::RetainedJobPayload, maxi
     Ok(bytes)
 }
 
-fn bridge_fault(error: InferenceBridgeError) -> semio_framework::Fault {
+fn bridge_fault(error: &InferenceBridgeError) -> semio_framework::Fault {
     super::fault("job.infer.bridge", error.to_string())
 }
 

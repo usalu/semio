@@ -18,7 +18,7 @@ use crate::editor::puzzle5d::{
     world_grip_position, Puzzle5dDocument, Puzzle5dScene, PUZZLE5D_FALLBACK_MESH_KIND,
 };
 use semio_framework_plugin::{
-    world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure,
+    world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_urls, World3dScene, world3d_selection_json, SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure,
     WindowOptions,
 };
 use semio_framework_ui_contract::BuiltNode;
@@ -207,29 +207,13 @@ fn world_fill_preview_json(session: &Puzzle5dPrecomputeSession, envelope: &Puzzl
 //#region 🔖️Render
 pub fn render(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let brush_preview = world_fill_preview_json(precompute, envelope, labels).or_else(|| world_brush_preview_json(precompute, envelope));
-    let scene = world3d_scene_extended(
-        camera3d_json(&envelope.runtime.camera3d),
-        world_meshes_json(&envelope.document),
-        world_instances_json(&envelope.document, &envelope.runtime),
-        world_selection_json_ex(envelope),
-        Some(world_grips_json(&envelope.document)),
-        Some(world_fasteners_json(&envelope.document)),
-        None,
-        None,
-        brush_preview,
-        Some(world_interaction_json(&envelope.runtime, &envelope.active_utility)),
-        None,
-        None,
-        Some(world3d_chunking_json(256.0, 8000.0)),
-        Some(world3d_environment_json(&envelope.runtime.sun)),
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-    );
+    let mut scene = World3dScene::base(camera3d_json(&envelope.runtime.camera3d), world_meshes_json(&envelope.document), world_instances_json(&envelope.document, &envelope.runtime), world_selection_json_ex(envelope));
+    scene.vortices_json = Some(world_grips_json(&envelope.document));
+    scene.attractions_json = Some(world_fasteners_json(&envelope.document));
+    scene.brush_preview_json = brush_preview;
+    scene.interaction_json = Some(world_interaction_json(&envelope.runtime, &envelope.active_utility));
+    scene.chunking_json = Some(world3d_chunking_json(256.0, 8000.0));
+    scene.environment_json = Some(world3d_environment_json(&envelope.runtime.sun));
     semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::World3d, &scene)
 }
 //#endregion 🔖️Render

@@ -110,7 +110,7 @@ mod tests {
     async fn config_operation_set_camera_diff_writes_the_targeted_field() {
         let base = EquationConfig::default();
         let camera = EquationCamera { x: 5.0, y: 6.0, zoom: 2.0 };
-        let operation = EquationConfigMutation::SetCamera(crate::editor::equation::config::SetCamera { camera: camera.clone() });
+        let operation = EquationConfigMutation::SetCamera(SetCamera { camera: camera.clone() });
         assert_eq!(Mutation::diff(&operation, &base).diff().camera, camera);
     }
 
@@ -118,18 +118,18 @@ mod tests {
     async fn config_operation_set_camera_round_trips() {
         let base = EquationConfig::default();
         let camera = EquationCamera { x: 5.0, y: 6.0, zoom: 2.0 };
-        let operation = EquationConfigMutation::SetCamera(crate::editor::equation::config::SetCamera { camera: camera.clone() });
+        let operation = EquationConfigMutation::SetCamera(SetCamera { camera: camera.clone() });
         let next = Mutation::diff(&operation, &base).diff().clone();
         assert_eq!(next.camera, camera);
         let backwards = Mutation::inverse(&operation, &base);
-        assert_eq!(backwards, vec![EquationConfigMutation::SetCamera(crate::editor::equation::config::SetCamera { camera: base.camera.clone() })]);
+        assert_eq!(backwards, vec![EquationConfigMutation::SetCamera(SetCamera { camera: base.camera.clone() })]);
         assert_eq!(Mutation::diff(&backwards[0], &next).diff().clone(), base);
         store::os_store::test_support::assert_op_line_round_trip(&operation);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn config_operation_set_locale_round_trips() {
-        store::os_store::test_support::assert_op_line_round_trip(&EquationConfigMutation::SetLocale(crate::editor::equation::config::SetLocale { value: "de-DE".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&EquationConfigMutation::SetLocale(SetLocale { value: "de-DE".into() }));
     }
 }
 //#endregion 🧪️Tests

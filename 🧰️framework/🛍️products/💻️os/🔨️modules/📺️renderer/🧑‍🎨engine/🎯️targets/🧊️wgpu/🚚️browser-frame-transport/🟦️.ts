@@ -97,7 +97,12 @@ export type BrowserFrameIntrospectionProbe = "structure" | "frame-stats";
 
 export type BrowserFrameWorkerIntrospect = { readonly kind: "introspect"; readonly lifecycle: number; readonly requestId: number; readonly probe: BrowserFrameIntrospectionProbe };
 
-export type BrowserFrameUiMessage = BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | { readonly kind: "close"; readonly lifecycle: number };
+/** @emoji 🧵️ One shard worker the UI isolate spawned on the frame worker's behalf, handed back as a
+ * `MessagePort`. Nested dedicated workers are unavailable in some embedded browsers, so the frame worker
+ * never constructs a shard `Worker` itself — see `shardWorkerPortBridge` in the wgpu plugin bridge. */
+export type BrowserFrameShardPort = { readonly kind: "shard-port"; readonly shardIndex: number; readonly port: MessagePort };
+
+export type BrowserFrameUiMessage = BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | { readonly kind: "close"; readonly lifecycle: number };
 
 export type BrowserFrameWorkerMessage =
   | { readonly kind: "boot-progress"; readonly lifecycle: number; readonly stage: string; readonly progress: number }
@@ -120,6 +125,8 @@ export type BrowserFrameWorkerMessage =
   | { readonly kind: "introspection"; readonly lifecycle: number; readonly requestId: number; readonly probe: BrowserFrameIntrospectionProbe; readonly json: string | null; readonly detail?: string }
   | { readonly kind: "fault"; readonly lifecycle: number; readonly code: string; readonly detail: string }
   | { readonly kind: "closed"; readonly lifecycle: number }
+  | { readonly kind: "shard-spawn"; readonly shardIndex: number; readonly url: string }
+  | { readonly kind: "shard-terminate"; readonly shardIndex: number }
   | InteractiveJobWorkerMessage;
 
 export interface BrowserFrameWorkerPort {
@@ -168,6 +175,7 @@ export class BrowserFrameTransport {
   status: BrowserFrameWorkerStatus = "booting";
   fault: { readonly code: BrowserFrameWorkerFaultCode; readonly detail: string } | undefined;
   private readonly worker: BrowserFrameWorkerPort;
+  private readonly shardWorkers = new Map<number, Worker>();
   private readonly now: () => number;
   private readonly clearTimer: (handle: number) => void;
   private readonly setTimer: (callback: () => void, delayMs: number) => number;
@@ -386,7 +394,42 @@ export class BrowserFrameTransport {
     return this.status === "booting" || this.status === "ready";
   }
 
+  /** @emoji 🧵️ Spawns one shard worker HERE, on the UI isolate, and hands the frame worker a
+   * `MessagePort` onto it. The frame worker cannot construct these itself: a nested dedicated worker
+   * fails to load outright in some embedded browsers (measured — even a one-line worker), which
+   * surfaced as four shards dying with a message-less `error` event and `create_app promise failed:
+   * shard 0 terminated`. Messages are relayed verbatim in both directions, and a worker-level `error`
+   * is forwarded as a `shard-worker-error` frame so `ShardClient`'s own failure ladder still runs. */
+  private spawnShardWorker(shardIndex: number, url: string): void {
+    this.terminateShardWorker(shardIndex);
+    const worker = new Worker(url, { type: "module" });
+    const channel = new MessageChannel();
+    worker.onmessage = (event: MessageEvent) => channel.port1.postMessage(event.data);
+    worker.onerror = (event: ErrorEvent) => channel.port1.postMessage({ kind: "shard-worker-error", message: event.message ?? "", filename: event.filename ?? "", lineno: event.lineno ?? 0 });
+    channel.port1.onmessage = (event: MessageEvent) => worker.postMessage(event.data);
+    channel.port1.start();
+    this.shardWorkers.set(shardIndex, worker);
+    this.worker.postMessage({ kind: "shard-port", shardIndex, port: channel.port2 }, [channel.port2]);
+  }
+
+  private terminateShardWorker(shardIndex: number): void {
+    const existing = this.shardWorkers.get(shardIndex);
+    if (!existing) return;
+    this.shardWorkers.delete(shardIndex);
+    existing.onmessage = null;
+    existing.onerror = null;
+    existing.terminate();
+  }
+
   private receive(message: BrowserFrameWorkerMessage): void {
+    if (message.kind === "shard-spawn") {
+      this.spawnShardWorker(message.shardIndex, message.url);
+      return;
+    }
+    if (message.kind === "shard-terminate") {
+      this.terminateShardWorker(message.shardIndex);
+      return;
+    }
     if (message.lifecycle !== this.lifecycle) return;
     if (message.kind === "job-input-pull" || message.kind === "job-output-page" || message.kind === "job-terminal") {
       this.interactiveJobs.receive(message);

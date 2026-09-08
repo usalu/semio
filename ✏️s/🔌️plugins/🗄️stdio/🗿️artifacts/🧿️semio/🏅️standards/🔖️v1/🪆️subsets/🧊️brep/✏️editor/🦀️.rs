@@ -125,7 +125,7 @@ impl ArtifactEditor for SemioBrepEditor {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
@@ -136,11 +136,10 @@ impl ArtifactEditor for SemioBrepEditor {
         let point = args
             .and_then(|value| value.get("point"))
             .and_then(DslValue::as_array)
-            .map(|array| {
+            .map_or([0.0, 0.0, 0.0], |array| {
                 let get = |index: usize| array.get(index).and_then(DslValue::as_f64).unwrap_or(0.0);
                 [get(0), get(1), get(2)]
-            })
-            .unwrap_or([0.0, 0.0, 0.0]);
+            });
         Ok(SemioBrepEditCommand::SetVertex(SemioBrepSetVertexArgs { point }))
     }
 }
@@ -172,7 +171,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn editor_and_viewer_share_one_dialect() {
-        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<SemioBrepEditor, crate::viewer::semio_brep::SemioBrepViewer>();
+        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<SemioBrepEditor, crate::viewer::semio_brep::SemioBrepViewer>().await;
     }
 
     //#region 🧪️SetVertex
@@ -203,7 +202,7 @@ mod tests {
         let command = SemioBrepEditCommand::SetVertex(SemioBrepSetVertexArgs { point: [1.5, -2.25, 4.0] });
         let bytes = protocol::OpBinary::encode_op(&command).expect("encode");
         assert_eq!(bytes.len(), 24);
-        let back = SemioBrepEditCommand::decode_op(&bytes).expect("decode");
+        let back = <SemioBrepEditCommand as protocol::OpBinary>::decode_op(&bytes).expect("decode");
         assert_eq!(back, command);
     }
 

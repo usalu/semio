@@ -3,6 +3,9 @@
 //! typed persisted source of truth (see the snapshot module's own doc comment for the exact
 //! honest-subset scope and the deviations it lists); `parse_markdown_blocks` is the codec's read
 //! half, independently testable.
+/// 🔗 Label range, destination, optional title, and next parse offset.
+pub type InlineLinkDestination = ((usize, usize), String, Option<String>, usize);
+
 
 use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
 
@@ -128,7 +131,7 @@ fn html_block_start(line: &str) -> bool {
     chars.next();
     match chars.next() {
         Some('!') | Some('?') => true,
-        Some('/') => chars.next().map(|c| c.is_ascii_alphabetic()).unwrap_or(false),
+        Some('/') => chars.next().is_some_and(|c| c.is_ascii_alphabetic()),
         Some(c) => c.is_ascii_alphabetic(),
         None => false,
     }
@@ -411,7 +414,7 @@ fn split_url_title(inside: &str) -> (String, Option<String>) {
 /// is `[`, finds the matching `]` (depth-aware) and, if immediately followed by `(...)`, the
 /// matching `)` (depth-aware). Returns `(text_range, url, title, total_consumed)`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn try_parse_bracket_paren(chars: &[char], start: usize) -> Option<((usize, usize), String, Option<String>, usize)> {
+fn try_parse_bracket_paren(chars: &[char], start: usize) -> Option<InlineLinkDestination> {
     let mut j = start + 1;
     let text_start = j;
     let mut depth = 1i32;
@@ -500,7 +503,7 @@ fn try_parse_html_inline(chars: &[char], start: usize) -> Option<(String, usize)
         j += 1;
     }
     let tag_start = j;
-    while chars.get(j).map(|c| c.is_ascii_alphanumeric() || *c == '-').unwrap_or(false) {
+    while chars.get(j).is_some_and(|c| c.is_ascii_alphanumeric() || *c == '-') {
         j += 1;
     }
     if j == tag_start {
@@ -604,7 +607,7 @@ fn parse_inline_lines(lines: &[&str]) -> Vec<MdInline> {
     for (idx, line) in lines.iter().enumerate() {
         let hard = line.ends_with("  ") || line.trim_end_matches(' ').ends_with('\\');
         let content = line.trim_end_matches(' ');
-        let content = if content.ends_with('\\') { &content[..content.len() - 1] } else { content };
+        let content = content.strip_suffix('\\').unwrap_or(content);
         out.extend(parse_inline(content));
         if idx + 1 < lines.len() {
             out.push(if hard { MdInline::HardBreak } else { MdInline::SoftBreak });

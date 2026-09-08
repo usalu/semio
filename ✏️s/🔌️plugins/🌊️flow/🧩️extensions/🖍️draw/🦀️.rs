@@ -1054,13 +1054,13 @@ mod tests {
             .contributes_topic(flow_topic.topic, flow_topic.payload)
             .contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload)
             .handler("evaluate", |req| Ok(flow_extension_sdk::evaluate_invoke_json(&module_registry(), req).unwrap()));
-        install_extension_bundle(bundle);
-        let installed = extension_manifest();
+        install_extension_bundle(bundle).await;
+        let installed = extension_manifest().await;
         assert_eq!(installed.topic_contributions.len(), 2);
         assert_eq!(installed.topic_contributions[0].topic, "flow.extension");
         assert_eq!(installed.topic_contributions[1].topic, "flow.extension");
-        let _ = extension_manifest();
-        extension_activate().expect("activate");
+        let _ = extension_manifest().await;
+        extension_activate().await.expect("activate");
         let _ = extension_invoke;
     }
 }

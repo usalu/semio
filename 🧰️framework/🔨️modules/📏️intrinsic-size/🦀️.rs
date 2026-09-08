@@ -210,7 +210,7 @@ pub fn svg_intrinsic_size(svg: &str) -> Result<(f64, f64), IntrinsicSizeError> {
     let tag = find_svg_tag(svg).ok_or(IntrinsicSizeError::NoSvgElement)?;
     let attrs = parse_attributes(tag);
     let view_box = attrs.get("viewBox").and_then(|v| parse_view_box(v));
-    let (container_w, container_h) = view_box.map(|(_, _, w, h)| (w, h)).unwrap_or((100.0, 100.0));
+    let (container_w, container_h) = view_box.map_or((100.0, 100.0), |(_, _, w, h)| (w, h));
     let width = resolve_length(attrs.get("width").map(String::as_str), container_w)?;
     let height = resolve_length(attrs.get("height").map(String::as_str), container_h)?;
     Ok((width, height))
@@ -376,7 +376,7 @@ fn split_unit(s: &str) -> (&str, Unit) {
             return (n, unit);
         }
     }
-    if s.chars().next_back().map(|c| c.is_ascii_alphabetic()).unwrap_or(false) {
+    if s.chars().next_back().is_some_and(|c| c.is_ascii_alphabetic()) {
         return (s, Unit::Unrecognized);
     }
     (s, Unit::Px)

@@ -20,13 +20,13 @@ fn before() -> Block3dSnapshot {
         crate::artifacts::block3d::Block3dVortexKind { id: "door".into(), name: "door".into(), label: "Door".into(), color: "hsl(206 52% 48%)".into(), default_cable_kind: "cable.link".into() },
         crate::artifacts::block3d::Block3dVortexKind { id: "hatch".into(), name: "hatch".into(), label: "Hatch".into(), color: "hsl(37 52% 48%)".into(), default_cable_kind: "cable.bus".into() },
     ]);
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> Block3dSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> Block3dMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`: the `door` vortex kind's `defaultCableKind` becomes `cable.heavy` — block-owned overflow, so the `catalog` handle is untouched
@@ -56,13 +56,13 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: Block3dSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: Block3dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-vortex-kind-default-cable-kind/swaps-door-default-cable-kind: committed {label} JSON is not canonical");
     }
     let decoded_mutation = mutation();
-    let reencoded = serde_json::to_value(&decoded_mutation).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded_mutation)).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "change-vortex-kind-default-cable-kind/swaps-door-default-cable-kind: committed mutation JSON is not canonical");
 }
@@ -91,7 +91,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <Block3dMutation as protocol::Mutation<Block3dSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-vortex-kind-default-cable-kind/swaps-door-default-cable-kind: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -99,8 +99,8 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::block3d::diff::Block3dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let decoded: crate::artifacts::block3d::diff::Block3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-vortex-kind-default-cable-kind/swaps-door-default-cable-kind: committed diff JSON is not canonical");
 }
@@ -109,7 +109,7 @@ async fn committed_diff_is_canonical() {
 /// complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::block3d::diff::Block3dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::artifacts::block3d::diff::Block3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::block3d::diff::Block3dDiff as protocol::MutationDiff<Block3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-vortex-kind-default-cable-kind/swaps-door-default-cable-kind: committed diff did not carry before to after");
 }

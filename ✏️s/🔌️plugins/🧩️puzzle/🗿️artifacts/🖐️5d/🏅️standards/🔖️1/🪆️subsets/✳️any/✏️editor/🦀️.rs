@@ -1666,7 +1666,7 @@ mod puzzle5d_retained_retirement_laws {
         assert_eq!(maximum_plus_one.len(), PUZZLE5D_IMPORT_MEDIA_BYTES + 1);
         assert!(puzzle5d_decode_import_fragment(&maximum_plus_one).is_err());
 
-        let canonical = serde_json::json!({
+        let canonical = dsl::json!({
             "schema": "manifest",
             "objectKinds": [],
             "vortexKinds": [],
@@ -1675,7 +1675,7 @@ mod puzzle5d_retained_retirement_laws {
             "kindCompatibility": [],
         });
         assert!(puzzle5d_import_keys_are(&canonical, &["schema", "objectKinds", "vortexKinds", "cableKinds", "attractionKinds", "kindCompatibility"]));
-        let hostile = serde_json::json!({ "objectKinds": [], "legacyRows": [] });
+        let hostile = dsl::json!({ "objectKinds": [], "legacyRows": [] });
         assert!(!puzzle5d_import_keys_are(&hostile, &["schema", "objectKinds", "vortexKinds", "cableKinds", "attractionKinds", "kindCompatibility"]));
     }
 
@@ -1697,7 +1697,7 @@ mod puzzle5d_retained_retirement_laws {
                     assert!(released_bytes <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
                     turns += 1;
                 }
-                Some(PluginCloseStep::Blocked { reason }) => panic!("typed close blocked: {reason}"),
+                Some(PluginCloseStep::AwaitingInput { .. } | PluginCloseStep::Blocked { .. }) => panic!("closed typed fixture unexpectedly requires input"),
                 Some(PluginCloseStep::Complete) => panic!("nested owner helper cannot publish outer completion"),
                 None => break,
             }
@@ -1720,7 +1720,7 @@ mod puzzle5d_retained_retirement_laws {
                     assert!(released_bytes <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
                     mutation_turns += 1;
                 }
-                Some(PluginCloseStep::Blocked { reason }) => panic!("preassembled mutation close blocked: {reason}"),
+                Some(PluginCloseStep::AwaitingInput { .. } | PluginCloseStep::Blocked { .. }) => panic!("closed typed fixture unexpectedly requires input"),
                 Some(PluginCloseStep::Complete) => panic!("mutation helper cannot publish outer completion"),
                 None => break,
             }
@@ -3249,16 +3249,13 @@ fn puzzle5d_retire_completion_emit_step(
     if let Some(step) = puzzle5d_retire_vec_backing(&mut owner.effects, maximum_bytes)? {
         return Ok(Some(step));
     }
-    if !owner.events.is_empty() || !owner.tasks.is_empty() {
-        return Err(Fault::from("puzzle5d completion rejection retained an unexpected event or task owner"));
+    if !owner.events.is_empty() {
+        return Err(Fault::from("puzzle5d completion rejection retained an unexpected event owner"));
     }
     if let Some(step) = puzzle5d_retire_vec_backing(&mut owner.events, maximum_bytes)? {
         return Ok(Some(step));
     }
-    if let Some(step) = puzzle5d_retire_vec_backing(&mut owner.child_emits, maximum_bytes)? {
-        return Ok(Some(step));
-    }
-    puzzle5d_retire_vec_backing(&mut owner.tasks, maximum_bytes)
+    puzzle5d_retire_vec_backing(&mut owner.child_emits, maximum_bytes)
 }
 
 fn puzzle5d_retire_completion_ephemeral_step(owner: &mut EphemeralEmit<EditorApp<Puzzle5dPlayApp>>, maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault> {
@@ -9408,13 +9405,13 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("zoomToSelection", InteractiveJobClassification::Migrated)
             // 📝️ Staged argument forms for the brush create actions (P1).
             .action_args("addPartKind", vec![
-                ActionArgDef::select("partKind", puzzle5d_localized(|l| l.kind), vec![ActionArgOption::new("Part", puzzle5d_localized(|l| l.part))]).default_value("Part"),
+                ActionArgDef::select("partKind", puzzle5d_localized(|l| l.kind), vec![ActionArgOption::new("Part", puzzle5d_localized(|l| l.part))]).default_value(&"Part"),
             ])
             .action_args("addBrushPart", vec![
-                ActionArgDef::select("partKind", puzzle5d_localized(|l| l.kind), vec![ActionArgOption::new("Part", puzzle5d_localized(|l| l.part))]).default_value("Part"),
+                ActionArgDef::select("partKind", puzzle5d_localized(|l| l.kind), vec![ActionArgOption::new("Part", puzzle5d_localized(|l| l.part))]).default_value(&"Part"),
             ])
             .action_args("addBrushObject", vec![
-                ActionArgDef::select("partKind", puzzle5d_localized(|l| l.kind), vec![ActionArgOption::new("Part", puzzle5d_localized(|l| l.part))]).default_value("Part"),
+                ActionArgDef::select("partKind", puzzle5d_localized(|l| l.kind), vec![ActionArgOption::new("Part", puzzle5d_localized(|l| l.part))]).default_value(&"Part"),
             ])
             // 🧰️ Flat per-window set of utilities; `select` is the default. Each `🪛️utilities/*` node
             // owns its own id/definition; a utility bound by BOTH windows is declared once (under the
@@ -9523,6 +9520,7 @@ pub(crate) mod testkit {
     /// 🖼️ The rendered body, as a JSON string — every panel/window assertion greps this value.
     pub fn render_body(app: &mut Puzzle5dApp, body_key: &str) -> String {
         let tree = semio_framework::io::resolve_ready(app.render(body_key, None, &ViewModel::default())).expect("render");
+        let mut scene_json = None;
         let mut stack = vec![&tree.root];
         while let Some(node) = stack.pop() {
             if let semio_framework_ui_contract::Component::Surface(surface) = &node.component {
@@ -9536,15 +9534,17 @@ pub(crate) mod testkit {
                     _ => continue,
                 }
                 .expect("serialize scene");
-                return serde_json::json!({ "schema": surface.doc_schema, "scene": scene }).to_string();
+                scene_json = Some(serde_json::json!({ "schema": surface.doc_schema, "scene": scene }).to_string());
+                break;
             }
             stack.extend(node.children.iter());
         }
-        serde_json::to_string(&tree.root).expect("serialize rendered node")
+        let projected = testkit::project_and_retire_fixture_tree(tree).expect("retire rendered node");
+        scene_json.unwrap_or(projected)
     }
 
     pub fn projection_of(app: &Puzzle5dApp) -> Value {
-        app.snapshot().expect("projection").0
+        parse(&app.snapshot().expect("projection").0.to_string()).expect("snapshot JSON")
     }
 
     pub fn part_count(app: &Puzzle5dApp) -> usize {
@@ -9579,7 +9579,7 @@ pub(crate) mod testkit {
 mod tests {
     use super::testkit::*;
     use super::*;
-    use protocol::MutationDiff;
+    
     use semio_framework_plugin::{ContextMenuRequest, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, PluginApp, UiMenuRef};
 
     #[test]
@@ -9996,7 +9996,7 @@ mod tests {
         use crate::artifacts::puzzle5d::spr::Puzzle5dStore;
         use crate::artifacts::puzzle5d::{Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, PUZZLE_5D_SCHEMA};
         use protocol::{ArtifactId, Edit, SchemaId};
-        use store::{create_document_envelope, EngineHandles};
+        use store::create_document_envelope;
 
         let mut store = semio_framework::io::resolve_ready(Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None))).expect("store");
         let part = Puzzle5dPart { id: "p1".into(), part_kind: None, anchor: Default::default(), part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
@@ -10058,7 +10058,7 @@ mod tests {
         let Effect::ClipboardWrite { fragment } = &copy_result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
         let before_count = part_count(&app);
         let before_ids: HashSet<String> = projection["parts"].as_array().unwrap().iter().map(|part| part["id"].as_str().unwrap_or_default().to_string()).collect();
-        let paste_args = serde_json::json!({ "fragment": fragment, "anchor": "original", "position": [10.0, 0.0, 0.0] });
+        let paste_args: dsl::DslValue = serde_json::json!({ "fragment": fragment, "anchor": "original", "position": [10.0, 0.0, 0.0] }).into();
         semio_framework::io::resolve_ready(app.handle_action("paste", Some(&paste_args), &meta("local"))).expect("paste");
         assert_eq!(part_count(&app), before_count + 1);
         let after = projection_of(&app);
@@ -10337,7 +10337,7 @@ mod tests {
         assert!(!result.mutations.is_empty(), "exact retained import must publish document mutations");
         let after = projection_of(&app);
         assert_ne!(after, before, "exact retained import must apply its completion output");
-        let snapshot: Puzzle5dSnapshot = serde_json::from_value(after).expect("retained projection deserializes");
+        let snapshot: Puzzle5dSnapshot = dsl::json::from_json_str(&after.to_string()).expect("retained projection deserializes");
         let catalogs = crate::artifacts::puzzle5d::kind_catalogs_of(&snapshot.kind_catalogs, &snapshot.kind_catalogs_extra).expect("retained catalog replacement applied");
         let part = catalogs.parts.iter().find(|part| part.id == "retained-capsule").expect("retained part catalog row");
         assert_eq!(part.grips.first().and_then(|grip| grip.grip_kind.as_deref()), Some("retained-door"));
@@ -10394,7 +10394,7 @@ mod tests {
         // `{parts:[...],...}` shape a JSON pointer could probe directly — reassemble the full
         // `Puzzle5dKindCatalogs` through the typed snapshot + `kind_catalogs_of` accessor instead
         // (same pattern `sourcing`'s `stock_of` established for its own composed catalog field).
-        let next_snapshot: Puzzle5dSnapshot = serde_json::from_value(next_projection.clone()).expect("next_projection deserializes as Puzzle5dSnapshot");
+        let next_snapshot: Puzzle5dSnapshot = dsl::json::from_json_str(&next_projection.to_string()).expect("next_projection deserializes as Puzzle5dSnapshot");
         let catalogs = crate::artifacts::puzzle5d::kind_catalogs_of(&next_snapshot.kind_catalogs, &next_snapshot.kind_catalogs_extra).expect("parts catalog present");
         let capsule = catalogs.parts.iter().find(|entry| entry.id == "capsule").expect("the imported part kind must appear in kindCatalogs.parts");
         assert_eq!(capsule.representations.first().map(|representation| representation.url.as_str()), Some("/mesh/capsule.glb"));
@@ -10429,14 +10429,13 @@ mod tests {
         }
 
         let current = projection_of(&app);
-        let current_snapshot: Puzzle5dSnapshot = serde_json::from_value(current.clone()).expect("current deserializes as Puzzle5dSnapshot");
+        let current_snapshot: Puzzle5dSnapshot = dsl::json::from_json_str(&current.to_string()).expect("current deserializes as Puzzle5dSnapshot");
         let catalogs = crate::artifacts::puzzle5d::kind_catalogs_of(&current_snapshot.kind_catalogs, &current_snapshot.kind_catalogs_extra).expect("parts catalog present");
         assert_eq!(catalogs.parts.iter().filter(|entry| entry.id == "capsule").count(), 1, "repeated delivery of the same fragment must upsert, never duplicate");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn kit_in_port_is_declared_on_the_app_io() {
-        let app = Puzzle5dPlayApp::default();
         let io = Puzzle5dPlayApp::io().expect("puzzle5d declares an AppIo");
         let kit_in = io.ports.iter().find(|port| port.id == "kit:in").expect("kit:in port declared");
         assert_eq!(kit_in.kind_id.as_deref(), Some("kit.catalog"));

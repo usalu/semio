@@ -1,8 +1,6 @@
 //#region 🩹️IssuedPatchReceipt
 use super::{decimal_generation, read_unsigned, ActorInstanceLifetime};
 use semio_framework_value_derive::{FromValue, ToValue};
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
 
 pub const ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES: usize = 35;
 

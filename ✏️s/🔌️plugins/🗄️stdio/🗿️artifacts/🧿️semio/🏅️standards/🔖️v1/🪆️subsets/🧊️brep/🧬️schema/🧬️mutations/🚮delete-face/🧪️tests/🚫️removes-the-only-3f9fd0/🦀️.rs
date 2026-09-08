@@ -4,7 +4,7 @@
 //! `mutation.target-missing`; otherwise the diff is a bare `faces.removed[id]`. No cascade in
 //! either direction — the loop the face bounded stays, and so does the shell that references the
 //! face. That deliberate non-cascade is what the single-collection diff pins.
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::{decode_semio_brep_diff_json, SemioBrepDiff};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::decode_semio_brep_diff_json;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{decode_semio_brep_mutation_json, SemioBrepMutation};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{decode_semio_brep_snapshot_json, SemioBrepSnapshot};
 use pack::value::ToValue;

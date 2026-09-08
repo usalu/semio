@@ -1174,7 +1174,7 @@ mod tests {
     fn marquee_maximum_plus_one_faults_without_unbounded_growth() {
         let mut document = crate::artifacts::drawing::schema::default_drawing_document("marquee-max", None);
         document.layers = (0..=DRAWING_QUERY_HIT_CAPACITY)
-            .map(|index| create_drawing_path_layer(format!("hit-{index}"), vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [1.0, 1.0] }]))
+            .map(|index| create_drawing_path_layer(&format!("hit-{index}"), vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [1.0, 1.0] }]))
             .collect();
         let mut query = TracePointerJob::new_marquee(&document, [-128.0, -128.0], [128.0, 128.0], true);
         let mut turns = 0;

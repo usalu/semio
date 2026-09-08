@@ -285,7 +285,7 @@ impl protocol::OpBinary for En1994Mutation {
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<En1994Mutation> {
     vec![
-        En1994Mutation::ChangeAnnex(ChangeAnnex { new_annex: AnnexChoice::En }),
+        En1994Mutation::ChangeAnnex(ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
         En1994Mutation::ChangeMEdKnm(ChangeMEdKnm { new_m_ed_knm: 42.75_f64 }),
         En1994Mutation::ChangeVEdKn(ChangeVEdKn { new_v_ed_kn: 42.75_f64 }),
         En1994Mutation::ChangeMPla(ChangeMPla { new_m_pla: 42.75_f64 }),
@@ -318,7 +318,7 @@ mod tests {
     use protocol::{OpBinary, OpText};
 
     #[semio_framework_async_macros::async_test]
-    fn op_text_binary_roundtrip_law() {
+    async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

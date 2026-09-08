@@ -875,6 +875,10 @@ impl<'file, S: PackSource> PackIdentityChunkCursor<'file, S> {
         self.entry.raw_len
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.entry.raw_len == 0
+    }
+
     pub fn remaining(&self) -> u64 {
         self.entry.raw_len.saturating_sub(self.offset)
     }
@@ -1089,6 +1093,11 @@ pub struct RetainedPackPage {
 }
 
 impl RetainedPackPage {
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    #[expect(clippy::result_large_err, reason = "Invalid page length returns the caller-owned fixed byte array without allocating on rejection.")]
     pub fn try_from_array(bytes: [u8; RETAINED_PACK_PAGE_BYTES], len: usize) -> Result<Self, [u8; RETAINED_PACK_PAGE_BYTES]> {
         if len == 0 || len > RETAINED_PACK_PAGE_BYTES {
             return Err(bytes);
@@ -1163,6 +1172,7 @@ impl RetainedPackSourceCursor {
         Ok(())
     }
 
+    #[expect(clippy::result_large_err, reason = "A full retained source returns the exact page owner without allocating beyond admitted capacity.")]
     pub fn admit_page(&mut self, page: RetainedPackPage) -> Result<(), RetainedPackPage> {
         if self.preflight_page(page.len()).is_err() {
             return Err(page);

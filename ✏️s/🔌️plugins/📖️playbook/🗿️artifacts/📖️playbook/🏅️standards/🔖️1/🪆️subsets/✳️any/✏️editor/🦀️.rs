@@ -369,16 +369,8 @@ impl ArtifactEditor for PlaybookPlayApp {
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
         };
-        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            request.context,
-            operation,
-            request.completion,
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion },
             PlaybookCommand::command_id,
             PLAYBOOK_RETAINED_RAW_BYTES,
             PLAYBOOK_RETAINED_WORK_ITEMS,
@@ -495,7 +487,7 @@ pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
                 LocalizedLabel::native("Kind", "Art"),
                 crate::artifacts::playbook::PLAYBOOK_BUILTIN_KINDS.iter().map(|kind| ActionArgOption::new(*kind, LocalizedLabel::data(*kind))).collect(),
             )
-            .default_value("text"),
+            .default_value(&"text"),
         ])
         // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "blocks" interaction
         // domain — two granularities ("block" default, "step"), `HierarchyProvider::Topology` from

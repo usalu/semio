@@ -875,7 +875,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn worked_example_u_value_known_wall() {
+    async fn worked_example_u_value_known_wall() {
         let layers = sample_wall();
         let r = part_2::total_resistance(&layers, R_SI_WALL_M2K_W, R_SE_WALL_M2K_W);
         let u = part_2::u_value_from_resistance(r);
@@ -884,7 +884,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn worked_example_f_rsi_above_minimum() {
+    async fn worked_example_f_rsi_above_minimum() {
         let layers = sample_moisture_wall();
         let f = part_3::interior_surface_temperature_factor(&layers, R_SI_WALL_M2K_W, R_SE_WALL_M2K_W, 20.0, -14.0, 0.5);
         assert!(f > F_RSI_MINIMUM, "f_Rsi = {f}, must exceed {F_RSI_MINIMUM}");
@@ -893,7 +893,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn worked_example_glaser_no_condensation_insulated_wall() {
+    async fn worked_example_glaser_no_condensation_insulated_wall() {
         let layers = sample_moisture_wall();
         assert!(!part_3::condensation_at_interfaces(&layers, 20.0, -14.0, 0.5));
         let check = part_3::check_glaser_moisture(&layers, 20.0, -14.0, 0.5).unwrap();
@@ -901,13 +901,13 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn worked_example_magnus_saturation_at_zero_c() {
+    async fn worked_example_magnus_saturation_at_zero_c() {
         let e = part_3::saturation_vapor_pressure_pa(0.0);
         assert!((e - 611.2).abs() < 1.0, "e_sat(0°C) = {e}");
     }
 
     #[semio_framework_async_macros::async_test]
-    fn worked_example_vapor_resistance_formula() {
+    async fn worked_example_vapor_resistance_formula() {
         let layer = part_3::MoistureLayer { thickness_m: 0.14, lambda_w_mk: 0.035, mu: 1.3 };
         let r_mu = part_3::vapor_resistance(&layer);
         let expected = 0.14 / (1.3 * 0.035);
@@ -915,7 +915,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn part_2_colder_zone_allows_higher_u_limit() {
+    async fn part_2_colder_zone_allows_higher_u_limit() {
         let limit_warm = part_2::climate_adjusted_u_limit(part_2::BuildingCategory::Residential, ClimateZoneDe::Zone4);
         let limit_cold = part_2::climate_adjusted_u_limit(part_2::BuildingCategory::Residential, ClimateZoneDe::Zone1);
         assert!(limit_cold > limit_warm, "zone1={limit_cold}, zone4={limit_warm}");
@@ -923,7 +923,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn part_4_mineral_wool_lambda() {
+    async fn part_4_mineral_wool_lambda() {
         let r = part_4::check_design_lambda("mineral_wool", 0.038).unwrap();
         assert_eq!(r.status, crate::document::CheckStatus::Pass);
         let design = part_4::design_lambda_for_material("mineral_wool").unwrap();
@@ -931,7 +931,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn part_4_has_fifteen_plus_materials() {
+    async fn part_4_has_fifteen_plus_materials() {
         let materials = ["mineral_wool", "glass_wool", "eps", "xps", "pur", "pir", "wood_fibre", "cellulose", "concrete", "aerated_concrete", "brick", "sand_lime_brick", "timber", "plywood", "gypsum_plaster", "lime_plaster", "clay_plaster"];
         assert!(materials.len() >= 15);
         for m in materials {
@@ -940,7 +940,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn part_5_summer_heat_zone_dependent() {
+    async fn part_5_summer_heat_zone_dependent() {
         let layers = sample_wall();
         let flux_z2 = part_5::peak_summer_heat_flux_w_m2(&layers, ClimateZoneDe::Zone2, 26.0, 0.6, 600.0);
         let flux_z4 = part_5::peak_summer_heat_flux_w_m2(&layers, ClimateZoneDe::Zone4, 26.0, 0.6, 600.0);
@@ -950,7 +950,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn part_6_thermal_bridge_increases_u() {
+    async fn part_6_thermal_bridge_increases_u() {
         let layers = sample_wall();
         let u_element = part_2::u_value_from_resistance(part_2::total_resistance(&layers, R_SI_WALL_M2K_W, R_SE_WALL_M2K_W));
         let u_bridged = part_6::u_value_with_thermal_bridges(u_element, 0.05);
@@ -960,7 +960,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn part_8_catalog_lookup() {
+    async fn part_8_catalog_lookup() {
         let entry = part_8::catalog_entry("AW-01").unwrap();
         assert!((entry.u_typical_w_m2k - 0.24).abs() < 0.01);
         let u = part_2::u_value_from_resistance(part_2::total_resistance(&sample_wall(), R_SI_WALL_M2K_W, R_SE_WALL_M2K_W));
@@ -969,7 +969,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn part_1_plausibility_flags_implausible_u_value() {
+    async fn part_1_plausibility_flags_implausible_u_value() {
         let layers = sample_wall();
         let ok = part_1::check_input_plausibility(&layers, 0.224);
         assert_eq!(ok.status, crate::document::CheckStatus::Pass);
@@ -980,7 +980,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn part_10_application_class_admissibility() {
+    async fn part_10_application_class_admissibility() {
         let admissible = part_10::check_application_class(part_10::ApplicationType::Deo, part_10::ApplicationClass::Dk);
         assert_eq!(admissible.status, crate::document::CheckStatus::Pass);
         let inadmissible = part_10::check_application_class(part_10::ApplicationType::Duk, part_10::ApplicationClass::Dm);
@@ -989,7 +989,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn bb2_worked_example_conform_details_pass() {
+    async fn bb2_worked_example_conform_details_pass() {
         let psi_l_sum = 18.0;
         let area = 400.0;
         let delta = bb_2::delta_u_wb_actual_w_m2k(psi_l_sum, area);
@@ -999,7 +999,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn bb2_non_conform_details_fall_back_to_flat_rate_surcharge() {
+    async fn bb2_non_conform_details_fall_back_to_flat_rate_surcharge() {
         let psi_l_sum = 32.0;
         let area = 400.0;
         let check = bb_2::check_beiblatt_2_equivalence(psi_l_sum, area, false).unwrap();

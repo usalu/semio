@@ -83,6 +83,8 @@ pub async fn verified_gis_map_test_profile(root: &Path) -> Result<VerifiedGisMap
     semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_s_plugin_gis::plugin().map_err(|error| AuthorityError::Catalog(format!("GIS assembly unavailable: {error:?}")))?);
     let emitted = semio_framework_plugin::describe::describe_plugin(&runtime).await;
     let mut descriptor = super::decode_package_descriptor(&emitted)?;
+    semio_s_plugin_stdio::registry::validate_native_artifact_catalog_dependency(&descriptor.manifest.dependencies).map_err(super::catalog_error)?;
+    semio_s_plugin_stdio::registry::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).map_err(super::catalog_error)?;
     let component_sha256 = hex_lower(&Sha256::digest(SYNTHETIC_COMPONENT));
     let mut component_blake3 = Hasher::new();
     component_blake3.update(SYNTHETIC_COMPONENT);
@@ -120,17 +122,18 @@ pub async fn verified_gis_map_test_profile(root: &Path) -> Result<VerifiedGisMap
     std::fs::write(root.join("component.wasm"), SYNTHETIC_COMPONENT).map_err(|error| AuthorityError::Catalog(format!("component write failed: {error}")))?;
     std::fs::write(root.join("descriptor.semio"), &descriptor_bytes).map_err(|error| AuthorityError::Catalog(format!("descriptor write failed: {error}")))?;
     std::fs::write(root.join("closed-actor.mjs"), SYNTHETIC_COMPONENT).map_err(|error| AuthorityError::Catalog(format!("synthetic actor write failed: {error}")))?;
+    let (stdio_identity, stdio_record) = super::headless_stdio_fixture_package(root)?;
     let mut bundle = serde_json::json!({
         "schemaVersion": 2,
         "profiles": [{
             "id": GIS_MAP_TEST_PROFILE_ID,
-            "selectedClosure": [package.clone()],
+            "selectedClosure": [package.clone(), stdio_identity.clone()],
             "selectedClosureSha256": "01".repeat(32),
             "openTarget": { "package": package.clone(), "target": target.clone() },
             "generationId": "02".repeat(32)
         }],
         "packages": [{
-            "pluginId": package["pluginId"], "packageId": package["packageId"], "version": package["version"], "role": "plugin", "dependencies": [],
+            "pluginId": package["pluginId"], "packageId": package["packageId"], "version": package["version"], "role": "plugin", "dependencies": [stdio_identity],
             "executionProtocol": { "appChannelVersion": descriptor.execution_protocol.app_channel_version },
             "component": { "path": "component.wasm", "byteLength": SYNTHETIC_COMPONENT.len(), "sha256": component_sha256, "blake3": hex_lower(component_blake3.finalize().as_bytes()) },
             "descriptor": { "path": "descriptor.semio", "byteLength": descriptor_bytes.len(), "sha256": hex_lower(&Sha256::digest(&descriptor_bytes)) },
@@ -140,7 +143,7 @@ pub async fn verified_gis_map_test_profile(root: &Path) -> Result<VerifiedGisMap
                 "sourceComponentSha256":component_sha256, "sourceDescriptorByteSha256":hex_lower(&Sha256::digest(&descriptor_bytes)), "policySha256":"41".repeat(32), "importInterfaces":[]
             },
             "nativeCodecs": native_codecs, "openTargets": [target]
-        }]
+        }, stdio_record]
     });
     let decoded: super::Bundle = serde_json::from_value(bundle.clone()).map_err(|error| AuthorityError::Catalog(format!("test-support bundle shape invalid: {error}")))?;
     bundle["profiles"][0]["selectedClosureSha256"] = hex_lower(&super::selected_closure_digest(&decoded.profiles[0].selected_closure)?).into();

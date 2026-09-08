@@ -1,4 +1,10 @@
 Feature: Correct Nx cache contracts
+  Scenario: Cargo component manifests own separate development and release deliverables
+    Given a plugin or extension Cargo package declares a component identity
+    When Nx discovers the package without running a compiler
+    Then both component profiles have a cacheable producer with exclusive staged outputs
+    And the producer compiles only that package through the shared Cargo incremental store
+
   Scenario: Side effects always execute
     Given a setup or publish target inherits a cacheable default
     When Nx resolves the project
@@ -64,3 +70,93 @@ Feature: Correct Nx cache contracts
     When the wrapper receives the cancellation signal
     Then Nx and its executable stop within the shutdown deadline
     And the health endpoint no longer accepts connections
+
+  Scenario: Native platform paths are selected on the current host
+    Given the operating-system development targets run on macOS, Linux, or Windows
+    When Nx resolves their environment
+    Then platform-specific SDK paths are absent from shared target metadata
+    And the Apple toolchain selector changes only the macOS environment
+
+  Scenario: Native services consume staged binary deliverables
+    Given a native service build and its development target
+    When Nx restores the cached build after its output directory was removed
+    Then the development target resolves the staged binary independently of Cargo state
+    And the restored binary answers an independent protocol client
+
+  Scenario: Asset encoding publishes one complete deliverable
+    Given an animated SVG whose path contains spaces, emoji, and a hash sign
+    When the export finishes
+    Then an independent media probe reports exactly the requested frames
+    And progress reaches the final frame
+    When the next export is cancelled
+    Then the previous deliverable remains byte-identical
+    And no encoder, browser, or temporary publication remains
+
+  Scenario: Cancelling a watcher owns callback descendants
+    Given an Nx watch callback starts a process that ignores the initial cancellation signal
+    When the public wrapper receives cancellation
+    Then the watcher and callback descendants stop within the shutdown deadline
+    And the wrapper leaves no inherited output pipe open
+
+  Scenario: Component consumers use restorable deliverables
+    Given the scale fixture's WASI component producer and native marshalling consumer
+    When Nx restores the component after deleting its staged directory
+    Then the consumer depends on that producer in the outer graph
+    And the restored component is independent of mutable Cargo target directories
+    And an independent component tool accepts its interface
+
+  Scenario: Bounded Rust discovery reuse follows source bytes
+    Given a warm discovery cache and two same-length source revisions
+    When the source changes while its modification timestamp remains unchanged
+    Then discovery matches the compiler dependency oracle for the new source
+    And repeated identical source reuses compact dependency facts
+    And retained facts never exceed the configured byte budget
+
+  Scenario: Browser materialization consumes completed component and support artifacts
+    Given a Cargo component and a fixed development or release profile
+    When Nx selects browser materialization
+    Then the component and shared browser support producers run first
+    And the materializer owns only its profile-specific module directory
+    And the descriptor is emitted beside the browser bridge without writing into source owners
+    And restoring the cached directory restores a usable component and descriptor
+
+  Scenario: Cancelling component code generation owns the compiler process
+    Given a materializer subprocess that ignores graceful termination
+    When materialization is cancelled
+    Then the subprocess stops before the shutdown deadline
+    And failed subprocess diagnostics stay within the configured bound
+
+  Scenario: Playground sessions have separate variant ownership
+    Given two playground variants declared by Cargo metadata
+    When Nx generates their sessions
+    Then each session depends on registry generation and its output bytes
+    And each variant owns an independent session directory
+    And restoring one variant leaves the other session unchanged
+
+  Scenario: Development selection starts from authored Cargo declarations
+    Given an authored playground manifest and no generated catalog
+    When the user selects its alias before Nx starts
+    Then its variant and ports match the independent TOML parser
+    And a same-time metadata edit changes the selection immediately
+    And stale generated data cannot change the selection
+    And duplicate variants and invalid ports are rejected
+
+  Scenario: Font bytes consume a separately cached native tool
+    Given the font tool and font bytes have disjoint output owners
+    When Nx builds the browser font asset
+    Then the tool is a declared prerequisite
+    And both tool and packed fonts are restorable outputs
+
+  Scenario: Browser engine output declarations match their producer
+    Given a WASM producer publishes a named bindings directory
+    When Nx caches the engine build
+    Then its output contract covers that exact directory
+    And the TypeScript compiler independently reads the producer declaration
+
+  Scenario: Each browser preparation declares its real producer closure
+    Given authored playground and component dependency metadata
+    When Nx selects a variant and profile
+    Then its session, browser support, fonts and engines are prerequisites
+    And only the variant's runtime plugin closure is materialized
+    And the host variant includes every component
+    And every engine path resolves to an authored project

@@ -73,7 +73,7 @@
     },
     {
       "project": "@semio-tech/framework-surface-rs",
-      "output": "{projectRoot}/pkg"
+      "output": "{projectRoot}/🕸️bindings"
     },
     {
       "project": "@semio-tech/framework-os-host-rs",
@@ -187,5 +187,265 @@
     "target": "@semio-tech/repo-coordinator:dev",
     "signal": "SIGTERM",
     "maxShutdownMs": 5000
+  },
+  "platformEnvironment": {
+    "project": "@semio-tech/framework-os-dev",
+    "keys": [
+      "SDKROOT",
+      "DEVELOPER_DIR"
+    ],
+    "platforms": [
+      "darwin",
+      "linux",
+      "win32"
+    ]
+  },
+  "nativeBinaries": [
+    {
+      "project": "@semio-tech/framework-os-mcp-rs",
+      "target": "build",
+      "consumer": "dev",
+      "output": "{projectRoot}/dist/build"
+    },
+    {
+      "project": "@semio-tech/framework-renderer-wgpu",
+      "target": "native-build",
+      "consumer": "native",
+      "output": "{projectRoot}/dist/native-dev"
+    },
+    {
+      "project": "@semio-tech/framework-renderer-wgpu",
+      "target": "native-build-release",
+      "consumer": "native-release",
+      "output": "{projectRoot}/dist/native-release"
+    }
+  ],
+  "svgExport": {
+    "inputName": "🧪️ animation # source.svg",
+    "width": 16,
+    "height": 16,
+    "fps": 2,
+    "durationSeconds": 1,
+    "expectedFrames": 2
+  },
+  "watchCancellation": {
+    "signal": "SIGTERM",
+    "shutdownMilliseconds": 8000,
+    "childIgnoresSignal": true
+  },
+  "components": [
+    {
+      "project": "@semio-tech/framework-os-scale-fixture",
+      "target": "build-wasm",
+      "output": "{projectRoot}/dist/component",
+      "filename": "semio_framework_os_scale_fixture.wasm",
+      "schemaInput": "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/**/*.wit",
+      "magic": [
+        0,
+        97,
+        115,
+        109,
+        13,
+        0,
+        1,
+        0
+      ],
+      "consumerProject": "@semio-tech/framework-plugin-host",
+      "consumerTarget": "ui-patch-marshalling-native-check"
+    }
+  ],
+  "benchmarkRenderers": [
+    "native",
+    "react",
+    "wgpu"
+  ],
+  "componentProfiles": [
+    {
+      "profile": "dev",
+      "target": "component-dev",
+      "output": "{projectRoot}/dist/component-dev"
+    },
+    {
+      "profile": "release",
+      "target": "component-release",
+      "output": "{projectRoot}/dist/component-release"
+    }
+  ],
+  "rustDiscoveryCache": {
+    "limitBytes": 4096,
+    "entry": "src/lib.rs",
+    "revisions": [
+      {
+        "source": "#[path=\"../domain/first.rs\"] mod chosen;\npub use chosen::VALUE;\n",
+        "inputs": [
+          "domain/first.rs",
+          "src/lib.rs"
+        ]
+      },
+      {
+        "source": "#[path=\"../domain/other.rs\"] mod chosen;\npub use chosen::VALUE;\n",
+        "inputs": [
+          "domain/other.rs",
+          "src/lib.rs"
+        ]
+      }
+    ],
+    "files": {
+      "domain/first.rs": "pub const VALUE: usize = 1;\n",
+      "domain/other.rs": "pub const VALUE: usize = 2;\n"
+    }
+  },
+  "materialization": {
+    "project": "@semio-tech/framework-plugin-web",
+    "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript",
+    "profiles": [
+      {
+        "profile": "dev",
+        "target": "materialize-dev",
+        "component": "component-dev",
+        "support": "support-dev"
+      },
+      {
+        "profile": "release",
+        "target": "materialize-release",
+        "component": "component-release",
+        "support": "support-release"
+      }
+    ],
+    "cancellation": {
+      "shutdownMilliseconds": 4500,
+      "maximumDiagnosticCharacters": 70000
+    }
+  },
+  "playgroundSessions": {
+    "project": "@semio-tech/plugin-registry",
+    "variants": [
+      "note",
+      "s"
+    ],
+    "prerequisite": "generate"
+  },
+  "playgroundSelections": {
+    "manifest": "owner/📦️packages/🦀️rust/Cargo.toml",
+    "text": "[package]\nname = \"selection-fixture\"\n[package.metadata.component]\npackage = \"semio:selection\"\n[package.metadata.semio]\nrole = \"plugin\"\n[[package.metadata.semio.playground]]\nvariant = \"selection\"\naliases = [\"pick this\"]\nports = { react = 6080, wgpu = 6180 }\n",
+    "variant": "selection",
+    "alias": "pick this",
+    "ports": [
+      6080,
+      6081
+    ]
+  },
+  "fontAssets": {
+    "project": "semio-framework-os-infinite",
+    "tool": "font-tool",
+    "producer": "fonts",
+    "toolOutput": "{projectRoot}/dist/font-tool",
+    "output": "{projectRoot}/dist/fonts"
+  },
+  "engineOutputs": [
+    {
+      "project": "@semio-tech/framework-surface-rs",
+      "directory": "🕸️bindings",
+      "outputs": [
+        "{projectRoot}/🕸️bindings"
+      ]
+    },
+    {
+      "project": "semio-framework-os-flow-core",
+      "directory": "🕸️bindings",
+      "outputs": [
+        "{projectRoot}/../../🕸️bindings",
+        "{projectRoot}/../../../📦️packages/🦀️rust/🕸️bindings"
+      ]
+    }
+  ],
+  "playgroundPreparation": {
+    "project": "@semio-tech/framework-os-dev",
+    "renderer": "react",
+    "profiles": [
+      "dev",
+      "release"
+    ],
+    "engines": [
+      "@semio-tech/framework-surface-rs:wasm",
+      "@semio-tech/framework-editor-rs:wasm",
+      "semio-framework-os-flow-core:wasm",
+      "@semio-tech/puzzle-plugin:wasm"
+    ],
+    "fonts": "semio-framework-os-infinite:fonts"
+  },
+  "socketFrames": {
+    "messages": [
+      {
+        "root": "🧰️framework/🛍️products/💻️os/📋️project.json",
+        "name": "semio"
+      },
+      {
+        "name": "🧩️puzzle",
+        "source": "Grüße 日本語"
+      },
+      {
+        "result": true
+      }
+    ],
+    "chunkSizes": [
+      1,
+      2,
+      3,
+      7,
+      64,
+      65536
+    ]
+  },
+  "wasmProfiles": [
+    {
+      "profile": "dev",
+      "pack": [
+        "--dev"
+      ],
+      "cargo": [
+        "--profile",
+        "dev"
+      ]
+    },
+    {
+      "profile": "release",
+      "pack": [
+        "--release"
+      ],
+      "cargo": [
+        "--profile",
+        "release"
+      ]
+    },
+    {
+      "profile": "wasm-release",
+      "pack": [
+        "--profile",
+        "wasm-release"
+      ],
+      "cargo": [
+        "--profile",
+        "wasm-release"
+      ]
+    }
+  ],
+  "daemonEnvironment": {
+    "NX_VERBOSE_LOGGING": "false",
+    "NX_PERF_LOGGING": "false",
+    "NX_NATIVE_LOGGING": "nx=warn"
+  },
+  "daemonLog": {
+    "limit": 65536,
+    "size": 131072,
+    "marker": "NATIVE_DAEMON_TAIL_MARKER"
+  },
+  "daemonTaskEnvironment": {
+    "SEMIO_TICKET_DIR": "fixture-ticket",
+    "SEMIO_PRINT_OUTPUT_DIR": "fixture-report-output",
+    "SEMIO_BUILD_MODE": "fixture-mode",
+    "SEMIO_PLUGIN": "fixture-plugin",
+    "SEMIO_RENDERER": "fixture-renderer",
+    "CODEX_SESSION_ID": "fixture-session"
   }
 }

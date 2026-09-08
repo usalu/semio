@@ -8,7 +8,7 @@ pub fn register() {}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &BinarySnapshot) -> Result<GifSnapshot, store::PackError> {
-    let mut snap = crate::artifacts::gif::standards::v89a::engine::decode_gif(&from.bytes).map_err(|e| store::PackError::Schema(e))?;
+    let mut snap = crate::artifacts::gif::standards::v89a::engine::decode_gif(&from.bytes).map_err(store::PackError::Schema)?;
     snap.schema = STDIO_GIF89A_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }

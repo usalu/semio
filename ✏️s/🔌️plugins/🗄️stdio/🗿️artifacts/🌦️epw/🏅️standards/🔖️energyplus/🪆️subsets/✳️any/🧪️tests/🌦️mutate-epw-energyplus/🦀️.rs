@@ -266,7 +266,7 @@ mod subject {
             "set-comments1" => EpwMutation::SetComments1(set_comments1::SetComments1 { value: params.str("value") }),
             "set-comments2" => EpwMutation::SetComments2(set_comments2::SetComments2 { value: params.str("value") }),
             "set-data-periods" => EpwMutation::SetDataPeriods(set_data_periods::SetDataPeriods { data_periods: data_periods_from(&params.get("dataPeriods").cloned().unwrap_or(Json::Null)) }),
-            "insert-record" => EpwMutation::InsertRecord(insert_record::InsertRecord { index: number("index").ok_or("insert-record: missing `index`")? as usize, record: record_from(&strings(&params, "fields")) }),
+            "insert-record" => EpwMutation::InsertRecord(insert_record::InsertRecord { index: number("index").ok_or("insert-record: missing `index`")? as usize, record: Box::new(record_from(&strings(&params, "fields"))) }),
             "remove-record" => EpwMutation::RemoveRecord(remove_record::RemoveRecord { index: number("index").ok_or("remove-record: missing `index`")? as usize }),
             "set-record-field" => EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: number("recordIndex").ok_or("set-record-field: missing `recordIndex`")? as usize, field_index: number("fieldIndex").ok_or("set-record-field: missing `fieldIndex`")? as usize, value: params.str("value") }),
             other => return Err(format!("no subject rule for kind {other:?}")),

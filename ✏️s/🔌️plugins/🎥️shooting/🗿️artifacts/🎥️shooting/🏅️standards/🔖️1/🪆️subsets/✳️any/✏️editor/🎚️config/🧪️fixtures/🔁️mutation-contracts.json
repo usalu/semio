@@ -9,17 +9,17 @@
     "cameraDraftLabel": "",
     "camera": {
       "position": [
-        420,
-        -420,
-        320
+        420.0,
+        -420.0,
+        320.0
       ],
       "target": [
-        0,
-        0,
-        40
+        0.0,
+        0.0,
+        40.0
       ],
-      "zoom": 1,
-      "fov": 50
+      "zoom": 1.0,
+      "fov": 50.0
     },
     "activeUtilityId": "move",
     "locale": "en-US"
@@ -39,17 +39,17 @@
             "cameraDraftLabel": "Übersicht",
             "camera": {
               "position": [
-                420,
-                -420,
-                320
+                420.0,
+                -420.0,
+                320.0
               ],
               "target": [
-                0,
-                0,
-                40
+                0.0,
+                0.0,
+                40.0
               ],
-              "zoom": 1,
-              "fov": 50
+              "zoom": 1.0,
+              "fov": 50.0
             },
             "activeUtilityId": "move",
             "locale": "de-DE"
@@ -66,17 +66,17 @@
         "cameraDraftLabel": "Übersicht",
         "camera": {
           "position": [
-            420,
-            -420,
-            320
+            420.0,
+            -420.0,
+            320.0
           ],
           "target": [
-            0,
-            0,
-            40
+            0.0,
+            0.0,
+            40.0
           ],
-          "zoom": 1,
-          "fov": 50
+          "zoom": 1.0,
+          "fov": 50.0
         },
         "activeUtilityId": "move",
         "locale": "de-DE"
@@ -105,17 +105,17 @@
         "cameraDraftLabel": "",
         "camera": {
           "position": [
-            420,
-            -420,
-            320
+            420.0,
+            -420.0,
+            320.0
           ],
           "target": [
-            0,
-            0,
-            40
+            0.0,
+            0.0,
+            40.0
           ],
-          "zoom": 1,
-          "fov": 50
+          "zoom": 1.0,
+          "fov": 50.0
         },
         "activeUtilityId": "move",
         "locale": "en-US"
@@ -138,17 +138,17 @@
         "cameraDraftLabel": "",
         "camera": {
           "position": [
-            420,
-            -420,
-            320
+            420.0,
+            -420.0,
+            320.0
           ],
           "target": [
-            0,
-            0,
-            40
+            0.0,
+            0.0,
+            40.0
           ],
-          "zoom": 1,
-          "fov": 50
+          "zoom": 1.0,
+          "fov": 50.0
         },
         "activeUtilityId": "move",
         "locale": "en-US"
@@ -171,17 +171,17 @@
         "cameraDraftLabel": "",
         "camera": {
           "position": [
-            420,
-            -420,
-            320
+            420.0,
+            -420.0,
+            320.0
           ],
           "target": [
-            0,
-            0,
-            40
+            0.0,
+            0.0,
+            40.0
           ],
-          "zoom": 1,
-          "fov": 50
+          "zoom": 1.0,
+          "fov": 50.0
         },
         "activeUtilityId": "move",
         "locale": "en-US"
@@ -204,17 +204,17 @@
         "cameraDraftLabel": "Übersicht",
         "camera": {
           "position": [
-            420,
-            -420,
-            320
+            420.0,
+            -420.0,
+            320.0
           ],
           "target": [
-            0,
-            0,
-            40
+            0.0,
+            0.0,
+            40.0
           ],
-          "zoom": 1,
-          "fov": 50
+          "zoom": 1.0,
+          "fov": 50.0
         },
         "activeUtilityId": "move",
         "locale": "en-US"
@@ -226,21 +226,21 @@
         "SetCamera": {
           "camera": {
             "position": [
-              1,
-              2,
-              3
+              1.0,
+              2.0,
+              3.0
             ],
             "target": [
-              0,
-              0,
-              0
+              0.0,
+              0.0,
+              0.0
             ],
-            "zoom": 2,
-            "fov": 35,
+            "zoom": 2.0,
+            "fov": 35.0,
             "up": [
-              0,
-              0,
-              1
+              0.0,
+              0.0,
+              1.0
             ],
             "projection": "orthographic"
           }
@@ -256,21 +256,21 @@
         "cameraDraftLabel": "",
         "camera": {
           "position": [
-            1,
-            2,
-            3
+            1.0,
+            2.0,
+            3.0
           ],
           "target": [
-            0,
-            0,
-            0
+            0.0,
+            0.0,
+            0.0
           ],
-          "zoom": 2,
-          "fov": 35,
+          "zoom": 2.0,
+          "fov": 35.0,
           "up": [
-            0,
-            0,
-            1
+            0.0,
+            0.0,
+            1.0
           ],
           "projection": "orthographic"
         },
@@ -295,17 +295,17 @@
         "cameraDraftLabel": "",
         "camera": {
           "position": [
-            420,
-            -420,
-            320
+            420.0,
+            -420.0,
+            320.0
           ],
           "target": [
-            0,
-            0,
-            40
+            0.0,
+            0.0,
+            40.0
           ],
-          "zoom": 1,
-          "fov": 50
+          "zoom": 1.0,
+          "fov": 50.0
         },
         "activeUtilityId": "rotate",
         "locale": "en-US"
@@ -328,17 +328,17 @@
         "cameraDraftLabel": "",
         "camera": {
           "position": [
-            420,
-            -420,
-            320
+            420.0,
+            -420.0,
+            320.0
           ],
           "target": [
-            0,
-            0,
-            40
+            0.0,
+            0.0,
+            40.0
           ],
-          "zoom": 1,
-          "fov": 50
+          "zoom": 1.0,
+          "fov": 50.0
         },
         "activeUtilityId": "move",
         "locale": "de-DE"
@@ -363,17 +363,17 @@
         "cameraDraftLabel": "",
         "camera": {
           "position": [
-            420,
-            -420,
-            320
+            420.0,
+            -420.0,
+            320.0
           ],
           "target": [
-            0,
-            0,
-            40
+            0.0,
+            0.0,
+            40.0
           ],
-          "zoom": 1,
-          "fov": 50
+          "zoom": 1.0,
+          "fov": 50.0
         },
         "activeUtilityId": "move",
         "locale": "en-US"

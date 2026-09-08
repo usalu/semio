@@ -21,13 +21,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioDocumentSnapshot {
-    serde_json::from_str(BEFORE).expect("before document snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("before document snapshot decodes")
 }
 fn expected_after() -> SemioDocumentSnapshot {
-    serde_json::from_str(AFTER).expect("after document snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("after document snapshot decodes")
 }
 fn mutation() -> SemioDocumentMutation {
-    serde_json::from_str(MUTATION).expect("set-snapshot mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("set-snapshot mutation decodes")
 }
 
 /// ▶️ `set-snapshot` carries the document to exactly the committed `after`: a bold, finalized body
@@ -65,12 +65,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioDocumentSnapshot = serde_json::from_str(text).expect("document snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("document snapshot encodes");
+        let decoded: SemioDocumentSnapshot = dsl::json::from_json_str(text).expect("document snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("document snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("document snapshot reparses");
         assert_eq!(reencoded, original, "semio-document/set-snapshot: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("set-snapshot mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("set-snapshot mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("set-snapshot mutation reparses");
     assert_eq!(reencoded, original, "semio-document/set-snapshot: committed mutation JSON is not canonical");
 }
@@ -96,7 +96,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioDocumentMutation as protocol::Mutation<SemioDocumentSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced document diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced document diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed document diff decodes");
     assert_eq!(produced, committed, "semio-document/set-snapshot: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -105,7 +105,7 @@ async fn produces_committed_diff() {
 /// preserving `Paragraph` patch.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: SemioDocumentDiff = serde_json::from_str(DIFF).expect("committed document diff decodes");
+    let decoded: SemioDocumentDiff = dsl::json::from_json_str(DIFF).expect("committed document diff decodes");
     assert!(decoded.styles.is_none() && decoded.images.is_none(), "semio-document/set-snapshot: neither the style table nor the image store may be re-emitted");
     let blocks = decoded.blocks.as_ref().expect("the committed diff carries a blocks triple");
     assert!(blocks.removed.is_empty() && blocks.added.is_empty() && blocks.modified.len() == 1 && blocks.modified[0].index == 1, "semio-document/set-snapshot: exactly the body paragraph may be patched in place");
@@ -118,7 +118,7 @@ async fn committed_diff_is_canonical() {
     let style = runs.modified[0].diff.style.as_ref().expect("the run patch carries a style delta");
     assert_eq!(style.bold, Some(true), "semio-document/set-snapshot: the style delta must set bold");
     assert!(style.italic.is_none() && style.underline.is_none() && style.size.is_none() && style.font.is_none() && style.color.is_none() && style.link.is_none(), "semio-document/set-snapshot: no other RunStyle field moved, so none may appear");
-    let reencoded = serde_json::to_value(&decoded).expect("document diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("document diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed document diff reparses");
     assert_eq!(reencoded, original, "semio-document/set-snapshot: committed diff JSON is not canonical");
 }
@@ -127,7 +127,7 @@ async fn committed_diff_is_canonical() {
 /// plus the single style flag is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioDocumentDiff = serde_json::from_str(DIFF).expect("committed document diff decodes");
+    let decoded: SemioDocumentDiff = dsl::json::from_json_str(DIFF).expect("committed document diff decodes");
     let produced = <SemioDocumentDiff as protocol::MutationDiff<SemioDocumentSnapshot>>::apply(&decoded, &before()).expect("committed document diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "semio-document/set-snapshot: committed diff did not carry before to after");
 }

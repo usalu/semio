@@ -186,9 +186,9 @@ mod tests {
     #[test]
     fn diff_absorb_composes_two_change_seed_mutations() {
         let base = AssemblySnapshot::default();
-        let d1 = change_seed(1).diff(&base);
+        let d1 = change_seed(1).diff(&base).into_parts().0;
         let mid = d1.apply(&base).expect("valid mutation diff");
-        let d2 = change_seed(2).diff(&mid);
+        let d2 = change_seed(2).diff(&mid).into_parts().0;
         let mut composed = d1.clone();
         composed.absorb(d2.clone());
         assert_eq!(composed.apply(&base).expect("valid mutation diff"), d2.apply(&mid).expect("valid mutation diff"));
@@ -201,7 +201,7 @@ mod tests {
     /// declared vocabulary and the measured one from drifting apart.
     #[test]
     fn kinds_match_the_enum_and_the_catalog() {
-        let descriptors = <AssemblyMutation as protocol::SemanticMutation<AssemblySnapshot>>::kinds();
+        let descriptors = <AssemblyMutation as SemanticMutation<AssemblySnapshot>>::kinds();
         assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared AssemblyMutation variant");
         for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
             assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");

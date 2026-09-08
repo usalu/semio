@@ -80,7 +80,7 @@ fn cold_pair_ingress_streams_the_exact_four_mibibyte_pair_and_loads_once() {
     assert_eq!(exact_header.page_count, COLD_PAIR_MAXIMUM_PAGES);
     let mut ingress = ColdDocumentPairIngressRegistry::<16>::new();
     for index in 0..exact_header.page_count {
-        let status = ingress.accept_page(page(&exact_header, &pack, &spr, index), Some(exact_header.lifetime));
+        let status = ingress.accept_page(&page(&exact_header, &pack, &spr, index), Some(exact_header.lifetime));
         if index + 1 == exact_header.page_count {
             assert!(matches!(status, ColdPairIngressStatus::Loading(cursor) if cursor == exact_header.cursor(index)));
         } else {
@@ -98,7 +98,7 @@ fn cold_pair_ingress_streams_the_exact_four_mibibyte_pair_and_loads_once() {
         matches!(status, ColdPairIngressStatus::Applied(receipt) if receipt.lifetime == exact_header.lifetime && receipt.transfer_generation == 51 && receipt.baseline_frontier == exact_header.baseline_frontier && receipt.aggregate_sha256 == exact_header.aggregate_sha256)
     );
     assert!(ingress.is_applied(exact_header.lifetime));
-    assert!(matches!(ingress.accept_page(page(&exact_header, &pack, &spr, 63), Some(exact_header.lifetime)), ColdPairIngressStatus::Backpressure(_)));
+    assert!(matches!(ingress.accept_page(&page(&exact_header, &pack, &spr, 63), Some(exact_header.lifetime)), ColdPairIngressStatus::Backpressure(_)));
     let (wiped, steps) = close_all(&mut ingress, exact_header.lifetime);
     assert_eq!(wiped, pack.len() + spr.len());
     assert_eq!(steps, COLD_PAIR_MAXIMUM_PAGES as usize);
@@ -113,23 +113,23 @@ fn cold_pair_ingress_rechecks_live_and_rejects_hostile_pages_without_displacemen
     let mut ingress = ColdDocumentPairIngressRegistry::<1>::new();
     let mut malformed_first = page(&exact_header, &pack, &spr, 0);
     malformed_first.bytes.pop();
-    assert!(matches!(ingress.accept_page(malformed_first, Some(exact_header.lifetime)), ColdPairIngressStatus::Fault { .. }));
+    assert!(matches!(ingress.accept_page(&malformed_first, Some(exact_header.lifetime)), ColdPairIngressStatus::Fault { .. }));
     assert!(!ingress.is_mounted(exact_header.lifetime));
-    assert!(matches!(ingress.accept_page(page(&exact_header, &pack, &spr, 0), Some(exact_header.lifetime)), ColdPairIngressStatus::PageAccepted(_)));
-    assert!(matches!(ingress.accept_page(page(&exact_header, &pack, &spr, 1), None), ColdPairIngressStatus::Fault { ref fault, .. } if fault == b"cold-pair.not-live"));
+    assert!(matches!(ingress.accept_page(&page(&exact_header, &pack, &spr, 0), Some(exact_header.lifetime)), ColdPairIngressStatus::PageAccepted(_)));
+    assert!(matches!(ingress.accept_page(&page(&exact_header, &pack, &spr, 1), None), ColdPairIngressStatus::Fault { ref fault, .. } if fault == b"cold-pair.not-live"));
     let mut changed = page(&exact_header, &pack, &spr, 1);
     changed.header.descriptor_sha256[0] ^= 1;
-    assert!(matches!(ingress.accept_page(changed, Some(exact_header.lifetime)), ColdPairIngressStatus::Fault { .. }));
+    assert!(matches!(ingress.accept_page(&changed, Some(exact_header.lifetime)), ColdPairIngressStatus::Fault { .. }));
     let foreign_header = header(&pack, &spr, lifetime(14), 53);
-    assert!(matches!(ingress.accept_page(page(&foreign_header, &pack, &spr, 0), Some(foreign_header.lifetime)), ColdPairIngressStatus::Fault { ref fault, .. } if fault == b"cold-pair.slot-collision"));
+    assert!(matches!(ingress.accept_page(&page(&foreign_header, &pack, &spr, 0), Some(foreign_header.lifetime)), ColdPairIngressStatus::Fault { ref fault, .. } if fault == b"cold-pair.slot-collision"));
     let mut short = page(&exact_header, &pack, &spr, 1);
     short.bytes.pop();
-    assert!(matches!(ingress.accept_page(short, Some(exact_header.lifetime)), ColdPairIngressStatus::Fault { .. }));
+    assert!(matches!(ingress.accept_page(&short, Some(exact_header.lifetime)), ColdPairIngressStatus::Fault { .. }));
     assert_eq!(ingress.retained_bytes(exact_header.lifetime), COLD_PAIR_PAGE_MAXIMUM_BYTES);
-    assert!(matches!(ingress.accept_page(page(&exact_header, &pack, &spr, 1), Some(exact_header.lifetime)), ColdPairIngressStatus::PageAccepted(_)));
+    assert!(matches!(ingress.accept_page(&page(&exact_header, &pack, &spr, 1), Some(exact_header.lifetime)), ColdPairIngressStatus::PageAccepted(_)));
     let mut terminal = page(&exact_header, &pack, &spr, 2);
     terminal.bytes[0] ^= 1;
-    assert!(matches!(ingress.accept_page(terminal, Some(exact_header.lifetime)), ColdPairIngressStatus::Fault { ref fault, .. } if fault == b"cold-pair.hash"));
+    assert!(matches!(ingress.accept_page(&terminal, Some(exact_header.lifetime)), ColdPairIngressStatus::Fault { ref fault, .. } if fault == b"cold-pair.hash"));
     assert!(ingress.begin_load(exact_header.lifetime, exact_header.transfer_generation, Some(exact_header.lifetime)).is_none());
     assert_eq!(close_all(&mut ingress, exact_header.lifetime).0, pack.len() + spr.len());
 }
@@ -141,7 +141,7 @@ fn cold_pair_ingress_keeps_the_structural_owner_across_load_cancel_and_bounded_c
     let exact_header = header(&pack, &spr, lifetime(13), 54);
     let mut ingress = ColdDocumentPairIngressRegistry::<1>::new();
     for index in 0..exact_header.page_count {
-        ingress.accept_page(page(&exact_header, &pack, &spr, index), Some(exact_header.lifetime));
+        ingress.accept_page(&page(&exact_header, &pack, &spr, index), Some(exact_header.lifetime));
     }
     let load = ingress.begin_load(exact_header.lifetime, 54, Some(exact_header.lifetime)).unwrap();
     assert_eq!(load.lifetime(), exact_header.lifetime);
@@ -154,12 +154,12 @@ fn cold_pair_ingress_keeps_the_structural_owner_across_load_cancel_and_bounded_c
 
     let reopened_header = header(&pack, &spr, lifetime(14), 55);
     for index in 0..reopened_header.page_count {
-        ingress.accept_page(page(&reopened_header, &pack, &spr, index), Some(reopened_header.lifetime));
+        ingress.accept_page(&page(&reopened_header, &pack, &spr, index), Some(reopened_header.lifetime));
     }
     let abandoned = ingress.begin_load(reopened_header.lifetime, 55, Some(reopened_header.lifetime)).unwrap();
     drop(abandoned);
     assert!(ingress.begin_load(reopened_header.lifetime, 55, Some(reopened_header.lifetime)).is_none());
-    assert!(matches!(ingress.accept_page(page(&exact_header, &pack, &spr, 1), Some(exact_header.lifetime)), ColdPairIngressStatus::Fault { .. }));
+    assert!(matches!(ingress.accept_page(&page(&exact_header, &pack, &spr, 1), Some(exact_header.lifetime)), ColdPairIngressStatus::Fault { .. }));
     assert_eq!(close_all(&mut ingress, reopened_header.lifetime).0, pack.len() + spr.len());
 }
 
@@ -170,7 +170,7 @@ fn cold_pair_ingress_final_live_fence_rejects_post_await_revocation() {
     let exact_header = header(&pack, &spr, lifetime(13), 56);
     let mut ingress = ColdDocumentPairIngressRegistry::<1>::new();
     for index in 0..exact_header.page_count {
-        ingress.accept_page(page(&exact_header, &pack, &spr, index), Some(exact_header.lifetime));
+        ingress.accept_page(&page(&exact_header, &pack, &spr, index), Some(exact_header.lifetime));
     }
     let load = ingress.begin_load(exact_header.lifetime, 56, Some(exact_header.lifetime)).unwrap();
     assert!(matches!(ingress.finish_load(load, Ok(()), None), ColdPairIngressStatus::Fault { ref fault, .. } if fault == b"cold-pair.not-live"));
@@ -187,11 +187,11 @@ fn cold_pair_ingress_charges_aggregate_reserved_capacity_until_final_close() {
     let first = header(&pack, &spr, first_lifetime, 57);
     let second = header(&pack, &spr, second_lifetime, 58);
     let mut ingress = ColdDocumentPairIngressRegistry::<4>::new();
-    assert!(matches!(ingress.accept_page(page(&first, &pack, &spr, 0), Some(first_lifetime)), ColdPairIngressStatus::PageAccepted(_)));
-    assert!(matches!(ingress.accept_page(page(&second, &pack, &spr, 0), Some(second_lifetime)), ColdPairIngressStatus::Fault { ref fault, .. } if fault == b"cold-pair.capacity"));
+    assert!(matches!(ingress.accept_page(&page(&first, &pack, &spr, 0), Some(first_lifetime)), ColdPairIngressStatus::PageAccepted(_)));
+    assert!(matches!(ingress.accept_page(&page(&second, &pack, &spr, 0), Some(second_lifetime)), ColdPairIngressStatus::Fault { ref fault, .. } if fault == b"cold-pair.capacity"));
     assert!(!ingress.is_mounted(second_lifetime));
     assert_eq!(close_all(&mut ingress, first_lifetime).0, COLD_PAIR_PAGE_MAXIMUM_BYTES);
-    assert!(matches!(ingress.accept_page(page(&second, &pack, &spr, 0), Some(second_lifetime)), ColdPairIngressStatus::PageAccepted(_)));
+    assert!(matches!(ingress.accept_page(&page(&second, &pack, &spr, 0), Some(second_lifetime)), ColdPairIngressStatus::PageAccepted(_)));
     assert_eq!(close_all(&mut ingress, second_lifetime).0, COLD_PAIR_PAGE_MAXIMUM_BYTES);
 }
 
@@ -204,11 +204,11 @@ fn cold_pair_ingress_is_an_exact_retained_native_close_participant() {
     let key = super::super::instance_lifetime::NativeCloseKey::fixture(exact_header.lifetime.instance_id, exact_header.lifetime.guest_lifetime);
     let foreign = super::super::instance_lifetime::NativeCloseKey::fixture(exact_header.lifetime.instance_id, exact_header.lifetime.guest_lifetime + 1);
     let mut ingress = ColdDocumentPairIngressRegistry::<1>::new();
-    assert!(matches!(ingress.accept_page(page(&exact_header, &pack, &spr, 0), Some(exact_header.lifetime)), ColdPairIngressStatus::PageAccepted(_)));
+    assert!(matches!(ingress.accept_page(&page(&exact_header, &pack, &spr, 0), Some(exact_header.lifetime)), ColdPairIngressStatus::PageAccepted(_)));
     ingress.preflight_close_instance(key).unwrap();
     ingress.reserve_close_instance(key).unwrap();
     assert!(ingress.reserve_close_instance(foreign).is_err());
-    assert!(matches!(ingress.accept_page(page(&exact_header, &pack, &spr, 1), Some(exact_header.lifetime)), ColdPairIngressStatus::Fault { ref fault, .. } if fault == b"cold-pair.not-live"));
+    assert!(matches!(ingress.accept_page(&page(&exact_header, &pack, &spr, 1), Some(exact_header.lifetime)), ColdPairIngressStatus::Fault { ref fault, .. } if fault == b"cold-pair.not-live"));
     ingress.activate_close_instance(key).unwrap();
     let mut opportunities = 0;
     while !ingress.close_instance_complete(key).unwrap() {

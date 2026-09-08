@@ -27,7 +27,7 @@ pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<f64> {
-    pair.overlap.map(|(volume, samples)| estimate(volume, GltfUnit::CubicMetre, samples, None)).unwrap_or_else(|| unavailable(GltfUnit::CubicMetre, GltfAvailability::Unavailable, Vec::new(), pair.sample_count, None))
+    pair.overlap.map_or_else(|| unavailable(GltfUnit::CubicMetre, GltfAvailability::Unavailable, Vec::new(), pair.sample_count, None), |(volume, samples)| estimate(volume, GltfUnit::CubicMetre, samples, None))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

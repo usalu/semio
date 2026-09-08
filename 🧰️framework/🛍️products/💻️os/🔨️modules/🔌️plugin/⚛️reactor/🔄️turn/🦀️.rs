@@ -70,6 +70,7 @@ impl DirtyPollOwners {
         Self { surfaces: ui_contract::UiFixedList::default(), intents: ui_contract::UiFixedList::default() }
     }
 
+    #[expect(clippy::result_large_err, reason = "Refusal returns the original fixed-capacity input so its caller can retry or retire that exact owner without an extra allocation.")]
     fn try_surface(&mut self, instance: u32, surface: ui_contract::SurfaceId) -> Result<(), ui_contract::SurfaceId> {
         if self.surfaces.iter().any(|queued| queued.0 == instance && queued.1 == surface) {
             return Ok(());
@@ -77,6 +78,7 @@ impl DirtyPollOwners {
         self.surfaces.try_push((instance, surface)).map_err(|(_, surface)| surface)
     }
 
+    #[expect(clippy::result_large_err, reason = "Refusal returns the original fixed-capacity input so its caller can retry or retire that exact owner without an extra allocation.")]
     fn try_intent(&mut self, instance: u32, intent: ui_contract::UiIntent) -> Result<(), ui_contract::UiIntent> {
         if let Some(batch) = self.intents.iter_mut().find(|batch| batch.instance == instance) {
             return batch.intents.try_push(intent);
@@ -104,6 +106,7 @@ pub async fn poll_kernel<PA: crate::app::PluginApp + 'static>(
     poll_kernel_output(runtime, events, command_page, cold_pair_page, budget, |_| Ok(()), |result, ()| result).await
 }
 
+#[expect(clippy::result_large_err, reason = "Patch reservation and publication callbacks return the original fixed surface or patch owner on refusal; these transfers must not allocate an error wrapper.")]
 pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
     runtime: &crate::plugin_runtime::PluginRuntime<PA>,
     events: Vec<Event>,
@@ -190,7 +193,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
                         runtime.guest_lifetimes.borrow_mut().remove_uncreated(instance).map_err(reactor_close_fault)?;
                         return Err(error);
                     }
-                    if let Err(error) = crate::plugin_runtime::plugin_open_actor_instance(runtime, request, &app_id.0, actor).await {
+                    if let Err(error) = crate::plugin_runtime::plugin_open_actor_instance(runtime, request, &app_id.0, &actor).await {
                         INSTANCE_METADATA.with(|metadata| drop(metadata.borrow_mut().remove(instance)));
                         runtime.guest_lifetimes.borrow_mut().remove_uncreated(instance).map_err(reactor_close_fault)?;
                         return Err(error);
@@ -261,7 +264,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
                 // `instance_task_quota`'s own `unwrap_or` fallback idiom above).
                 REGISTRY.with(|registry| {
                     let cap = registry.instance_of(req).and_then(|instance| INSTANCE_METADATA.with(|metadata| metadata.borrow().get(instance).and_then(|entry| entry.quota.message_bytes))).unwrap_or(64 * 1024 * 1024) as usize;
-                    registry.append_chunk(req, bytes, done, cap);
+                    registry.append_chunk(req, &bytes, done, cap);
                 });
             }
             Event::JobProgress { job, .. } => {
@@ -321,7 +324,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
         let transfer_generation = page.header.transfer_generation;
         let terminal_cursor = page.header.cursor(page.header.page_count.saturating_sub(1));
         let live = native_close_key(runtime, lifetime.instance_id).ok().filter(|key| key.lifetime() == lifetime).map(|key| key.lifetime());
-        cold_pair_ingress = COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().accept_page(page, live));
+        cold_pair_ingress = COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().accept_page(&page, live));
         if matches!(cold_pair_ingress, semio_framework::kernel::ColdPairIngressStatus::Loading(_)) {
             let live = native_close_key(runtime, lifetime.instance_id).ok().filter(|key| key.lifetime() == lifetime).map(|key| key.lifetime());
             let load = COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().begin_load(lifetime, transfer_generation, live));
@@ -391,7 +394,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
     retained = match retained.take() {
         Some(CommandIngressOwner::ReservedPresence { cursor, admission, page }) => {
             let now_ms = crate::host::now_ms().await;
-            match crate::plugin_runtime::plugin_admit_reserved_presence(runtime, cursor.instance, admission, cursor.seq, if cursor.metadata & 0x100 != 0 { Some((cursor.metadata & 0xff) as u8) } else { None }, cursor.item_count, page, now_ms).await {
+            match crate::plugin_runtime::plugin_admit_reserved_presence(runtime, cursor.instance, admission, if cursor.metadata & 0x100 != 0 { Some((cursor.metadata & 0xff) as u8) } else { None }, cursor.item_count, page, now_ms).await {
                 Ok(publication_generation) => {
                     command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor.clone());
                     Some(CommandIngressOwner::Presence { cursor, publication_generation })
@@ -525,7 +528,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
                     match crate::plugin_runtime::plugin_reserve_presence_ingress(runtime, cursor.instance, cursor.seq).await {
                         Ok(admission) => {
                             let now_ms = crate::host::now_ms().await;
-                            match crate::plugin_runtime::plugin_admit_reserved_presence(runtime, cursor.instance, admission, cursor.seq, own_color, cursor.item_count, page, now_ms).await {
+                            match crate::plugin_runtime::plugin_admit_reserved_presence(runtime, cursor.instance, admission, own_color, cursor.item_count, page, now_ms).await {
                                 Ok(publication_generation) => {
                                     retained = Some(CommandIngressOwner::Presence { cursor: cursor.clone(), publication_generation });
                                     command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor);
@@ -889,7 +892,7 @@ fn same_command_cursor(left: &semio_framework::kernel::CommandPageCursor, right:
 use super::pending::{parse_surface_instance, with_state as with_pending_patches};
 
 fn surface_body_key(surface: &str) -> &str {
-    surface.split_once(':').map(|(_, body_key)| body_key).unwrap_or(surface)
+    surface.split_once(':').map_or(surface, |(_, body_key)| body_key)
 }
 
 /// 🔀️ `AppFrame::UiPatch` → a real `kernel::UiPatch` passthrough into `PENDING_PATCHES` (the wire
@@ -899,6 +902,7 @@ fn surface_body_key(surface: &str) -> &str {
 /// `AppFrame::UiSnapshotEnd` has no consumer yet in this wave (patches apply incrementally, no
 /// snapshot-boundary bookkeeping); everything else → `Effect::SendMessage` to the shell, matching
 /// design-abi.md §2's table verbatim.
+#[expect(clippy::result_large_err, reason = "A rejected external patch is returned intact by its fixed pending-queue callback.")]
 fn route_app_frame(instance: u32, frame_bytes: &[u8], effects: &mut Vec<Effect>) {
     // 🚫️async: E5 executor bridge (× 3) — `protocol::{decode,encode}_app_frame` (`📡️spr/**`, out
     // of `path_scope`) and `store::pack_rt::decode_wire_value` stay genuinely `async fn`; safe to

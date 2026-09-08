@@ -2,9 +2,9 @@
 name = "semio-framework-graph"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Graph vocabulary, index-based algorithms, drawing layouts and the compile-time graph manifest registry — the framework-internal graph surface every framework crate may name without reaching a plugin"
-build = "build.rs"
+build = false
 
 [package.metadata.semio]
 role = "framework"

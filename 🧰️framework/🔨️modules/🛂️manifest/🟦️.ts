@@ -978,7 +978,7 @@ function resolveNativeLabel(label: unknown): { readonly en: string; readonly de:
  * contributes one choice per dialect coordinate. Deduped by dialect coordinate (first manifest/app
  * wins — callers pass owner manifests first so the owner's label wins over a later contributor's),
  * sorted by coordinate for determinism — the pure resolver behind `ActionArgControl.artifactKind`. */
-export function artifactKindChoices(manifests: readonly PluginManifest[], roles: readonly AppRole[]): ArtifactKindChoice[] {
+export function artifactKindChoices(manifests: readonly { readonly apps: readonly unknown[] }[], roles: readonly AppRole[]): ArtifactKindChoice[] {
   const byCoordinate = new Map<string, ArtifactKindChoice>();
   for (const manifest of manifests) {
     for (const raw of manifest.apps) {

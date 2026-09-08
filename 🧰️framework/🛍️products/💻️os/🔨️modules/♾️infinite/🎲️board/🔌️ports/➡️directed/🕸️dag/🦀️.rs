@@ -346,7 +346,7 @@ impl IoPortSpec {
         let label = label.into();
         let code = if id.len() <= 2 { id.to_uppercase() } else { id.chars().take(2).collect::<String>().to_uppercase() };
         let abbreviation = if label.len() <= 3 { label.clone() } else { label.chars().take(3).collect() };
-        Self { id: id.clone(), label: label.clone(), code, abbreviation: abbreviation.clone(), full_name: label, ..Default::default() }
+        Self { id, label: label.clone(), code, abbreviation, full_name: label, ..Default::default() }
     }
 
     pub fn display_code(&self) -> &str {
@@ -889,15 +889,15 @@ impl ::semio_framework_os_kernel::FromValue for DagNodeSpec {
 impl DagNodeSpec {
     /// 🔧️ Builds a computation node with explicit IO ports.
     #[allow(clippy::too_many_arguments, reason = "positional constructor called by external crates (framework/surface/node-graph/rs, sequence/core/rs, flow/core/rs); bundling into a params struct is a breaking API change out of this crate's scope")]
-    pub fn computation(id: String, name: String, abbreviation: String, icon: String, inputs: Vec<IoPortSpec>, outputs: Vec<IoPortSpec>, variadic_inputs: bool, variadic_outputs: bool, x: f64, y: f64, width: f64, height: f64) -> Self {
-        let (name, abbreviation) = normalize_node_display(&name, &abbreviation);
+    pub fn computation(id: String, name: &str, abbreviation: &str, icon: String, inputs: Vec<IoPortSpec>, outputs: Vec<IoPortSpec>, variadic_inputs: bool, variadic_outputs: bool, x: f64, y: f64, width: f64, height: f64) -> Self {
+        let (name, abbreviation) = normalize_node_display(name, abbreviation);
         Self { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Computation { inputs, outputs, variadic_inputs, variadic_outputs } }
     }
 
     /// 🧩️ Builds a cluster node with contract IO ports.
     #[allow(clippy::too_many_arguments, reason = "positional constructor called by external crates (framework/surface/node-graph/rs, sequence/core/rs, flow/core/rs); bundling into a params struct is a breaking API change out of this crate's scope")]
-    pub fn cluster(id: String, name: String, abbreviation: String, icon: String, inputs: Vec<IoPortSpec>, outputs: Vec<IoPortSpec>, x: f64, y: f64, width: f64, height: f64) -> Self {
-        let (name, abbreviation) = normalize_node_display(&name, &abbreviation);
+    pub fn cluster(id: String, name: &str, abbreviation: &str, icon: String, inputs: Vec<IoPortSpec>, outputs: Vec<IoPortSpec>, x: f64, y: f64, width: f64, height: f64) -> Self {
+        let (name, abbreviation) = normalize_node_display(name, abbreviation);
         Self { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Cluster { inputs, outputs } }
     }
 
@@ -2152,6 +2152,7 @@ struct DagNodeMove {
 }
 
 #[derive(Clone, Copy, Debug)]
+#[expect(clippy::large_enum_variant, reason = "Pointer plans copy the complete fixed-capacity gesture snapshot before atomic admission; boxing drag state would allocate and break Copy.")]
 enum DagProjectionGesture {
     Idle,
     Pan { start_x: f64, start_y: f64, camera: [f64; 3] },
@@ -2166,6 +2167,13 @@ pub struct DagInteractionProjection {
     selected: [u64; DAG_INTERACTION_WORD_CAPACITY],
     hover: Option<u16>,
     gesture: DagProjectionGesture,
+}
+
+/// 📍️ Owned selection, hover and camera values from an admitted pointer projection.
+pub struct DagPointerSnapshot {
+    pub node_ids: Vec<String>,
+    pub hovered_id: Option<String>,
+    pub camera: [f64; 3],
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -2659,7 +2667,7 @@ impl DagPayloadRetirement {
             return DagRetirementStep::Blocked;
         }
         let owner = self.owners.pop_front().expect("nonempty DAG payload retirement");
-        let step = match owner {
+        match owner {
             DagRetirementOwner::Text(value) => {
                 self.text(value);
                 DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 }
@@ -3015,8 +3023,7 @@ impl DagPayloadRetirement {
                 }
                 DagRetirementStep::Pending { released_items: 1, credited_bytes, released_bytes: if released_backing { released_backing_bytes } else { 0 } }
             }
-        };
-        step
+        }
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -4263,7 +4270,7 @@ impl DagHost {
             let node = node.as_ref();
             let engine_nid = self.engine_node_id_for_index(idx);
             let is_dimmed = engine_nid.is_some_and(|nid| self.dimmed.contains(&nid));
-            let (is_selected, is_highlighted, is_hovered) = engine_nid.map(|nid| self.node_interaction_chrome(nid)).unwrap_or((false, false, false));
+            let (is_selected, is_highlighted, is_hovered) = engine_nid.map_or((false, false, false), |nid| self.node_interaction_chrome(nid));
             let Some(fill) = dag_node_paint_fill(lod, theme, is_dimmed, is_selected, is_highlighted, is_hovered) else {
                 continue;
             };
@@ -4380,7 +4387,7 @@ impl DagHost {
             for &bounds in candidates {
                 let (_, screen_center) = world_rect_to_screen(bounds.0, bounds.1, bounds.2, bounds.3);
                 let distance = (screen_center.0 - viewport_center.0).hypot(screen_center.1 - viewport_center.1);
-                if best.map(|(_, best_distance)| distance < best_distance).unwrap_or(true) {
+                if best.is_none_or(|(_, best_distance)| distance < best_distance) {
                     best = Some((bounds, distance));
                 }
             }
@@ -4765,7 +4772,7 @@ impl DagHost {
                 let outputs = node.outputs();
                 let row = outputs.len() + DAG_COMPUTATION_HEADER_ROWS;
                 let (x0, y0, x1, y1) = channel_row_bounds(node, row);
-                let hit_x0 = computation_output_column_x_bounds(node).map(|(left, _)| left).unwrap_or(x0);
+                let hit_x0 = computation_output_column_x_bounds(node).map_or(x0, |(left, _)| left);
                 if point_in_rect(world_x, world_y, hit_x0, y0, x1, y1) {
                     return Some((DagPortSide::Output, node.id.clone(), outputs.len()));
                 }
@@ -4939,7 +4946,7 @@ impl DagHost {
         (self.snap_world_scalar(x), self.snap_world_scalar(y))
     }
 
-    fn stroke_world_step_grid(&self, scene: &mut canvas::Scene, cam: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, color: canvas::Color, stroke_px: f64, world_step: f64, min_step_screen: f64) {
+    fn stroke_world_step_grid(scene: &mut canvas::Scene, cam: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, color: canvas::Color, stroke_px: f64, world_step: f64, min_step_screen: f64) {
         use canvas::camera::world_to_screen;
         use canvas::{Affine, Point, Stroke};
         let step = world_step * cam.zoom;
@@ -4973,18 +4980,18 @@ impl DagHost {
             return;
         }
         let grid_color = self.canvas_theme.grid_minor_stroke;
-        self.stroke_world_step_grid(scene, cam, viewport, grid_color, ui_styling::strokes::GRID_LARGE, self.grid_step_large_world(), 0.0);
+        Self::stroke_world_step_grid(scene, cam, viewport, grid_color, ui_styling::strokes::GRID_LARGE, self.grid_step_large_world(), 0.0);
         match lod {
             DagDrawLod::Normal | DagDrawLod::Detail | DagDrawLod::Micro => {
-                self.stroke_world_step_grid(scene, cam, viewport, grid_color, ui_styling::strokes::GRID_MEDIUM, self.grid_step_medium_world(), 0.0);
+                Self::stroke_world_step_grid(scene, cam, viewport, grid_color, ui_styling::strokes::GRID_MEDIUM, self.grid_step_medium_world(), 0.0);
             }
             DagDrawLod::Minimap | DagDrawLod::Overview | DagDrawLod::Compact => {}
         }
         if matches!(lod, DagDrawLod::Detail | DagDrawLod::Micro) {
-            self.stroke_world_step_grid(scene, cam, viewport, grid_color, ui_styling::strokes::GRID_SMALL, self.grid_step_small_world(), 0.0);
+            Self::stroke_world_step_grid(scene, cam, viewport, grid_color, ui_styling::strokes::GRID_SMALL, self.grid_step_small_world(), 0.0);
         }
         if lod == DagDrawLod::Micro {
-            self.stroke_world_step_grid(scene, cam, viewport, grid_color, ui_styling::strokes::GRID_MICRO, self.grid_step_micro_world(), 0.0);
+            Self::stroke_world_step_grid(scene, cam, viewport, grid_color, ui_styling::strokes::GRID_MICRO, self.grid_step_micro_world(), 0.0);
         }
     }
 
@@ -5118,7 +5125,7 @@ impl DagHost {
     }
 
     fn dag_port_endpoint_parts(endpoint: &str) -> (String, String) {
-        endpoint.split_once('@').map(|(node, port)| (node.to_string(), port.to_string())).unwrap_or_else(|| (endpoint.to_string(), String::new()))
+        endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), String::new()), |(node, port)| (node.to_string(), port.to_string()))
     }
 
     fn dag_port_handle_key(node_id: &str, port_id: &str, input: bool) -> String {
@@ -5521,7 +5528,7 @@ impl DagHost {
         if start == 0 {
             return false;
         }
-        let prev = text[..start].char_indices().last().map(|(i, _)| i).unwrap_or(0);
+        let prev = text[..start].char_indices().last().map_or(0, |(i, _)| i);
         text.replace_range(prev..start, "");
         edit.caret = prev;
         edit.anchor = prev;
@@ -5553,7 +5560,7 @@ impl DagHost {
         if start >= text.len() {
             return false;
         }
-        let next = text[start..].char_indices().nth(1).map(|(i, _)| start + i).unwrap_or(text.len());
+        let next = text[start..].char_indices().nth(1).map_or(text.len(), |(i, _)| start + i);
         text.replace_range(start..next, "");
         edit.caret = start;
         edit.anchor = start;
@@ -5579,10 +5586,10 @@ impl DagHost {
                 if edit.caret == 0 {
                     0
                 } else {
-                    text[..edit.caret].char_indices().last().map(|(i, _)| i).unwrap_or(0)
+                    text[..edit.caret].char_indices().last().map_or(0, |(i, _)| i)
                 }
             }
-            "right" => text[edit.caret..].char_indices().nth(1).map(|(i, _)| edit.caret + i).unwrap_or(text.len()),
+            "right" => text[edit.caret..].char_indices().nth(1).map_or(text.len(), |(i, _)| edit.caret + i),
             "home" => 0,
             "end" => text.len(),
             _ => return false,
@@ -6256,7 +6263,7 @@ impl DagHost {
             let inputs = node.inputs();
             for row in computation_io_side_row_divider_indices(input_rows, grid_rows) {
                 let y = channel_row_divider_y(node.y, node.height, row);
-                let port_id = inputs.get(row.saturating_sub(1)).map(|port| port.id.as_str()).unwrap_or("");
+                let port_id = inputs.get(row.saturating_sub(1)).map_or("", |port| port.id.as_str());
                 scene.stroke(&stroke_style, aff, row_stroke(port_id), None, &Line::new(Point::new(left, y), Point::new(right, y)));
             }
         }
@@ -6265,7 +6272,7 @@ impl DagHost {
             let outputs = node.outputs();
             for row in computation_io_side_row_divider_indices(output_rows, grid_rows) {
                 let y = channel_row_divider_y(node.y, node.height, row);
-                let port_id = outputs.get(row.saturating_sub(1)).map(|port| port.id.as_str()).unwrap_or("");
+                let port_id = outputs.get(row.saturating_sub(1)).map_or("", |port| port.id.as_str());
                 scene.stroke(&stroke_style, aff, row_stroke(port_id), None, &Line::new(Point::new(left, y), Point::new(right, y)));
             }
         }
@@ -6286,7 +6293,7 @@ impl DagHost {
         let center = world_to_screen(cam, viewport, Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5));
         let w = (x1 - x0).max(1.0);
         let h = (y1 - y0).max(1.0);
-        self.icon_paint_cache.append_icon_at_screen_rect(scene, src, center, w, h, label_fill, bg, true);
+        self.icon_paint_cache.append_icon_at_screen_rect(scene, src, graph::IconScreenRect { center, width: w, height: h }, label_fill, bg, true);
     }
 
     #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
@@ -6390,7 +6397,7 @@ impl DagHost {
         }
         let screen_w = node.width * zoom.max(0.05);
         let screen_h = node.height * zoom.max(0.05);
-        self.icon_paint_cache.append_icon_at_screen_rect(scene, icon, center_screen, screen_w, screen_h, fg, bg, false);
+        self.icon_paint_cache.append_icon_at_screen_rect(scene, icon, graph::IconScreenRect { center: center_screen, width: screen_w, height: screen_h }, fg, bg, false);
     }
 
     fn paint_cluster_affordances(scene: &mut canvas::Scene, cam: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, node: &DagNodeSpec, paint_px: f64, label_fill: canvas::Color, label_halo: canvas::Color) {
@@ -6613,7 +6620,7 @@ impl DagHost {
                         let control = Rect::new(cx0, cy0, cx1, cy1);
                         scene.stroke(&Stroke::new(chrome_stroke), *aff, theme.edge_stroke, None, &control);
                         if lod.shows_detail_text() {
-                            let option = usize::try_from(*selected).ok().and_then(|index| options.get(index)).map(String::as_str).unwrap_or("—");
+                            let option = usize::try_from(*selected).ok().and_then(|index| options.get(index)).map_or("—", String::as_str);
                             let option_pos = world_to_screen(cam, viewport, Point::new((cx0 + cx1) * 0.5, (cy0 + cy1) * 0.5));
                             append_label(scene, option, option_pos, paint_px * 0.95, label_fill, label_halo);
                             let chevron = world_to_screen(cam, viewport, Point::new(cx1 - 6.0 / cam.zoom.max(0.05), (cy0 + cy1) * 0.5));
@@ -6819,7 +6826,7 @@ impl DagHost {
             let rect = Rect::new(node.x - hw, node.y - hh, node.x + hw, node.y + hh);
             let engine_nid = self.engine_node_id_for_index(idx);
             let is_dimmed = engine_nid.is_some_and(|nid| self.dimmed.contains(&nid));
-            let (is_selected, is_highlighted, is_hovered) = engine_nid.map(|nid| self.node_interaction_chrome(nid)).unwrap_or((false, false, false));
+            let (is_selected, is_highlighted, is_hovered) = engine_nid.map_or((false, false, false), |nid| self.node_interaction_chrome(nid));
             if let Some(fill) = dag_node_paint_fill(lod, theme, is_dimmed, is_selected, is_highlighted, is_hovered) {
                 scene.fill(FillRule::NonZero, aff, fill, None, &rect);
             }
@@ -6851,7 +6858,7 @@ impl DagHost {
                 let node = node.as_ref();
                 let engine_nid = self.engine_node_id_for_index(idx);
                 let is_dimmed = engine_nid.is_some_and(|nid| self.dimmed.contains(&nid));
-                let (is_selected, is_highlighted, is_hovered) = engine_nid.map(|nid| self.node_interaction_chrome(nid)).unwrap_or((false, false, false));
+                let (is_selected, is_highlighted, is_hovered) = engine_nid.map_or((false, false, false), |nid| self.node_interaction_chrome(nid));
                 let eval_status = engine_nid.and_then(|nid| self.node_eval_status.get(&nid).copied()).unwrap_or(DagNodeEvalStatusKind::Ok);
                 self.paint_node_visual(scene, &aff, &cam, &viewport, lod, lod_index, node, DagNodePaintChrome { is_dimmed, is_selected, is_highlighted, is_hovered, eval_status, body_fill_alpha: 255, ghost_tint: false });
             }
@@ -7165,11 +7172,11 @@ mod tests {
             schema: "dag.fixture".into(),
             camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![
-                DagNodeSpec::computation("a".into(), "A".into(), "A".into(), "emoji:🔷️".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 0.0, 0.0, 160.0, 24.0),
+                DagNodeSpec::computation("a".into(), "A", "A", "emoji:🔷️".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 0.0, 0.0, 160.0, 24.0),
                 DagNodeSpec::computation(
                     "b".into(),
-                    "B".into(),
-                    "B".into(),
+                    "B",
+                    "B",
                     "emoji:🔷️".into(),
                     vec![IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() }],
                     vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }],
@@ -7244,8 +7251,8 @@ mod tests {
         let nodes = vec![
             DagNodeSpec::computation(
                 "c".into(),
-                "C".into(),
-                "C".into(),
+                "C",
+                "C",
                 "emoji:🔷️".into(),
                 vec![IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() }],
                 vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }],
@@ -7307,8 +7314,8 @@ mod tests {
             camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![DagNodeSpec::computation(
                 "merge".into(),
-                "Merge".into(),
-                "M".into(),
+                "Merge",
+                "M",
                 "emoji:🔀️".into(),
                 vec![IoPortSpec { id: "0".into(), label: "0".into(), ..Default::default() }],
                 vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }],
@@ -7393,11 +7400,11 @@ mod tests {
             schema: "dag.fixture".into(),
             camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![
-                DagNodeSpec::computation("a".into(), "A".into(), "A".into(), "emoji:🔷️".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 100.0, 200.0, 160.0, 56.0),
+                DagNodeSpec::computation("a".into(), "A", "A", "emoji:🔷️".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 100.0, 200.0, 160.0, 56.0),
                 DagNodeSpec::computation(
                     "b".into(),
-                    "B".into(),
-                    "B".into(),
+                    "B",
+                    "B",
                     "emoji:🔷️".into(),
                     vec![IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() }],
                     vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }],
@@ -7408,7 +7415,7 @@ mod tests {
                     160.0,
                     56.0,
                 ),
-                DagNodeSpec::computation("c".into(), "C".into(), "C".into(), "emoji:🔷️".into(), vec![IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() }], vec![], false, false, 700.0, 300.0, 160.0, 56.0),
+                DagNodeSpec::computation("c".into(), "C", "C", "emoji:🔷️".into(), vec![IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() }], vec![], false, false, 700.0, 300.0, 160.0, 56.0),
             ],
             edges: vec![DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() }, DagFixtureEdge { id: "e2".into(), source: "b@out".into(), target: "c@in".into(), ..Default::default() }],
         });
@@ -7429,11 +7436,11 @@ mod tests {
             schema: "dag.fixture".into(),
             camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![
-                DagNodeSpec::computation("a".into(), "A".into(), "A".into(), "emoji:🔷️".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 100.0, 200.0, 160.0, 56.0),
+                DagNodeSpec::computation("a".into(), "A", "A", "emoji:🔷️".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 100.0, 200.0, 160.0, 56.0),
                 DagNodeSpec::computation(
                     "b".into(),
-                    "B".into(),
-                    "B".into(),
+                    "B",
+                    "B",
                     "emoji:🔷️".into(),
                     vec![IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() }],
                     vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }],
@@ -7444,7 +7451,7 @@ mod tests {
                     160.0,
                     56.0,
                 ),
-                DagNodeSpec::computation("c".into(), "C".into(), "C".into(), "emoji:🔷️".into(), vec![IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() }], vec![], false, false, 700.0, 300.0, 160.0, 56.0),
+                DagNodeSpec::computation("c".into(), "C", "C", "emoji:🔷️".into(), vec![IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() }], vec![], false, false, 700.0, 300.0, 160.0, 56.0),
             ],
             edges: vec![DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() }, DagFixtureEdge { id: "e2".into(), source: "b@out".into(), target: "c@in".into(), ..Default::default() }],
         });
@@ -7464,8 +7471,8 @@ mod tests {
             schema: "dag.fixture".into(),
             camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![
-                DagNodeSpec::computation("a".into(), "A".into(), "A".into(), "emoji:🔷️".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 500.0, 500.0, 160.0, 56.0),
-                DagNodeSpec::computation("b".into(), "B".into(), "B".into(), "emoji:🔷️".into(), vec![IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() }], vec![], false, false, 500.0, 500.0, 160.0, 56.0),
+                DagNodeSpec::computation("a".into(), "A", "A", "emoji:🔷️".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 500.0, 500.0, 160.0, 56.0),
+                DagNodeSpec::computation("b".into(), "B", "B", "emoji:🔷️".into(), vec![IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() }], vec![], false, false, 500.0, 500.0, 160.0, 56.0),
             ],
             edges: vec![DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() }],
         });
@@ -8075,8 +8082,8 @@ mod tests {
             schema: "dag.fixture".into(),
             camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![
-                DagNodeSpec::computation("src".into(), "Src".into(), "Src".into(), "emoji:🔢️".into(), vec![], outputs.clone(), false, false, 0.0, 0.0, src_w, src_h),
-                DagNodeSpec::computation("tgt".into(), "Tgt".into(), "Tgt".into(), "emoji:🔢️".into(), inputs, outputs, false, false, 220.0, 0.0, tgt_w, tgt_h),
+                DagNodeSpec::computation("src".into(), "Src", "Src", "emoji:🔢️".into(), vec![], outputs.clone(), false, false, 0.0, 0.0, src_w, src_h),
+                DagNodeSpec::computation("tgt".into(), "Tgt", "Tgt", "emoji:🔢️".into(), inputs, outputs, false, false, 220.0, 0.0, tgt_w, tgt_h),
             ],
             edges: vec![],
         });
@@ -8105,9 +8112,9 @@ mod tests {
             schema: "dag.fixture".into(),
             camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![
-                DagNodeSpec::computation("sphere".into(), "Sphere".into(), "Sphere".into(), "emoji:🔵️".into(), vec![], outputs.clone(), false, false, 0.0, -60.0, src_w, src_h),
-                DagNodeSpec::computation("torus".into(), "Torus".into(), "Torus".into(), "emoji:🍩️".into(), vec![], outputs.clone(), false, false, 0.0, 60.0, src_w, src_h),
-                DagNodeSpec::computation("cut".into(), "Cut".into(), "Cut".into(), "emoji:✂️".into(), inputs, outputs, false, false, 240.0, 0.0, cut_w, cut_h),
+                DagNodeSpec::computation("sphere".into(), "Sphere", "Sphere", "emoji:🔵️".into(), vec![], outputs.clone(), false, false, 0.0, -60.0, src_w, src_h),
+                DagNodeSpec::computation("torus".into(), "Torus", "Torus", "emoji:🍩️".into(), vec![], outputs.clone(), false, false, 0.0, 60.0, src_w, src_h),
+                DagNodeSpec::computation("cut".into(), "Cut", "Cut", "emoji:✂️".into(), inputs, outputs, false, false, 240.0, 0.0, cut_w, cut_h),
             ],
             edges: vec![DagFixtureEdge { id: "e1".into(), source: "sphere@out".into(), target: "cut@a".into(), ..Default::default() }, DagFixtureEdge { id: "e2".into(), source: "torus@out".into(), target: "cut@b".into(), ..Default::default() }],
         });
@@ -8137,8 +8144,8 @@ mod tests {
             nodes: vec![
                 DagNodeSpec::computation(
                     "extrude".into(),
-                    "Extrude".into(),
-                    "Extrude".into(),
+                    "Extrude",
+                    "Extrude",
                     "emoji:⬆️".into(),
                     vec![],
                     solid.clone(),
@@ -8149,11 +8156,11 @@ mod tests {
                     computation_node_width("Extrude", &[], &solid),
                     computation_node_height(0, 1, false, false),
                 ),
-                DagNodeSpec::computation("brep".into(), "Brep".into(), "Brep".into(), "emoji:🧊️".into(), brep.clone(), brep.clone(), false, false, 200.0, 0.0, computation_node_width("Brep", &brep, &brep), computation_node_height(1, 1, false, false)),
+                DagNodeSpec::computation("brep".into(), "Brep", "Brep", "emoji:🧊️".into(), brep.clone(), brep.clone(), false, false, 200.0, 0.0, computation_node_width("Brep", &brep, &brep), computation_node_height(1, 1, false, false)),
                 DagNodeSpec::computation(
                     "get".into(),
-                    "Get".into(),
-                    "Get".into(),
+                    "Get",
+                    "Get",
                     "emoji:📋️".into(),
                     list,
                     vec![],
@@ -8193,8 +8200,8 @@ mod tests {
             schema: "dag.fixture".into(),
             camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![
-                DagNodeSpec::computation("src".into(), "Src".into(), "Src".into(), "emoji:🔢️".into(), vec![], outputs.clone(), false, false, 0.0, 0.0, src_w, src_h),
-                DagNodeSpec::computation("tgt".into(), "Tgt".into(), "Tgt".into(), "emoji:🔢️".into(), inputs, outputs, false, false, 220.0, 0.0, tgt_w, tgt_h),
+                DagNodeSpec::computation("src".into(), "Src", "Src", "emoji:🔢️".into(), vec![], outputs.clone(), false, false, 0.0, 0.0, src_w, src_h),
+                DagNodeSpec::computation("tgt".into(), "Tgt", "Tgt", "emoji:🔢️".into(), inputs, outputs, false, false, 220.0, 0.0, tgt_w, tgt_h),
             ],
             edges: vec![],
         });
@@ -8377,7 +8384,7 @@ mod tests {
         let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }];
         let width = computation_node_width("Node", &inputs, &outputs);
         let height = computation_node_height(2, 1, false, false);
-        let node = DagNodeSpec::computation("n".into(), "Node".into(), "Node".into(), "emoji:🔢️".into(), inputs, outputs, false, false, 0.0, 0.0, width, height);
+        let node = DagNodeSpec::computation("n".into(), "Node", "Node", "emoji:🔢️".into(), inputs, outputs, false, false, 0.0, 0.0, width, height);
         let hw = width * 0.5;
         let divider_x = computation_column_divider_x(&node).expect("divider");
         let (x0, _, x1, _) = input_port_row_hit_bounds(&node, 1).expect("row");
@@ -8391,7 +8398,7 @@ mod tests {
         let outputs = vec![IoPortSpec { id: "x".into(), label: "x".into(), ..Default::default() }, IoPortSpec { id: "y".into(), label: "y".into(), ..Default::default() }];
         let width = computation_node_width("Node", &inputs, &outputs);
         let height = computation_node_height(1, 2, false, false);
-        let node = DagNodeSpec::computation("n".into(), "Node".into(), "Node".into(), "emoji:🔢️".into(), inputs, outputs, false, false, 0.0, 0.0, width, height);
+        let node = DagNodeSpec::computation("n".into(), "Node", "Node", "emoji:🔢️".into(), inputs, outputs, false, false, 0.0, 0.0, width, height);
         let hw = width * 0.5;
         let divider_x = computation_column_divider_x(&node).expect("divider");
         let (x0, _, x1, _) = output_port_row_hit_bounds(&node, 1).expect("row");
@@ -8408,7 +8415,7 @@ mod tests {
         let host = DagHost::from_fixture_without_layout(DagFixture {
             schema: "dag.fixture".into(),
             camera: DagCamera { x: 0.0, y: 0.0, zoom: 2.0 },
-            nodes: vec![DagNodeSpec::computation("merge".into(), "Merge".into(), "Merge".into(), "emoji:🔀️".into(), inputs, outputs, true, false, 0.0, 0.0, width, height)],
+            nodes: vec![DagNodeSpec::computation("merge".into(), "Merge", "Merge", "emoji:🔀️".into(), inputs, outputs, true, false, 0.0, 0.0, width, height)],
             edges: vec![],
         });
         let positions = variadic_input_insert_positions(&host.fixture.nodes[0]);
@@ -8430,7 +8437,7 @@ mod tests {
         let host = DagHost::from_fixture_without_layout(DagFixture {
             schema: "dag.fixture".into(),
             camera: DagCamera { x: 0.0, y: 0.0, zoom: 2.0 },
-            nodes: vec![DagNodeSpec::computation("get".into(), "Get".into(), "Get".into(), "emoji:📋️".into(), inputs, outputs, false, true, 0.0, 0.0, width, height)],
+            nodes: vec![DagNodeSpec::computation("get".into(), "Get", "Get", "emoji:📋️".into(), inputs, outputs, false, true, 0.0, 0.0, width, height)],
             edges: vec![],
         });
         let positions = variadic_output_insert_positions(&host.fixture.nodes[0]);
@@ -8479,7 +8486,7 @@ mod tests {
         let outputs = vec![IoPortSpec { id: "out".into(), label: "geometry".into(), ..Default::default() }];
         let width = computation_node_width("Box", &inputs, &outputs);
         let height = computation_node_height(2, 1, false, false);
-        let node = DagNodeSpec::computation("box".into(), "Box".into(), "Box".into(), "emoji:📦️".into(), inputs, outputs, false, false, 0.0, 0.0, width, height);
+        let node = DagNodeSpec::computation("box".into(), "Box", "Box", "emoji:📦️".into(), inputs, outputs, false, false, 0.0, 0.0, width, height);
         let divider_x = computation_column_divider_x(&node).expect("divider");
         let hw = width * 0.5;
         assert!(divider_x > node.x - hw + 1.0);
@@ -8492,7 +8499,7 @@ mod tests {
         let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }];
         let width = computation_node_width("Box", &inputs, &outputs);
         let height = computation_node_height(1, 1, false, false);
-        let node = DagNodeSpec::computation("box".into(), "Box".into(), "Box".into(), "emoji:📦️".into(), inputs, outputs, false, false, 0.0, 0.0, width, height);
+        let node = DagNodeSpec::computation("box".into(), "Box", "Box", "emoji:📦️".into(), inputs, outputs, false, false, 0.0, 0.0, width, height);
         let paint_px = dag_label_paint_px(1.0, 3);
         let (label_x, label_y) = computation_name_world_center(&node, "Box", paint_px, 1.0);
         assert!((label_x - node.x).abs() < 1e-6);
@@ -8528,8 +8535,8 @@ mod tests {
     fn computation_channel_row_count_matches_io_rows() {
         let node = DagNodeSpec::computation(
             "box".into(),
-            "Box".into(),
-            "Box".into(),
+            "Box",
+            "Box",
             "emoji:📦️".into(),
             vec![
                 IoPortSpec { id: "cornerA".into(), label: "cornerA".into(), ..Default::default() },
@@ -8560,8 +8567,8 @@ mod tests {
         let one_input = vec![IoPortSpec { id: "a".into(), label: "cornerA".into(), ..Default::default() }];
         let more_inputs = DagNodeSpec::computation(
             "more-in".into(),
-            "Box".into(),
-            "Box".into(),
+            "Box",
+            "Box",
             "emoji:📦️".into(),
             three_inputs.clone(),
             one_output.clone(),
@@ -8574,8 +8581,8 @@ mod tests {
         );
         let more_outputs = DagNodeSpec::computation(
             "more-out".into(),
-            "Box".into(),
-            "Box".into(),
+            "Box",
+            "Box",
             "emoji:📦️".into(),
             one_input.clone(),
             three_outputs.clone(),
@@ -8603,7 +8610,7 @@ mod tests {
         let outputs = vec![IoPortSpec { id: "outA".into(), label: "geometry".into(), ..Default::default() }, IoPortSpec { id: "outB".into(), label: "mesh".into(), ..Default::default() }];
         let width = computation_node_width("Box", &inputs, &outputs);
         let height = computation_node_height(3, 2, false, false);
-        let node = DagNodeSpec::computation("box".into(), "Box".into(), "Box".into(), "emoji:📦️".into(), inputs, outputs, false, false, 0.0, 0.0, width, height);
+        let node = DagNodeSpec::computation("box".into(), "Box", "Box", "emoji:📦️".into(), inputs, outputs, false, false, 0.0, 0.0, width, height);
         let (input_rows, output_rows) = computation_io_side_row_counts(&node);
         assert_eq!(input_rows, 3);
         assert_eq!(output_rows, 2);
@@ -9064,8 +9071,8 @@ mod tests {
         assert_eq!(DagDrawLod::Micro.node_label(), DagNodeLabel::Name);
         let computation = DagNodeSpec::computation(
             "add".into(),
-            "Add".into(),
-            "Add".into(),
+            "Add",
+            "Add",
             "emoji:➕️".into(),
             vec![IoPortSpec { id: "a".into(), label: "a".into(), ..Default::default() }],
             vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }],
@@ -9083,7 +9090,7 @@ mod tests {
 
     #[test]
     fn dag_node_spec_round_trips_display_fields() {
-        let node = DagNodeSpec::computation("n".into(), "pass through".into(), "pass".into(), "emoji:➡️".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 0.0, 0.0, 80.0, 24.0);
+        let node = DagNodeSpec::computation("n".into(), "pass through", "pass", "emoji:➡️".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 0.0, 0.0, 80.0, 24.0);
         let json = dsl::os_pack::json::to_json_string(&node);
         let back: DagNodeSpec = dsl::os_pack::json::from_json_str(&json).unwrap();
         assert_eq!(back.name, "PassThrough");
@@ -9147,7 +9154,7 @@ mod tests {
     fn cluster_node_round_trips_serde() {
         let inputs = vec![IoPortSpec::simple("a", "a")];
         let outputs = vec![IoPortSpec::simple("out", "out")];
-        let node = DagNodeSpec::cluster("cluster".into(), "Cluster".into(), "Cluster".into(), "emoji:🧩️".into(), inputs, outputs, 10.0, 20.0, 120.0, 80.0);
+        let node = DagNodeSpec::cluster("cluster".into(), "Cluster", "Cluster", "emoji:🧩️".into(), inputs, outputs, 10.0, 20.0, 120.0, 80.0);
         let json = dsl::os_pack::json::to_json_string(&node);
         let back: DagNodeSpec = dsl::os_pack::json::from_json_str(&json).unwrap();
         assert!(matches!(back.kind, DagNodeKind::Cluster { .. }));
@@ -9157,7 +9164,7 @@ mod tests {
     fn cluster_explode_hit_rect_detects_top_right_affordance() {
         let inputs = vec![IoPortSpec::simple("a", "a")];
         let outputs = vec![IoPortSpec::simple("out", "out")];
-        let node = DagNodeSpec::cluster("cluster".into(), "Cluster".into(), "Cluster".into(), "emoji:🧩️".into(), inputs, outputs, 0.0, 0.0, 120.0, 80.0);
+        let node = DagNodeSpec::cluster("cluster".into(), "Cluster", "Cluster", "emoji:🧩️".into(), inputs, outputs, 0.0, 0.0, 120.0, 80.0);
         let (x0, y0, x1, y1) = cluster_explode_hit_rect(&node).expect("rect");
         assert!(cluster_explode_hit(&node, (x0 + x1) * 0.5, (y0 + y1) * 0.5));
         assert!(!cluster_explode_hit(&node, node.x - 50.0, node.y - 50.0));

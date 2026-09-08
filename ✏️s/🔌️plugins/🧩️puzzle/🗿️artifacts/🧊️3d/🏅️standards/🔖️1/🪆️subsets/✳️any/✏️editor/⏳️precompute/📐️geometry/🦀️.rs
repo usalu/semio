@@ -34,6 +34,11 @@ impl<T, const N: usize> FixedOwnerVec<T, N> {
         size_of::<[MaybeUninit<T>; N]>()
     }
 
+    #[cfg(test)]
+    pub(crate) fn backing_ptr(&self) -> Option<*const MaybeUninit<T>> {
+        self.page.as_ref().map(|page| page.as_ptr())
+    }
+
     pub(crate) fn backing_credit(&self) -> Option<(usize, usize)> {
         self.page.as_ref().map(|_| (1, Self::page_bytes()))
     }
@@ -873,7 +878,6 @@ pub(crate) enum CollisionMutationStep {
 pub(crate) struct CollisionIndexRemoval {
     owner: CollisionIndexOwner,
     id: String,
-    bounds: CollisionAabb,
     span: Option<CollisionCellSpan>,
     cursor: u64,
     complete: bool,
@@ -1118,7 +1122,7 @@ impl CollisionSpatialIndex {
     #[cfg(test)]
     pub(crate) fn begin_removal(&self, owner: CollisionIndexOwner, id: String) -> Option<CollisionIndexRemoval> {
         let bounds = *self.entries.get(id.as_str())?;
-        Some(CollisionIndexRemoval { owner, id, bounds, span: CollisionCellSpan::new(self.cell_size, bounds), cursor: 0, complete: false })
+        Some(CollisionIndexRemoval { owner, id, span: CollisionCellSpan::new(self.cell_size, bounds), cursor: 0, complete: false })
     }
 
     #[cfg(test)]

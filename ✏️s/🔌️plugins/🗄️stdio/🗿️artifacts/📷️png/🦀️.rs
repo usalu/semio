@@ -154,9 +154,9 @@ pub fn register() {
     ::schema::register_artifact_schema_descriptor(crate::artifacts::png::standards::v1_2::subsets::any::schema::png_artifact_schema_descriptor());
     ::schema::register_artifact_inference_descriptor(crate::artifacts::png::standards::v1_2::subsets::any::schema::inferences::png_artifact_inference_descriptor());
     for lang in pilot_languages() {
-        dsl::register_language(lang.clone());
+        dsl::register_language(*lang);
     }
-    let _ = store::register_document_codec(store::ArtifactCodec::of::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA));
+    store::register_document_codec(store::ArtifactCodec::of::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA)).expect("static Stdio registration must be available and conflict-free");
 }
 //#endregion 🔖️ImperativeRegister
 
@@ -181,7 +181,7 @@ pub mod io_registry {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        let _ = register_composer_entries(v1_2::entries());
+        register_composer_entries(v1_2::entries()).expect("static Stdio registration must be available and conflict-free");
     }
 }
 //#endregion 🚪️DerivedIoRegistry

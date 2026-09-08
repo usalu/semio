@@ -1,6 +1,7 @@
 //! 🧪️ Actual-grant session byte retirement, final cache ownership, and strict lifecycle guards.
 
 use super::*;
+use crate::dag::{DagCamera, DagHostRetirement, IoPortSpec};
 
 //#region 🧪️SessionRetirement
 fn close(mut session: FlowEvalSession, maximum_bytes: usize) -> usize {
@@ -75,13 +76,13 @@ fn host_retirement_reports_no_credit_and_retained_fault_without_false_pending() 
     assert!(retirement.terminal_nonopaque_is_empty());
 }
 
-fn dag_retirement_fixture() -> (dag::DagHostRetirement, usize) {
+fn dag_retirement_fixture() -> (DagHostRetirement, usize) {
     let fixture = crate::os_pack::json::parse(include_str!("../🔣️.json")).unwrap();
     let dag_fixture = fixture.get("dag").unwrap();
     let repeat = dag_fixture.get("repeat").and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize;
     let text = dag_fixture.get("text").and_then(crate::os_pack::json::Value::as_str).unwrap().repeat(repeat);
     let minimum_bytes = dag_fixture.get("minimumUtf8Bytes").and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize;
-    let node = dag::DagNodeSpec {
+    let node = DagNodeSpec {
         id: dag_fixture.get("nodeId").and_then(crate::os_pack::json::Value::as_str).unwrap().into(),
         name: dag_fixture.get("nodeName").and_then(crate::os_pack::json::Value::as_str).unwrap().into(),
         abbreviation: "RN".into(),
@@ -92,15 +93,15 @@ fn dag_retirement_fixture() -> (dag::DagHostRetirement, usize) {
         height: 180.0,
         operator_kind: None,
         properties: PropertyBag::new(),
-        kind: dag::DagNodeKind::Note { text, output: dag::IoPortSpec::simple("out", "note") },
+        kind: DagNodeKind::Note { text, output: IoPortSpec::simple("out", "note") },
     };
-    let host = dag::DagHost::from_fixture_without_layout(dag::DagFixture {
+    let host = DagHost::from_fixture_without_layout(DagFixture {
         schema: dag_fixture.get("schemaText").and_then(crate::os_pack::json::Value::as_str).unwrap().into(),
-        camera: dag::DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
+        camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![node],
         edges: Vec::new(),
     });
-    (dag::DagHostRetirement::new(host), minimum_bytes)
+    (DagHostRetirement::new(host), minimum_bytes)
 }
 
 fn close_dag(mut retirement: dag::DagHostRetirement, maximum_bytes: usize) -> (usize, usize, usize, bool) {
@@ -153,21 +154,40 @@ fn session_close_dag_host_retirement_preserves_exact_owner_and_byte_grants() {
 #[test]
 fn session_close_dag_host_nonterminal_drop_refuses_recursive_release() {
     let (retirement, _) = dag_retirement_fixture();
-    assert!(std::panic::catch_unwind(|| drop(retirement)).is_err());
+    assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| drop(retirement))).is_err());
 }
 
 #[test]
 fn session_close_vector_scene_retirement_retains_and_reuses_exact_slot() {
-    use crate::infinite::canvas::{advance_opaque_scene_retirement, publish_opaque_scene_retirement, reserve_opaque_scene_retirement, OpaqueSceneRetirementStep, Scene};
+    use crate::infinite::canvas::{advance_opaque_scene_retirement, append_svg_document, publish_opaque_scene_retirement, reserve_opaque_scene_retirement, Affine, BezPath, Color, FillRule, OpaqueSceneRetirementStep, Scene, SvgDocument};
 
     let fixture = crate::os_pack::json::parse(include_str!("../🔣️.json")).unwrap();
     let capacity = fixture.get("scene").and_then(|value| value.get("retirementCapacity")).and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize;
     let retained_commands = fixture.get("scene").and_then(|value| value.get("retainedCommands")).and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize;
+    let retained_path_elements = fixture.get("scene").and_then(|value| value.get("retainedPathElements")).and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize;
+    let retained_vello_rects = fixture.get("scene").and_then(|value| value.get("retainedVelloRects")).and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize;
     for index in 0..=capacity {
         let token = reserve_opaque_scene_retirement().expect("terminal vector scene retirement slot is reusable");
         let mut scene = Scene::new();
-        for _ in 0..if index == 0 { retained_commands } else { 1 } {
+        for _ in 0..if index == 1 { retained_commands } else { 1 } {
             scene.pop_layer();
+        }
+        if index == 0 {
+            let mut svg = String::from("<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'>");
+            for rect in 0..retained_vello_rects {
+                svg.push_str(&format!("<rect x='{}' y='{}' width='1' height='1' fill='black'/>", rect % 256, rect / 256));
+            }
+            svg.push_str("</svg>");
+            let document = SvgDocument::parse_icons(&svg).expect("retained Vello fragment SVG remains canonical");
+            append_svg_document(&mut scene, &document);
+        }
+        if index == 1 {
+            let mut path = BezPath::new();
+            path.move_to((0.0, 0.0));
+            for point in 0..retained_path_elements {
+                path.line_to((point as f64, point as f64));
+            }
+            scene.fill(FillRule::NonZero, Affine::IDENTITY, Color::from_rgba8(0, 0, 0, 255), None, &path);
         }
         publish_opaque_scene_retirement(token, scene);
         assert_eq!(advance_opaque_scene_retirement(token, 0, usize::MAX), OpaqueSceneRetirementStep::Blocked);
@@ -200,8 +220,8 @@ fn session_close_vector_scene_retirement_retains_and_reuses_exact_slot() {
         assert_eq!(outstanding_credit, 0);
         assert_eq!(credited_total, released_total);
         assert!(released_total > 0);
-        if index == 0 {
-            assert!(released_total > 4096, "large scene backing crosses multiple retained credits before actual terminal release");
+        if index <= 1 {
+            assert!(released_total > 4096, "large scene or Vello backing crosses multiple retained credits before actual terminal release");
         }
     }
 }

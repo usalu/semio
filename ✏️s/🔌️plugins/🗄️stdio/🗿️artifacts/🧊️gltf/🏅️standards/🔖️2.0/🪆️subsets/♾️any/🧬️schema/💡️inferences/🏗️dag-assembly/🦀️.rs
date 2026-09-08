@@ -9,29 +9,29 @@ use super::{
 use crate::artifacts::gltf::schema::snapshot::GltfSnapshot;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn empty_indicators(diagnostic_ids: Vec<String>) -> GltfEntityIndicators {
+fn empty_indicators(diagnostic_ids: &[String]) -> GltfEntityIndicators {
     GltfEntityIndicators {
-        size: GltfSizeInference::unavailable(&diagnostic_ids),
-        area_volume: GltfAreaVolumeInference::unavailable(&diagnostic_ids),
-        compactness: GltfCompactnessInference::unavailable(&diagnostic_ids),
-        proportion: GltfProportionInference::unavailable(&diagnostic_ids),
-        mass: GltfMassInference::unavailable(&diagnostic_ids),
-        curvature: GltfCurvatureInference::unavailable(&diagnostic_ids),
-        thickness: GltfThicknessInference::unavailable(&diagnostic_ids),
-        concavity: GltfConcavityInference::unavailable(&diagnostic_ids),
-        clearance: GltfClearanceInference::unavailable(&diagnostic_ids),
-        adjacency: GltfAdjacencyInference::unavailable(&diagnostic_ids),
-        orientation: GltfOrientationInference::unavailable(&diagnostic_ids),
-        symmetry: GltfSymmetryInference::unavailable(&diagnostic_ids),
-        roughness: GltfRoughnessInference::unavailable(&diagnostic_ids),
-        topology: GltfTopologyInference::unavailable(&diagnostic_ids),
+        size: GltfSizeInference::unavailable(diagnostic_ids),
+        area_volume: GltfAreaVolumeInference::unavailable(diagnostic_ids),
+        compactness: GltfCompactnessInference::unavailable(diagnostic_ids),
+        proportion: GltfProportionInference::unavailable(diagnostic_ids),
+        mass: GltfMassInference::unavailable(diagnostic_ids),
+        curvature: GltfCurvatureInference::unavailable(diagnostic_ids),
+        thickness: GltfThicknessInference::unavailable(diagnostic_ids),
+        concavity: GltfConcavityInference::unavailable(diagnostic_ids),
+        clearance: GltfClearanceInference::unavailable(diagnostic_ids),
+        adjacency: GltfAdjacencyInference::unavailable(diagnostic_ids),
+        orientation: GltfOrientationInference::unavailable(diagnostic_ids),
+        symmetry: GltfSymmetryInference::unavailable(diagnostic_ids),
+        roughness: GltfRoughnessInference::unavailable(diagnostic_ids),
+        topology: GltfTopologyInference::unavailable(diagnostic_ids),
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn assemble_indicators(points: &[V3], triangles: &[[usize; 3]], policy: &GltfAnalysisPolicy) -> (GltfEntityIndicators, Topology) {
     let Some(context) = GltfGeometryContext::new(points, triangles, policy) else {
-        return (empty_indicators(Vec::new()), topology_summary(points, triangles));
+        return (empty_indicators(&[]), topology_summary(points, triangles));
     };
     let topology = context.topology;
     (
@@ -105,7 +105,7 @@ pub fn compute_gltf_inference(snapshot: &GltfSnapshot) -> GltfGeometricInference
     GltfAreaVolumeInference::infer_assembly(&mut overall.area_volume, raw_parts.len(), contact_area, contact_area_complete, sample_count, overall_topology);
     GltfAdjacencyInference::infer_assembly(&mut overall.adjacency, raw_parts.len(), contacts, sample_count, overall_topology);
     GltfOrientationInference::infer_assembly(&mut overall.orientation, raw_parts.len(), sample_count, overall_topology);
-    GltfClearanceInference::infer_assembly(&mut overall.clearance, &distances, overlap_volume, overlap_complete, pairs.len(), &policy, sample_count, overall_topology);
+    GltfClearanceInference::infer_assembly(&mut overall.clearance, &distances, (overlap_volume, overlap_complete), pairs.len(), &policy, sample_count, overall_topology);
     let valid_part_count = raw_parts.iter().filter(|part| !part.triangles.is_empty()).count() as u64;
     let invalid_part_count = raw_parts.iter().filter(|part| part.triangles.is_empty()).count() as u64 + diagnostics.iter().filter(|diagnostic| diagnostic.severity == GltfSeverity::Error).count() as u64;
     let counts = GltfInferenceCounts {

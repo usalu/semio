@@ -192,9 +192,9 @@ function renderRust(icons: Record<string, string>, generatedDir: string, sources
   }).join("\n");
   const asStrArms = ids.map((id) => `            Self::${iconIdToRustVariant(id)} => "${id}",`).join("\n");
   const fromStrArms = ids.map((id) => `            "${id}" => Some(Self::${iconIdToRustVariant(id)}),`).join("\n");
-  const allEntries = ids.map((id) => `    IconName::${iconIdToRustVariant(id)},`).join("\n");
+  const allEntries = ids.map((id) => `        IconName::${iconIdToRustVariant(id)},`).join("\n");
   const svgArms = ids.map((id) => {
-    return `        IconName::${iconIdToRustVariant(id)} => Some(include_str!("🖼️icon_svgs/${sourcePaths.get(id)!}")),`;
+    return `            IconName::${iconIdToRustVariant(id)} => Some(include_str!("🖼️icon_svgs/${sourcePaths.get(id)!}")),`;
   }).join("\n");
   const svgDir = join(generatedDir, "🖼️icon_svgs");
   const svgs = ids.map((id) => ({ path: join(svgDir, sourcePaths.get(id)!), content: icons[id]! }));
@@ -301,7 +301,7 @@ impl From<&str> for IconName {
 /// Compile-time catalog icon id from a string literal.
 #[macro_export]
 macro_rules! icon_name {
-${ids.map((id) => `    (${JSON.stringify(id)}) => { $crate::IconName::${iconIdToRustVariant(id)} };`).join("\n")}
+${ids.map((id) => `    (${JSON.stringify(id)}) => {\n        $crate::IconName::${iconIdToRustVariant(id)}\n    };`).join("\n")}
     ($other:literal) => {
         ::core::compile_error!(::core::concat!("unknown catalog icon name: ", $other))
     };
@@ -484,12 +484,12 @@ function renderRustMetabolism(icons: Record<string, string>, generatedDir: strin
   const variants = ids.map((id) => `    #[serde(rename = "${id}")]\n    ${iconIdToRustVariant(id)},`).join("\n");
   const asStrArms = ids.map((id) => `            Self::${iconIdToRustVariant(id)} => "${id}",`).join("\n");
   const fromStrArms = ids.map((id) => `            "${id}" => Some(Self::${iconIdToRustVariant(id)}),`).join("\n");
-  const allEntries = ids.map((id) => `    MetabolismIconName::${iconIdToRustVariant(id)},`).join("\n");
+  const allEntries = ids.map((id) => `        MetabolismIconName::${iconIdToRustVariant(id)},`).join("\n");
   const paths = new Map(sources.map(({ id, path }) => [id, path]));
   const svgArms = ids.map((id) => {
     const path = paths.get(id);
     if (!path) throw new Error(`Missing metabolism icon source: ${id}`);
-    return `        MetabolismIconName::${iconIdToRustVariant(id)} => Some(include_str!("🌱️metabolism_svgs/${path}")),`;
+    return `            MetabolismIconName::${iconIdToRustVariant(id)} => Some(include_str!("🌱️metabolism_svgs/${path}")),`;
   }).join("\n");
   const svgDir = join(generatedDir, "🌱️metabolism_svgs");
   const svgs = ids.map((id) => ({ path: join(svgDir, paths.get(id)!), content: icons[id]! }));
@@ -511,7 +511,7 @@ ${asStrArms}
         }
     }
 
-    pub fn from_str(s: &str) -> Option<Self> {
+    pub fn parse(s: &str) -> Option<Self> {
         match s.trim() {
 ${fromStrArms}
             _ => None,
@@ -533,7 +533,7 @@ impl std::fmt::Display for MetabolismIconName {
 
 impl From<&str> for MetabolismIconName {
     fn from(value: &str) -> Self {
-        Self::from_str(value).expect("invalid metabolism icon name")
+        Self::parse(value).expect("invalid metabolism icon name")
     }
 }
 `;
@@ -936,7 +936,9 @@ class ExportLogoScript extends BundleScript {
     const inputPath = join(logoDir, "🎞️animation/⚡️animated.svg");
     const outputPath = join(logoDir, "🎞️animation/🎬️animation.mp4");
     console.log(`Exporting ${inputPath} to ${outputPath}...`);
-    await exportAnimatedSvgToMp4(inputPath, outputPath);
+    await exportAnimatedSvgToMp4(inputPath, outputPath, { progress: ({ completed, total }) => {
+      if (completed % 60 === 0 || completed === total) console.log(`[logo] encoded ${completed}/${total} frames`);
+    } });
     console.log(`Successfully exported logo to MP4: ${outputPath}`);
   }
 }

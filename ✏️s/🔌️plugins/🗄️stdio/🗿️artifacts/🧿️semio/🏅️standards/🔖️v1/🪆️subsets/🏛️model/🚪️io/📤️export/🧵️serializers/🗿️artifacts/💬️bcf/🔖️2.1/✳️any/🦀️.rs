@@ -57,8 +57,8 @@ fn number_property(properties: &[crate::artifacts::semio::standards::v1::subsets
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn topic_from_element(element: &crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement, referenced_guids: &[String]) -> BcfTopic {
     let empty: Vec<crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::Property> = Vec::new();
-    let topic_props = element.psets.iter().find(|p| p.name == "Pset_BcfTopic").map(|p| p.properties.as_slice()).unwrap_or(&empty);
-    let comments_props = element.psets.iter().find(|p| p.name == "Pset_BcfComments").map(|p| p.properties.as_slice()).unwrap_or(&empty);
+    let topic_props = element.psets.iter().find(|p| p.name == "Pset_BcfTopic").map_or(empty.as_slice(), |p| p.properties.as_slice());
+    let comments_props = element.psets.iter().find(|p| p.name == "Pset_BcfComments").map_or(empty.as_slice(), |p| p.properties.as_slice());
 
     let count = number_property(comments_props, "count").unwrap_or(0.0) as usize;
     let comments = (0..count)

@@ -66,7 +66,7 @@ mod tests {
     async fn set_active_example_via_string_action_loads_fixture() {
         let _serial = crate::editor::generation3d::test_support::lock();
         let mut app = app_with_registry().await;
-        app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_FILLET })), &semio_framework_plugin::testkit::meta("local")).await.expect("set example");
+        app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_FILLET }).into()), &semio_framework_plugin::testkit::meta("local")).await.expect("set example");
         let projection = app.snapshot().expect("snapshot");
         assert!(projection
             .fixture

@@ -54,8 +54,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn the_inspector_always_summarises_the_schema_and_visible_count() {
-        let mut app = app();
-        let json = render_body(&mut app, GIS2D_PLAY_BODY_INSPECTION);
+        let mut app = app().await;
+        let json = render_body(&mut app, GIS2D_PLAY_BODY_INSPECTION).await;
         assert!(json.contains(GIS_MAP_SCHEMA));
         assert!(json.contains(&format!("{}/{}", GIS_MAP_LAYER_IDS.len(), GIS_MAP_LAYER_IDS.len())));
     }

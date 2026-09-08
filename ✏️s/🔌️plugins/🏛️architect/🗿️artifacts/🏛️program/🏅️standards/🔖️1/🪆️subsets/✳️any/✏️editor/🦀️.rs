@@ -1582,11 +1582,10 @@ mod tests {
     /// `ArchitectCommand` variant.
     #[semio_framework_async_macros::async_test]
     async fn command_from_action_bridges_declared_actions() {
-        let app = ArchitectPlayApp;
         assert!(matches!(ArchitectPlayApp::command_from_action("runValidation", None), Ok(ArchitectCommand::RunValidation(_))));
-        assert!(matches!(ArchitectPlayApp::command_from_action("search", Some(&json!({ "query": "hall" }))), Ok(ArchitectCommand::Search(query::Search { query })) if query == "hall"));
+        assert!(matches!(ArchitectPlayApp::command_from_action("search", Some(&dsl::json::to_dsl_value(&dsl::json!({ "query": "hall" })))), Ok(ArchitectCommand::Search(query::Search { query })) if query == "hall"));
         assert!(matches!(
-            ArchitectPlayApp::command_from_action("selectRegister", Some(&json!({ "registerId": "risks" }))),
+            ArchitectPlayApp::command_from_action("selectRegister", Some(&dsl::json::to_dsl_value(&dsl::json!({ "registerId": "risks" })))),
             Ok(ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id })) if register_id == "risks"
         ));
     }
@@ -1595,7 +1594,7 @@ mod tests {
     //#region 🔖️Manifest
     #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
-        let definition = create_architect_app().definition;
+        let definition = create_architect_app();
         assert_eq!(definition.modes.len(), 3);
         assert_eq!(definition.window_kinds.len(), 5);
         for body_key in [document_panel::ARCHITECT_BODY_DOCUMENT, catalogue_panel::ARCHITECT_BODY_CATALOGUE, inspection_panel::ARCHITECT_BODY_INSPECTION] {
@@ -1756,7 +1755,7 @@ mod tests {
         let mut app = testkit::app_with_registry().await;
         let element_id = app.snapshot().expect("snapshot").elements[0].header.id.to_string();
         let targets = serde_json::to_string(&[serde_json::json!({ "granularity": ARCHITECT_INTERACTION_GRANULARITY_ENTITY, "id": element_id })]).expect("targets json");
-        app.handle_action("interactionSelect", Some(&json!({ "domainId": ARCHITECT_INTERACTION_PROGRAM, "targets": targets, "merge": "replace" })), &semio_framework_plugin::testkit::meta("test")).await.expect("interactionSelect");
+        app.handle_action("interactionSelect", Some(&dsl::json::to_dsl_value(&dsl::json!({ "domainId": ARCHITECT_INTERACTION_PROGRAM, "targets": targets, "merge": "replace" }))), &semio_framework_plugin::testkit::meta("test")).await.expect("interactionSelect");
         let rendered = testkit::render(&mut app, document_panel::ARCHITECT_BODY_DOCUMENT).await;
         assert!(rendered.contains(&element_id), "the rendered tree must still list the picked element");
         assert!(rendered.contains("\"selected\":true"), "the picked element must be stamped selected by the framework wrapper");

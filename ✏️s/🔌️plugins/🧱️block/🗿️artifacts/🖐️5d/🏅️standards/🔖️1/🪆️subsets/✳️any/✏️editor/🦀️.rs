@@ -422,14 +422,7 @@ impl ArtifactEditor for Block5dPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            operation_context,
-            request.completion,
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
             Block5dCommand::command_id,
             BLOCK5D_RETAINED_RAW_BYTES,
             BLOCK5D_RETAINED_WORK_ITEMS,
@@ -624,7 +617,7 @@ pub fn create_block5d_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::testkit::{meta, new_app as sdk_new_app, new_app_with_registry};
+    use semio_framework_plugin::testkit::{meta, new_app_with_registry};
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
     /// ✏️ `Block5dPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
@@ -633,8 +626,8 @@ pub(crate) mod testkit {
     /// `PluginBuilder::editor::<Block5dPlayApp>` builds it.
     pub type Block5dApp = VcsArtifactApp<EditorApp<Block5dPlayApp>>;
 
-    pub fn new_app() -> Block5dApp {
-        sdk_new_app::<EditorApp<Block5dPlayApp>>()
+    pub async fn new_app() -> Block5dApp {
+        app_with_registry().await
     }
 
     /// ✏️ Adapts `create_block5d_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
@@ -646,16 +639,16 @@ pub(crate) mod testkit {
     }
 
     /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
-    pub fn app_with_registry() -> Block5dApp {
-        new_app_with_registry::<EditorApp<Block5dPlayApp>>(block5d_app_manifest_for_testkit)
+    pub async fn app_with_registry() -> Block5dApp {
+        new_app_with_registry::<EditorApp<Block5dPlayApp>>(block5d_app_manifest_for_testkit).await
     }
 
-    pub fn dispatch(app: &mut Block5dApp, command: Block5dCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+    pub async fn dispatch(app: &mut Block5dApp, command: Block5dCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
     }
 
-    pub fn render(app: &mut Block5dApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+    pub async fn render(app: &mut Block5dApp, body_key: &str) -> String {
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
     }
 }
 //#endregion 🧪️Testkit
@@ -713,7 +706,7 @@ mod tests {
     /// `command_id`.
     #[semio_framework_async_macros::async_test]
     async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
-        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<Block5dPlayApp>>(testkit::block5d_app_manifest_for_testkit);
+        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Block5dPlayApp>>(testkit::block5d_app_manifest_for_testkit).await;
         assert!(<Block5dPlayApp as ArtifactEditor>::command_from_action("noSuchAction", None).is_err());
     }
     //#endregion 🔖️CommandSurface
@@ -748,9 +741,9 @@ mod tests {
     /// (`removeGripKind`/`removeGrip`) and transitive hover from a kind to its grips.
     #[semio_framework_async_macros::async_test]
     async fn interaction_topology_nests_grips_under_their_grip_kind() {
-        let mut app: Block5dApp = new_app();
-        testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {}));
-        testkit::dispatch(&mut app, Block5dCommand::AddGrip(add_grip::AddGrip {}));
+        let mut app: Block5dApp = new_app().await;
+        testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {})).await;
+        testkit::dispatch(&mut app, Block5dCommand::AddGrip(add_grip::AddGrip {})).await;
         let snapshot = app.snapshot().expect("snapshot");
         let kind_id = snapshot.grip_kinds[0].id.clone();
         let grip_id = snapshot.grips[0].id.clone();
@@ -768,7 +761,7 @@ mod tests {
     async fn block5d_io_declares_the_catalog_out_port() {
         let io = block5d_io();
         assert_eq!(io.document_schema, BLOCK_5D_SCHEMA);
-        let ports = io.all_ports();
+        let ports = io.all_ports().await;
         let catalog = ports.iter().find(|port| port.id == "catalog:out").expect("catalog:out port declared");
         assert_eq!(catalog.kind_id.as_deref(), Some("kit.catalog"));
         assert_eq!(catalog.direction, semio_framework_plugin::MediaPortDirection::Out);
@@ -776,53 +769,53 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_falls_back_to_a_text_node() {
-        let mut app = new_app();
-        assert!(testkit::render(&mut app, "block5d.play.nope").contains("Unknown body"));
+        let mut app = new_app().await;
+        assert!(testkit::render(&mut app, "block5d.play.nope").await.contains("Unknown body"));
     }
     //#endregion 🔖️Manifest
 
     //#region 🔖️Behavior
     #[semio_framework_async_macros::async_test]
     async fn renders_document_tree_board_and_world() {
-        let mut app: Block5dApp = new_app();
-        assert!(testkit::render(&mut app, document_panel::BLOCK5D_BODY_DOCUMENT).contains("Grip Kinds"));
-        assert!(testkit::render(&mut app, board::BLOCK5D_BODY_BOARD).contains("2d grips"));
-        assert!(testkit::render(&mut app, world::BLOCK5D_BODY_WORLD).contains("mesh:"));
+        let mut app: Block5dApp = new_app().await;
+        assert!(testkit::render(&mut app, document_panel::BLOCK5D_BODY_DOCUMENT).await.contains("Grip Kinds"));
+        assert!(testkit::render(&mut app, board::BLOCK5D_BODY_BOARD).await.contains("2d grips"));
+        assert!(testkit::render(&mut app, world::BLOCK5D_BODY_WORLD).await.contains("mesh:"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn add_grip_kind_then_add_grip_then_remove_round_trips() {
-        let mut app: Block5dApp = new_app();
+        let mut app: Block5dApp = new_app().await;
         let booted = app.snapshot().expect("snapshot");
         let (kinds, grips) = (booted.grip_kinds.len(), booted.grips.len());
         let booted_ids: Vec<String> = booted.grips.iter().map(|grip| grip.id.clone()).collect();
-        testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {}));
+        testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {})).await;
         assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), kinds + 1);
-        testkit::dispatch(&mut app, Block5dCommand::AddGrip(add_grip::AddGrip {}));
+        testkit::dispatch(&mut app, Block5dCommand::AddGrip(add_grip::AddGrip {})).await;
         let projection = app.snapshot().expect("snapshot");
         assert_eq!(projection.grips.len(), grips + 1);
         let grip_id = projection.grips.iter().map(|grip| grip.id.clone()).find(|id| !booted_ids.contains(id)).expect("the added grip");
-        testkit::dispatch(&mut app, Block5dCommand::RemoveGrip(remove_grip::RemoveGrip { id: grip_id }));
+        testkit::dispatch(&mut app, Block5dCommand::RemoveGrip(remove_grip::RemoveGrip { id: grip_id })).await;
         assert_eq!(app.snapshot().expect("snapshot").grips.len(), grips);
     }
 
     /// 📄️ The app boots on a real document, so every window renders content before the first action.
     #[semio_framework_async_macros::async_test]
     async fn boots_on_the_forest_left_example_document() {
-        let mut app: Block5dApp = new_app();
+        let mut app: Block5dApp = new_app().await;
         let booted = app.snapshot().expect("snapshot");
         assert_ne!(booted, crate::artifacts::block5d::schema::empty_block5d_snapshot());
         assert_eq!(booted.part_kind.label, "Hexagonal Cut Concrete Forest Left");
         assert!(booted.representations.first().and_then(|representation| representation.mesh_url.as_deref()).is_some());
         assert!(!booted.grip_kinds.is_empty());
-        assert!(testkit::render(&mut app, board::BLOCK5D_BODY_BOARD).contains("Hexagonal Cut Concrete Forest Left"));
-        assert!(testkit::render(&mut app, world::BLOCK5D_BODY_WORLD).contains("hexagonal-cut-concrete-forest-left.glb"));
+        assert!(testkit::render(&mut app, board::BLOCK5D_BODY_BOARD).await.contains("Hexagonal Cut Concrete Forest Left"));
+        assert!(testkit::render(&mut app, world::BLOCK5D_BODY_WORLD).await.contains("hexagonal-cut-concrete-forest-left.glb"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_active_example_loads_forest_left_fixture() {
-        let mut app: Block5dApp = new_app();
-        testkit::dispatch(&mut app, Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK5D_EXAMPLE_FOREST_LEFT.into() }));
+        let mut app: Block5dApp = new_app().await;
+        testkit::dispatch(&mut app, Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK5D_EXAMPLE_FOREST_LEFT.into() })).await;
         let projection = app.snapshot().expect("snapshot");
         assert_eq!(projection.part_kind.id, "Hexagonal Cut Concrete Forest Left");
         assert_eq!(projection.grips.len(), 1);
@@ -830,21 +823,21 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trips_through_the_wrapper() {
-        let mut app: Block5dApp = new_app();
+        let mut app: Block5dApp = new_app().await;
         let kinds = app.snapshot().expect("snapshot").grip_kinds.len();
-        testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {}));
+        testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {})).await;
         assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), kinds + 1);
-        app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
+        app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("undo");
         assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), kinds);
-        app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).expect("redo");
+        app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("redo");
         assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), kinds + 1);
     }
 
     /// 🌉️ `puzzle5d_catalog_fragment`'s new caller round-trips through the `"catalog:out"` media port.
     #[semio_framework_async_macros::async_test]
     async fn export_media_catalog_out_wraps_the_puzzle5d_fragment() {
-        let mut app: Block5dApp = new_app();
-        testkit::dispatch(&mut app, Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK5D_EXAMPLE_FOREST_LEFT.into() }));
+        let mut app: Block5dApp = new_app().await;
+        testkit::dispatch(&mut app, Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK5D_EXAMPLE_FOREST_LEFT.into() })).await;
         let media = semio_framework_plugin::resolve_ready(app.export_media("catalog:out")).expect("export catalog");
         assert_eq!(media.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
         match media.payload {
@@ -861,7 +854,7 @@ mod tests {
     async fn command_from_action_bridges_set_active_example() {
         let _app = Block5dPlayApp;
         assert!(
-            matches!(<Block5dPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "forest" }))), Ok(Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "forest")
+            matches!(<Block5dPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&dsl::json::to_dsl_value(&dsl::json!({ "exampleId": "forest" })))), Ok(Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "forest")
         );
     }
 
@@ -874,8 +867,8 @@ mod tests {
     /// operations under the real, kind-discipline-enforcing registry.
     #[semio_framework_async_macros::async_test]
     async fn mutation_commands_still_emit_artifact_mutations_under_the_real_registry() {
-        let mut app = testkit::app_with_registry();
-        let result = testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {}));
+        let mut app = testkit::app_with_registry().await;
+        let result = testkit::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {})).await;
         assert!(!result.mutations.is_empty(), "addGripKind is a mutation and must reach document operations under kind discipline");
     }
     //#endregion 🔖️Behavior

@@ -155,7 +155,7 @@ fn pages_diff_between(a: &[PageDoc], b: &[PageDoc]) -> PdfPagesDiff {
 /// into the carried added payload), specialized to the flat [`PdfPageDiff`] because a page is a
 /// weak entity with no nested collection of its own.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_pages_diff(first: PdfPagesDiff, second: PdfPagesDiff) -> PdfPagesDiff {
+fn absorb_pages_diff(first: &PdfPagesDiff, second: &PdfPagesDiff) -> PdfPagesDiff {
     enum Origin {
         Base(usize),
         FirstAdded(usize),
@@ -331,7 +331,7 @@ impl MutationDiff<PdfSnapshot> for PdfDiff {
             (None, other) => other,
             (mine, None) => mine,
             (Some(mine), Some(other)) => {
-                let combined = absorb_pages_diff(mine, other);
+                let combined = absorb_pages_diff(&mine, &other);
                 (!combined.is_empty()).then_some(combined)
             }
         };
@@ -366,7 +366,7 @@ pub(crate) fn enc_str(text: &str) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_str(text: &str) -> Result<String, String> {
-    if text.len() % 2 != 0 {
+    if !text.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {text:?}"));
     }
     let bytes: Result<Vec<u8>, String> = (0..text.len()).step_by(2).map(|index| u8::from_str_radix(&text[index..index + 2], 16).map_err(|error| error.to_string())).collect();

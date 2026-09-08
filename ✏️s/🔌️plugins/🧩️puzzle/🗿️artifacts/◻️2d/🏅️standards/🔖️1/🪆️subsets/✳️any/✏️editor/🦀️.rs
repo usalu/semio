@@ -844,7 +844,7 @@ macro_rules! puzzle2d_command_variants {
             }
 
             #[cfg(test)]
-            fn from_action(action: &str, args: Option<Value>, window_id: Option<String>) -> Self {
+            pub(crate) fn from_action(action: &str, args: Option<Value>, window_id: Option<String>) -> Self {
                 Self::try_from_action(action, args, window_id)
                     .unwrap_or_else(|| panic!("unknown puzzle2d action id in test: {action}"))
             }
@@ -3917,13 +3917,13 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(puzzle2d_internal_action("lodScaleJson", LocalizedLabel::native("LOD Scale Json", "LOD-Skalierung-Json"), ActionKind::View))
             // 📝️ Staged palette args for the two content commands that need a target.
             .action_args("addNode", vec![
-                ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![ActionArgOption::new("node", LocalizedLabel::native("Node", "Knoten"))]).required().default_value("node"),
+                ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![ActionArgOption::new("node", LocalizedLabel::native("Node", "Knoten"))]).required().default_value(&"node"),
             ])
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
                     ActionArgOption::new(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, puzzle2d_localized(|l| l.example_concrete_forest)),
                     ActionArgOption::new(PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, LocalizedLabel::native("Nakagin Capsule Tower", "Nakagin Capsule Tower")),
-                ]).required().default_value(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID),
+                ]).required().default_value(&PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID),
             ])
             .action_interactive_job("addNode", InteractiveJobClassification::Migrated)
             .action_interactive_job("applyBoardEvents", InteractiveJobClassification::Migrated)
@@ -4045,7 +4045,8 @@ pub(crate) mod testkit {
                 | "setSelectionMode"
                 | "setInteractionGranularity"
         ) {
-            return semio_framework::io::resolve_ready(app.handle_action(action, args, &meta("local")));
+            let dsl_args = args.map(dsl::DslValue::from);
+            return semio_framework::io::resolve_ready(app.handle_action(action, dsl_args.as_ref(), &meta("local")));
         }
         semio_framework::io::resolve_ready(app.dispatch_typed(Puzzle2dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &meta("local")))
     }

@@ -13,7 +13,7 @@ pub fn inverse(payload: &super::DeleteNode, base: &SemioGraphSnapshot) -> Vec<Se
         id: node.id.clone(),
         kind: node.kind.clone(),
         label: node.label.clone(),
-        position: node.position.clone(),
+        position: node.position,
         ports: node.ports.clone(),
         properties: node.properties.clone(),
     })];

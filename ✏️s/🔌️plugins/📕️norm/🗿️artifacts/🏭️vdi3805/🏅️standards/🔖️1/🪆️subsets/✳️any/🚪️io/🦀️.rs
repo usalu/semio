@@ -96,7 +96,7 @@ mod json_serializers_tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    fn catalog_and_document_json_round_trip() {
+    async fn catalog_and_document_json_round_trip() {
         let doc = Vdi3805Snapshot::default();
         let json = catalog_to_json(&doc.catalog).expect("to_json");
         let restored = catalog_from_json(&json).expect("from_json");

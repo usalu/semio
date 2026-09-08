@@ -238,7 +238,7 @@ impl<O: GuestLifetimeOwner> GuestLifecycleCell<O> {
             None
         };
         let elapsed = now_us().zip(started_us).and_then(|(end, start)| end.checked_sub(start)).ok_or("guest lifecycle clock missing or backward; receipt retained")?;
-        if semio_framework_trace::interactive_step_contract_violated(elapsed) {
+        if semio_framework_trace::guest_lifecycle_turn_contract_violated(elapsed) {
             return Err(GUEST_LIFECYCLE_TURN_DEADLINE);
         }
         if let Some(phase) = phase {

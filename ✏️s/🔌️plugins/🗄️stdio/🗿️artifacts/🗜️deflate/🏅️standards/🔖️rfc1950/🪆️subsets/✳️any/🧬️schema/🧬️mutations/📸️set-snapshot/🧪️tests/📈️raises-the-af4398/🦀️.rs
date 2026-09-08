@@ -25,13 +25,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> DeflateSnapshot {
-    serde_json::from_str(BEFORE).expect("before zlib snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("before zlib snapshot decodes")
 }
 fn expected_after() -> DeflateSnapshot {
-    serde_json::from_str(AFTER).expect("after zlib snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("after zlib snapshot decodes")
 }
 fn mutation() -> DeflateMutation {
-    serde_json::from_str(MUTATION).expect("set-snapshot mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("set-snapshot mutation decodes")
 }
 
 /// ▶️ `set-snapshot` carries the zlib stream to exactly the committed `after`: FLEVEL `Maximum`
@@ -69,12 +69,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: DeflateSnapshot = serde_json::from_str(text).expect("zlib snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("zlib snapshot encodes");
+        let decoded: DeflateSnapshot = dsl::json::from_json_str(text).expect("zlib snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("zlib snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("zlib snapshot reparses");
         assert_eq!(reencoded, original, "deflate/set-snapshot: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("set-snapshot mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("set-snapshot mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("set-snapshot mutation reparses");
     assert_eq!(reencoded, original, "deflate/set-snapshot: committed mutation JSON is not canonical");
 }
@@ -98,7 +98,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <DeflateMutation as protocol::Mutation<DeflateSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced zlib diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced zlib diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed zlib diff decodes");
     assert_eq!(produced, committed, "deflate/set-snapshot: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -107,11 +107,11 @@ async fn produces_committed_diff() {
 /// the one shape this artifact's tri-state field can round-trip.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: DeflateDiff = serde_json::from_str(DIFF).expect("committed zlib diff decodes");
+    let decoded: DeflateDiff = dsl::json::from_json_str(DIFF).expect("committed zlib diff decodes");
     assert!(decoded.compression_method.is_none() && decoded.window_bits.is_none(), "deflate/set-snapshot: the CMF header nibbles must not be re-emitted");
     assert!(decoded.dict_id.is_none(), "deflate/set-snapshot: the tri-state dict_id slot must be absent, not a round-trip-lossy null");
     assert_eq!(decoded.compression_level_hint, Some(DeflateLevelHint::Maximum), "deflate/set-snapshot: the committed diff must raise FLEVEL");
-    let reencoded = serde_json::to_value(&decoded).expect("zlib diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("zlib diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed zlib diff reparses");
     assert_eq!(reencoded, original, "deflate/set-snapshot: committed diff JSON is not canonical");
 }
@@ -120,7 +120,7 @@ async fn committed_diff_is_canonical() {
 /// plus payload is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: DeflateDiff = serde_json::from_str(DIFF).expect("committed zlib diff decodes");
+    let decoded: DeflateDiff = dsl::json::from_json_str(DIFF).expect("committed zlib diff decodes");
     let produced = <DeflateDiff as protocol::MutationDiff<DeflateSnapshot>>::apply(&decoded, &before()).expect("committed zlib diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "deflate/set-snapshot: committed diff did not carry before to after");
 }

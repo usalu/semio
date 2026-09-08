@@ -92,7 +92,7 @@ fn intersect_line_circle(origin: Pnt3, dir: Vec3, frame: &Frame3, radius: f64, t
         if o.z.abs() > tol {
             return Ok(vec![]);
         }
-        return intersect_line2_circle(o.x, o.y, d.x, d.y, radius, origin, dir, frame, tol, swap);
+        return intersect_line2_circle((o.x, o.y), (d.x, d.y), radius, (origin, dir), frame, tol, swap);
     }
     let t_plane = -o.z / d.z;
     let x = o.x + d.x * t_plane;
@@ -106,11 +106,11 @@ fn intersect_line_circle(origin: Pnt3, dir: Vec3, frame: &Frame3, radius: f64, t
     if rho > radius + tol {
         return Ok(vec![]);
     }
-    intersect_line2_circle(o.x, o.y, d.x, d.y, radius, origin, dir, frame, tol, swap)
+    intersect_line2_circle((o.x, o.y), (d.x, d.y), radius, (origin, dir), frame, tol, swap)
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn intersect_line2_circle(ox: f64, oy: f64, dx: f64, dy: f64, radius: f64, origin: Pnt3, dir: Vec3, frame: &Frame3, tol: f64, swap: bool) -> Result<Vec<CurveCurveHit>, IntersectError> {
+fn intersect_line2_circle((ox, oy): (f64, f64), (dx, dy): (f64, f64), radius: f64, (origin, dir): (Pnt3, Vec3), frame: &Frame3, tol: f64, swap: bool) -> Result<Vec<CurveCurveHit>, IntersectError> {
     let a = dx * dx + dy * dy;
     if a <= tol * tol {
         return Err(IntersectError::Degenerate("line direction parallel to circle normal with zero in-plane speed".into()));
@@ -223,7 +223,7 @@ fn intersect_general(a: &Curve3, b: &Curve3, tol: f64) -> Result<Vec<CurveCurveH
     let mut hits = Vec::new();
     for (bez_a, a0, a1) in &segs_a {
         for (bez_b, b0, b1) in &segs_b {
-            clip_pair(bez_a, *a0, *a1, bez_b, *b0, *b1, a, b, tol, 0, &mut hits)?;
+            clip_pair((bez_a, *a0, *a1), (bez_b, *b0, *b1), a, b, tol, 0, &mut hits)?;
         }
     }
     if hits.is_empty() {
@@ -280,7 +280,7 @@ fn line_domain_against(origin: &Pnt3, dir: &Vec3, other: &Curve3, tol: f64) -> R
 /// ➰ Re-extracts Bézier spans for a NURBS already computed via [`curve_as_nurbs`] (kept local
 /// rather than routed through `shared::curve_to_bezier_segments`, which starts from a [`Curve3`]
 /// + domain rather than an already-converted [`NurbsCurve3`] — this file needs the latter because
-/// `curve_as_nurbs`'s domain resolution against the *other* curve has no `shared` equivalent).
+///   `curve_as_nurbs`'s domain resolution against the *other* curve has no `shared` equivalent).
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn nurbs_to_bezier_segments(nurbs: &NurbsCurve3) -> Result<Vec<(RationalBezier3, f64, f64)>, IntersectError> {
     let mut knots = nurbs.knots.clone();
@@ -292,7 +292,7 @@ fn nurbs_to_bezier_segments(nurbs: &NurbsCurve3) -> Result<Vec<(RationalBezier3,
     let (d0, d1) = knots.domain();
     let mut unique: Vec<f64> = Vec::new();
     for &k in &knots.knots {
-        if k > d0 + 1e-15 && k < d1 - 1e-15 && unique.last().map(|&u| (u - k).abs() > 1e-15).unwrap_or(true) {
+        if k > d0 + 1e-15 && k < d1 - 1e-15 && unique.last().is_none_or(|&u| (u - k).abs() > 1e-15) {
             unique.push(k);
         }
     }
@@ -346,7 +346,7 @@ fn boxes_overlap3(a: (Pnt3, Pnt3), b: (Pnt3, Pnt3), tol: f64) -> bool {
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn clip_pair(bez_a: &RationalBezier3, a0: f64, a1: f64, bez_b: &RationalBezier3, b0: f64, b1: f64, curve_a: &Curve3, curve_b: &Curve3, tol: f64, depth: u32, hits: &mut Vec<CurveCurveHit>) -> Result<(), IntersectError> {
+fn clip_pair((bez_a, a0, a1): (&RationalBezier3, f64, f64), (bez_b, b0, b1): (&RationalBezier3, f64, f64), curve_a: &Curve3, curve_b: &Curve3, tol: f64, depth: u32, hits: &mut Vec<CurveCurveHit>) -> Result<(), IntersectError> {
     if !boxes_overlap3(bez_a.control_hull_box(), bez_b.control_hull_box(), tol) {
         return Ok(());
     }
@@ -367,13 +367,13 @@ fn clip_pair(bez_a: &RationalBezier3, a0: f64, a1: f64, bez_b: &RationalBezier3,
     if span_a >= span_b {
         let (left, right) = bez_a.subdivide(0.5);
         let mid = 0.5 * (a0 + a1);
-        clip_pair(&left, a0, mid, bez_b, b0, b1, curve_a, curve_b, tol, depth + 1, hits)?;
-        clip_pair(&right, mid, a1, bez_b, b0, b1, curve_a, curve_b, tol, depth + 1, hits)?;
+        clip_pair((&left, a0, mid), (bez_b, b0, b1), curve_a, curve_b, tol, depth + 1, hits)?;
+        clip_pair((&right, mid, a1), (bez_b, b0, b1), curve_a, curve_b, tol, depth + 1, hits)?;
     } else {
         let (left, right) = bez_b.subdivide(0.5);
         let mid = 0.5 * (b0 + b1);
-        clip_pair(bez_a, a0, a1, &left, b0, mid, curve_a, curve_b, tol, depth + 1, hits)?;
-        clip_pair(bez_a, a0, a1, &right, mid, b1, curve_a, curve_b, tol, depth + 1, hits)?;
+        clip_pair((bez_a, a0, a1), (&left, b0, mid), curve_a, curve_b, tol, depth + 1, hits)?;
+        clip_pair((bez_a, a0, a1), (&right, mid, b1), curve_a, curve_b, tol, depth + 1, hits)?;
     }
     Ok(())
 }

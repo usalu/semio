@@ -35,18 +35,18 @@ mod tests {
         let mut instance = app().await;
         dispatch(&mut instance, VcsCommand::SetLocale(SetLocale { value: "de-DE".into() })).await;
 
-        let editor = crate::editor::vcs::testkit::render(&mut instance, VCS_PLAY_BODY_EDITOR);
+        let editor = crate::editor::vcs::testkit::render(&mut instance, VCS_PLAY_BODY_EDITOR).await;
         assert!(editor.contains("Aktionen"));
         assert!(editor.contains("Rückgängig"));
         assert!(editor.contains("Wiederholen"));
         assert!(editor.contains("Zähler"));
 
-        let inspection = crate::editor::vcs::testkit::render(&mut instance, VCS_PLAY_BODY_INSPECTION);
+        let inspection = crate::editor::vcs::testkit::render(&mut instance, VCS_PLAY_BODY_INSPECTION).await;
         assert!(inspection.contains("Titel"));
         assert!(inspection.contains("Notizen"));
         assert!(inspection.contains("Schlagwörter"));
 
-        let document_tree = crate::editor::vcs::testkit::render(&mut instance, VCS_PLAY_BODY_DOCUMENT);
+        let document_tree = crate::editor::vcs::testkit::render(&mut instance, VCS_PLAY_BODY_DOCUMENT).await;
         assert!(document_tree.contains("Alternativen"));
         assert!(document_tree.contains("Checkpoints"));
         assert!(!document_tree.contains("\"Alternatives\""));

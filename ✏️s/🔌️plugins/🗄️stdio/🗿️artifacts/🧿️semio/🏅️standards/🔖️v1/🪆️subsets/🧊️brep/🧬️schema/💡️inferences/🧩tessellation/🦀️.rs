@@ -16,6 +16,9 @@
 //! `edge_groups`/`face_infos`/`edge_infos` fields are now filled directly. Pure algorithm only —
 //! the real `InferredField<SemioBrepSnapshot>` wrapper is future work (see
 //! `💡️inferences/✅validation-report`'s doc comment for why it's not built yet).
+/// 🪡 Loop positions, surface parameters, and boundary flags.
+pub type TessellationLoopUv = (Vec<Pnt3>, Vec<(f64, f64)>, Vec<bool>);
+
 
 use std::collections::HashMap;
 
@@ -147,7 +150,7 @@ pub fn tessellate_face_with_report(body: &Body, face: FaceId, deflection: f64) -
         let count = pts.len().saturating_sub(1) as u32;
         let edge = body.edges.get(edge_id);
         let label = edge.map(|e| e.label.0.to_string()).unwrap_or_default();
-        let curve_kind = edge.and_then(|e| body.curves3.get(e.curve)).map(curve_kind_of).unwrap_or(CurveKind::Line);
+        let curve_kind = edge.and_then(|e| body.curves3.get(e.curve)).map_or(CurveKind::Line, curve_kind_of);
         let length = polyline_length(points);
         transfer.edge_groups.push(EdgeGroup { start, count, entity_id: label.clone() });
         transfer.edge_infos.push(EdgeInfo { entity_id: label, curve_kind, length });
@@ -297,7 +300,7 @@ fn pack_edge_segments_with_info(body: &Body, solid: SolidId, cache: &HashMap<Edg
             push_polyline_segments(&mut edges, &pts);
             let count = pts.len().saturating_sub(1) as u32;
             let label = edge.label.0.to_string();
-            let curve_kind = body.curves3.get(edge.curve).map(curve_kind_of).unwrap_or(CurveKind::Line);
+            let curve_kind = body.curves3.get(edge.curve).map_or(CurveKind::Line, curve_kind_of);
             let length = polyline_length(points);
             edge_groups.push(EdgeGroup { start, count, entity_id: label.clone() });
             edge_infos.push(EdgeInfo { entity_id: label, curve_kind, length });
@@ -404,7 +407,7 @@ fn append_face_mesh(transfer: &mut MeshTransfer, report: &mut TessellationReport
         transfer.index.push(base + *idx);
     }
     let mut area = 0.0;
-    for tri in indices.chunks_exact(3) {
+    for tri in indices.as_chunks::<3>().0 {
         let a = positions[tri[0] as usize];
         let b = positions[tri[1] as usize];
         let c = positions[tri[2] as usize];
@@ -423,7 +426,7 @@ fn append_face_mesh(transfer: &mut MeshTransfer, report: &mut TessellationReport
 /// nearest the previous sample) and pins the arbitrary `u` at poles/apexes to the previous branch
 /// so a boundary loop that touches a singularity stays a single well-formed ring vertex there.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn collect_loop_uv(body: &Body, loop_id: LoopId, surface: &Surface, edge_cache: &HashMap<EdgeId, Vec<(f64, Pnt3)>>) -> Result<(Vec<Pnt3>, Vec<(f64, f64)>, Vec<bool>), KernelError> {
+fn collect_loop_uv(body: &Body, loop_id: LoopId, surface: &Surface, edge_cache: &HashMap<EdgeId, Vec<(f64, Pnt3)>>) -> Result<TessellationLoopUv, KernelError> {
     let mut positions: Vec<Pnt3> = Vec::new();
     let mut uvs: Vec<(f64, f64)> = Vec::new();
     let mut poles: Vec<bool> = Vec::new();
@@ -433,7 +436,7 @@ fn collect_loop_uv(body: &Body, loop_id: LoopId, surface: &Surface, edge_cache: 
         let coedge = body.coedges.get(coedge_id).ok_or_else(|| KernelError::MissingEntity(coedge_id.to_string()))?;
         let edge = body.edges.get(coedge.edge).ok_or_else(|| KernelError::MissingEntity(coedge.edge.to_string()))?;
         let samples = edge_cache.get(&coedge.edge).ok_or_else(|| KernelError::Operation(format!("missing edge sample for {}", coedge.edge)))?;
-        let ordered: Vec<(f64, Pnt3)> = if coedge.forward { samples.clone() } else { samples.iter().rev().cloned().collect() };
+        let ordered: Vec<(f64, Pnt3)> = if coedge.forward { samples.clone() } else { samples.iter().rev().copied().collect() };
         for (i, &(t, p)) in ordered.iter().enumerate() {
             if i == 0 {
                 if let Some(&last) = positions.last() {
@@ -529,7 +532,7 @@ fn remove_closing_duplicate_uv(positions: &mut Vec<Pnt3>, uvs: &mut Vec<(f64, f6
 fn measure_report(surface: &Surface, positions: &[Pnt3], uvs: &[(f64, f64)], indices: &[u32]) -> (f64, f64) {
     let mut max_chordal = 0.0_f64;
     let mut max_angular = 0.0_f64;
-    for tri in indices.chunks_exact(3) {
+    for tri in indices.as_chunks::<3>().0 {
         let idx = [tri[0] as usize, tri[1] as usize, tri[2] as usize];
         let pts3 = [positions[idx[0]], positions[idx[1]], positions[idx[2]]];
         let uv3 = [uvs[idx[0]], uvs[idx[1]], uvs[idx[2]]];
@@ -559,7 +562,7 @@ fn vertex_normal(surface: &Surface, flipped: bool, uv: (f64, f64), positions: &[
         return n;
     }
     let mut accum = Vec3::ZERO;
-    for tri in indices.chunks_exact(3) {
+    for tri in indices.as_chunks::<3>().0 {
         if tri.iter().any(|&i| i as usize == vertex) {
             let a = positions[tri[0] as usize];
             let b = positions[tri[1] as usize];
@@ -575,7 +578,7 @@ fn vertex_normal(surface: &Surface, flipped: bool, uv: (f64, f64), positions: &[
 /// different parts of a curved face are each judged against their own local normal.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn fix_winding_per_triangle(positions: &[Pnt3], uvs: &[(f64, f64)], indices: &mut [u32], desired_at: &dyn Fn((f64, f64)) -> Vec3) {
-    for tri in indices.chunks_exact_mut(3) {
+    for tri in indices.as_chunks_mut::<3>().0 {
         let (ia, ib, ic) = (tri[0] as usize, tri[1] as usize, tri[2] as usize);
         let a = positions[ia];
         let b = positions[ib];
@@ -858,7 +861,7 @@ fn recover_edge(pts: &[(f64, f64)], tris: &mut Vec<Tri>, i: usize, j: usize) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn try_flip_towards(pts: &[(f64, f64)], tris: &mut Vec<Tri>, i: usize, j: usize) -> bool {
+fn try_flip_towards(pts: &[(f64, f64)], tris: &mut [Tri], i: usize, j: usize) -> bool {
     let pi = pts[i];
     let pj = pts[j];
     for a in 0..tris.len() {

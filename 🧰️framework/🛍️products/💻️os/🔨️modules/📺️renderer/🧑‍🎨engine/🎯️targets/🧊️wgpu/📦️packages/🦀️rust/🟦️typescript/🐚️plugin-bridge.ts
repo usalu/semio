@@ -68,13 +68,16 @@ import {
   SemioFaultError,
   type TurnOutcome,
 } from "@semio-tech/framework";
-import { AppChannelClient, AppChannelRequestSequence, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, packWireNatural } from "@semio-tech/framework-os";
+import { AppChannelClient, AppChannelRequestSequence, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, packValueToExactJson, decodePackWire, encodePackValue, faultDisplayMessage, packWireNatural } from "@semio-tech/framework-os";
 import { createShardCommandIngressPages, ShardClient, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
-import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
+import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts"
+import { SHARD_WORKER_URL } from "../../../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
+import type { ShardInstanceLifecycleLease, ShardWorkerLike } from "../../../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { rendererResidentLedger } from "../../../../../💾️resident/🟦️.ts";
 import {
   applyUiPatchToRetained,
   coerceTurnResult,
+  coerceWireBytes,
   decodeWirePatchOps,
   shellFrameBytes,
   wireEffectToFriendly,
@@ -85,10 +88,83 @@ import {
 } from "../../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts";
 // #endregion 🔌️Imports
 
+//#region 🧵️MainThreadShardWorkers
+/** @emoji 🧵️ A shard worker that the UI ISOLATE owns, reached over a `MessagePort`.
+ *
+ * This frame worker cannot call `new Worker(...)` for a shard itself: a NESTED dedicated worker fails
+ * to load outright in some embedded browsers — measured here, where even a one-line
+ * `self.postMessage` worker failed with a message-less `error` event while the identical script loaded
+ * fine from the page. That presented as all four shards dying at once and
+ * `create_app promise failed: shard 0 terminated`, with no filename or line to point at.
+ *
+ * `ShardClient.createWorker` is synchronous, so this proxy is returned immediately and queues anything
+ * sent before the port lands; the queue drains in order the moment it does. `terminate()` is relayed so
+ * the UI isolate can drop the real worker, and a relayed `shard-worker-error` is re-raised on `onerror`
+ * so `ShardClient`'s existing rebuild/failure ladder behaves exactly as with a direct `Worker`. */
+class MainThreadShardWorker implements ShardWorkerLike {
+  onmessage: ((event: { readonly data: unknown }) => void) | null = null;
+  onerror: ((event: unknown) => void) | null = null;
+  private port: MessagePort | null = null;
+  private readonly queued: { readonly message: unknown; readonly transfer?: readonly Transferable[] }[] = [];
+  private terminated = false;
+
+  constructor(private readonly shardIndex: number) {
+    shardPortWaiters.set(shardIndex, (port) => this.attach(port));
+    (self as unknown as { postMessage(message: unknown): void }).postMessage({ kind: "shard-spawn", shardIndex, url: SHARD_WORKER_URL });
+  }
+
+  private attach(port: MessagePort): void {
+    if (this.terminated) {
+      port.close();
+      return;
+    }
+    this.port = port;
+    port.onmessage = (event: MessageEvent) => {
+      const data = event.data as { readonly kind?: unknown; readonly message?: unknown } | null;
+      if (data && typeof data === "object" && data.kind === "shard-worker-error") {
+        this.onerror?.(data);
+        return;
+      }
+      this.onmessage?.({ data: event.data });
+    };
+    port.start();
+    for (const entry of this.queued.splice(0)) port.postMessage(entry.message, (entry.transfer ?? []) as Transferable[]);
+  }
+
+  postMessage(message: unknown, transfer?: readonly Transferable[]): void {
+    if (this.terminated) return;
+    if (!this.port) {
+      this.queued.push({ message, transfer });
+      return;
+    }
+    this.port.postMessage(message, (transfer ?? []) as Transferable[]);
+  }
+
+  terminate(): void {
+    if (this.terminated) return;
+    this.terminated = true;
+    shardPortWaiters.delete(this.shardIndex);
+    this.port?.close();
+    this.port = null;
+    this.queued.length = 0;
+    (self as unknown as { postMessage(message: unknown): void }).postMessage({ kind: "shard-terminate", shardIndex: this.shardIndex });
+  }
+}
+
+const shardPortWaiters = new Map<number, (port: MessagePort) => void>();
+self.addEventListener("message", (event: MessageEvent) => {
+  const data = event.data as { readonly kind?: unknown; readonly shardIndex?: unknown; readonly port?: unknown } | null;
+  if (!data || typeof data !== "object" || data.kind !== "shard-port" || typeof data.shardIndex !== "number") return;
+  shardPortWaiters.get(data.shardIndex)?.(data.port as MessagePort);
+  shardPortWaiters.delete(data.shardIndex);
+});
+//#endregion 🧵️MainThreadShardWorkers
+
 //#region 🔖️PooledSingletons
 let pooledRuntime: PooledActorRuntime | null = null;
 function getShardClient(): ShardClient {
   pooledRuntime ??= createPooledActorRuntime({
+    createWorker: (shardIndex: number) => new MainThreadShardWorker(shardIndex),
     residentLedger: rendererResidentLedger(),
     onActorTrap: (actorId, message) => console.error(`[DEBUG] wgpu plugin-bridge: actor ${actorId} trapped: ${message}`),
     onShardLost: (shardIndex, actorIds) => {
@@ -120,6 +196,30 @@ function submitTurn(actorId: string, events: readonly ShardEventEnvelope[], comm
   return next.then(coerceTurnResult);
 }
 //#endregion 🔖️TurnSubmit
+
+//#region 🚪️InstanceLifecycleSettle
+/** @emoji 🚪️ Drives one instance's open handshake to LIVE. `open()` only POSTS the request — the guest
+ * answers with a lifecycle receipt that the host must acknowledge before the instance is registered, and
+ * `⚛️reactor/🔄️turn/🦀️.rs`'s dirty-surface loop `continue`s past any instance whose
+ * `native_close_key` is not registered. Skipping the ACK therefore renders NOTHING, silently: measured as
+ * 257 turns producing zero patches and zero effects for `puzzle3d.play.composite`, with no fault raised.
+ * Bounded by the same opportunity ceiling as the document drain. */
+async function settleInstanceLifecycle(lifecycle: ShardInstanceLifecycleLease): Promise<void> {
+  for (let opportunity = 0; opportunity < RETAINED_DOCUMENT_OPPORTUNITIES; opportunity += 1) {
+    const receipt = lifecycle.pendingReceipt;
+    if (receipt !== null) {
+      await lifecycle.acknowledge(receipt, DEFAULT_SHARD_BUDGET);
+      continue;
+    }
+    const phase = lifecycle.progress().kind;
+    if (phase !== "opening" && phase !== "captured") return;
+    await lifecycle.poll(DEFAULT_SHARD_BUDGET);
+  }
+  console.warn(`[DEBUG] plugin-bridge: instance lifecycle never reached open within ${RETAINED_DOCUMENT_OPPORTUNITIES} opportunities`);
+}
+
+const lifecycleByInstance = new Map<number, ShardInstanceLifecycleLease>();
+//#endregion 🚪️InstanceLifecycleSettle
 
 //#region 🔖️RetainedWindow
 const retainedWindowByActor = new Map<string, RetainedSurface>();
@@ -154,6 +254,69 @@ async function performRender(actorId: string, instanceId: number, bodyKey: strin
   const result = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: bodyKey } } }]);
   if (result.uiPatches.length > 0) applyRetainedWindowPatches(actorId, result.uiPatches);
   return retainedWindowByActor.get(actorId)?.node ?? null;
+}
+
+/** @emoji 📃️ Publishes ONE surface's retained document as the `UiSnapshot`-shaped JSON the wgpu
+ * renderer's `render_with_document_js` assembles into a `UiDocumentLease`.
+ *
+ * Reads the RAW `ui-patch` ops (`🧬️schema/📜️.wit`'s `patch-op`: `upsert` carries a pack-encoded
+ * `contract-doc::UiNodeRecord`, `set-root` carries the root `node-id`) rather than the reconciled JS tree,
+ * because the Rust side wants the flat node table `UiSnapshot` declares — and because `decodeWirePatchOps`
+ * still speaks the older `replace`/`insert-child` vocabulary this variant no longer emits.
+ *
+ * Every decoded record is projected with `packValueToExactJson`: `decodePackValue` yields `{kind,value}`
+ * integer carriers, which serialize as `[object Object]` where `UiNodeId`/`UiRevision` expect numbers. */
+/** @emoji 🔁️ Bounded drain for one retained surface: a guest answers `surface-visible` with
+ * `status: more-work` and publishes its `ui-patch` a turn or more later, so a single turn reads empty
+ * (measured — `puzzle3d.play.composite` returns zero ops on the visibility turn itself). Mirrors the
+ * native `render_with_document`'s own opportunity ceiling: keep stepping until the surface publishes,
+ * and fail closed rather than spin. `WireTurnResult` carries no `status`, so the ceiling — not a guest
+ * flag — is what bounds this. */
+const RETAINED_DOCUMENT_OPPORTUNITIES = 256;
+
+async function publishRetainedDocument(actorId: string, instanceId: number, bodyKey: string): Promise<string> {
+  const collected: WireUiPatch[] = [];
+  const seenSurfaces: string[] = [];
+  const seenTags: string[] = [];
+  let anyPatches = 0;
+  let anyEffects = 0;
+  const seenEffects: string[] = [];
+  let turns = 1;
+  let result = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: bodyKey } } }]);
+  for (let opportunity = 0; opportunity < RETAINED_DOCUMENT_OPPORTUNITIES; opportunity += 1) {
+    anyPatches += result.uiPatches.length;
+    anyEffects += result.effects.length;
+    for (const effect of result.effects) if (typeof effect.tag === "string" && !seenEffects.includes(effect.tag)) seenEffects.push(effect.tag);
+    for (const patch of result.uiPatches) {
+      const name = patch.surface?.surface ?? "(none)";
+      if (!seenSurfaces.includes(name)) seenSurfaces.push(name);
+      for (const op of patch.ops ?? []) if (typeof op.tag === "string" && !seenTags.includes(op.tag)) seenTags.push(op.tag);
+    }
+    if (result.uiPatches.length > 0) {
+      applyRetainedWindowPatches(actorId, result.uiPatches);
+      collected.push(...result.uiPatches.filter((patch) => (patch.surface?.surface ?? bodyKey) === bodyKey));
+    }
+    if (collected.length > 0) break;
+    result = await submitTurn(actorId, []);
+    turns += 1;
+  }
+  console.log(`[DEBUG] publishRetainedDocument ${bodyKey}: turns=${turns} collected=${collected.length} anyPatches=${anyPatches} surfaces=${JSON.stringify(seenSurfaces)} tags=${JSON.stringify(seenTags.slice(0, 12))} effects=${anyEffects} effectTags=${JSON.stringify(seenEffects.slice(0, 12))}`);
+  const nodes: unknown[] = [];
+  let revision = 0;
+  let root: number | null = null;
+  for (const patch of collected) {
+    if (typeof patch.revision === "number") revision = patch.revision;
+    for (const op of patch.ops ?? []) {
+      const value = (op.val ?? {}) as Record<string, unknown>;
+      if (op.tag === "upsert") {
+        nodes.push(packValueToExactJson(decodePackValue(coerceWireBytes(value.node)) as Parameters<typeof packValueToExactJson>[0]));
+        continue;
+      }
+      if (op.tag === "set-root") root = Number(typeof op.val === "object" && op.val !== null ? (value.id ?? 0) : op.val);
+    }
+  }
+  if (root === null && nodes.length > 0) root = Number((nodes[0] as { readonly id?: unknown }).id ?? 0);
+  return JSON.stringify({ surface: bodyKey, revision, root, nodes, layoutEpoch: 0 });
 }
 //#endregion 🔖️RetainedWindow
 
@@ -220,6 +383,7 @@ export interface WgpuPluginHandle {
   readonly handleAction: (instanceId: number, actionJson: string, viewState: unknown) => Promise<InvocationResponse>;
   readonly handleCommand: (instanceId: number, commandJson: string, viewState: unknown) => Promise<InvocationResponse>;
   readonly render: (instanceId: number, bodyKey: string, viewState: unknown) => Promise<unknown>;
+  readonly renderDocument: (instanceId: number, bodyKey: string) => Promise<string>;
   readonly contextMenu: (instanceId: number, request: unknown) => Promise<unknown>;
   readonly dispose: () => void;
 }
@@ -328,7 +492,10 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       actorIdByInstance.set(instanceId, actorId);
       await registry.activate(pluginId, actorId, "manual" satisfies ActivationReason);
       eventSeq += 1;
-      await submitTurn(actorId, [{ kind: "instance-open", payload: { instance: instanceId, appId, actor: "local", config: [], assets: [], capabilities: [], quotas: Array.from(encodePackValue({})) } }]);
+      const lifecycle = getShardClient().captureInstanceLifecycle(actorId, instanceId);
+      await lifecycle.open({ appId, actor: "local", config: [], assets: [], capabilities: [], quotas: Array.from(encodePackValue({})) }, DEFAULT_SHARD_BUDGET);
+      await settleInstanceLifecycle(lifecycle);
+      lifecycleByInstance.set(instanceId, lifecycle);
       channelByInstance.set(instanceId, new AppChannelClient(channelHandle, channelRequests, instanceId, appId, "local"));
       return instanceId;
     },
@@ -348,6 +515,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     handleAction: (instanceId, actionJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(actionJson), viewState),
     handleCommand: (instanceId, commandJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(commandJson), viewState),
     render: (instanceId, bodyKey) => performRender(requireActorId(instanceId), instanceId, bodyKey),
+    renderDocument: (instanceId, bodyKey) => publishRetainedDocument(requireActorId(instanceId), instanceId, bodyKey),
     contextMenu: (instanceId, request) => requireChannel(instanceId).contextMenu(request),
     dispose: () => {
       for (const instanceId of channelByInstance.keys()) channelByInstance.get(instanceId)?.dispose();
@@ -377,6 +545,7 @@ export interface WgpuJsBridge {
   readonly handleAction: (instanceId: number, actionJson: string, contextJson: string) => Promise<string>;
   readonly handleCommand: (instanceId: number, commandJson: string, contextJson: string) => Promise<string>;
   readonly render: (instanceId: number, bodyKey: string, viewStateJson: string) => Promise<string>;
+  readonly renderDocument: (instanceId: number, bodyKey: string) => Promise<string>;
   readonly contextMenu: (instanceId: number, requestJson: string) => Promise<string>;
 }
 
@@ -402,6 +571,7 @@ export function pluginHandleForBridge(handle: WgpuPluginHandle): WgpuJsBridge {
     handleAction: (instanceId, actionJson, contextJson) => handle.handleAction(instanceId, actionJson, viewStateFromContextJson(contextJson)).then((result) => JSON.stringify(result)),
     handleCommand: (instanceId, commandJson, contextJson) => handle.handleCommand(instanceId, commandJson, viewStateFromContextJson(contextJson)).then((result) => JSON.stringify(result)),
     render: (instanceId, bodyKey, viewStateJson) => handle.render(instanceId, bodyKey, JSON.parse(viewStateJson)).then((node) => JSON.stringify(node)),
+    renderDocument: (instanceId, bodyKey) => handle.renderDocument(instanceId, bodyKey),
     contextMenu: (instanceId, requestJson) => handle.contextMenu(instanceId, JSON.parse(requestJson)).then((items) => JSON.stringify(items)),
   };
 }

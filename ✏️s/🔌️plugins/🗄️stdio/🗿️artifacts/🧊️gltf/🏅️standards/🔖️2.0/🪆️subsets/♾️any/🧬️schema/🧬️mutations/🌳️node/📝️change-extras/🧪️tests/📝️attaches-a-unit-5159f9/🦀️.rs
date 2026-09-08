@@ -23,10 +23,10 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> GltfSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> GltfSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn payload() -> GltfChangeNodeExtraDataPayload {
     serde_json::from_str(MUTATION).expect("change-node-extra-data payload decodes")
@@ -57,8 +57,8 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: GltfSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: GltfSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "{CASE}: committed {side} JSON is not canonical");
     }
@@ -100,8 +100,8 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to this leaf's own diff type.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: GltfChangeNodeExtraDataDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let decoded: GltfChangeNodeExtraDataDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "{CASE}: committed diff JSON is not canonical");
     assert!(matches!(decoded.before, crate::artifacts::gltf::schema::mutations::change_node_extra_data::GltfDataPresence::Absent), "{CASE}: the committed pre-state presence must decode back to Absent");
@@ -111,7 +111,7 @@ async fn committed_diff_is_canonical() {
 /// a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: GltfChangeNodeExtraDataDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: GltfChangeNodeExtraDataDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = diff::apply(&before(), &decoded).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "{CASE}: committed diff did not carry before to after");
 }

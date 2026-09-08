@@ -95,7 +95,7 @@ mod json_serializers_tests {
     use crate::artifacts::iso16757::Iso16757Snapshot;
 
     #[semio_framework_async_macros::async_test]
-    fn catalogue_json_round_trip() {
+    async fn catalogue_json_round_trip() {
         let doc = Iso16757Snapshot::default();
         let json = io::catalogue_to_json(&doc.catalogue).expect("json");
         let restored = io::catalogue_from_json(&json).expect("restore");
@@ -103,7 +103,7 @@ mod json_serializers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn dictionary_json_round_trip() {
+    async fn dictionary_json_round_trip() {
         let doc = Iso16757Snapshot::default();
         let json = io::dictionary_to_json(&doc.dictionary).expect("json");
         assert!(json.contains("hvac-dict"));

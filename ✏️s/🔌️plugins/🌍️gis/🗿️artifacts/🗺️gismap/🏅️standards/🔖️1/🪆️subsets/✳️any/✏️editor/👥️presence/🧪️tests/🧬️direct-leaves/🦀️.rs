@@ -21,16 +21,16 @@ pub(crate) fn assert_set_camera_leaf(descriptor: &str) {
     let envelope = fixture["aggregate"]["valid"][0].clone();
     let mut payload = envelope.clone();
     payload.as_object_mut().expect("envelope object").remove("operation");
-    let leaf: SetCamera = serde_json::from_value(payload.clone()).expect("camera payload");
-    assert_eq!(serde_json::to_value(&leaf).unwrap(), payload);
-    assert_eq!(serde_json::to_value(SetCamera::DESCRIPTOR).unwrap(), serde_json::from_str::<serde_json::Value>(descriptor).unwrap());
+    let leaf: SetCamera = dsl::json::from_json_str(&(payload.clone()).to_string()).expect("camera payload");
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&leaf)).unwrap(), payload);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&SetCamera::DESCRIPTOR)).unwrap(), serde_json::from_str::<serde_json::Value>(descriptor).unwrap());
     assert_eq!(SetCamera::PROVENANCE.owner, SetCamera::DESCRIPTOR.owner);
     assert_eq!(SetCamera::PROVENANCE.source_path, format!("{}/🦀️.rs", SetCamera::DESCRIPTOR.owner));
     assert_eq!(SetCamera::PROVENANCE.descriptor_path, format!("{}/🔣️.json", SetCamera::DESCRIPTOR.owner));
     let operation = Gis2dPresenceMutation::SetCamera(leaf);
     assert_eq!(operation.descriptor(), &SetCamera::DESCRIPTOR);
-    assert_eq!(serde_json::to_value(&operation).unwrap(), envelope);
-    assert_eq!(serde_json::from_value::<Gis2dPresenceMutation>(envelope).unwrap(), operation);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&operation)).unwrap(), envelope);
+    assert_eq!(dsl::json::from_json_str::<Gis2dPresenceMutation>(&(envelope).to_string()).unwrap(), operation);
     assert_eq!(operation.print_op().split_whitespace().next(), SetCamera::DESCRIPTOR.text_opcode);
     assert_eq!(Gis2dPresenceMutation::parse_op(&operation.print_op()).unwrap(), operation);
     let bytes = operation.encode_op().expect("camera binary");
@@ -38,11 +38,11 @@ pub(crate) fn assert_set_camera_leaf(descriptor: &str) {
     assert_eq!(Some(u32::from(bytes[1])), SetCamera::DESCRIPTOR.binary_tag);
     assert_eq!(Gis2dPresenceMutation::decode_op(&bytes).unwrap(), operation);
     for law in fixture["laws"].as_array().expect("camera laws") {
-        let before: Gis2dPresence = serde_json::from_value(law["before"].clone()).expect("before camera");
-        let after: Gis2dPresence = serde_json::from_value(law["after"].clone()).expect("after camera");
-        let operation: Gis2dPresenceMutation = serde_json::from_value(law["operation"].clone()).expect("camera mutation");
+        let before: Gis2dPresence = dsl::json::from_json_str(&(law["before"].clone()).to_string()).expect("before camera");
+        let after: Gis2dPresence = dsl::json::from_json_str(&(law["after"].clone()).to_string()).expect("after camera");
+        let operation: Gis2dPresenceMutation = dsl::json::from_json_str(&(law["operation"].clone()).to_string()).expect("camera mutation");
         let Gis2dPresenceMutation::SetCamera(leaf) = &operation;
-        let expected_diff: Gis2dPresenceDiff = serde_json::from_value(law.get("operationDiff").unwrap_or(&law["diff"]).clone()).expect("operation diff");
+        let expected_diff: Gis2dPresenceDiff = dsl::json::from_json_str(&(law.get("operationDiff").unwrap_or(&law["diff"]).clone()).to_string()).expect("operation diff");
         let outcome = operation.diff(&before);
         assert_eq!(outcome.diff(), &expected_diff, "{}", law["name"]);
         assert_eq!(<SetCamera as MutationKind<Gis2dPresence, Gis2dPresenceMutation>>::diff(leaf, &before), outcome);
@@ -51,17 +51,17 @@ pub(crate) fn assert_set_camera_leaf(descriptor: &str) {
         if let Some(code) = law["outcome"]["warningCode"].as_str() {
             assert_eq!(outcome.messages().len(), 1);
             assert_eq!(outcome.messages()[0].code.0, code);
-            assert_eq!(outcome.messages()[0].level, protocol::MutationMessage::warn(code, "").level);
+            assert_eq!(outcome.messages()[0].level, dsl::Severity::Warning);
         } else {
             assert!(outcome.messages().is_empty());
         }
-        let expected_inverse: Vec<Gis2dPresenceMutation> = serde_json::from_value(law["inverse"].clone()).expect("stored inverse");
+        let expected_inverse: Vec<Gis2dPresenceMutation> = dsl::json::from_json_str(&(law["inverse"].clone()).to_string()).expect("stored inverse");
         let inverse = operation.inverse(&before);
         assert_eq!(inverse, expected_inverse, "{}", law["name"]);
         assert_eq!(<SetCamera as MutationKind<Gis2dPresence, Gis2dPresenceMutation>>::inverse(leaf, &before), inverse);
         let restored = inverse.iter().rev().fold(after.clone(), |state, inverse| apply(&state, inverse));
         assert_eq!(restored, before);
-        assert_eq!(serde_json::to_value(&operation).expect("mutation JSON"), law["operation"]);
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&operation)).expect("mutation JSON"), law["operation"]);
         let text = operation.print_op();
         let parsed = Gis2dPresenceMutation::parse_op(&text).expect("camera text");
         assert_eq!(parsed, operation);
@@ -73,7 +73,7 @@ pub(crate) fn assert_set_camera_leaf(descriptor: &str) {
         for end in 0..bytes.len() {
             assert!(Gis2dPresenceMutation::decode_op(&bytes[..end]).is_err(), "{} prefix {end}", law["name"]);
         }
-        let expected: Gis2dPresenceDiff = serde_json::from_value(law["diff"].clone()).expect("ordered diff");
+        let expected: Gis2dPresenceDiff = dsl::json::from_json_str(&(law["diff"].clone()).to_string()).expect("ordered diff");
         let mut combined = Gis2dPresenceDiff::default();
         let mut sequential = before.clone();
         for step in &expected.steps {
@@ -86,7 +86,7 @@ pub(crate) fn assert_set_camera_leaf(descriptor: &str) {
         assert_eq!(sequential, after);
         combined.absorb(Gis2dPresenceDiff::default());
         assert_eq!(combined, expected);
-        assert_eq!(before, serde_json::from_value::<Gis2dPresence>(law["before"].clone()).expect("unchanged before"));
+        assert_eq!(before, dsl::json::from_json_str::<Gis2dPresence>(&(law["before"].clone()).to_string()).expect("unchanged before"));
     }
 }
 //#endregion 🧪️Fixture
@@ -95,15 +95,15 @@ pub(crate) fn assert_set_camera_leaf(descriptor: &str) {
 #[test]
 fn strict_state_and_payload_vectors_match_the_direct_camera_contract() {
     let fixture = fixture();
-    for row in fixture["state"]["valid"].as_array().unwrap() { assert!(serde_json::from_value::<Gis2dPresence>(row["value"].clone()).is_ok(), "{}", row["name"]); }
-    for row in fixture["state"]["invalid"].as_array().unwrap() { assert!(serde_json::from_value::<Gis2dPresence>(row["value"].clone()).is_err(), "{}", row["name"]); }
-    for payload in fixture["payload"]["valid"].as_array().unwrap() { assert!(serde_json::from_value::<SetCamera>(payload.clone()).is_ok()); }
-    for payload in fixture["payload"]["invalid"].as_array().unwrap() { assert!(serde_json::from_value::<SetCamera>(payload.clone()).is_err()); }
+    for row in fixture["state"]["valid"].as_array().unwrap() { assert!(dsl::json::from_json_str::<Gis2dPresence>(&(row["value"].clone()).to_string()).is_ok(), "{}", row["name"]); }
+    for row in fixture["state"]["invalid"].as_array().unwrap() { assert!(dsl::json::from_json_str::<Gis2dPresence>(&(row["value"].clone()).to_string()).is_err(), "{}", row["name"]); }
+    for payload in fixture["payload"]["valid"].as_array().unwrap() { assert!(dsl::json::from_json_str::<SetCamera>(&(payload.clone()).to_string()).is_ok()); }
+    for payload in fixture["payload"]["invalid"].as_array().unwrap() { assert!(dsl::json::from_json_str::<SetCamera>(&(payload.clone()).to_string()).is_err()); }
     for envelope in fixture["aggregate"]["valid"].as_array().unwrap() {
-        let operation: Gis2dPresenceMutation = serde_json::from_value(envelope.clone()).expect("valid aggregate");
-        assert_eq!(serde_json::to_value(operation).expect("aggregate JSON"), *envelope);
+        let operation: Gis2dPresenceMutation = dsl::json::from_json_str(&(envelope.clone()).to_string()).expect("valid aggregate");
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&operation)).expect("aggregate JSON"), *envelope);
     }
-    for envelope in fixture["aggregate"]["invalid"].as_array().unwrap() { assert!(serde_json::from_value::<Gis2dPresenceMutation>(envelope.clone()).is_err()); }
+    for envelope in fixture["aggregate"]["invalid"].as_array().unwrap() { assert!(dsl::json::from_json_str::<Gis2dPresenceMutation>(&(envelope.clone()).to_string()).is_err()); }
 }
 
 #[test]
@@ -124,16 +124,16 @@ fn sparse_camera_diff_has_an_empty_identity_and_preserves_the_no_op_warning() {
 #[test]
 fn sparse_camera_diff_serde_order_noop_and_codec_rejections_match_neutral_fixture() {
     let fixture = fixture();
-    for value in fixture["diff"]["valid"].as_array().unwrap() { assert!(serde_json::from_value::<Gis2dPresenceDiff>(value.clone()).is_ok()); }
-    for value in fixture["diff"]["invalid"].as_array().unwrap() { assert!(serde_json::from_value::<Gis2dPresenceDiff>(value.clone()).is_err()); }
-    let missing: Gis2dPresenceDiff = serde_json::from_value(serde_json::json!({"steps":[{}]})).unwrap();
-    let explicit_null: Gis2dPresenceDiff = serde_json::from_value(serde_json::json!({"steps":[{"cameraJson":null}]})).unwrap();
+    for value in fixture["diff"]["valid"].as_array().unwrap() { assert!(dsl::json::from_json_str::<Gis2dPresenceDiff>(&(value.clone()).to_string()).is_ok()); }
+    for value in fixture["diff"]["invalid"].as_array().unwrap() { assert!(dsl::json::from_json_str::<Gis2dPresenceDiff>(&(value.clone()).to_string()).is_err()); }
+    let missing: Gis2dPresenceDiff = dsl::json::from_json_str(&(serde_json::json!({"steps":[{}]})).to_string()).unwrap();
+    let explicit_null: Gis2dPresenceDiff = dsl::json::from_json_str(&(serde_json::json!({"steps":[{"cameraJson":null}]})).to_string()).unwrap();
     assert_eq!(missing, explicit_null);
-    assert_eq!(serde_json::to_value(&missing).unwrap(), serde_json::json!({"steps":[{"cameraJson":null}]}));
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&missing)).unwrap(), serde_json::json!({"steps":[{"cameraJson":null}]}));
     let law = &fixture["laws"][3];
-    let before: Gis2dPresence = serde_json::from_value(law["before"].clone()).unwrap();
-    let diff: Gis2dPresenceDiff = serde_json::from_value(law["diff"].clone()).unwrap();
-    let after: Gis2dPresence = serde_json::from_value(law["after"].clone()).unwrap();
+    let before: Gis2dPresence = dsl::json::from_json_str(&(law["before"].clone()).to_string()).unwrap();
+    let diff: Gis2dPresenceDiff = dsl::json::from_json_str(&(law["diff"].clone()).to_string()).unwrap();
+    let after: Gis2dPresence = dsl::json::from_json_str(&(law["after"].clone()).to_string()).unwrap();
     assert_eq!(missing.apply(&before).unwrap(), before);
     assert_eq!(explicit_null.apply(&before).unwrap(), before);
     assert_eq!(diff.apply(&before).unwrap(), after);

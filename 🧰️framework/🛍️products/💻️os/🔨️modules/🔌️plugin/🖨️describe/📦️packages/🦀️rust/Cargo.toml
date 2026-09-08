@@ -2,7 +2,7 @@
 name = "semio-framework-plugin-describe"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Build-time descriptor emitter: instantiates a built plugin/extension component once and writes its static PackageDescriptor (🛂️.descriptor.semio + 🔣️.json), never called at runtime"
 
 [package.metadata.semio]

@@ -76,15 +76,15 @@ pub(crate) use impl_serde_op_codec;
 pub fn base64_standard(bytes: &[u8]) -> String {
     const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut output = String::with_capacity(bytes.len().div_ceil(3).saturating_mul(4));
-    let mut chunks = bytes.chunks_exact(3);
-    for chunk in &mut chunks {
+    let (chunks, remainder) = bytes.as_chunks::<3>();
+    for chunk in chunks {
         let value = u32::from_be_bytes([0, chunk[0], chunk[1], chunk[2]]);
         output.push(ALPHABET[((value >> 18) & 63) as usize] as char);
         output.push(ALPHABET[((value >> 12) & 63) as usize] as char);
         output.push(ALPHABET[((value >> 6) & 63) as usize] as char);
         output.push(ALPHABET[(value & 63) as usize] as char);
     }
-    match chunks.remainder() {
+    match remainder {
         [first] => {
             output.push(ALPHABET[(first >> 2) as usize] as char);
             output.push(ALPHABET[((first & 3) << 4) as usize] as char);
@@ -112,7 +112,7 @@ fn hash_hex_bytes(hash: &str) -> Vec<u8> {
         }
     }
 
-    hash.as_bytes().chunks_exact(2).map(|pair| nibble(pair[0]) << 4 | nibble(pair[1])).collect()
+    hash.as_bytes().as_chunks::<2>().0.iter().map(|pair| nibble(pair[0]) << 4 | nibble(pair[1])).collect()
 }
 
 /// 🪪️ Computes the stable BLAKE3 identity of a semantic projection.
@@ -124,10 +124,10 @@ pub fn semantic_fingerprint<T: dsl::ToValue>(projection: &T) -> Result<Vec<u8>, 
 //#endregion SemanticFingerprint
 
 //#region Plugin
-#[cfg(feature = "full-artifact-catalog")]
+#[cfg(feature = "component-app-assembly")]
 #[path = "../../🦀️.rs"]
 pub mod plugin;
-#[cfg(feature = "full-artifact-catalog")]
+#[cfg(feature = "component-app-assembly")]
 pub use plugin::plugin;
 // 🚀 Ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M0 — installs the process-wide plugin
 // bundle, anchors the `component-guest`-gated wasm export against link-time dead-code elimination,
@@ -193,8 +193,10 @@ pub mod artifacts {
             pub mod v_raw {
                 // 🌳️ Standard root (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, W2-P
                 // pilot): `standard() -> StandardDeclaration`, mounts subset `any` below.
+                #[cfg(feature = "component-app-assembly")]
                 #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🦀️.rs"]
                 mod component;
+                #[cfg(feature = "component-app-assembly")]
                 pub use component::*;
 
                 // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
@@ -364,8 +366,10 @@ pub mod artifacts {
             pub mod v_utf_8 {
                 // 🌳️ Standard root (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, W2-P
                 // pilot): `standard() -> StandardDeclaration`, mounts subset `any` below.
+                #[cfg(feature = "component-app-assembly")]
                 #[path = "../../🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🦀️.rs"]
                 mod component;
+                #[cfg(feature = "component-app-assembly")]
                 pub use component::*;
 
                 // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
@@ -879,15 +883,7 @@ pub mod artifacts {
             pub use super::standards::v1_0::subsets::base::io::*;
         }
 
-        #[path = "."]
-        pub mod examples {
-            #[path = "."]
-            pub mod demo {
-                #[path = "../../🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/📚️examples/🎬️demo/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-        }
+        pub use standards::v1_0::subsets::base::examples;
     }
 
     #[path = "."]
@@ -1027,15 +1023,7 @@ pub mod artifacts {
             pub use super::standards::v_rfc4180::subsets::any::io::*;
         }
 
-        #[path = "."]
-        pub mod examples {
-            #[path = "."]
-            pub mod demo {
-                #[path = "../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-        }
+        pub use standards::v_rfc4180::subsets::any::examples;
     }
 
     #[path = "."]
@@ -4180,7 +4168,6 @@ pub mod artifacts {
     }
 
     #[path = "."]
-
     #[cfg(feature = "full-artifact-catalog")]
     pub mod pdf {
         #[path = "../../🗿️artifacts/📖️pdf/🦀️.rs"]
@@ -4572,7 +4559,6 @@ pub mod artifacts {
     }
 
     #[path = "."]
-
     #[cfg(feature = "full-artifact-catalog")]
     pub mod jpg {
         #[path = "../../🗿️artifacts/📸️jpg/🦀️.rs"]
@@ -4764,7 +4750,6 @@ pub mod artifacts {
     }
 
     #[path = "."]
-
     #[cfg(feature = "full-artifact-catalog")]
     pub mod gif {
         #[path = "../../🗿️artifacts/🎞️gif/🦀️.rs"]
@@ -5059,7 +5044,6 @@ pub mod artifacts {
     }
 
     #[path = "."]
-
     #[cfg(feature = "full-artifact-catalog")]
     pub mod tiff {
         #[path = "../../🗿️artifacts/🖼️tiff/🦀️.rs"]
@@ -5238,19 +5222,10 @@ pub mod artifacts {
             pub use super::standards::v6_0::subsets::document::io::*;
         }
 
-        #[path = "."]
-        pub mod examples {
-            #[path = "."]
-            pub mod demo {
-                #[path = "../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/📚️examples/🎬️demo/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-        }
+        pub use standards::v6_0::subsets::document::examples;
     }
 
     #[path = "."]
-
     #[cfg(feature = "full-artifact-catalog")]
     pub mod docx {
         #[path = "../../🗿️artifacts/📜️docx/🦀️.rs"]
@@ -5454,7 +5429,6 @@ pub mod artifacts {
     }
 
     #[path = "."]
-
     #[cfg(feature = "full-artifact-catalog")]
     pub mod pptx {
         #[path = "../../🗿️artifacts/📽️pptx/🦀️.rs"]
@@ -5661,7 +5635,6 @@ pub mod artifacts {
     }
 
     #[path = "."]
-
     #[cfg(any(feature = "full-artifact-catalog", feature = "home-io"))]
     pub mod xlsx {
         #[path = "../../🗿️artifacts/📕️xlsx/🦀️.rs"]
@@ -5865,7 +5838,6 @@ pub mod artifacts {
     }
 
     #[path = "."]
-
     #[cfg(feature = "full-artifact-catalog")]
     pub mod bcf {
         #[path = "../../🗿️artifacts/💬️bcf/🦀️.rs"]
@@ -9770,7 +9742,7 @@ pub mod artifacts {
 //#endregion Artifacts
 
 //#region ✏️Editor
-#[cfg(feature = "full-artifact-catalog")]
+#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -11944,7 +11916,7 @@ pub mod editor {
 //#endregion ✏️Editor
 
 //#region 👁️Viewer
-#[cfg(feature = "full-artifact-catalog")]
+#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

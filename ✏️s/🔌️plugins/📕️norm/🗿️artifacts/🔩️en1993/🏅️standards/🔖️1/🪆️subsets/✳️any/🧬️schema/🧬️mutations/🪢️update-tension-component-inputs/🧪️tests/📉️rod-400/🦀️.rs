@@ -32,7 +32,7 @@ fn applied() -> En1993Snapshot {
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
 #[semio_framework_async_macros::async_test]
-fn applies_to_committed_after() {
+async fn applies_to_committed_after() {
     let snapshot = applied();
     assert_eq!(snapshot.tension_component_f_uk_kn, 400.0, "update-tension-component-inputs/derates-the-tension-rod-to-a-400-kn-characteristic-strength: Fuk must be 400 kN");
     assert_eq!(snapshot.tension_component_n_ed_kn, 190.0, "update-tension-component-inputs/derates-the-tension-rod-to-a-400-kn-characteristic-strength: the design force must be 190 kN");
@@ -42,7 +42,7 @@ fn applies_to_committed_after() {
 
 /// ↩️ Applying the mutation then every step of its inverse restores `before` exactly.
 #[semio_framework_async_macros::async_test]
-fn inverse_restores_before() {
+async fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
     let inverse = <En1993Mutation as protocol::Mutation<En1993Snapshot>>::inverse(&mutation, &base);
@@ -58,7 +58,7 @@ fn inverse_restores_before() {
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical: decode→encode is
 /// a fixed point.
 #[semio_framework_async_macros::async_test]
-fn committed_json_is_canonical() {
+async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1993Snapshot = serde_json::from_str(text).expect("snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
@@ -73,7 +73,7 @@ fn committed_json_is_canonical() {
 /// 🎯️ The declared outcome — status AND every diagnostic `update-tension-component-inputs`'s own diff builder raises —
 /// matches what the mutation actually produces.
 #[semio_framework_async_macros::async_test]
-fn declared_outcome_holds() {
+async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     let declared: Vec<(String, String)> =
@@ -83,7 +83,7 @@ fn declared_outcome_holds() {
         .messages()
         .iter()
         .map(|message| {
-            let level = serde_json::to_value(message.level).expect("severity encodes");
+            let level = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&message.level)).expect("severity encodes");
             (level.as_str().unwrap_or_default().to_string(), message.code.0.clone())
         })
         .collect();
@@ -100,7 +100,7 @@ fn declared_outcome_holds() {
 /// load-bearing assertion in the fixture: it pins WHICH fields `update-tension-component-inputs` is allowed to
 /// touch, not merely that the end state matches.
 #[semio_framework_async_macros::async_test]
-fn produces_committed_diff() {
+async fn produces_committed_diff() {
     let raised = <En1993Mutation as protocol::Mutation<En1993Snapshot>>::diff(&mutation(), &before());
     let raised_diff = raised.diff();
     assert_eq!(raised_diff.tension_component_f_k_kn, Some(280.0), "update-tension-component-inputs/derates-the-tension-rod-to-a-400-kn-characteristic-strength: the diff must publish tensionComponentFKKn = 280");
@@ -115,7 +115,7 @@ fn produces_committed_diff() {
 /// explicit `null` — and its `Option<Option<u32>>` presence field cannot distinguish "cleared" from
 /// "untouched" across a JSON round trip, which is why no case here writes it.
 #[semio_framework_async_macros::async_test]
-fn committed_diff_is_canonical() {
+async fn committed_diff_is_canonical() {
     let decoded: En1993Diff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -125,7 +125,7 @@ fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is a
 /// complete description of what `update-tension-component-inputs` changed, not a summary of it.
 #[semio_framework_async_macros::async_test]
-fn committed_diff_applies_to_after() {
+async fn committed_diff_applies_to_after() {
     let decoded: En1993Diff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let produced = <En1993Diff as protocol::MutationDiff<En1993Snapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "update-tension-component-inputs/derates-the-tension-rod-to-a-400-kn-characteristic-strength: committed diff did not carry before to after");

@@ -6,6 +6,9 @@
 //! index-transport arithmetic as gif 89a's frame collection). HEADER fields are three sparse
 //! scalar slots. `schema` is identity and never appears here.
 
+/// 🧩 Ordered removed keys, modified values, and inserted items.
+pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>);
+
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use crate::artifacts::ifc::schema::snapshot::{IfcComplexType, IfcEntity, IfcValue};
@@ -56,12 +59,12 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
     added2: Vec<(usize, T)>,
     mut absorb_diff: impl FnMut(&mut D, D),
     apply_diff_to_item: impl Fn(&D, &T) -> T,
-) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
-    let mut removed1_sorted = removed1.clone();
+) -> IndexedDiffParts<D, T> {
+    let mut removed1_sorted = removed1;
     removed1_sorted.sort_unstable();
     let mut added1_index_sorted: Vec<usize> = added1.iter().map(|(i, _)| *i).collect();
     added1_index_sorted.sort_unstable();
-    let mut removed2_sorted = removed2.clone();
+    let mut removed2_sorted = removed2;
     removed2_sorted.sort_unstable();
     let mut added2_index_sorted: Vec<usize> = added2.iter().map(|(i, _)| *i).collect();
     added2_index_sorted.sort_unstable();
@@ -126,7 +129,7 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
 
 /// ↩️ Diff-level inverse for an index-keyed collection triple, given the ORIGINAL base items.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>) {
+fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], diff_inverse: impl Fn(&D, &T) -> D) -> IndexedDiffParts<D, T> {
     let mut removed_sorted = removed.to_vec();
     removed_sorted.sort_unstable();
     let mut added_index_sorted: Vec<usize> = added.iter().map(|(i, _)| *i).collect();
@@ -537,18 +540,16 @@ fn validate_args_diff(base_len: usize, diff: &IfcArgsDiff, prefix: &[String]) ->
             return Err(target_error("invalid-modify-index", "argument modification target must exist exactly once and remain present", target));
         }
     }
-    let mut length = base_len - removed.len();
     let mut additions: Vec<usize> = diff.added.iter().map(|entry| entry.index).collect();
     additions.sort_unstable();
     let mut previous = None;
-    for index in additions {
+    for (length, index) in (base_len - removed.len()..).zip(additions) {
         let mut target = prefix.to_vec();
         target.extend(["args".to_string(), index.to_string()]);
         if index > length || previous == Some(index) {
             return Err(target_error("invalid-add-index", "argument addition target must be unique and within the evolving sequence", target));
         }
         previous = Some(index);
-        length += 1;
     }
     Ok(())
 }
@@ -577,17 +578,15 @@ fn validate_entities_diff(base: &[IfcEntity], diff: &IfcEntitiesDiff) -> Mutatio
             validate_args_diff(base_entity.map(|entity| entity.args.len()).unwrap_or_default(), args, &["entities".to_string(), entry.id.to_string()])?;
         }
     }
-    let mut length = base.len() - removed.len();
     let mut additions: Vec<&IfcEntityAdded> = diff.added.iter().collect();
     additions.sort_by_key(|entry| entry.index);
     let mut added_ids = BTreeSet::new();
     let mut previous = None;
-    for entry in additions {
+    for (length, entry) in (base.len() - removed.len()..).zip(additions) {
         if base_by_id.contains_key(&entry.entity.id) || !added_ids.insert(entry.entity.id) || entry.index > length || previous == Some(entry.index) {
             return Err(target_error("invalid-add-target", "entity id and position must be unique and valid", vec!["entities".to_string(), entry.entity.id.to_string()]));
         }
         previous = Some(entry.index);
-        length += 1;
     }
     Ok(())
 }
@@ -653,7 +652,7 @@ impl DiffAlgebra<IfcSnapshot> for IfcDiff {
     }
 
     fn is_empty(&self) -> bool {
-        self.file_description.is_none() && self.file_name.is_none() && self.file_schema.is_none() && self.entities.as_ref().map_or(true, IfcEntitiesDiff::is_empty)
+        self.file_description.is_none() && self.file_name.is_none() && self.file_schema.is_none() && self.entities.as_ref().is_none_or(IfcEntitiesDiff::is_empty)
     }
 }
 
@@ -722,7 +721,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -1216,7 +1215,7 @@ fn dec_args_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcArgsDiff, 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_entity_diff_bin(d: &IfcEntityDiff, out: &mut Vec<u8>) {
     write_option_bin(out, &d.name, |v, o| write_str_bin(o, v));
-    write_option_bin(out, &d.args, |v, o| enc_args_diff_bin(v, o));
+    write_option_bin(out, &d.args, enc_args_diff_bin);
     write_option_bin(out, &d.complex, |v, o| enc_complex_list_bin(v, o));
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

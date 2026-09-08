@@ -31,9 +31,9 @@ impl ColdDocumentPairHeader {
             return Err("cold-pair.hash");
         }
         if self.baseline_frontier.document_id.is_empty()
-            || self.baseline_frontier.document_id.as_bytes().len() > COLD_PAIR_ID_MAXIMUM_BYTES
+            || self.baseline_frontier.document_id.len() > COLD_PAIR_ID_MAXIMUM_BYTES
             || self.baseline_frontier.head_edit_id.is_empty()
-            || self.baseline_frontier.head_edit_id.as_bytes().len() > COLD_PAIR_ID_MAXIMUM_BYTES
+            || self.baseline_frontier.head_edit_id.len() > COLD_PAIR_ID_MAXIMUM_BYTES
             || self.baseline_frontier.last_commit_seq > self.baseline_frontier.head_edit_ordinal
         {
             return Err("cold-pair.frontier");

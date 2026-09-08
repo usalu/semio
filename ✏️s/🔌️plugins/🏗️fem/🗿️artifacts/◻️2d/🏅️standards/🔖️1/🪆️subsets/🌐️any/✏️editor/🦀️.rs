@@ -714,14 +714,7 @@ impl ArtifactEditor for Fem2dPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            operation_context,
-            request.completion,
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
             Fem2dCommand::command_id,
             FEM2D_RETAINED_RAW_BYTES,
             FEM2D_RETAINED_WORK_ITEMS,
@@ -993,7 +986,7 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             .mutation("addMaterial", LocalizedLabel::native("Add Material", "Material hinzufügen"))
             .action_args("addMaterial", vec![
                 ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).required(),
-                ActionArgDef::number("e", LocalizedLabel::native("Young's Modulus", "Elastizitätsmodul")).default_value(2.1e11),
+                ActionArgDef::number("e", LocalizedLabel::native("Young's Modulus", "Elastizitätsmodul")).default_value(&2.1e11),
             ])
             .mutation("addSection", LocalizedLabel::native("Add Section", "Querschnitt hinzufügen"))
             .action_args("addSection", vec![
@@ -1006,7 +999,7 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             // staged form takes the separator-delimited spelling `fem2d_dofs` reads (`"tx,ty"`).
             .action_args("addSupport", vec![
                 ActionArgDef::text("nodeId", LocalizedLabel::native("Node", "Knoten")).required(),
-                ActionArgDef::text("fixed", LocalizedLabel::native("Fixed Degrees of Freedom", "Gesperrte Freiheitsgrade")).default_value("tx,ty"),
+                ActionArgDef::text("fixed", LocalizedLabel::native("Fixed Degrees of Freedom", "Gesperrte Freiheitsgrade")).default_value(&"tx,ty"),
             ])
             .mutation("addNodalLoad", LocalizedLabel::native("Add Nodal Load", "Knotenlast hinzufügen"))
             .action_args("addNodalLoad", vec![
@@ -1016,14 +1009,14 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
                     ActionArgOption::new("ty", LocalizedLabel::native("Ty", "Ty")),
                     ActionArgOption::new("rz", LocalizedLabel::native("Rz", "Rz")),
                 ])
-                .default_value("ty"),
+                .default_value(&"ty"),
                 ActionArgDef::number("value", LocalizedLabel::native("Value", "Wert")).required(),
                 ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall")),
             ])
             .mutation("addMemberUdl", LocalizedLabel::native("Add Member UDL", "Streckenlast hinzufügen"))
             .action_args("addMemberUdl", vec![
                 ActionArgDef::text("elementId", LocalizedLabel::native("Element", "Element")).required(),
-                ActionArgDef::number("wx", LocalizedLabel::native("Wx", "Wx")).default_value(0.0),
+                ActionArgDef::number("wx", LocalizedLabel::native("Wx", "Wx")).default_value(&0.0),
                 ActionArgDef::number("wy", LocalizedLabel::native("Wy", "Wy")).required(),
                 ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall")),
             ])
@@ -1040,13 +1033,13 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
                 ActionArgDef::number("width", LocalizedLabel::native("Width", "Breite")).required(),
                 ActionArgDef::number("height", LocalizedLabel::native("Height", "Höhe")).required(),
                 ActionArgDef::text("materialId", LocalizedLabel::native("Material", "Material")).required(),
-                ActionArgDef::number("thickness", LocalizedLabel::native("Thickness", "Dicke")).default_value(0.02),
-                ActionArgDef::number("meshSize", LocalizedLabel::native("Mesh Size", "Netzgröße")).default_value(0.25),
+                ActionArgDef::number("thickness", LocalizedLabel::native("Thickness", "Dicke")).default_value(&0.02),
+                ActionArgDef::number("meshSize", LocalizedLabel::native("Mesh Size", "Netzgröße")).default_value(&0.25),
             ])
             .mutation("addLoadCase", LocalizedLabel::native("Add Load Case", "Lastfall hinzufügen"))
             .action_args("addLoadCase", vec![
                 ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).required(),
-                ActionArgDef::toggle("selfWeight", LocalizedLabel::native("Self Weight", "Eigengewicht")).default_value(false),
+                ActionArgDef::toggle("selfWeight", LocalizedLabel::native("Self Weight", "Eigengewicht")).default_value(&false),
             ])
             // 🎯️ `terms` is `Fem2dCommand::AddCombination`'s typed `Vec<FemCombinationTerm>` — no single
             // `ActionArgDef` control maps to that shape, so the staged form declares `name` only and the
@@ -1076,7 +1069,7 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
                     crate::artifacts::fem2d::examples::demo::ID,
                     crate::artifacts::fem2d::examples::demo::label(),
                 )])
-                .default_value(crate::artifacts::fem2d::examples::demo::ID),
+                .default_value(&crate::artifacts::fem2d::examples::demo::ID),
             ])
             .view_action("setResultDisplay", LocalizedLabel::native("Set Result Display", "Ergebnisanzeige festlegen"))
             .action_args("setResultDisplay", crate::app_surface::result_display_action_args())

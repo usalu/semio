@@ -29,7 +29,7 @@ pub fn print_dsl(document: &Puzzle3dSnapshot) -> String {
 mod tests {
     use super::*;
     use crate::artifacts::puzzle3d::{
-        Puzzle3dAttraction, Puzzle3dCompatSpecificity, Puzzle3dKindCompatibility, Puzzle3dMeta, Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dReference, Puzzle3dReferenceSource, Puzzle3dScale, Puzzle3dTargetVolume, Puzzle3dVortex,
+        Puzzle3dAttraction, Puzzle3dKindCompatibility, Puzzle3dMeta, Puzzle3dObject, Puzzle3dReference, Puzzle3dReferenceSource, Puzzle3dScale, Puzzle3dTargetVolume, Puzzle3dVortex,
     };
 
     /// 📜️ Both real example fixtures (migrated from the legacy `.3d.json` shape — see ticket

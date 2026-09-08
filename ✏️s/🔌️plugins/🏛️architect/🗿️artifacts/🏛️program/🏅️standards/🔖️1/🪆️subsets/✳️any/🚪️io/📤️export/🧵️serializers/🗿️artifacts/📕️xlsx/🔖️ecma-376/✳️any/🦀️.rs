@@ -58,10 +58,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn exports_every_program_table_to_a_real_workbook() {
-        let program = crate::artifacts::program::sample_plugin().await;
-        let workbook = serialize(&program).await.expect("serialize program workbook");
+        let program = crate::artifacts::program::sample_plugin();
+        let workbook = serialize(&program).expect("serialize program workbook");
         assert_eq!(workbook.workbook.sheets.len(), 70);
-        assert!(workbook.workbook.sheets.iter().any(|sheet| sheet.name == "meta" && sheet.cells.iter().any(|cell| cell.row == 2 && cell.value == semio_s_plugin_stdio::artifacts::xlsx::XlsxCellValue::InlineString("Sample Clinic".into()))));
+        assert!(workbook.workbook.sheets.iter().any(|sheet| sheet.name == "meta" && sheet.cells.iter().any(|cell| cell.row == 2 && cell.value == XlsxCellValue::InlineString("Sample Clinic".into()))));
         assert_eq!(workbook.workbook.sheets.iter().find(|sheet| sheet.name == "elements").expect("elements sheet").cells.iter().filter(|cell| cell.row > 1 && cell.col == 0).count(), 2);
         assert!(workbook.workbook.sheets.iter().any(|sheet| sheet.name == "risks" && sheet.cells.is_empty()));
 

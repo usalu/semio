@@ -39,8 +39,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: "shooting.scene".into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.bmp", "stdio.dwg", "stdio.gif", "stdio.jpg", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.tiff"],
-        import_stdio_kinds: vec!["stdio.bmp", "stdio.dwg", "stdio.gif", "stdio.jpg", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.tiff"],
+        export_stdio_kinds: vec!["stdio.bmp".into(), "stdio.dwg".into(), "stdio.gif".into(), "stdio.jpg".into(), "stdio.json".into(), "stdio.pdf".into(), "stdio.png".into(), "stdio.svg".into(), "stdio.tiff".into()],
+        import_stdio_kinds: vec!["stdio.bmp".into(), "stdio.dwg".into(), "stdio.gif".into(), "stdio.jpg".into(), "stdio.json".into(), "stdio.pdf".into(), "stdio.png".into(), "stdio.svg".into(), "stdio.tiff".into()],
     }
 }
 //#endregion 🔖️ArtifactKind

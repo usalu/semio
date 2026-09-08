@@ -10,7 +10,7 @@
 //! Honest boundaries — see the mirror `📥️import` leaf's module doc comment for the full list;
 //! restated briefly: `BrepShellFace.orientation` has no STEP counterpart (dropped, since
 //! `CLOSED_SHELL` face membership is an unordered ref set); `AXIS2_PLACEMENT_3D.ref_direction` is
-//! always emitted `$` (unset) since `BrepCurve`/`BrepSurface` don't carry an in-plane rotation to
+//! always emitted ` (unset) since `BrepCurve`/`BrepSurface` don't carry an in-plane rotation to
 //! round-trip it from. Semio ids are NOT preserved as STEP ids — every export mints fresh,
 //! sequential Part-21 instance ids (expected/honest: neutral in-memory ids are never a real
 //! exchange format's own identity scheme; the `📥️import` leaf's own round-trip test asserts
@@ -67,7 +67,7 @@ fn point_to_part21(b: &mut Part21Builder, p: SemioPoint3) -> u64 {
 fn direction_to_part21(b: &mut Part21Builder, d: SemioPoint3) -> u64 {
     b.alloc("DIRECTION", vec![s(""), xyz(d)])
 }
-/// 📐️ `AXIS2_PLACEMENT_3D` with the ref_direction (in-plane rotation) always `$` — see module
+/// 📐️ `AXIS2_PLACEMENT_3D` with the ref_direction (in-plane rotation) always ` — see module
 /// doc comment.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn axis_placement_to_part21(b: &mut Part21Builder, origin: SemioPoint3, axis: SemioPoint3) -> u64 {
@@ -280,7 +280,7 @@ impl ArtifactSerializer for SemioBrepToStep {
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let doc = build_part21(from).map_err(|m| store::PackError::Schema(format!("semio brep -> step: {m}")))?;
-        Ok(StepSnapshot::from_part21_document(doc))
+        Ok(StepSnapshot::from_part21_document(&doc))
     }
 }
 //#endregion 🔖️Serializer

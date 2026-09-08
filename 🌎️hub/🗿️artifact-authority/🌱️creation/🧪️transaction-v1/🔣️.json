@@ -1,0 +1,216 @@
+{
+  "cases": [
+    { "kind": "fault-index-missing", "committed": false, "publicEvents": 0, "terminal": "preparing", "delivery": "none" },
+    { "kind": "fault-index-digest", "committed": false, "publicEvents": 0, "terminal": "preparing", "delivery": "none" },
+    {
+      "kind": "success",
+      "committed": true,
+      "publicEvents": 3,
+      "terminal": "ready",
+      "delivery": "broadcast"
+    },
+    {
+      "kind": "ack-loss",
+      "committed": true,
+      "publicEvents": 3,
+      "terminal": "ready",
+      "delivery": "broadcast"
+    },
+    {
+      "kind": "fault-descriptor",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "fault-index",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "fault-checkpoint",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "fault-authority",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "fault-cas-ledger",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "fault-cas-reference",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "fault-completion",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "revoked-session",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "expired-session",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "changed-generation",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "archived-space",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "removed-member",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "spectator",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "future-clock",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "wrong-event-order",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "wrong-event-actor",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "wrong-event-user",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "wrong-event-space",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "wrong-index-name",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "wrong-checkpoint-id",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "wrong-pack-locator",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "wrong-spr-locator",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "wrong-reservation-generation",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "wrong-reservation-epoch",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "wrong-reservation-expiry",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "preparing",
+      "delivery": "none"
+    },
+    {
+      "kind": "cancelled",
+      "committed": false,
+      "publicEvents": 0,
+      "terminal": "cancelled",
+      "delivery": "none"
+    },
+    {
+      "kind": "ack-receipt-unreadable",
+      "committed": true,
+      "publicEvents": 3,
+      "terminal": "ready",
+      "delivery": "reconnect"
+    },
+    {
+      "kind": "ack-events-unreadable",
+      "committed": true,
+      "publicEvents": 3,
+      "terminal": "ready",
+      "delivery": "reconnect"
+    }
+  ]
+}

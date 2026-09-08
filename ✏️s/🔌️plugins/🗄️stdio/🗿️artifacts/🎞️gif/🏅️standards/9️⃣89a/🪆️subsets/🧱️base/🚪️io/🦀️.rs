@@ -105,7 +105,7 @@ pub fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
     match &gct_bytes {
         Some(colors) => {
             let size_field = validated_color_table_size_field(colors.len(), "gif89a: global")?;
-            let sorted = snap.gct.as_ref().map(|t| t.sorted).unwrap_or(false);
+            let sorted = snap.gct.as_ref().is_some_and(|t| t.sorted);
             out.push(0x80 | (sorted as u8) << 3 | size_field);
         }
         None => out.push(0),
@@ -185,7 +185,7 @@ pub fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
         let min_code_size;
         if let Some(colors) = &local_bytes {
             let size_field = validated_color_table_size_field(colors.len(), &format!("gif89a: frame {index} local"))?;
-            let sorted = frame.lct.as_ref().map(|t| t.sorted).unwrap_or(false);
+            let sorted = frame.lct.as_ref().is_some_and(|t| t.sorted);
             ipacked |= 0x80 | (sorted as u8) << 5 | size_field;
             min_code_size = codec::min_code_size_for(colors.len());
         } else {
@@ -413,7 +413,7 @@ pub fn register() {
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
-    let _ = store::register_document_codec(store::ArtifactCodec::of::<GifSnapshot, GifMutation>(STDIO_GIF89A_DOCUMENT_SCHEMA));
+    store::register_document_codec(store::ArtifactCodec::of::<GifSnapshot, GifMutation>(STDIO_GIF89A_DOCUMENT_SCHEMA)).expect("static Stdio registration must be available and conflict-free");
 }
 
 /// 💡️ Registers `s.stdio.gif.89a.inference`'s facet leaves into the OS-wide inference catalog —

@@ -481,6 +481,7 @@ fn partial_from_job<T: Topology + Clone>(job: &WfcJob<T>) -> PartialState {
 
 fn drive_batch_job<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], cancel: Option<&CancelToken>) -> SolveOutcome {
     use semio_framework_job::{allocate_operation_id, root_cancel_token, Generation, InteractiveJob, Operation, RevisionId, StepBudget, StepContext};
+    use crate::wfc_engine::job::tests::{close_job, payload_bytes, retire_outcome};
 
     if config.mode == SearchMode::RestartOnly || config.nogood.enabled {
         return solve_inner(model, topo, config, seed, init_domains, fixed, cancel, None);
@@ -496,7 +497,7 @@ fn drive_batch_job<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, 
     };
     let mut job = WfcJob::new(operation, model.clone(), topo.clone(), job_config, init_domains.map(<[PatternSet]>::to_vec), fixed.to_vec());
     let mut sequence = 0;
-    loop {
+    let result = loop {
         let (observations, propagations, backtracks) = job.metrics();
         let metrics = Metrics { observations, propagations, backtracks, elapsed_millis: start.elapsed().as_millis() as u64, ..Metrics::default() };
         let run_report = |terminal: Event, observed: &[(NodeId, PatternId)]| {
@@ -510,35 +511,39 @@ fn drive_batch_job<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, 
             RunReport { metrics, model_fingerprint: model.fingerprint(), seed, events }
         };
         if cancel.is_some_and(CancelToken::is_cancelled) {
-            return SolveOutcome::Cancelled { partial: partial_from_job(&job), report: run_report(Event::BudgetExceeded, job.observed()) };
+            break SolveOutcome::Cancelled { partial: partial_from_job(&job), report: run_report(Event::BudgetExceeded, job.observed()) };
         }
         if config.budget.max_observations.is_some_and(|limit| observations >= limit) || config.budget.max_backtracks.is_some_and(|limit| backtracks >= limit) || config.budget.max_millis.is_some_and(|limit| metrics.elapsed_millis >= limit) {
-            return SolveOutcome::BudgetExceeded { partial: partial_from_job(&job), report: run_report(Event::BudgetExceeded, job.observed()) };
+            break SolveOutcome::BudgetExceeded { partial: partial_from_job(&job), report: run_report(Event::BudgetExceeded, job.observed()) };
         }
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(4_096, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
-        match job.step(&mut context) {
+        let mut outcome = job.step(&mut context);
+        let result = match &outcome {
             semio_framework_job::StepOutcome::Complete(candidate) => {
-                let commit: crate::wfc_engine::job::WfcCommit =
-                    protocol::json::from_json_str(std::str::from_utf8(&candidate.output).expect("completed WFC batch job output is valid utf8")).expect("completed WFC batch job has a valid commit");
-                let assignment = commit.assignment.into_iter().map(PatternId).collect();
-                return SolveOutcome::Solved(Solution { assignment, report: run_report(Event::Solved, job.observed()) });
+                let bytes = payload_bytes(&candidate.output);
+                let commit = protocol::json::from_json_str::<crate::wfc_engine::job::WfcCommit>(std::str::from_utf8(&bytes).expect("completed WFC batch output is UTF-8"));
+                retire_outcome(&mut outcome);
+                let assignment = commit.expect("completed WFC batch job has a valid commit").assignment.into_iter().map(PatternId).collect();
+                Some(SolveOutcome::Solved(Solution { assignment, report: run_report(Event::Solved, job.observed()) }))
             }
-            semio_framework_job::StepOutcome::Fault(fault) if fault.detail == b"wfc-unsatisfiable" => {
+            semio_framework_job::StepOutcome::Fault(fault) => {
                 let report = run_report(Event::Contradiction { node: NodeId(0) }, job.observed());
-                if config.mode == SearchMode::RestartOnly {
-                    return SolveOutcome::Contradiction(ContradictionReport { node: NodeId(0), report });
+                if payload_bytes(&fault.detail) == b"wfc-unsatisfiable" {
+                    Some(SolveOutcome::Unsatisfiable(UnsatReport { proven: true, report }))
+                } else {
+                    Some(SolveOutcome::Contradiction(ContradictionReport { node: NodeId(0), report }))
                 }
-                return SolveOutcome::Unsatisfiable(UnsatReport { proven: true, report });
             }
-            semio_framework_job::StepOutcome::Fault(_) => {
-                return SolveOutcome::Contradiction(ContradictionReport { node: NodeId(0), report: run_report(Event::Contradiction { node: NodeId(0) }, job.observed()) });
-            }
-            semio_framework_job::StepOutcome::Cancelled => {
-                return SolveOutcome::Cancelled { partial: partial_from_job(&job), report: run_report(Event::BudgetExceeded, job.observed()) };
-            }
-            semio_framework_job::StepOutcome::Yield | semio_framework_job::StepOutcome::PreviewReady(_) | semio_framework_job::StepOutcome::CheckpointReady(_) => {}
+            semio_framework_job::StepOutcome::Cancelled => Some(SolveOutcome::Cancelled { partial: partial_from_job(&job), report: run_report(Event::BudgetExceeded, job.observed()) }),
+            _ => None,
+        };
+        retire_outcome(&mut outcome);
+        if let Some(result) = result {
+            break result;
         }
-    }
+    };
+    close_job(&mut job);
+    result
 }
 
 /// 🌳️ Like [`solve`], but also applies every constraint's initial restriction and rejects (via an

@@ -1077,7 +1077,7 @@ mod tests {
         let sibling = open(&mut bridge, 2, 1);
         let FlowResource::Session(owner) = bridge.resources.get(session).unwrap() else { panic!("session") };
         let domain = owner.borrow().domain.clone();
-        bridge.push_event(AbiRequestId(65), 1, FLOW_EVENT_PROGRESS, AbiStatus::OK, Vec::new(), false).unwrap();
+        bridge.push_event(AbiRequestId(FLOW_MAX_REQUESTS as u64 + 1), 1, FLOW_EVENT_PROGRESS, AbiStatus::OK, Vec::new(), false).unwrap();
         let AbiMessage::Event(collision) = poll_message(&mut bridge) else { panic!("collision") };
         bridge.try_send(AbiMessage::Control(AbiControl::Close { handle: session }), budget()).unwrap();
         for _ in 0..4 { assert!(matches!(bridge.poll(budget()).unwrap(), AbiPortPoll::Pending)); }

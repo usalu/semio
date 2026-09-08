@@ -175,24 +175,24 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    fn op_text_round_trips_change_n_ed_kn() {
+    async fn op_text_round_trips_change_n_ed_kn() {
         store::os_store::test_support::assert_op_line_round_trip(&En1999Mutation::ChangeNEdKn(change_n_ed_kn::ChangeNEdKn { new_n_ed_kn: 95.0 }));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn op_text_round_trips_change_annex() {
-        store::os_store::test_support::assert_op_line_round_trip(&En1999Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }));
+    async fn op_text_round_trips_change_annex() {
+        store::os_store::test_support::assert_op_line_round_trip(&En1999Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: AnnexChoice::En }));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn op_text_round_trips_change_alloy() {
+    async fn op_text_round_trips_change_alloy() {
         store::os_store::test_support::assert_op_line_round_trip(&En1999Mutation::ChangeAlloy(change_alloy::ChangeAlloy { new_alloy: "aw6082t6".to_string() }));
     }
 
     /// ⚖️ Every variant, not just the hand-picked ones above — full-coverage `OpText` round trip
     /// over the closed vocabulary, one sample value per field.
     #[semio_framework_async_macros::async_test]
-    fn every_variant_op_text_round_trips() {
+    async fn every_variant_op_text_round_trips() {
         for mutation in every_mutation() {
             store::os_store::test_support::assert_op_line_round_trip(&mutation);
         }
@@ -225,7 +225,7 @@ mod tests {
             En1999Mutation::ChangeShellTMm(change_shell_t_mm::ChangeShellTMm { new_shell_t_mm: 4.5 }),
             En1999Mutation::ChangeShellRMm(change_shell_r_mm::ChangeShellRMm { new_shell_r_mm: 520.0 }),
             En1999Mutation::ChangeSigmaEdShellMpa(change_sigma_ed_shell_mpa::ChangeSigmaEdShellMpa { new_sigma_ed_shell_mpa: 160.0 }),
-            En1999Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
+            En1999Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: AnnexChoice::En }),
         ]
     }
 }

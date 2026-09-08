@@ -74,13 +74,13 @@ mod tests {
     use protocol::Inference;
 
     #[semio_framework_async_macros::async_test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = En1993Snapshot::default();
         assert_eq!(En1993Inference::infer(&snapshot), En1993Inference::infer(&snapshot));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(En1993Inference::infer(&En1993Snapshot::default()), En1993Inference::default());
     }
 }
@@ -233,13 +233,13 @@ mod compliance_report_tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    fn full_steel_member_e2e() {
+    async fn full_steel_member_e2e() {
         let report = check_full_steel_member(&En1993Snapshot::default());
         assert_eq!(report.checks.len(), 25);
     }
 
     #[semio_framework_async_macros::async_test]
-    fn every_part_reaches_evaluate() {
+    async fn every_part_reaches_evaluate() {
         let report = check_full_steel_member(&En1993Snapshot::default());
         let families: std::collections::BTreeSet<&str> = report.checks.iter().map(|c| c.clause.family.as_str()).collect();
         for expected in

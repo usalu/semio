@@ -44,7 +44,7 @@ fn string_array_arg(id: &str, en: &str, de: &str) -> ActionArgDef {
 }
 
 fn number_arg(id: &str, en: &str, de: &str) -> ActionArgDef {
-    ActionArgDef::number(id, LocalizedLabel::native(en, de)).default_value(0.0)
+    ActionArgDef::number(id, LocalizedLabel::native(en, de)).default_value(&0.0)
 }
 
 fn empty_hashes() -> PackageHashes {
@@ -61,7 +61,7 @@ fn wrap_descriptor(package_id: &str, manifest: manifest::PluginManifest) -> Pack
         capability_requests: Vec::new(),
         extension_points: Vec::new(),
         execution: ExecutionMode::Isolated,
-        execution_protocol: manifest::ExecutionProtocol { app_channel_version: crate::os_spr::CHANNEL_VERSION },
+        execution_protocol: manifest::ExecutionProtocol { app_channel_version: semio_framework_os_kernel::os_spr::CHANNEL_VERSION },
         quotas: Default::default(),
         contributions: ContributionSet::default(),
         assets: Vec::new(),

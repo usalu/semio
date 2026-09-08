@@ -384,7 +384,7 @@ mod tests {
     async fn whole_artifact_diff_replaces_the_snapshot_and_absorbs_every_earlier_edit() {
         let base = sample_scene();
         let mut diff = CadMutation::DeleteNode(DeleteNode { node_id: "node-1".into() }).diff(&base).diff().clone();
-        let replacement = CadDiff { artifact: Some(Box::new(crate::artifacts::cad::schema::CadArtifact::from_snapshot(base.clone()))), ..Default::default() };
+        let replacement = CadDiff { artifact: Some(Box::new(CadArtifact::from_snapshot(base.clone()))), ..Default::default() };
         diff.absorb(replacement);
         assert_eq!(diff.apply(&base).expect("valid mutation diff"), base, "a whole-artifact diff wins over anything absorbed before it");
     }
@@ -392,7 +392,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn node_collection_diffs_absorb_into_one_apply() {
         let base = sample_scene();
-        let mut diff = CadMutation::CreateNode(CreateNode { node: crate::artifacts::cad::CadNode { id: "node-9".into(), label: "Fresh".into(), kind: "group".into() } }).diff(&base).diff().clone();
+        let mut diff = CadMutation::CreateNode(CreateNode { node: CadNode { id: "node-9".into(), label: "Fresh".into(), kind: "group".into() } }).diff(&base).diff().clone();
         diff.absorb(CadMutation::RenameNode(RenameNode { node_id: "node-1".into(), new_label: "Renamed".into() }).diff(&base).diff().clone());
         let next = diff.apply(&base).expect("valid mutation diff");
         assert!(next.nodes.iter().any(|node| node.id == "node-9"));

@@ -21,6 +21,9 @@
 //! its own `[...]` (bracket-depth-aware `split_top_level`, same primitive `gif`89a's/`svg`'s
 //! hand-rolled `DiffCodec` use), so nesting is unambiguous.
 
+/// 🧩 Ordered removed keys, modified values, and inserted items.
+pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>);
+
 use crate::artifacts::stl::schema::snapshot::StlTriangle;
 use crate::artifacts::stl::StlSnapshot;
 use protocol::command::DiffAlgebra;
@@ -59,7 +62,7 @@ fn triangle_diff_is_empty(d: &StlTriangleDiff) -> bool {
 
 /// ➕️ LWW field-by-field absorb of one triangle patch into another.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_triangle_diff(base: &mut StlTriangleDiff, other: StlTriangleDiff) {
+fn absorb_triangle_diff(base: &mut StlTriangleDiff, other: &StlTriangleDiff) {
     if other.normal.is_some() {
         base.normal = other.normal;
     }
@@ -143,16 +146,14 @@ fn validate_triangles_diff(base_len: usize, diff: &StlTrianglesDiff) -> Mutation
             return Err(MutationApplyError::new("invalid-modify-index", "triangle modification target must exist exactly once and remain present").at(["triangles", &entry.index.to_string()]));
         }
     }
-    let mut length = base_len - removed.len();
     let mut additions: Vec<usize> = diff.added.iter().map(|entry| entry.index).collect();
     additions.sort_unstable();
     let mut previous = None;
-    for index in additions {
+    for (length, index) in (base_len - removed.len()..).zip(additions) {
         if index > length || previous == Some(index) {
             return Err(MutationApplyError::new("invalid-add-index", "triangle addition target must be unique and within the evolving sequence").at(["triangles", &index.to_string()]));
         }
         previous = Some(index);
-        length += 1;
     }
     Ok(())
 }
@@ -228,7 +229,7 @@ fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) 
 fn absorb_pair(d1: &StlTrianglesDiff, d2: &StlTrianglesDiff) -> StlTrianglesDiff {
     let max_ref =
         d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).chain(d1.added.iter().map(|a| a.index)).chain(d2.removed.iter().copied()).chain(d2.modified.iter().map(|m| m.index)).chain(d2.added.iter().map(|a| a.index)).max();
-    let l1 = max_ref.map(|m| m + 2).unwrap_or(0);
+    let l1 = max_ref.map_or(0, |m| m + 2);
 
     let base_labels: Vec<Lbl> = (0..l1).map(Lbl::Base).collect();
     let d1_added: Vec<(usize, Lbl)> = d1.added.iter().enumerate().map(|(j, a)| (a.index, Lbl::Added1(j))).collect();
@@ -274,7 +275,7 @@ fn absorb_pair(d1: &StlTrianglesDiff, d2: &StlTrianglesDiff) -> StlTrianglesDiff
                 let mut combined = d1_modified_at.get(&i).map(|d| (*d).clone()).unwrap_or_default();
                 if let Some(mp) = mid_pos {
                     if let Some(d2d) = d2_modified_at.get(&mp) {
-                        absorb_triangle_diff(&mut combined, (*d2d).clone());
+                        absorb_triangle_diff(&mut combined, d2d);
                     }
                 }
                 if !triangle_diff_is_empty(&combined) {
@@ -373,7 +374,7 @@ impl DiffAlgebra<StlSnapshot> for StlDiff {
     }
 
     fn is_empty(&self) -> bool {
-        self.solid_name.is_none() && self.triangles.as_ref().map_or(true, StlTrianglesDiff::is_empty)
+        self.solid_name.is_none() && self.triangles.as_ref().is_none_or(StlTrianglesDiff::is_empty)
     }
 }
 //#endregion 🔖️Diff
@@ -433,7 +434,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -640,7 +641,7 @@ pub(crate) fn enc_collection_triple(name: &str, removed: &[usize], modified: &[(
     format!("{name}{{[{removed}];[{modified}];[{added}]}}")
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_collection_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<(usize, String)>), String> {
+pub(crate) fn dec_collection_triple(body: &str) -> Result<IndexedDiffParts<String, String>, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("collection: expected 3 sections, got {}", three.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
@@ -683,8 +684,8 @@ fn dec_triangles_diff(body: &str) -> Result<StlTrianglesDiff, String> {
 /// triple.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_triangle_diff_bin(d: &StlTriangleDiff, out: &mut Vec<u8>) {
-    write_option_bin(out, &d.normal, |v, o| enc_vec3_bin(v, o));
-    write_option_bin(out, &d.vertices, |v, o| enc_vertices_bin(v, o));
+    write_option_bin(out, &d.normal, enc_vec3_bin);
+    write_option_bin(out, &d.vertices, enc_vertices_bin);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_triangle_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StlTriangleDiff, String> {

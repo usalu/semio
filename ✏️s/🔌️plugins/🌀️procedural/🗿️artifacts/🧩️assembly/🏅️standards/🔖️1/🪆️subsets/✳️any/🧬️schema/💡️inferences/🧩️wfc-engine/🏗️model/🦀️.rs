@@ -74,10 +74,6 @@ impl ModelBuilder {
         self.tiles[p.index()] = Some(tile);
     }
 
-    pub fn set_orbit_canonical(&mut self, p: PatternId, canonical: PatternId) {
-        self.orbit_canonical[p.index()] = Some(canonical);
-    }
-
     /// 🏗️ Tags `p` with `name`, interning the name on first use. Idempotent.
     pub fn add_tag(&mut self, p: PatternId, name: &str) -> u32 {
         let id = self.intern_tag(name);
@@ -445,12 +441,6 @@ impl CompiledModel {
     #[cfg(test)]
     pub fn supporters(&self, r: RelationId, tgt: PatternId) -> &PatternSet {
         &self.supporters[r.index() * self.pattern_count() + tgt.index()]
-    }
-
-    #[inline]
-    #[cfg(test)]
-    pub fn base_support(&self, r: RelationId, tgt: PatternId) -> u32 {
-        self.base_support[r.index() * self.pattern_count() + tgt.index()]
     }
 
     #[cfg(test)]

@@ -6,6 +6,12 @@
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/🪡️surface-ops` in ticket
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL4, mounted locally
 //! under `🏄️surface` per that file's own pre-mounted-stub note.
+/// 🏄️ Parameter interval, knots, controls, and weights of a surface strip.
+pub type SurfaceControlStrip = (f64, f64, KnotVector, Vec<Vec<Pnt3>>, Vec<Vec<f64>>);
+
+/// 🗺️ Parameter bounds and spatial bounds for a surface patch.
+pub type SurfacePatchBounds = (f64, f64, f64, f64, (Pnt3, Pnt3));
+
 
 use super::Surface;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::{insert_knot, KnotVector};
@@ -244,12 +250,12 @@ fn point_to_box_distance(target: Pnt3, lo: Pnt3, hi: Pnt3) -> f64 {
 /// 🧩️ Decomposes a tensor-product NURBS surface into its Bézier patches (one per `(u, v)` knot
 /// cell), each tagged with its exact `(u0, u1, v0, v1)` sub-domain and control-net hull box.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn bezier_patches(u_knots: &KnotVector, v_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: &[Vec<f64>]) -> Vec<(f64, f64, f64, f64, (Pnt3, Pnt3))> {
+fn bezier_patches(u_knots: &KnotVector, v_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: &[Vec<f64>]) -> Vec<SurfacePatchBounds> {
     let (ulo, uhi) = u_knots.domain();
     let mut u_interior: Vec<f64> = u_knots.knots.iter().copied().filter(|&k| k > ulo + 1e-12 && k < uhi - 1e-12).collect();
     u_interior.sort_by(|a, b| a.partial_cmp(b).unwrap());
     u_interior.dedup_by(|a, b| (*a - *b).abs() < 1e-12);
-    let mut u_strips: Vec<(f64, f64, KnotVector, Vec<Vec<Pnt3>>, Vec<Vec<f64>>)> = Vec::new();
+    let mut u_strips: Vec<SurfaceControlStrip> = Vec::new();
     let mut remaining_c = controls.to_vec();
     let mut remaining_w = weights.to_vec();
     let mut remaining_k = u_knots.clone();
@@ -560,8 +566,8 @@ mod tests {
             let cyl = Surface::Cylinder { frame, radius: 2.5 };
             // A NURBS surface built by densely sampling a cylinder patch is an independent,
             // easily oracled shape for the patch-subdivision + Newton path.
-            let u_knots = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector::clamped_uniform(5, 3);
-            let v_knots = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::KnotVector::clamped_uniform(4, 3);
+            let u_knots = KnotVector::clamped_uniform(5, 3);
+            let v_knots = KnotVector::clamped_uniform(4, 3);
             let controls: Vec<Vec<Pnt3>> = (0..5)
                 .map(|i| {
                     let u = std::f64::consts::PI * i as f64 / 4.0;

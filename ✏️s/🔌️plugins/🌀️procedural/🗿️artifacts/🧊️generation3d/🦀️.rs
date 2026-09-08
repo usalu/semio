@@ -48,8 +48,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         import_formats: vec![],
         // 🖼️ "stdio.json"/"stdio.png" stay out of exports (generation2d owns those EXPORT claims, D3)
         // but stay in imports below — see `🚪️io/🦀️.rs`'s `🚪️IoRegistry` region.
-        export_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.las", "stdio.obj", "stdio.ply", "stdio.stl"],
-        import_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
+        export_stdio_kinds: vec!["stdio.dwg".into(), "stdio.gltf".into(), "stdio.las".into(), "stdio.obj".into(), "stdio.ply".into(), "stdio.stl".into()],
+        import_stdio_kinds: vec!["stdio.dwg".into(), "stdio.gltf".into(), "stdio.json".into(), "stdio.las".into(), "stdio.obj".into(), "stdio.ply".into(), "stdio.png".into(), "stdio.stl".into()],
     }
 }
 //#endregion 🔖️ArtifactKind

@@ -112,6 +112,35 @@ export interface DirectoryEventDocumentAnnounced {
   descriptor: DocumentDescriptor;
 }
 
+/** 🏷️ Directory-owned display metadata, not executable descriptor authority. */
+export interface DocumentIndexEntryV1 {
+  name: string;
+  dialect: { artifactKind: string; standard: string; subset: string };
+}
+
+/** 🧾️ One descriptor-bound presentation row derived from ordered Directory events. */
+export interface DirectoryIndexedDocumentViewV1 {
+  descriptor: DocumentDescriptor;
+  descriptorDigestV1: ArtifactHash;
+  entry: DocumentIndexEntryV1;
+  createdAtMs: number;
+  createdBy: string;
+}
+
+export interface DirectoryEventDocumentIndexed {
+  kind: "document.indexed";
+  scope: DocumentScope;
+  descriptorDigestV1: ArtifactHash;
+  entry: DocumentIndexEntryV1;
+}
+
+/** 🛡️ Validates the bounded presentation shape without authorizing document execution. */
+export function validDocumentIndexEntryV1(entry: DocumentIndexEntryV1): boolean {
+  const identity = (value: unknown): boolean => typeof value === "string" && value.length <= 256 && /^[A-Za-z0-9][A-Za-z0-9._:/-]*$/u.test(value);
+  return typeof entry.name === "string" && entry.name.length > 0 && [...entry.name].length <= 128 && !entry.name.startsWith(" ") && !entry.name.endsWith(" ") && !/[\u0000-\u001f\u007f-\u009f\uD800-\uDFFF]/u.test(entry.name)
+    && identity(entry.dialect.artifactKind) && identity(entry.dialect.standard) && identity(entry.dialect.subset);
+}
+
 export interface DirectoryEventArtifactCheckpointPublished {
   kind: "artifact.checkpoint-published";
   checkpoint: PublishedArtifactCheckpoint;
@@ -133,6 +162,7 @@ export type DirectoryEventBody =
   | DirectoryEventMemberRemoved
   | DirectoryEventInviteRedeemed
   | DirectoryEventDocumentAnnounced
+  | DirectoryEventDocumentIndexed
   | DirectoryEventArtifactCheckpointPublished
   | DirectoryEventArtifactRetentionAdvanced;
 
@@ -217,6 +247,14 @@ function directoryEventPageNestedShapes(body: Record<string, unknown>): void {
     for (const field of ["headSeq", "commitSeq", "epoch"]) directoryEventPageInteger(bootstrap[field]);
   };
   if (body.kind === "document.announced") descriptor(body.descriptor);
+  if (body.kind === "document.indexed") {
+    scope(body.scope);
+    hash(body.descriptorDigestV1);
+    if (!(body.descriptorDigestV1 as number[]).some((byte) => byte !== 0)) throw new Error("directory-event-page.invalid-index-digest");
+    const entry = exact(body.entry, ["name", "dialect"]);
+    exact(entry.dialect, ["artifactKind", "standard", "subset"]);
+    if (!validDocumentIndexEntryV1(entry as unknown as DocumentIndexEntryV1)) throw new Error("directory-event-page.invalid-index");
+  }
   if (body.kind === "artifact.checkpoint-published") {
     const checkpoint = exact(body.checkpoint, ["scope", "checkpointId", "descriptorDigestV1", "baselineFrontier", "pack", "spr", "aggregateSha256", "publishedAtMs"], ["parentCheckpointId"]);
     scope(checkpoint.scope);
@@ -270,6 +308,7 @@ function directoryEventPageEvent(value: unknown): DirectoryEvent {
     "member.removed": ["kind", "spaceId", "userId"],
     "invite.redeemed": ["kind", "spaceId", "userId", "inviteId", "role"],
     "document.announced": ["kind", "descriptor"],
+    "document.indexed": ["kind", "scope", "descriptorDigestV1", "entry"],
     "artifact.checkpoint-published": ["kind", "checkpoint"],
     "artifact.retention-advanced": ["kind", "retention"],
   };
@@ -295,6 +334,7 @@ function directoryEventPageEvent(value: unknown): DirectoryEvent {
   )
     throw new Error("directory-event-page.invalid-event-vocabulary");
   directoryEventPageNestedShapes(body);
+  if (body.kind === "document.indexed" && (event.spaceId !== (body.scope as DocumentScope).spaceId || typeof event.userId !== "string" || event.userId.length === 0 || new TextEncoder().encode(event.userId).length > 256)) throw new Error("directory-event-page.invalid-index-author");
   if (directoryEventPageHasControl(event)) throw new Error("directory-event-page.control-character");
   if (new TextEncoder().encode(JSON.stringify(event)).length > DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES) throw new Error("directory-event-page.event-too-large");
   return event as unknown as DirectoryEvent;
@@ -363,7 +403,7 @@ export interface CheckpointPublicationFrontierV1 {
   chainSha256: string;
 }
 
-export type CheckpointPublicationCurrentV1 = { state: "none" } | { state: "active"; checkpointId: string; baselineFrontier: CheckpointPublicationFrontierV1 };
+export type CheckpointPublicationCurrentV1 = { state: "genesis"; checkpointId: string } | { state: "active"; checkpointId: string; baselineFrontier: CheckpointPublicationFrontierV1 };
 
 export interface CheckpointPublicationBlobV1 {
   sha256: string;
@@ -431,10 +471,10 @@ export function parseCheckpointPublicationCommandV1(source: string): CheckpointP
   if (commitSeq > headSeq) throw new Error("checkpoint-publication.invalid-document-frontier");
   const expectedCurrentObject = directoryEventPageObject(object.expectedCurrent, ["state"], ["checkpointId", "baselineFrontier"]);
   const expectedCurrent: CheckpointPublicationCurrentV1 =
-    expectedCurrentObject.state === "none"
+    expectedCurrentObject.state === "genesis"
       ? (() => {
-          if (Object.keys(expectedCurrentObject).length !== 1) throw new Error("checkpoint-publication.invalid-current");
-          return { state: "none" };
+          const genesis = directoryEventPageObject(object.expectedCurrent, ["state", "checkpointId"]);
+          return { state: "genesis", checkpointId: checkpointPublicationHex(genesis.checkpointId, "checkpoint") };
         })()
       : expectedCurrentObject.state === "active"
         ? (() => {
@@ -1157,7 +1197,7 @@ export interface DocumentOpenPlanV1 {
   surface: DocumentOpenSurfaceV1;
   browserActor: DocumentOpenBrowserActorV1;
   grant: DocumentOpenGrantV1;
-  checkpoint?: DocumentOpenCheckpointV1;
+  checkpoint: DocumentOpenCheckpointV1;
   revalidation: DocumentOpenRevalidationV1;
 }
 
@@ -1208,19 +1248,19 @@ function parseDocumentOpenScope(value: unknown): DocumentScope {
   return { spaceId: documentOpenText(object.spaceId), documentId: documentOpenText(object.documentId) };
 }
 
-function parseDocumentOpenFrontier(value: unknown, documentId: string): ArtifactFrontier {
+function parseDocumentOpenFrontier(value: unknown, scope: DocumentScope): ArtifactFrontier {
   const object = documentOpenObject(value, ["documentId", "headEditOrdinal", "headEditId", "lastCommitSeq", "chainHash"]);
   const chainHash = object.chainHash;
-  if (!Array.isArray(chainHash) || chainHash.length !== 32 || chainHash.every((byte) => byte === 0) || chainHash.some((byte) => typeof byte !== "number" || !Number.isInteger(byte) || byte < 0 || byte > 255))
+  if (!Array.isArray(chainHash) || chainHash.length !== 32 || chainHash.some((byte) => typeof byte !== "number" || !Number.isInteger(byte) || byte < 0 || byte > 255))
     throw new Error("document-open.invalid-frontier-hash");
   const frontier = {
     documentId: documentOpenText(object.documentId),
     headEditOrdinal: documentOpenInteger(object.headEditOrdinal),
-    headEditId: documentOpenText(object.headEditId),
+    headEditId: object.headEditId === "" ? "" : documentOpenText(object.headEditId),
     lastCommitSeq: documentOpenInteger(object.lastCommitSeq),
     chainHash: chainHash as number[],
   };
-  if (frontier.documentId !== documentId || frontier.lastCommitSeq > frontier.headEditOrdinal) throw new Error("document-open.stale-frontier");
+  if (!(artifactFrontierIsGenesisForV1(scope, frontier) || artifactFrontierIsEditedForV1(scope, frontier)) || frontier.lastCommitSeq > frontier.headEditOrdinal) throw new Error("document-open.stale-frontier");
   return frontier;
 }
 
@@ -1243,7 +1283,7 @@ export function parseDocumentPlanSocketGrantIntentV1(value: unknown): DocumentPl
 }
 
 export function parseDocumentOpenPlanV1(value: unknown, nowMs: number): DocumentOpenPlanV1 {
-  const object = documentOpenObject(value, ["schema", "version", "receipt", "expiresAtUnixMs", "scope", "descriptorDigestV1", "catalog", "package", "artifact", "parentDialect", "surface", "browserActor", "grant", "revalidation"], ["checkpoint"]);
+  const object = documentOpenObject(value, ["schema", "version", "receipt", "expiresAtUnixMs", "scope", "descriptorDigestV1", "catalog", "package", "artifact", "parentDialect", "surface", "browserActor", "grant", "checkpoint", "revalidation"]);
   if (object.schema !== "semio.hub.document-open-plan/v1" || object.version !== 1) throw new Error("document-open.invalid-version");
   const scope = parseDocumentOpenScope(object.scope);
   const descriptorDigestV1 = documentOpenHash(object.descriptorDigestV1);
@@ -1268,8 +1308,8 @@ export function parseDocumentOpenPlanV1(value: unknown, nowMs: number): Document
     subset: documentOpenText(parentDialect.subset),
   };
   if (parsedParentDialect.artifactKind !== artifact.kind || Object.values(parsedParentDialect).some((value) => value.trim() !== value)) throw new Error("document-open.invalid-parent-dialect");
-  const checkpoint = object.checkpoint === undefined ? undefined : documentOpenObject(object.checkpoint, ["checkpointId", "descriptorDigestV1", "baselineFrontier", "aggregateSha256"]);
-  if (checkpoint && checkpoint.descriptorDigestV1 !== descriptorDigestV1) throw new Error("document-open.stale-checkpoint");
+  const checkpoint = documentOpenObject(object.checkpoint, ["checkpointId", "descriptorDigestV1", "baselineFrontier", "aggregateSha256"]);
+  if (checkpoint.descriptorDigestV1 !== descriptorDigestV1) throw new Error("document-open.stale-checkpoint");
   return {
     schema: object.schema,
     version: object.version,
@@ -1298,16 +1338,12 @@ export function parseDocumentOpenPlanV1(value: unknown, nowMs: number): Document
     },
     browserActor: parseDocumentOpenBrowserActorV1(object.browserActor, { componentSha256: documentOpenHash(packageValue.componentSha256), descriptorByteSha256: documentOpenHash(packageValue.descriptorByteSha256) }, surface.rendererTarget),
     grant: { read: true, write: grant.write, observe: true },
-    ...(checkpoint
-      ? {
-          checkpoint: {
-            checkpointId: documentOpenHash(checkpoint.checkpointId),
-            descriptorDigestV1,
-            baselineFrontier: parseDocumentOpenFrontier(checkpoint.baselineFrontier, scope.documentId),
-            aggregateSha256: documentOpenHash(checkpoint.aggregateSha256),
-          },
-        }
-      : {}),
+    checkpoint: {
+      checkpointId: documentOpenHash(checkpoint.checkpointId),
+      descriptorDigestV1,
+      baselineFrontier: parseDocumentOpenFrontier(checkpoint.baselineFrontier, scope),
+      aggregateSha256: documentOpenHash(checkpoint.aggregateSha256),
+    },
     revalidation: {
       directoryRevision: documentOpenInteger(revalidation.directoryRevision, true),
       membershipGeneration: documentOpenInteger(revalidation.membershipGeneration, true),
@@ -1356,7 +1392,7 @@ export interface DocumentExecutionTargetLeaseFieldsV1 {
   parentDialect: DocumentOpenParentDialectV1;
   surface: DocumentOpenSurfaceV1;
   grant: DocumentOpenGrantV1;
-  checkpoint?: DocumentOpenCheckpointV1;
+  checkpoint: DocumentOpenCheckpointV1;
   revalidation: DocumentOpenRevalidationV1;
 }
 
@@ -1367,10 +1403,10 @@ function documentExecutionTargetByteLength(value: unknown, maxBytes: number): nu
 
 /** ✅️ Strictly parses the public lease fields and enforces every byte/identity invariant: both
  * component digests and the descriptor digest must equal the package projection, the parent dialect
- * must share the artifact kind, the grant must follow the surface role, and an optional checkpoint
+ * must share the artifact kind, the grant must follow the surface role, and the required checkpoint
  * must carry the same descriptor digest. */
 export function parseDocumentExecutionTargetLeaseFieldsV1(value: unknown): DocumentExecutionTargetLeaseFieldsV1 {
-  const object = documentOpenObject(value, ["schema", "version", "scope", "descriptorDigestV1", "catalog", "package", "component", "descriptor", "browserActor", "artifact", "parentDialect", "surface", "grant", "revalidation"], ["checkpoint"]);
+  const object = documentOpenObject(value, ["schema", "version", "scope", "descriptorDigestV1", "catalog", "package", "component", "descriptor", "browserActor", "artifact", "parentDialect", "surface", "grant", "checkpoint", "revalidation"]);
   if (object.schema !== "semio.os.document-execution-target-lease/v1" || object.version !== 1) throw new Error("document-execution-target-lease.invalid-version");
   const scope = parseDocumentOpenScope(object.scope);
   const descriptorDigestV1 = documentOpenHash(object.descriptorDigestV1);
@@ -1415,8 +1451,8 @@ export function parseDocumentExecutionTargetLeaseFieldsV1(value: unknown): Docum
   };
   if (parsedComponent.sha256 !== parsedPackage.componentSha256 || parsedComponent.blake3 !== parsedPackage.componentBlake3 || parsedDescriptor.sha256 !== parsedPackage.descriptorByteSha256)
     throw new Error("document-execution-target-lease.unbound-bytes");
-  const checkpoint = object.checkpoint === undefined ? undefined : documentOpenObject(object.checkpoint, ["checkpointId", "descriptorDigestV1", "baselineFrontier", "aggregateSha256"]);
-  if (checkpoint && checkpoint.descriptorDigestV1 !== descriptorDigestV1) throw new Error("document-execution-target-lease.stale-checkpoint");
+  const checkpoint = documentOpenObject(object.checkpoint, ["checkpointId", "descriptorDigestV1", "baselineFrontier", "aggregateSha256"]);
+  if (checkpoint.descriptorDigestV1 !== descriptorDigestV1) throw new Error("document-execution-target-lease.stale-checkpoint");
   return {
     schema: object.schema,
     version: object.version,
@@ -1437,16 +1473,12 @@ export function parseDocumentExecutionTargetLeaseFieldsV1(value: unknown): Docum
       rendererTarget: surface.rendererTarget,
     },
     grant: { read: true, write: grant.write, observe: true },
-    ...(checkpoint
-      ? {
-          checkpoint: {
-            checkpointId: documentOpenHash(checkpoint.checkpointId),
-            descriptorDigestV1,
-            baselineFrontier: parseDocumentOpenFrontier(checkpoint.baselineFrontier, scope.documentId),
-            aggregateSha256: documentOpenHash(checkpoint.aggregateSha256),
-          },
-        }
-      : {}),
+    checkpoint: {
+      checkpointId: documentOpenHash(checkpoint.checkpointId),
+      descriptorDigestV1,
+      baselineFrontier: parseDocumentOpenFrontier(checkpoint.baselineFrontier, scope),
+      aggregateSha256: documentOpenHash(checkpoint.aggregateSha256),
+    },
     revalidation: {
       directoryRevision: documentOpenInteger(revalidation.directoryRevision, true),
       membershipGeneration: documentOpenInteger(revalidation.membershipGeneration, true),
@@ -1474,7 +1506,7 @@ export function leaseFieldsFromPlanV1(plan: DocumentOpenPlanV1, byteLengths: { r
     parentDialect: plan.parentDialect,
     surface: plan.surface,
     grant: plan.grant,
-    ...(plan.checkpoint ? { checkpoint: plan.checkpoint } : {}),
+    checkpoint: plan.checkpoint,
     revalidation: plan.revalidation,
   });
 }
@@ -1662,6 +1694,34 @@ export interface GisMapInferenceApprovalReceiptV1 {
   commandHash: string;
   proposalHash: string;
   applied: boolean;
+  undo: GisMapApprovalUndoHandleV1;
+}
+
+/** ↩️ Owner-bound durable undo locator minted only from a committed GIS approval witness. */
+export interface GisMapApprovalUndoHandleV1 {
+  targetId: string;
+  expectedCurrent: CheckpointPublicationFrontierV1;
+}
+
+/** 📨️ Closed undo intent; inverse bytes never cross this boundary. */
+export interface GisMapApprovalUndoRequestV1 {
+  schema: "semio.hub.gis-map-approval-undo/v1";
+  version: 1;
+  targetId: string;
+  idempotencyKey: string;
+  expectedCurrent: CheckpointPublicationFrontierV1;
+}
+
+/** 🧾️ Durable inverse receipt published only after a second verified WAL decision. */
+export interface GisMapApprovalUndoReceiptV1 {
+  schema: "semio.hub.gis-map-approval-undo-receipt/v1";
+  targetId: string;
+  originalJobId: string;
+  mutationId: string;
+  commandHash: string;
+  applied: boolean;
+  replayed: boolean;
+  frontier: CheckpointPublicationFrontierV1;
 }
 
 /** 🚦️ The complete published failure vocabulary the four authenticated routes may answer with,
@@ -2031,15 +2091,52 @@ export function parseGisMapInferenceEventPageV1(value: unknown): GisMapInference
 
 /** ✅️ Strictly parses one approval receipt. */
 export function parseGisMapInferenceApprovalReceiptV1(value: unknown): GisMapInferenceApprovalReceiptV1 {
-  const object = documentOpenObject(value, ["schema", "jobId", "mutationId", "commandHash", "proposalHash", "applied"]);
+  const object = documentOpenObject(value, ["schema", "jobId", "mutationId", "commandHash", "proposalHash", "applied", "undo"]);
   if (typeof object.applied !== "boolean") throw new Error("gis-map-inference.invalid-applied");
+  const undo = documentOpenObject(object.undo, ["targetId", "expectedCurrent"]);
   return {
     schema: documentOpenText(object.schema),
     jobId: gisMapInferenceHex(object.jobId, 32),
-    mutationId: gisMapInferenceHex(object.mutationId, 64),
+    mutationId: gisMapInferenceHex(object.mutationId, 32),
     commandHash: gisMapInferenceHex(object.commandHash, 64),
     proposalHash: gisMapInferenceHex(object.proposalHash, 64),
     applied: object.applied,
+    undo: { targetId: gisMapInferenceHex(undo.targetId, 32), expectedCurrent: checkpointPublicationFrontier(undo.expectedCurrent) },
+  };
+}
+
+/** 📥️ Strictly parses the client-authored undo request; no inverse bytes are accepted. */
+export function parseGisMapApprovalUndoRequestV1(value: unknown): GisMapApprovalUndoRequestV1 {
+  const object = documentOpenObject(value, ["schema", "version", "targetId", "idempotencyKey", "expectedCurrent"]);
+  if (object.schema !== "semio.hub.gis-map-approval-undo/v1" || object.version !== 1) throw new Error("gis-map-approval-undo.invalid-envelope");
+  return {
+    schema: object.schema,
+    version: object.version,
+    targetId: gisMapInferenceHex(object.targetId, 32),
+    idempotencyKey: gisMapInferenceHex(object.idempotencyKey, 32),
+    expectedCurrent: checkpointPublicationFrontier(object.expectedCurrent),
+  };
+}
+
+/** ↩️ Seals one worker-private durable undo intent from the Hub-minted handle and a stable
+ * idempotency key. The page never supplies or receives either value. */
+export function sealGisMapApprovalUndoRequestV1(handle: GisMapApprovalUndoHandleV1, idempotencyKey: string): GisMapApprovalUndoRequestV1 {
+  return parseGisMapApprovalUndoRequestV1({ schema: "semio.hub.gis-map-approval-undo/v1", version: 1, targetId: handle.targetId, idempotencyKey, expectedCurrent: handle.expectedCurrent });
+}
+
+/** 🧾️ Strictly parses the server-minted durable undo receipt. */
+export function parseGisMapApprovalUndoReceiptV1(value: unknown): GisMapApprovalUndoReceiptV1 {
+  const object = documentOpenObject(value, ["schema", "targetId", "originalJobId", "mutationId", "commandHash", "applied", "replayed", "frontier"]);
+  if (object.schema !== "semio.hub.gis-map-approval-undo-receipt/v1" || typeof object.applied !== "boolean" || typeof object.replayed !== "boolean") throw new Error("gis-map-approval-undo.invalid-receipt");
+  return {
+    schema: object.schema,
+    targetId: gisMapInferenceHex(object.targetId, 32),
+    originalJobId: gisMapInferenceHex(object.originalJobId, 32),
+    mutationId: gisMapInferenceHex(object.mutationId, 32),
+    commandHash: gisMapInferenceHex(object.commandHash, 64),
+    applied: object.applied,
+    replayed: object.replayed,
+    frontier: checkpointPublicationFrontier(object.frontier),
   };
 }
 
@@ -2075,6 +2172,20 @@ export interface ArtifactFrontier {
   headEditId: string;
   lastCommitSeq: number;
   chainHash: ArtifactHash;
+}
+
+/** 🌱️ Exact scope-bound empty history, never an invented edit identifier. */
+export function artifactFrontierIsGenesisForV1(scope: DocumentScope, frontier: ArtifactFrontier): boolean {
+  const text = (value: string): boolean => value.length > 0 && new TextEncoder().encode(value).length <= DOCUMENT_OPEN_ID_MAX_BYTES && !/[\u0000-\u001f\u007f-\u009f\ud800-\udfff]/u.test(value);
+  return text(scope.spaceId) && text(scope.documentId) && frontier.documentId === scope.documentId && frontier.headEditOrdinal === 0 && frontier.headEditId === "" && frontier.lastCommitSeq === 0 && frontier.chainHash.length === 32 && frontier.chainHash.every((byte) => byte === 0);
+}
+
+/** 🌿️ Normal edited history has exact positive counters and a nonzero authenticated head. */
+export function artifactFrontierIsEditedForV1(scope: DocumentScope, frontier: ArtifactFrontier): boolean {
+  const text = (value: string): boolean => value.length > 0 && new TextEncoder().encode(value).length <= DOCUMENT_OPEN_ID_MAX_BYTES && !/[\u0000-\u001f\u007f-\u009f\ud800-\udfff]/u.test(value);
+  return text(scope.spaceId) && frontier.documentId === scope.documentId && text(frontier.documentId) && text(frontier.headEditId)
+    && Number.isSafeInteger(frontier.headEditOrdinal) && frontier.headEditOrdinal > 0 && Number.isSafeInteger(frontier.lastCommitSeq) && frontier.lastCommitSeq > 0
+    && frontier.chainHash.length === 32 && frontier.chainHash.every((byte) => Number.isInteger(byte) && byte >= 0 && byte <= 255) && frontier.chainHash.some((byte) => byte !== 0);
 }
 
 export interface ArtifactBlobRef {

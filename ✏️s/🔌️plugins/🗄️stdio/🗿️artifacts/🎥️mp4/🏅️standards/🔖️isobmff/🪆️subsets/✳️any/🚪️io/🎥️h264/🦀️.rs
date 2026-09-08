@@ -15,6 +15,12 @@
 //! of the container's own `stsd` fields, for cross-validation). The full pixel decoder remains
 //! at its original remodel location, unmoved, for a future wave to lift as a video-subset
 //! accessor without needing to touch this container codec's schema.
+/// 🎬 AVC parameter sets and optional profile extension.
+pub type ExtendedAvcParameterSets = (Vec<Vec<u8>>, Vec<Vec<u8>>, u8, Option<crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4AvcExtension>);
+
+/// 🎥 Sequence parameters, picture parameters, and NAL length width.
+pub type AvcParameterSets = (Vec<Vec<u8>>, Vec<Vec<u8>>, u8);
+
 
 //#region 🔖️Error
 #[derive(Clone, Debug, PartialEq)]
@@ -208,13 +214,13 @@ pub fn parse_sps_dimensions(rbsp: &[u8]) -> Result<SpsDimensions, H264Error> {
 /// wants them as separate lists, so the adaptation only changes the output container shape, not
 /// the parse logic). <https://www.iso.org/standard/74428.html> (ISO/IEC 14496-15)
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn parse_avcc(avcc: &[u8]) -> Result<(Vec<Vec<u8>>, Vec<Vec<u8>>, u8), H264Error> {
+pub fn parse_avcc(avcc: &[u8]) -> Result<AvcParameterSets, H264Error> {
     let (sps, pps, nal_length_size, _) = parse_avcc_extended(avcc)?;
     Ok((sps, pps, nal_length_size))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn parse_avcc_extended(avcc: &[u8]) -> Result<(Vec<Vec<u8>>, Vec<Vec<u8>>, u8, Option<crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4AvcExtension>), H264Error> {
+pub fn parse_avcc_extended(avcc: &[u8]) -> Result<ExtendedAvcParameterSets, H264Error> {
     let mut pos = 4usize;
     let length_size_byte = *avcc.get(pos).ok_or(H264Error::Truncated)?;
     pos += 1;

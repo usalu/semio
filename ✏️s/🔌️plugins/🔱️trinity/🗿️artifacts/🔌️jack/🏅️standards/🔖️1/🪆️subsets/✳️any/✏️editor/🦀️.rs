@@ -527,7 +527,13 @@ impl ArtifactEditor for TrinityJackPlayApp {
         let tool_id = Self::command_id(&request.command);
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(BoundedArtifactCommandWork::new(tool_id, jack_retained_config_reduce, jack_retained_config_extent));
         let operation = AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id.clone(), operation_id: request.operation.operation.0, generation: request.operation.generation.0, canonical_base_revision: request.canonical_base_revision };
-        let payload = ArtifactRetainedCommandPayload::try_new_with_context(*request.command, request.snapshot, request.config, request.history, request.interaction_state, request.interaction_hover, request.context, operation, request.completion, TrinityJackPlayApp::command_id, JACK_RETAINED_RAW_BYTES, JACK_RETAINED_WORK_ITEMS, work)?;
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion },
+            TrinityJackPlayApp::command_id,
+            JACK_RETAINED_RAW_BYTES,
+            JACK_RETAINED_WORK_ITEMS,
+            work,
+        )?;
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 

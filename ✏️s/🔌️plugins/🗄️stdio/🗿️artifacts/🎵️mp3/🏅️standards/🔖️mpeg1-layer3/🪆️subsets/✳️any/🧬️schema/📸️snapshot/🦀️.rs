@@ -117,7 +117,7 @@ impl store::ArtifactDsl for Mp3Snapshot {
             Err(_) => text,
         };
         let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
-        if hex.len() % 2 != 0 {
+        if !hex.len().is_multiple_of(2) {
             return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
         }
         let mut bytes = Vec::with_capacity(hex.len() / 2);

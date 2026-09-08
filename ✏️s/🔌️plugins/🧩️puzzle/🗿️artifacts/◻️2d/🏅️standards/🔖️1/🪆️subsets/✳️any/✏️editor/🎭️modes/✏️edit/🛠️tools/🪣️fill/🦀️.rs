@@ -89,7 +89,7 @@ pub fn measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowMeas
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::puzzle2d::config::Puzzle2dConfig;
+    use crate::editor::puzzle2d::config::{Puzzle2dConfig, Puzzle2dFillText};
     use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
     use crate::editor::puzzle2d::default_empty_fixture;
     use crate::editor::puzzle2d::engine::board_host::puzzle_board_host;

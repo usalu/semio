@@ -232,7 +232,7 @@ fn read_tag_values(data: &[u8], entry: &RawEntry, e: Endian, kind: TiffFieldType
 //#endregion IfdRead
 
 //#region TagLookup
-fn tag_values<'a>(ifd: &'a TiffIfd, tag: u16) -> Option<&'a TiffValues> {
+fn tag_values(ifd: &TiffIfd, tag: u16) -> Option<&TiffValues> {
     ifd.entries.iter().find(|t| t.tag == tag).map(|t| &t.values)
 }
 fn tag_u32_list(ifd: &TiffIfd, tag: u16) -> Vec<u32> {
@@ -272,7 +272,7 @@ fn packbits_decode(data: &[u8], expected_len: usize) -> Result<Vec<u8>, String> 
             }
             let b = data[i];
             i += 1;
-            out.extend(std::iter::repeat(b).take(count));
+            out.extend(std::iter::repeat_n(b, count));
         }
     }
     if out.len() != expected_len {

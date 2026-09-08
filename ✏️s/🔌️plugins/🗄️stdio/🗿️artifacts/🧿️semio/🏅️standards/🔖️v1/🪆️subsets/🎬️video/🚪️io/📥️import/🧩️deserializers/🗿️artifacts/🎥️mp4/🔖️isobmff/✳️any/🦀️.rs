@@ -44,7 +44,7 @@ impl ArtifactDeserializer for SemioVideoFromMp4 {
                         SemioVideoSample { pts, key: sample.sync, data: sample.data.clone() }
                     })
                     .collect();
-                let den = track.samples.first().map(|s| s.duration as i64).unwrap_or(1).max(1);
+                let den = track.samples.first().map_or(1, |s| s.duration as i64).max(1);
                 SemioVideoStream { kind: SemioVideoStreamKind::Video, codec, width: track.width, height: track.height, rate: SemioRational { num: track.timescale as i64, den }, samples }
             })
             .collect();

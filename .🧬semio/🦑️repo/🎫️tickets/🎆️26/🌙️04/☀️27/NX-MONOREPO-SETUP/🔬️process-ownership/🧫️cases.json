@@ -1,0 +1,74 @@
+[
+  {
+    "name": "detached task and shared daemon",
+    "roots": [
+      100
+    ],
+    "daemon": "/workspace/node_modules/nx/dist/src/daemon/server/start.js",
+    "rows": [
+      {
+        "pid": 101,
+        "parent": 100,
+        "command": "node executor"
+      },
+      {
+        "pid": 201,
+        "parent": 101,
+        "command": "bun server"
+      },
+      {
+        "pid": 202,
+        "parent": 201,
+        "command": "bun child"
+      },
+      {
+        "pid": 150,
+        "parent": 100,
+        "command": "node /workspace/node_modules/nx/dist/src/daemon/server/start.js"
+      },
+      {
+        "pid": 151,
+        "parent": 150,
+        "command": "node plugin-worker"
+      },
+      {
+        "pid": 777,
+        "parent": 1,
+        "command": "other work"
+      }
+    ],
+    "expected": [
+      101,
+      201,
+      202
+    ]
+  },
+  {
+    "name": "Windows daemon and sibling task",
+    "roots": [
+      10,
+      20
+    ],
+    "daemon": "C:\\Repo\\node_modules\\nx\\dist\\src\\daemon\\server\\start.js",
+    "rows": [
+      {
+        "pid": 11,
+        "parent": 10,
+        "command": "node \"c:\\repo\\node_modules\\nx\\dist\\src\\daemon\\server\\start.js\""
+      },
+      {
+        "pid": 12,
+        "parent": 11,
+        "command": "node plugin-worker"
+      },
+      {
+        "pid": 21,
+        "parent": 20,
+        "command": "bun task"
+      }
+    ],
+    "expected": [
+      21
+    ]
+  }
+]

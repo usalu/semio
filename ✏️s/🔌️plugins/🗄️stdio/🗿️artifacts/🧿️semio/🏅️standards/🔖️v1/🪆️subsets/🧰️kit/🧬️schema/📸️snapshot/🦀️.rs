@@ -81,33 +81,25 @@ pub struct SemioKitDesign {
 
 //#region 🔖️Snapshot
 #[derive(Clone, Debug, PartialEq, ArtifactSchema)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.stdio.semio.kit")]
 pub struct SemioKitSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[cfg_attr(test, serde(default))]
     pub types: Vec<SemioKitType>,
     #[state(artifact)]
-    #[cfg_attr(test, serde(default))]
     pub designs: Vec<SemioKitDesign>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.object")]
-    #[cfg_attr(test, serde(default))]
     pub objects: Vec<store::ArtifactChild<SemioObjectSnapshot>>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.model")]
-    #[cfg_attr(test, serde(default))]
     pub models: Vec<store::ArtifactChild<SemioModelSnapshot>>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.value")]
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub properties: Option<store::ArtifactChild<SemioValueSnapshot>>,
     #[state(artifact)]
     #[link_slot(roles("representation"))]
-    #[cfg_attr(test, serde(default))]
     pub representations: Vec<store::ArtifactLink>,
 }
 
@@ -119,11 +111,7 @@ impl Default for SemioKitSnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️ValueCodec
-/// 🔀️ Hand-written, not derived: `objects`/`models`/`properties` are `store::ArtifactChild<S>`
-/// composed-artifact CHILD handles and `representations` is a `Vec<store::ArtifactLink>` LINK
-/// slot — both bridged per-field through `to_dsl_value`/`from_dsl_value` (`🌱️value/🔀️serde`)
-/// rather than widening the derive macro. Same pattern as `📦️object`'s `SemioObjectSnapshot` and
-/// the fan-out playbook's `PlaybookArtifact` reference.
+/// 🔀️ Encodes composite child and link fields through their first-party value contracts.
 impl dsl::ToValue for SemioKitSnapshot {
     fn to_value(&self) -> dsl::DslValue {
         dsl::DslValue::object([
@@ -162,7 +150,7 @@ fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()

@@ -97,7 +97,7 @@ const MODULE_VERSION: &str = "0.1.0";
 pub fn imperative_module_contribution() -> semio_framework::ProgramContributionEntry {
     let registry = module_registry();
     let catalogue = catalogue_json(&registry);
-    imperative_extension_sdk::imperative_module_contribution(EXTENSION_ID, "text", "Text", "message-square", "text", "Text", MODULE_VERSION, &registry, Some(&catalogue))
+    imperative_extension_sdk::imperative_module_contribution(EXTENSION_ID, "text", "Text", "message-square", imperative_extension_sdk::build_manifest_json("text", "Text", MODULE_VERSION, &registry, Some(&catalogue)))
 }
 
 /// 🗺️ Open-registry twin of [`imperative_module_contribution`] — see
@@ -105,7 +105,7 @@ pub fn imperative_module_contribution() -> semio_framework::ProgramContributionE
 pub fn imperative_module_topic_contribution() -> semio_framework::TopicContribution {
     let registry = module_registry();
     let catalogue = catalogue_json(&registry);
-    imperative_extension_sdk::imperative_module_topic_contribution("text", "Text", "message-square", "text", "Text", MODULE_VERSION, &registry, Some(&catalogue))
+    imperative_extension_sdk::imperative_module_topic_contribution("text", "Text", "message-square", imperative_extension_sdk::build_manifest_json("text", "Text", MODULE_VERSION, &registry, Some(&catalogue)))
 }
 
 #[cfg(all(target_arch = "wasm32", feature = "extension-entry"))]

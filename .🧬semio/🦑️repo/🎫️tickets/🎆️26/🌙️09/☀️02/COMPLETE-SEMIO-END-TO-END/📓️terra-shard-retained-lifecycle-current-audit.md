@@ -9377,6 +9377,247 @@ No Cargo or native test was run for this audit.  The current fixture proves
 owner transitions and file stability only; it deliberately does not yet prove
 Cargo resolver, dep-info, build-script, or directory-membership completeness.
 
+### Source Epoch Resolver: Exact Materializer Closure (2026-09-08, Source-only)
+
+The materializer has four relevant Cargo legs, not merely a Stdio and GIS
+component pair.  Each `produceFreshComponentV1` first emits the selected
+plugin's `wasm32-wasip2` component and then, in the same private target root,
+builds the native `semio-framework-plugin-describe` binary before invoking it
+on that component ([`produce:735`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts:735>),
+[`produce:782`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts:782>)).
+The ordered Stdio→GIS materializer therefore needs a compiler-input record for
+all of:
+
+1. `semio-s-plugin-stdio`, wasm `cdylib`, `wasm32-wasip2`, selected component
+   profile;
+2. the native descriptor-emitter build used for that Stdio descriptor;
+3. `semio-s-plugin-gis`, wasm `cdylib`, `wasm32-wasip2`, selected component
+   profile; and
+4. the native descriptor-emitter build used for that GIS descriptor.
+
+The `jco transpile` and `jco wit` subprocesses between those steps are also
+part of output provenance: bind the resolved executable content/version and
+chain their output hashes to the component receipt.  They are not Rust source
+closure evidence.  `freshRun` presently appends Cargo JSON mode but reduces
+the child result to success/failure and deletes its evidence outside a ticket
+diagnostics run ([`freshRun:514`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts:514>)).
+That is the right private integration seam: return a bounded, opaque parsed
+Cargo-observation owner from that same child/reaper, rather than accept a
+caller-supplied dep-info string list.
+
+`cargo metadata --format-version=1 --locked` can establish selected package,
+manifest, target, feature, and local path-package identities.  It cannot
+establish module resolution, macro/include inputs, generated inputs, or
+build-script reads.  Use it only to construct a closed command specification
+and conservative preflight, with the effective root/hierarchical Cargo config,
+`Cargo.lock`, Cargo/rustc version reports, command CWD, target triple/profile,
+and the normalized relevant environment captured alongside it.  The current
+commands deliberately override `RUSTC_WRAPPER` and disable incremental work
+([`produce:750`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts:750>));
+the resolver must bind that effective configuration rather than only the
+workspace default.
+
+The smallest sound protocol is a disposable **probe/final** pair per
+qualification, with neither probe output staged or published:
+
+1. Execute all four exact Cargo commands in fresh owned probe target roots
+   under the exact command/config/toolchain environment.  Require successful
+   bounded Cargo JSON, the unique selected root `compiler-artifact` for each
+   leg, all local compiler units, and all `build-script-executed` records.
+   Reject a `fresh` selected artifact in this new target rather than treating
+   a cache hit as provenance.
+2. Bind every dep-info file to an exact `compiler-artifact` record for its
+   output; do not discover `.d` files by globbing Cargo's private target layout.
+   Merge dep-info for every local compiler unit, not just the selected root.
+   A local package compiled to an rlib can still supply actual Rust source to
+   the selected component.
+3. Normalize each observed input as one of: repo regular source file
+   `(relative path, no-follow identity, hash, size)`; declared directory
+   membership `(root, sorted entries/types/hashes)`; environment value or
+   absence; generated `OUT_DIR` file `(producer package ID, relative child,
+   hash, size)`; toolchain/registry package fact; or in-leg generated artifact.
+   Unknown/outside/symlinked inputs refuse.  Raw `..` in a dep-info entry is
+   valid only after resolution relative to the proven command CWD and strict
+   containment of its category; it is not itself an escape signal.
+4. For each observed build script, parse its owned output via the observed
+   `out_dir`, accepting both `cargo:` and `cargo::` directives.  Capture
+   `rerun-if-changed` files and `rerun-if-env-changed` values.  A directory
+   directive needs the membership record above—including empty-directory
+   identity—because add/remove can change a later build.  A script that gives
+   no rerun directives needs its whole bounded package-tree witness or strict
+   refusal.  Build-script JSON does not provide those rerun declarations, and
+   build-output path guessing is not a portable authority.
+5. Build a typed epoch plan from the union of the observed probe inputs.  The
+   present `files: string[]` plan is insufficient for directories, generated
+   files, environment, and tool facts.  Rehash/revalidate its source records
+   before/after every final leg, preserving the existing ordered-array epoch
+   serializer.
+6. Re-execute all four legs into separate empty final target roots and require
+   exact normalized observed-input equality per leg, after replacing only the
+   probe-specific absolute target root by the normalized `OUT_DIR` producer
+   coordinate.  Then chain the exact component/core/descriptor/JCO hashes to
+   that closed epoch.  Any probe/final difference restarts the complete
+   Stdio→GIS sequence; never retain a first-leg Stdio output for a new GIS
+   epoch.
+
+Static module parsing is a permissible bounded preflight aid only.  `cfg`,
+`include!`, generated sources, and custom build scripts make equality to a
+lexical graph unsound.  Likewise, Cargo's own artifact directory layout is not
+an authority; use message identities and handles/paths derived from the
+specific observed artifact.  General build scripts can perform arbitrary host
+reads.  Without system-call tracing, a strict qualified mode must constrain a
+local build script to the captured package tree and explicitly declared,
+captured external roots, or refuse it.  This is a real trust boundary, not a
+fixture omission.
+
+Required non-Cargo corpus rows are: all four selected leg identities;
+missing/extra/wrong-package artifact messages; a transitive mounted local
+source visible only through a dependent unit's dep-info; target/profile/
+feature/config/lock/env drift; `include_*` and relative `../../` input drift;
+each rerun file/env/directory membership mutation; unobserved or mismatched
+`OUT_DIR` input; absent directives without package-tree witness; a cached or
+stale probe report; and source drift after Stdio before GIS.  The only
+positive terminal row is exact four-leg report equality plus the existing
+component/descriptor receipt checks.  No such compiler-provenance execution
+has occurred in this audit.
+
+### Semantic Catalog Commitment Timeout (2026-09-08, Read-only diagnosis)
+
+`AY6eCc/00` reached the exact runner's 60-second kill in the semantic
+commitment law, after laws 0–2 passed.  Its retained law record reports only
+`running 1 test`; it does not establish a loop or a production hang.  The
+test's work is deliberately multiplicative: it validates every one of the 30
+fixture rows, Pack-encodes/decodes the entire contribution, then validates the
+roundtrip again ([`provider law:77`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/🧪️tests/📇️native-openable-provider/🦀️.rs:77>)).
+Each successful validator recomputes the expected full projection
+([`registry:1462`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs:1462>)), including fresh artifact assembly, schema parsing/validation,
+26 codec-receipt constructions and factory instantiations
+([`registry:1500`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs:1500>)).
+The earlier receipt-only law took 0.49s, so roughly sixty full expected
+projection constructions plus thirty full Pack roundtrips plausibly exceed
+the fixed 60-second law budget.  The source inventory itself is only about
+230KiB, so static schema-file I/O is not the leading explanation.
+
+The newly added stage timings should separately measure initial projection,
+first validation, Pack encode, Pack decode, and second validation before any
+optimization.  `println!` of the full payload is captured by libtest until the
+test completes, so the prior runner output cannot distinguish which stage
+stalled.
+
+A process-static cached **expected typed projection** is source-safe if
+measurements confirm recomputation dominates.  Its inputs are all compiled
+constants: `SOURCES`/component manifest/protocol bytes use `include_*`,
+version is `env!`, and the native 26-factory table is static
+([`registry:1`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs:1>),
+[`registry:1018`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs:1018>)).
+I found no runtime environment, filesystem, command-line, or caller input in
+the expected-projection path.  A `OnceLock` may therefore retain a private
+immutable `Result<NativeArtifactCatalogV1, ...>`; each validation must still
+project/clone that expectation for comparison with the supplied descriptor.
+Never cache a supplied `TopicContribution`, weaken the 30 public boundary
+rows, or use cross-process persistence.  This is a potential bounded test and
+provider cost repair, not evidence that the timed-out row is nonterminating.
+
+### Compiled Dependency Commitment Is the E2E Gate; Source Epoch Is Provenance (2026-09-08, Source-only)
+
+**Decision:** do not make the eight-leg probe/final source-epoch protocol a
+publication prerequisite for the user-visible Stdio→GIS path.  A smaller,
+stronger-for-this-risk gate is available: carry the same mandatory Stdio
+36-root/26-codec semantic `TopicContribution` inside every compiled consumer
+descriptor, declare Stdio as an exact manifest/bundle dependency, and require
+that commitment at the selected consumer's native-provider boundary.  This
+attests the selected component's linked Stdio semantics; it does not attest
+how Cargo obtained those bytes.
+
+The required building blocks are present, but the consumer link is not yet
+wired:
+
+- GIS and VCS both compile with a non-default Stdio dependency carrying
+  `full-artifact-catalog` ([`GIS Cargo:81`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/Cargo.toml:81>),
+  [`VCS Cargo:36`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/Cargo.toml:36>)).
+  GIS's actual source imports Stdio types in the gismap/terrain data and
+  mutation paths, so this is a real linked dependency, not a manifest-only
+  declaration ([`GIS gismap:8`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️.rs:8>)).
+- `describe_component` invokes `describe()` in the *actual supplied component*
+  and only then patches that component/core hash and the descriptor self-hash
+  ([`emitter:429`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/🦀️.rs:429>)).
+  The trusted loader independently hashes the component and descriptor,
+  canonical-decodes the latter, and requires its wasm hash to equal the exact
+  selected component record ([`loader:640`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:640>),
+  [`descriptor fence:1228`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:1228>)).
+- The native Stdio provider already recomputes the closed expected C from its
+  linked native Stdio crate before it can preview any Stdio binding
+  ([`provider:45`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs:45>)).
+  Thus Stdio's own compiled descriptor and a GIS descriptor carrying the
+  dependency C both have to equal the same host-native C.  Equality is
+  transitive; the loader need not add a second descriptor-to-descriptor
+  comparison once both packages are selected.
+
+The current gap is exact and narrow.  Stdio builds C and pushes it after
+`try_library()` ([`Stdio plugin:203`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🦀️.rs:203>),
+[`Stdio plugin:502`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🦀️.rs:502>)), but GIS and VCS
+plugin roots neither declare a manifest dependency nor carry C
+([`GIS plugin:26`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🦀️.rs:26>),
+[`VCS plugin:28`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🌿️vcs/🦀️.rs:28>)).  The active materializer
+also emits `dependencies: []` for both packages
+([`materializer:8761`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:8761>)).
+Provider validation therefore checks C only when the selected package is
+`stdio`; GIS/VCS native preview currently has no dependency-semantic fence.
+
+The minimum coherent repair is:
+
+1. Add a generic `PluginBuilder::contributes_topic` path, then have GIS
+   (and VCS before it is ever included in a profile) obtain C directly from
+   `semio_s_plugin_stdio::registry::native_artifact_catalog_contribution()`
+   while assembling their own guest plugin.  Do not serialize a source file or
+   reuse a descriptor emitted by a different component.  The contribution is
+   created by the exact Stdio code statically linked into that consumer
+   component.
+2. In the same builders declare `.depends_on("stdio",
+   VersionReq::Exact(Version::new(0, 1, 0)))` (or the exact package-version
+   constant once available).  The builder already owns a dependency vector
+   ([`PluginBuilder:52`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🦀️.rs:52>))
+   and the closed `VersionReq::Exact` grammar is implemented upstream
+   ([`manifest:3855`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🛂️manifest/🦀️.rs:3855>)).
+3. Make the actual generation record GIS→Stdio in `dependencies`.  The loader
+   already requires a descriptor dependency to match a selected bundle package
+   and version ([`descriptor fence:1244`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:1244>)),
+   and includes sorted dependencies in generation encoding
+   ([`generation encoding:946`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:946>)).
+   This also gives topological selection an explicit compiled dependency rather
+   than inference from Cargo source.
+4. At `preview_gis_bindings` (and future `preview_vcs_bindings`), require
+   exactly one reserved `stdio.artifact-catalog.v1` C, require the exact Stdio
+   manifest dependency, and invoke the existing Stdio C validator before any
+   GIS/VCS receipt or factory is constructed.  The caller reaches this only
+   after the loader's package/dependency validation, so no broader provider
+   interface is required.  Reject missing, duplicate, bare/foreign topic,
+   altered C, missing/`Any`/wrong-exact dependency, wrong bundle dependency,
+   and a Stdio component whose own descriptor C differs.  Do not let a GIS
+   topic supply a separate source of native codecs.
+
+A production-genuine positive law can materialize the two components once,
+then load the selected closure and prove that both actual descriptors contain
+the same C and no binding is previewed before both checks.  Its hostile twins
+mutate the *descriptor bytes/bundle records* after receipt capture: remove or
+alter GIS C; swap its declared dependency to an old/foreign Stdio record;
+make the dependency broad; or alter Stdio C.  Every row must fail before
+factory preview/publication.  A distinct VCS row is needed only when a VCS
+profile is introduced; it is not part of today's stdio+GIS selected closure.
+
+What remains without source epoch is intentional provenance scope, not an
+E2E semantic admission hole.  The gate does not prove which Rust modules,
+build-script reads, compiler flags, toolchain, linker, or generated `OUT_DIR`
+files produced the binary.  Nor can its catalog C attest behavior deliberately
+outside that catalog (for example a codec implementation algorithm changing
+while its schema/hash/claims remain stable).  It does bind the immutable bytes
+that will actually run, their guest-produced descriptor, the linked Stdio
+semantic catalog, native static factory semantics, protocol/version, and the
+generation closure.  Preserve final byte/descriptor rechecks and pointer CAS;
+they are still publication correctness requirements.  The optional source
+epoch remains the correct later reproducibility/audit/TOCTOU provenance
+feature, not a reason to delay this compiled E2E gate.
+
 ## Stdio Full-Catalog Native Compile Cost (2026-09-08, read-only live sample)
 
 The observed compiler is the exact active process, not a reconstructed build:
@@ -9550,3 +9791,1239 @@ can instantiate all 26 but cannot name `StdioApps`, `plugin()`, or guest export
 symbols.  A `plugin-root` target must still prove all 36 definitions, the same
 26 projection digest, and its existing full app roster.  These are
 source-design requirements; no compilation or runtime qualification was run.
+
+### Descriptor-Owned Full Catalog Commitment (2026-09-08, Source-only)
+
+The generic guest `describe()` still emits descriptor V1
+([`describe:141`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛂️describe/🦀️.rs:141>)); the core
+[`PackageDescriptor`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🛂️manifest/🦀️.rs:4912>) has no catalog field. Its manifest
+exposes the 26 runtime kinds, while the other ten definition-only roots live
+only in the process-local `ArtifactDefinitionRegistry`
+([`plugin runtime:4188`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:4188>)). Existing Hub validation is
+one-way (descriptor kind must occur among bundle codecs), and the Stdio native
+provider ignores the decoded descriptor
+([`trusted catalog:1228`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:1228>),
+[`native provider:45`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs:45>)). Thus the current descriptor cannot
+truthfully bind the complete 36-root catalog to the compiled component.
+
+The smallest clean contract is a mandatory `artifactCatalog` field in
+**descriptor V2**, encoded as a closed tag:
+
+```text
+none
+declared-v1 {
+  schema: "semio.artifact-catalog-commitment/v1"
+  ownerPackageId, ownerPluginId, ownerVersion
+  definitionRoots: ordered [{ artifactId, semanticSha256 }] // exact 36
+  nativeCodecs: ordered [{ factoryId, descriptorCodecId,
+    runtimeCapabilityId, artifactKind, artifactSchema, extension,
+    packSchemaSha256 }] // exact 26
+}
+```
+
+`none` is explicit for packages that do not own the Stdio catalog; only Stdio
+uses `declared-v1` in the present closed provider set. No default, omitted
+field, unknown tag/key, duplicate identity, noncanonical order, or malformed
+digest is admissible. V2, rather than a backwards parser, makes a missing
+commitment unrepresentable in a newly admitted descriptor.
+
+`semanticSha256` must be domain-separated canonical bytes of the guest's
+`ArtifactDefinition`: root identity; stable capability identity and kind;
+SHA-256 of each exact capability descriptor; ordered claims; ordered locale
+text. Those facts are exposed without source inspection by
+[`ArtifactDefinition`/`ArtifactCapability`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:2508>). Exclude
+`ArtifactExecutableIdentity` (a process-local function address), Cargo/source
+hashes, and factory pointers. Such values are not compiled guest proof. A root
+digest may be a fast precheck, but exact structured equality must follow it.
+
+Implementation ownership:
+
+1. Define the types beside `PackageDescriptor`, without serde/value defaults
+   or skip annotations. Add `artifact_catalog` to
+   [`PluginDescriptorExtras`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:29747>) and make
+   [`PluginBuilder::try_build`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🦀️.rs:749>) install the same typed value.
+   The builder has an explicit `none` default; the Stdio component assembly
+   provides one `declared-v1` value. Generic describe only forwards it.
+2. A catalog-only Stdio function computes the projection from
+   `artifact_assemblies()` plus receipt identities and verifies 36 unique
+   roots, 26 unique codec tuples, codec-root membership, and canonical order.
+   The component builder calls this same pure function; no `StdioApps` or
+   guest export is required.
+3. `preview_stdio_bindings` must receive the descriptor, recompute the
+   projection and require exact `declared-v1` equality **before** factory
+   instantiation. It must additionally demand an exact ordered equality of
+   descriptor `manifest.artifact_kinds` and the receipt `(kind,schema)` rows,
+   retaining existing per-factory identity/schema/extension/hash checks.
+   Registration remains after this preflight.
+4. The compiled component's real `describe()` bytes plus materializer hash
+   checks are the guest-proof boundary. A catalog-only Rust test proves only
+   headless equivalence; it cannot replace decoding the compiled V2 descriptor
+   and comparing it to the recomputed projection before trusted registration.
+
+V2 reaches every strict reader. The registry script has two separate
+top-level descriptor checks
+([`registry:2111`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts:2111>),
+[`registry:2434`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts:2434>),
+[`registry:2556`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts:2556>)); share one closed-field validator so JSON/Pack cannot disagree. The
+browser canonical-Pack reader also hardcodes V1
+([`backbone worker:1089`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:1089>)). It must reject V1/missing/unknown/malformed
+commitment while merely validating descriptor syntax already bound to its lease;
+it must not grant native catalog authority. This is independent of application
+channel execution-protocol V14. Regenerate all manually constructed descriptors,
+trusted fixtures, and emitted JSON/Pack from the V2 owner.
+
+Authoritative law matrix: schema-first definitive 36/26 fixture; root
+missing/extra/duplicate/reorder and semantic-digest mutation; codec
+missing/extra/duplicate/reorder and mutation of every tuple field; codec root
+not in definitions; both directions of 26-row manifest inequality; Rust/TS/Pack
+V1, absent, unknown, malformed, noncanonical, and JSON/Pack-disagreement rows.
+The native component law invokes real Stdio `describe`, compares V2 projection
+to the headless projection, and proves one tampered row rejects before
+registration. A headless target instantiates all 26 while unable to name
+`StdioApps`/`plugin()`/guest exports; plugin-root retains the same projection
+and app roster. These are proposed laws only; this audit ran no target.
+
+### Current Stdio Split and Opaque Commitment Boundary (2026-09-08, Source-only)
+
+The live feature graph now has the intended direction:
+`plugin-root -> component-app-assembly -> full-artifact-catalog`
+([`Stdio Cargo features`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/Cargo.toml:24>)). The crate root gates the only module which contains the
+176-variant `StdioApps`, `plugin()`, and guest export macro on the app-assembly
+feature ([`Stdio crate root:127`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/🦀️.rs:127>)). `editor` and `viewer` roots are gated
+likewise ([`Stdio crate root:9773`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/🦀️.rs:9773>),
+[`Stdio crate root:11947`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/🦀️.rs:11947>)).
+
+The catalog-only registry now owns package-id parsing and receipt construction;
+the residual registry `crate::plugin()` assertion is correctly itself gated by
+`component-app-assembly` ([`registry:1352`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs:1352>)). Its manifest forwarding module
+depends only on `artifact_definitions` and `format_descriptors`, not app
+assembly ([`manifest`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🛂️manifest/🦀️.rs)). I found no active full-catalog or home-io registry path that
+calls `plugin()`/names `StdioApps`, and no remaining native-receipt dependency
+on the component module. The new Binary/TXT declaration functions are also
+individually app-assembly gated; their ungated `assembly()` and codec/schema
+exports remain catalog functions ([`binary artifact:20`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🦀️.rs:20>),
+[`txt artifact:20`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🦀️.rs:20>)).
+
+One required source-gate law remains important: build a catalog-only target
+with `default-features = false, features = ["full-artifact-catalog"]` and
+call `artifact_assemblies`, `native_codec_factory_receipts`, and all 26
+instantiations. It must not be able to import `plugin`, `StdioApps`, `editor`,
+or `viewer`. Pair it with a plugin-root target that keeps the app roster and
+complete 36/26 receipt projection. This is required because direct source
+references inside unmounted artifact editor/viewer leaf files are harmless only
+while the parent app modules remain excluded; a regular default-feature test
+cannot prove the negative dependency boundary.
+
+For the descriptor commitment, generic `PackageDescriptor` should remain
+domain-neutral. Prefer a required closed enum such as
+`CatalogCommitment::{None, OpaqueV1 { schema, bytes }}`, where `bytes` is an
+owned, bounded, canonical Pack value and `schema` is a canonical semantic
+contract id. The generic Rust/TS/browser layers validate enum shape, byte
+length, canonical bytes, and descriptor binding, but do not know Stdio roots.
+The Stdio component builder canonical-encodes its typed 36/26 projection into
+the opaque bytes; the Hub's Stdio provider typed-decodes, rejects unknown or
+trailing fields, recomputes its catalog-only projection, then compares exact
+canonical bytes before factory registration. This avoids embedding a Stdio
+taxonomy in `PackageDescriptor` without turning untyped bytes into authority.
+
+Do not use an optional raw digest alone: it loses row-level closure and permits
+a descriptor/provider format disagreement to hide behind the digest producer.
+The exact raw bytes (and optionally a digest solely as a transport precheck)
+are the commitment. The compiled component's decoded descriptor is still the
+only guest-origin evidence; the native projection merely verifies it. Add
+generic hostile rows for absent/unknown enum variants, noncanonical/oversize
+opaque bytes and JSON/Pack disagreement, plus Stdio-only typed decode,
+trailing-field, changed row, and recomputed-byte mismatch rows. No source or
+Cargo target was modified or run in this audit.
+
+### Stdio Catalog Commitment Through Existing Topic Contributions (2026-09-08, Source-only)
+
+**Revised recommendation: use the existing descriptor-owned topic seam, not a
+new `PackageDescriptor` V2 field.** `PluginManifest.topic_contributions` is
+specifically documented as open plugin-published names, with a typed
+consumer-side `TopicContribution::decode<T: FromValue>()`
+([`manifest:3681`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🛂️manifest/🦀️.rs:3681>)). It is part of the guest `PluginManifest`, which
+`describe_plugin()` forwards both to `manifest.topic_contributions` and to the
+descriptive projection ([`describe:120`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛂️describe/🦀️.rs:120>)). Thus the
+topic is already inside the descriptor Pack bytes, descriptor self-hash, and
+catalog record digest. It needs no new descriptor version, browser schema
+rollout, or generic Stdio field.
+
+The trusted loader makes this safe despite the handwritten generic
+`TopicContribution::from_value` currently ignoring unknown *envelope* keys:
+it recursively rejects duplicate keys and requires the decoded descriptor to
+re-encode byte-for-byte to the original Pack
+([`trusted catalog:1296`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:1296>)). An unrecognised topic-entry
+field therefore disappears from the projection and is refused before provider
+preview. The Stdio payload itself must still be a Stdio-owned
+`#[value(deny_unknown_fields)]` typed V1 projection; its decoder must compare
+canonical re-encoded payload bytes as well as structured equality. This is
+not a reason to relax the generic loader or accept a missing topic.
+
+Use exactly one manifest contribution with topic
+`"stdio.artifact-catalog.v1"`. Its payload is the ordered, strictly decoded
+36-root/26-receipt semantic projection: identity, stable capability and claim
+rows, localization/descriptor digests, plus the complete factory tuple. The
+Stdio registry computes it from the same catalog-only roots that currently
+produce `artifact_assemblies()`, `native_codec_artifact_kinds()`, and factory
+receipts ([`stdio registry:859`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs:859>),
+[`registry:1121`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs:1121>)). It must be emitted once by the
+actual Stdio `Plugin::builder(...).try_build()` path, never supplied from Cargo
+metadata or Hub source.
+
+There is a real builder seam to add. `PluginBuilder` presently has no topic
+field or method; only `ExtensionBundle::contributes_topic` exists
+([`plugin builder:52`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🦀️.rs:52>),
+[`extension bundle:33458`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:33458>)). Add a generic
+`PluginBuilder<Ready>::contributes_topic(topic, payload)` that retains the
+value through the two typestate moves and transfers it to
+`plugin.manifest.topic_contributions` in `try_build`. Do **not** make topic
+strings globally unique: open topics can legitimately have multiple records.
+Stdio's producer emits exactly one; its provider is the authority that rejects
+duplicate or altered catalog-topic records.
+
+At [`native provider:45`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs:45>), before
+`NativeOpenableCatalogProviderV1::linked(...).into_bindings()`, the `stdio`
+branch must:
+
+1. select exactly one manifest topic named `stdio.artifact-catalog.v1`;
+2. reject absence, duplicate exact name, and every `stdio.artifact-catalog.*`
+   name other than V1 (unrelated open topics remain allowed);
+3. decode and canonicalize the V1 payload, recompute the catalog-only Stdio
+   projection, and require exact ordered equality;
+4. retain the existing exact 26 `manifest.artifact_kinds` equality and all
+   receipt/factory/schema checks before registration.
+
+`descriptor.contributions.topic_contributions` is a mechanically duplicated
+view of the manifest for ordinary plugins ([`describe:120`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛂️describe/🦀️.rs:120>));
+it is not an independent commitment authority. The provider should either
+ignore it or require its single reflected Stdio row to equal the manifest row;
+it must not count the expected reflection as a forbidden duplicate.
+
+The registry's current descriptor checker validates only that
+`manifest.topicContributions` is an array
+([`registry:2434`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts:2434>)). Extend the
+Stdio descriptor fixture/oracle with the exact topic object and JSON/Pack
+equality, but keep the authoritative semantic comparison in the Hub provider,
+where a compiled descriptor is decoded and native factory registration is
+still impossible on refusal. Required hostile rows: absent; duplicate;
+foreign `stdio.artifact-catalog.v0/v2`; unknown payload key; reordered,
+added, or changed root/receipt; mismatch between manifest and reflected
+contribution; and an old Stdio descriptor that otherwise names all 26 kinds.
+Each must reject before `preview_stdio_bindings` yields any binding. This
+supersedes the earlier V2/opaque-field recommendation above; no legacy Stdio
+descriptor is admissible.
+
+### Landed Stdio Topic Commitment Review (2026-09-08, Source-only)
+
+The main acceptance boundary is sound. The provider invokes
+`validate_native_artifact_catalog_contributions` before it obtains any Stdio
+binding ([`native provider:51`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs:51>)). The
+projection is derived from the same 36 `ArtifactAssembly` values the guest
+then consumes ([`Stdio plugin:203`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🦀️.rs:203>)), while the independent provider recomputes it
+from its catalog-only closure before receipt instantiation
+([`registry:1229`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs:1229>)). It includes definition and capability
+identities, capability kinds, descriptor SHA-256, executable presence,
+claims, localizations, plus every receipt tuple. The existing receipt factory
+path separately binds the caller's descriptor version to the linked receipt
+version ([`provider:130`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs:130>)). I found no
+path which reaches `into_bindings()` after a missing, added, semanticly changed,
+or foreign-version `stdio.artifact-catalog.*` contribution.
+
+The payload has a real language-neutral schema, not merely a Rust tag
+([`commitment schema`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🧪️fixtures/📇️native-catalog-surface/📌️commitment.schema.json>)),
+and the 27 hostile rows cover topic absence/duplication, a dotted foreign
+version, every top-level identity, root and codec cardinality/order, and the
+named semantic fields. The 2 MiB producer bound and 36/26/2048/64 local bounds
+are present; trusted descriptor input is independently capped at 4 MiB. No
+Cargo target was run by this audit.
+
+Two actionable hardenings remain.
+
+1. **Canonical payload proof is incomplete.** `catalog_value_matches` is
+   intentionally object-order-insensitive ([`registry:1294`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs:1294>)). The trusted
+   descriptor decoder re-encodes a `TopicContribution` by cloning its payload,
+   so a payload whose object members are reordered can pass both that decoder
+   and the provider even though it is not the typed canonical projection.
+   This cannot alter the current payload semantics, but it defeats an
+   "exact canonical guest commitment" claim. After `actual.decode()`, require
+   `ToValue::to_value(&decoded) == actual.payload` (or compare the canonical
+   typed value before the structural comparison). Add a real Pack
+   encode/decode/re-encode row which permutes a payload object's members; the
+   current test mutates `serde_json::Value` then calls the validator directly,
+   so it does not exercise the emitted descriptor Pack boundary.
+
+2. **Reserve the bare namespace root as well.** The current selector is only
+   `starts_with("stdio.artifact-catalog.")`
+   ([`registry:1317`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs:1317>)). A second topic named exactly
+   `stdio.artifact-catalog` is presently treated as unrelated. It cannot
+   replace the required V1 topic, hence is not a binding bypass, but it
+   contradicts strict rejection of foreign catalog versions/names. Reserve
+   `topic == "stdio.artifact-catalog" || topic.starts_with("stdio.artifact-catalog.")`,
+   then require that this reserved subset has exactly the V1 row. Add the bare
+   topic hostile fixture.
+
+`plugin.manifest.topic_contributions.push(catalog)` occurs after
+`try_library()` ([`Stdio plugin:501`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🦀️.rs:501>)). This is not a demonstrated runtime drift:
+the installed `Plugin` owns that final manifest and `describe_plugin()` reads
+it before cloning into both descriptor locations. It does, however, bypass the
+builder's single preflight/commit path. A generic builder topic method remains
+the clean ownership repair, with one focused real `plugin()` → installed
+runtime → `describe_plugin()` Pack law proving exactly one manifest row and
+one reflected contribution row. That is an integrity test/architecture P1,
+not evidence of a current global-state publication bug.
+
+### Semantic Catalog Projection Bounds and Canonical Form (2026-09-08, Source-only)
+
+The explicit `definitionIdentity` repair is correct. A codec's public kind
+(`stdio.avi`) is intentionally not an artifact-definition identity
+(`s.stdio.avi`). The registry now locates the private factory by receipt ID,
+derives the latter from its factory-owned artifact key, and requires that it
+be one of the 36 projected definition identities
+([`registry:1266`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs:1266>)). This supplements—not replaces—the existing receipt
+path: `native_codec_factory_receipts` already proves each registered factory
+is bijective with one runtime artifact, source codec, artifact kind, schema,
+and protocol hash ([`registry:1361`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs:1361>)). The resulting 26 rows therefore bind
+factory → definition root → descriptor codec → runtime capability → kind /
+schema / extension / Pack schema hash. I found no remaining source-to-
+projection owner mismatch.
+
+The prior recommendation to use direct `DslValue` equality was wrong and is
+superseded. The Pack encoder deliberately canonicalizes every object by UTF-8
+key bytes ([`Pack value:561`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🦀️.rs:561>)), but its decoded objects remain `Vec`-backed,
+and `DslValue::PartialEq` is order-sensitive. A source-generated typed value
+can therefore have declaration order while the equivalent descriptor arriving
+through Pack has lexical key order. The current structural comparison is the
+right rule: object fields compare as an exact key/value set, whereas arrays
+(definitions, capabilities, codecs) remain ordered. The current native law
+now also Pack-encodes, decodes, re-encodes, and validates every hostile row
+([`provider law:121`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/🧪️tests/📇️native-openable-provider/🦀️.rs:121>)). A useful additional positive
+row is a manually constructed `DslValue::Object` with only object fields
+permuted; it should remain accepted after Pack canonicalization. Do not use
+`serde_json::Value` for that row because its object-map implementation may
+erase the ordering distinction before the production decoder sees it.
+
+The checked current source catalog is materially below every local limit: 36
+roots, 714 projected capabilities (the exact sum of the collections consumed
+by `build`), 26 executable codecs, at most 95 capabilities per root, two
+claims per runtime capability, two localized descriptors per root, and a
+139-byte longest source string. The schema's 36/26 root and
+codec counts, `2048` capability maximum, 64 claim/localization maximum, and
+`stdio.[a-z0-9]+` kind pattern all accept the actual source values. In
+particular, the `artifactKind` schema must remain distinct from
+`definitionIdentity`; the current fields are correctly typed that way
+([`commitment schema`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🧪️fixtures/📇️native-catalog-surface/📌️commitment.schema.json>)).
+
+There is one bounded resource P1, not an admission bypass. The advertised 2
+MiB semantic-projection limit is tested only *after*
+`native_artifact_catalog` has copied all projected strings and after JSON has
+been serialized ([`registry:1231`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs:1231>),
+[`registry:1290`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs:1290>)). The individual maxima permit a future locally edited
+catalog to allocate far beyond 2 MiB before that late refusal. The current
+compiled source is small, and an untrusted descriptor is capped to 4 MiB
+before provider preview, so this is not remotely exploitable nor a current
+runtime fault. If 2 MiB is intended as a true allocation bound, add a private
+`CatalogProjectionBudget` to the Stdio registry which charges a conservative
+UTF-8/JSON upper bound before each string clone and rejects before pushing the
+next row. It should be local and pure: do not make the guest registry depend
+on Hub's `OperationContext`.
+
+Provider cancellation is currently checked on both sides of semantic
+validation ([`native provider:46`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs:46>)). With an exact
+36/26 expected shape, structural comparison cannot descend through attacker-
+chosen depth or cardinality: any added object/array member fails its length
+check before recursion. The only potentially large accepted candidate work is
+bounded scalar comparison inside the 4 MiB descriptor cap. Thus there is no
+concrete cancellation or retained-owner leak. If future measurements show the
+36-root recomputation misses the authority deadline, the narrow extension is
+an optional callback variant of the validator (called before each root and
+codec receipt by the Hub adapter), not an `OperationContext` type leak into
+the shared guest crate. It must retain the existing no-control pure wrapper
+for guest construction.
+
+Separate from admission, the registry's source inventory is stale: its
+declared OBJ path is `🧊️obj`
+([`registry inventory:12`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🔣️.json:12>)), while the compiled 36-root source closure uses
+`🗽️obj` ([`registry sources:311`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs:311>)). The semantic provider itself uses the
+compiled list and remains sound; any index-driven taxonomy or source-epoch
+consumer can instead fail or omit OBJ. Repair that inventory as an ownership
+index correction and add an exact index-path-to-compiled-source closure law;
+do not weaken the catalog commitment to accommodate it.
+
+
+### Stdio Test-Only Fixture Mount Coordinate Audit (2026-09-08, Source-only)
+
+The current Stdio Rust tree has **152** literal missing `#[path]` mounts and
+**10** literal missing `include_str!` mounts, all below test-only
+`🧪️tests` owners. This is coordinate drift, not absent tests or a semantic
+fixture deficit. I resolved every row without prefix inference: for each
+missing target, its exact owning `🧪️tests` directory currently contains
+**one and only one** immediate `🦀️.rs` candidate; the candidate's full
+path (including the current shortened/hash or `tNNN` segment) is recorded
+below. All 162 replacements preserve the original source/mutation/test
+module; only the literal path changes.
+
+The `path-direct-cfg` group is the 63 directly guarded rows. The 89
+`path-inherited-cfg` rows are also test-only: their enclosing
+`#[cfg(test)] #[path = "."] mod fixture_tests` is the guard (for example
+the Semio image aggregate at its first inherited row). They compile in the
+lib-test target even though a local five-line attribute scan misses them.
+There are **no ambiguous or unrelated remaining path rows**. The ten JPEG
+`include` rows must move with their corresponding `#[path]` test directory
+or their module compiles and then fails on the old fixture JSON.
+
+```json
+{"counts":{"path-direct-cfg":63,"path-inherited-cfg":89,"include":10},"rows":[{"kind":"path-direct-cfg","source":"🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🦀️.rs:834","from":"📸️set-snapshot/🧪️tests/🏗️lifts-the-third-vertex-and-gives-it-an-explicit-w/🦀️.rs","to":"📸️set-snapshot/🧪️tests/🏗️lifts-the-third-55b415/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:462","from":"📸️set-snapshot/🧪️tests/✏️renames-the-alpha-row-and-switches-to-crlf/🦀️.rs","to":"📸️set-snapshot/🧪️tests/✏️renames-the-alpha-c5101d/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:612","from":"📸️set-snapshot/🧪️tests/✏️corrects-the-area-cell-and-quotes-it/🦀️.rs","to":"📸️set-snapshot/🧪️tests/✏️corrects-the-area-62d48d/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:382","from":"📸️set-snapshot/🧪️tests/🖼️repaints-the-right-pixel-of-the-single-image/🦀️.rs","to":"📸️set-snapshot/🧪️tests/🖼️repaints-the-right-319285/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs:600","from":"📸️set-snapshot/🧪️tests/⏱️slows-the-second-frame-and-marks-it-do-not-dispose/🦀️.rs","to":"📸️set-snapshot/🧪️tests/⏱️slows-the-second-5fed2f/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/🧬️mutations/🦀️.rs:1153","from":"📸️set-snapshot/🧪️tests/📈️lifts-the-second-point-and-stretches-the-z-bound/🦀️.rs","to":"📸️set-snapshot/🧪️tests/📈️lifts-the-second-c64af6/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs:1268","from":"📸️set-snapshot/🧪️tests/🅱️bolds-the-tower-run-of-the-opening-paragraph/🦀️.rs","to":"📸️set-snapshot/🧪️tests/🅱️bolds-the-tower-deb62c/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:463","from":"📸️set-snapshot/🧪️tests/🏗️lifts-the-second-vertex-and-appends-a-comment/🦀️.rs","to":"📸️set-snapshot/🧪️tests/🏗️lifts-the-second-6636ec/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs:1134","from":"📸️set-snapshot/🧪️tests/🧮️widens-the-total-formula-to-a-third-row/🦀️.rs","to":"📸️set-snapshot/🧪️tests/🧮️widens-the-total-75c2ba/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:10","from":"📸️set-snapshot/🧪️tests/🔢️bumps-the-auxiliary-save-counter/🦀️.rs","to":"📸️set-snapshot/🧪️tests/🔢️bumps-the-eebfc0/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:169","from":"📸️set-snapshot/🧪️tests/✏️retitles-the-summary-and-records-the-last-editor/🦀️.rs","to":"📸️set-snapshot/🧪️tests/✏️retitles-the-4a2963/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:479","from":"📸️set-snapshot/🧪️tests/🔽️demotes-the-tower-heading-to-level-3/🦀️.rs","to":"📸️set-snapshot/🧪️tests/🔽️demotes-the-c9db71/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs:891","from":"📸️set-snapshot/🧪️tests/🏷️retitles-and-lowers-the-title-placeholder/🦀️.rs","to":"📸️set-snapshot/🧪️tests/🏷️retitles-and-4004a3/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs:600","from":"📸️set-snapshot/🧪️tests/🏷️restamps-the-product-long-name/🦀️.rs","to":"📸️set-snapshot/🧪️tests/🏷️restamps-the-9dd8a0/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs:199","from":"📸️set-snapshot/🧪️tests/📖️extends-the-readme-and-adds-a-version-member/🦀️.rs","to":"📸️set-snapshot/🧪️tests/📖️extends-the-readme-8229f8/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:226","from":"📸️set-snapshot/🧪️tests/📈️raises-the-flevel-hint-and-extends-the-payload/🦀️.rs","to":"📸️set-snapshot/🧪️tests/📈️raises-the-af4398/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:718","from":"📸️set-snapshot/🧪️tests/🗣️declares-the-document-language-on-the-root-html-element/🦀️.rs","to":"📸️set-snapshot/🧪️tests/🗣️declares-the-document-a3760a/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/🧬️mutations/🦀️.rs:807","from":"📸️set-snapshot/🧪️tests/🔄️retypes-a-map-member-and-repoints-a-graph-node/🦀️.rs","to":"📸️set-snapshot/🧪️tests/🔄️retypes-a-map-1c7a17/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/🧬️mutations/🦀️.rs:497","from":"📸️set-snapshot/🧪️tests/🔥️slides-the-wall-and-attaches-a-fire-rating-pset/🦀️.rs","to":"📸️set-snapshot/🧪️tests/🔥️slides-the-wall-687d98/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/🧬️mutations/🦀️.rs:1219","from":"📸️set-snapshot/🧪️tests/📋️bolds-the-body-paragraph-and-finalizes-its-copy/🦀️.rs","to":"📸️set-snapshot/🧪️tests/📋️bolds-the-body-e1b6f1/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🧬️mutations/🦀️.rs:422","from":"📸️set-snapshot/🧪️tests/🎧️rerates-to-48-khz-and-rewrites-the-right-channel/🦀️.rs","to":"📸️set-snapshot/🧪️tests/🎧️rerates-to-48-9bb6d3/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧬️mutations/🦀️.rs:978","from":"📸️set-snapshot/🧪️tests/✉️replaces-the-envelope-wrapping-a-value-subset/🦀️.rs","to":"📸️set-snapshot/🧪️tests/✉️replaces-the-a60559/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🧬️mutations/🦀️.rs:560","from":"➕️insert-frame/🧪️tests/🆕️appends-a-second-frame-at-the-end/🦀️.rs","to":"➕️insert-frame/🧪️tests/🆕️appends-a-second-592f0e/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🧬️mutations/🦀️.rs:562","from":"🔀️move-frame/🧪️tests/⏮️moves-the-last-frame-to-the-front/🦀️.rs","to":"🔀️move-frame/🧪️tests/⏮️moves-the-last-32f627/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🧬️mutations/🦀️.rs:564","from":"🚫️remove-frame/🧪️tests/🚫️removes-the-leading-frame/🦀️.rs","to":"🚫️remove-frame/🧪️tests/🚫️removes-the-e55e2f/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🧬️mutations/🦀️.rs:566","from":"🗑️remove-metadata-entry/🧪️tests/💬️removes-the-comment-entry-and-keeps-the-author-entry/🦀️.rs","to":"🗑️remove-metadata-entry/🧪️tests/t080/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🧬️mutations/🦀️.rs:568","from":"🔢️set-bit-depth/🧪️tests/🔢️raises-the-source-bit-depth-to-sixteen/🦀️.rs","to":"🔢️set-bit-depth/🧪️tests/🔢️raises-the-446b4f/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🧬️mutations/🦀️.rs:570","from":"🌈️set-colorspace/🧪️tests/🌈️records-the-source-colorspace-as-rgba/🦀️.rs","to":"🌈️set-colorspace/🧪️tests/🌈️records-the-14b4f2/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🧬️mutations/🦀️.rs:572","from":"📐️set-dimensions/🧪️tests/↔️widens-the-frameless-canvas-to-four-by-two/🦀️.rs","to":"📐️set-dimensions/🧪️tests/↔️widens-the-b74bc3/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🧬️mutations/🦀️.rs:574","from":"⏱️set-frame-delay/🧪️tests/⏳️slows-the-second-frame-down/🦀️.rs","to":"⏱️set-frame-delay/🧪️tests/⏳️slows-the-second-84eebe/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🧬️mutations/🦀️.rs:576","from":"🖌️set-frame-pixels/🧪️tests/⬛️repaints-the-only-frame-black/🦀️.rs","to":"🖌️set-frame-pixels/🧪️tests/⬛️repaints-the-only-4104d3/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🧬️mutations/🦀️.rs:578","from":"🎨️set-icc/🧪️tests/🎨️attaches-an-icc-profile-where-there-was-none/🦀️.rs","to":"🎨️set-icc/🧪️tests/🎨️attaches-an-icc-46f20d/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🧬️mutations/🦀️.rs:580","from":"🏷️set-metadata-entry/🧪️tests/✍️rewrites-the-existing-author-entry/🦀️.rs","to":"🏷️set-metadata-entry/🧪️tests/✍️rewrites-the-e73f32/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🧬️mutations/🦀️.rs:582","from":"📸️set-snapshot/🧪️tests/⚫️retargets-the-document-onto-a-grayscale-sixteen-bit-variant/🦀️.rs","to":"📸️set-snapshot/🧪️tests/⚫️retargets-the-05a762/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🦀️.rs:498","from":"🖇️create-edge/🧪️tests/📐️adds-a-diagonal-edge-across-the-square/🦀️.rs","to":"🖇️create-edge/🧪️tests/📐️adds-a-diagonal-cef7fd/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🦀️.rs:500","from":"🔷create-face/🧪️tests/🔷️adds-an-opposing-face-over-the-same-loop/🦀️.rs","to":"🔷create-face/🧪️tests/🔷️adds-an-opposing-c97919/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🦀️.rs:502","from":"🐚create-shell/🧪️tests/🐚️adds-a-second-shell-that-reuses-the-face-with-flipped-sense/🦀️.rs","to":"🐚create-shell/🧪️tests/🐚️adds-a-second-7bc1b9/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🦀️.rs:504","from":"🧊create-solid/🧪️tests/🧊️adds-a-second-solid-that-treats-the-shell-as-a-void/🦀️.rs","to":"🧊create-solid/🧪️tests/🧊️adds-a-second-558401/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🦀️.rs:506","from":"🏗️create-vertex/🧪️tests/🏔️adds-an-apex-vertex-above-the-square/🦀️.rs","to":"🏗️create-vertex/🧪️tests/🏔️adds-an-apex-b37312/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🦀️.rs:508","from":"✂️delete-edge/🧪️tests/🚫️removes-the-closing-edge-and-keeps-its-two-vertices/🦀️.rs","to":"✂️delete-edge/🧪️tests/🚫️removes-the-closing-8f9723/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🦀️.rs:510","from":"🚮delete-face/🧪️tests/🚫️removes-the-only-face-and-leaves-its-loop-behind/🦀️.rs","to":"🚮delete-face/🧪️tests/🚫️removes-the-only-3f9fd0/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🦀️.rs:512","from":"💥delete-shell/🧪️tests/🚫️removes-the-only-shell-and-leaves-its-faces-behind/🦀️.rs","to":"💥delete-shell/🧪️tests/🚫️removes-the-only-438615/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🦀️.rs:514","from":"🕳️delete-solid/🧪️tests/🚫️removes-the-only-solid-and-leaves-its-shell-behind/🦀️.rs","to":"🕳️delete-solid/🧪️tests/🚫️removes-the-only-84c2a9/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🦀️.rs:516","from":"🗑️delete-vertex/🧪️tests/🚫️removes-a-corner-vertex-and-cascades-into-its-two-incident-edges/🦀️.rs","to":"🗑️delete-vertex/🧪️tests/t081/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🦀️.rs:518","from":"📍move-vertex/🧪️tests/📍️lifts-the-third-corner-off-the-base-plane/🦀️.rs","to":"📍move-vertex/🧪️tests/📍️lifts-the-third-7fa625/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🦀️.rs:520","from":"➰replace-curve/🧪️tests/➰️swaps-the-first-edges-line-for-a-circular-arc/🦀️.rs","to":"➰replace-curve/🧪️tests/➰️swaps-the-first-583ab8/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🦀️.rs:522","from":"🗺️replace-surface/🧪️tests/🛢️swaps-the-faces-plane-for-a-cylinder/🦀️.rs","to":"🗺️replace-surface/🧪️tests/🛢️swaps-the-faces-262c36/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🦀️.rs:306","from":"➕add-type/🧪️tests/📇️appends-a-slab-type-to-the-catalogue/🦀️.rs","to":"➕add-type/🧪️tests/📇️appends-a-slab-type-to-f6249a/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🦀️.rs:308","from":"🪢️bind-representation/🧪️tests/🔗️binds-a-second-representation-to-an-existing-type/🦀️.rs","to":"🪢️bind-representation/🧪️tests/🔗️binds-a-second-049839/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🦀️.rs:310","from":"📌change-representation-pin/🧪️tests/📌️repins-the-representation-from-head-to-a-checkpoint/🦀️.rs","to":"📌change-representation-pin/🧪️tests/t083/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🦀️.rs:312","from":"🏛️create-model/🧪️tests/🏛️attaches-a-second-model-child/🦀️.rs","to":"🏛️create-model/🧪️tests/🏛️attaches-a-second-f6ad70/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🦀️.rs:314","from":"🏗️create-object/🧪️tests/🏗️attaches-a-second-object-child/🦀️.rs","to":"🏗️create-object/🧪️tests/🏗️attaches-a-second-d10987/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🦀️.rs:316","from":"🏷️create-properties/🧪️tests/🏷️attaches-a-properties-child-to-a-kit-that-has-none/🦀️.rs","to":"🏷️create-properties/🧪️tests/🏷️attaches-a-dba230/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🦀️.rs:318","from":"💣delete-model/🧪️tests/💣️detaches-the-only-model-child-and-keeps-the-object-child/🦀️.rs","to":"💣delete-model/🧪️tests/💣️detaches-the-only-e1dd2b/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🦀️.rs:320","from":"🪓delete-object/🧪️tests/🪓️detaches-the-only-object-child-and-keeps-the-model-child/🦀️.rs","to":"🪓delete-object/🧪️tests/🪓️detaches-the-only-10b840/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🦀️.rs:322","from":"🚫delete-properties/🧪️tests/🚫️detaches-the-properties-child-and-leaves-every-other-collection-alone/🦀️.rs","to":"🚫delete-properties/🧪️tests/t084/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🦀️.rs:324","from":"🖊️edit-design/🧪️tests/🧩️replaces-the-designs-pieces-and-connections-in-one-step/🦀️.rs","to":"🖊️edit-design/🧪️tests/🧩️replaces-the-c48e3d/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🦀️.rs:326","from":"🗑️remove-design/🧪️tests/🚫️removes-the-only-design-together-with-its-pieces/🦀️.rs","to":"🗑️remove-design/🧪️tests/🚫️removes-the-only-ae729f/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🦀️.rs:328","from":"➖remove-type/🧪️tests/🚫️removes-the-column-type-and-keeps-the-beam-type/🦀️.rs","to":"➖remove-type/🧪️tests/🚫️removes-the-column-1977ab/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🦀️.rs:330","from":"✏️rename-type/🧪️tests/✏️renames-the-beam-type-without-recategorising-it/🦀️.rs","to":"✏️rename-type/🧪️tests/✏️renames-the-beam-type-576d0a/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🦀️.rs:332","from":"✂️unbind-representation/🧪️tests/🔗️unbinds-the-leading-representation-and-keeps-the-trailing-one/🦀️.rs","to":"✂️unbind-representation/🧪️tests/t082/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🦀️.rs:321","from":"🔌add-node-port/🧪️tests/🔌️inserts-an-in-port-ahead-of-the-existing-out-port/🦀️.rs","to":"🔌add-node-port/🧪️tests/🔌️inserts-an-in-506161/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🦀️.rs:323","from":"➕add-node-property/🧪️tests/⚖️inserts-a-weight-property-ahead-of-the-colour-property/🦀️.rs","to":"➕add-node-property/🧪️tests/⚖️inserts-a-weight-b01181/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🦀️.rs:325","from":"🔧change-node-kind/🧪️tests/🔧️retypes-the-source-node-without-relabelling-it/🦀️.rs","to":"🔧change-node-kind/🧪️tests/🔧️retypes-the-61b6f4/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🦀️.rs:327","from":"🖍️change-node-label/🧪️tests/🔤️relabels-the-source-node-without-retyping-it/🦀️.rs","to":"🖍️change-node-label/🧪️tests/🔤️relabels-the-cf02ff/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🦀️.rs:329","from":"🌉️create-edge/🧪️tests/🌉️connects-the-source-node-to-the-sink-node/🦀️.rs","to":"🌉️create-edge/🧪️tests/🌉️connects-the-fec3c8/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🦀️.rs:331","from":"🏗️create-node/🧪️tests/🔎️appends-a-filter-node-to-the-end-of-the-node-set/🦀️.rs","to":"🏗️create-node/🧪️tests/🔎️appends-a-filter-cc4c88/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🦀️.rs:333","from":"✂️delete-edge/🧪️tests/✂️removes-the-feedback-edge-and-keeps-both-endpoints/🦀️.rs","to":"✂️delete-edge/🧪️tests/✂️removes-the-951758/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🦀️.rs:335","from":"🗑️delete-node/🧪️tests/🚫️removes-the-sink-node-and-severs-the-edge-into-it/🦀️.rs","to":"🗑️delete-node/🧪️tests/🚫️removes-the-sink-f2684e/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🦀️.rs:337","from":"📍move-node/🧪️tests/📍️moves-the-sink-node-to-a-new-canvas-position/🦀️.rs","to":"📍move-node/🧪️tests/📍️moves-the-sink-node-d65764/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🦀️.rs:339","from":"🔚remove-node-port/🧪️tests/🔚️detaches-the-trailing-out-port-from-the-source-node/🦀️.rs","to":"🔚remove-node-port/🧪️tests/🔚️detaches-the-81150c/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🦀️.rs:341","from":"➖remove-node-property/🧪️tests/➖️detaches-the-trailing-weight-property-from-the-source-node/🦀️.rs","to":"➖remove-node-property/🧪️tests/t077/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/🧬️mutations/🦀️.rs:664","from":"📸️set-snapshot/🧪️tests/⏱️retimes-the-track-and-promotes-a-sample-to-a-keyframe/🦀️.rs","to":"📸️set-snapshot/🧪️tests/⏱️retimes-the-track-aec820/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/🧬️mutations/🦀️.rs:809","from":"📸️set-snapshot/🧪️tests/🔤️rewrites-the-second-slides-textbox-and-adds-a-speaker-note/🦀️.rs","to":"📸️set-snapshot/🧪️tests/t074/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🦀️.rs:225","from":"🧱create-brep/🧪️tests/🧱️attaches-a-brep-child-to-an-object-that-has-none/🦀️.rs","to":"🧱create-brep/🧪️tests/🧱️attaches-a-brep-c2153c/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🦀️.rs:227","from":"🕸️create-mesh/🧪️tests/🕸️attaches-a-mesh-child-to-an-object-that-has-none/🦀️.rs","to":"🕸️create-mesh/🧪️tests/🕸️attaches-a-mesh-1accd6/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🦀️.rs:229","from":"🏷️create-properties/🧪️tests/🏷️attaches-a-properties-child-to-an-object-that-has-none/🦀️.rs","to":"🏷️create-properties/🧪️tests/t072/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🦀️.rs:231","from":"💥delete-brep/🧪️tests/💥️detaches-the-brep-child-and-leaves-the-mesh-child-alone/🦀️.rs","to":"💥delete-brep/🧪️tests/💥️detaches-the-brep-c4d116/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🦀️.rs:233","from":"🧨delete-mesh/🧪️tests/🧨️detaches-the-mesh-child-and-leaves-the-brep-child-alone/🦀️.rs","to":"🧨delete-mesh/🧪️tests/🧨️detaches-the-mesh-61f58a/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🦀️.rs:235","from":"🚫delete-properties/🧪️tests/🚫️detaches-the-properties-child-and-leaves-the-mesh-child-alone/🦀️.rs","to":"🚫delete-properties/🧪️tests/t073/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🦀️.rs:237","from":"🚚move-object/🧪️tests/🚚️moves-the-object-to-a-new-translation/🦀️.rs","to":"🚚move-object/🧪️tests/🚚️moves-the-object-d8342f/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🦀️.rs:239","from":"🔄rotate-object/🧪️tests/🔄️rotates-the-object-a-half-turn-about-z/🦀️.rs","to":"🔄rotate-object/🧪️tests/🔄️rotates-the-b0cac4/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/🦀️.rs:241","from":"📏scale-object/🧪️tests/📏️scales-the-object-non-uniformly/🦀️.rs","to":"📏scale-object/🧪️tests/📏️scales-the-d7173b/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🦀️.rs:595","from":"🌈change-material-base-color/🧪️tests/🔵️repaints-the-material-from-red-to-blue/🦀️.rs","to":"🌈change-material-base-color/🧪️tests/🔵️repaints-the-f52dab/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🦀️.rs:597","from":"⚙️change-material-metallic/🧪️tests/🪙️raises-the-metallic-factor-to-fully-metallic/🦀️.rs","to":"⚙️change-material-metallic/🧪️tests/🪙️raises-the-d93e10/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🦀️.rs:599","from":"🧱change-material-roughness/🧪️tests/🧱️lowers-the-roughness-factor-to-a-quarter/🦀️.rs","to":"🧱change-material-roughness/🧪️tests/🧱️lowers-the-e9eee8/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🦀️.rs:601","from":"🏷️change-texture-mime/🧪️tests/🖼️retags-the-texture-as-jpeg-without-touching-its-bytes/🦀️.rs","to":"🏷️change-texture-mime/🧪️tests/t075/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🦀️.rs:603","from":"🎨create-material/🧪️tests/🎨️adds-a-second-material-at-the-end/🦀️.rs","to":"🎨create-material/🧪️tests/🎨️adds-a-second-65429d/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🦀️.rs:605","from":"🕸️create-mesh/🧪️tests/🕸️adds-an-empty-second-mesh-at-the-end/🦀️.rs","to":"🕸️create-mesh/🧪️tests/🕸️adds-an-empty-d9e87a/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🦀️.rs:607","from":"🔺create-primitive/🧪️tests/🔺️adds-a-second-primitive-inside-the-existing-mesh/🦀️.rs","to":"🔺create-primitive/🧪️tests/🔺️adds-a-second-465d4b/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🦀️.rs:609","from":"🖼️create-texture/🧪️tests/🖼️adds-a-second-texture-at-the-end/🦀️.rs","to":"🖼️create-texture/🧪️tests/🖼️adds-a-second-68c4ab/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🦀️.rs:611","from":"🚮delete-material/🧪️tests/🚫️removes-the-leading-material-and-keeps-the-trailing-one/🦀️.rs","to":"🚮delete-material/🧪️tests/🚫️removes-the-f1e6d1/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🦀️.rs:613","from":"🗑️delete-mesh/🧪️tests/🚫️removes-the-leading-mesh-and-keeps-the-trailing-one/🦀️.rs","to":"🗑️delete-mesh/🧪️tests/🚫️removes-the-8b2eeb/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🦀️.rs:615","from":"✂️delete-primitive/🧪️tests/🚫️removes-the-leading-primitive-and-keeps-the-trailing-one/🦀️.rs","to":"✂️delete-primitive/🧪️tests/🚫️removes-the-409988/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🦀️.rs:617","from":"🕳️delete-texture/🧪️tests/🚫️removes-the-leading-texture-and-keeps-the-trailing-one/🦀️.rs","to":"🕳️delete-texture/🧪️tests/🚫️removes-the-aec473/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🦀️.rs:619","from":"📍move-vertex/🧪️tests/🎯️lifts-the-third-vertex-of-the-triangle/🦀️.rs","to":"📍move-vertex/🧪️tests/🎯️lifts-the-third-7a6482/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🦀️.rs:621","from":"📐replace-primitive-geometry/🧪️tests/🔲️swaps-the-triangle-for-a-textured-quad/🦀️.rs","to":"📐replace-primitive-geometry/🧪️tests/🔲️swaps-the-f184e8/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🦀️.rs:623","from":"📀replace-texture-bytes/🧪️tests/📀️swaps-the-texture-payload-without-retagging-its-mime/🦀️.rs","to":"📀replace-texture-bytes/🧪️tests/t076/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🦀️.rs:625","from":"🧲️set-primitive-material/🧪️tests/🔗️binds-the-primitive-to-the-existing-material/🦀️.rs","to":"🧲️set-primitive-material/🧪️tests/🔗️binds-the-14e1bc/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🦀️.rs:627","from":"🔀set-primitive-topology/🧪️tests/🔀️switches-the-primitive-to-a-triangle-strip/🦀️.rs","to":"🔀set-primitive-topology/🧪️tests/🔀️switches-the-6ea13b/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🦀️.rs:283","from":"🏗️create-column/🧪️tests/🏗️appends-a-float-column-and-null-pads-every-row/🦀️.rs","to":"🏗️create-column/🧪️tests/🏗️appends-a-float-5ae5be/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🦀️.rs:285","from":"🗑️delete-column/🧪️tests/🗑️drops-the-middle-column-and-cascades-into-every-row/🦀️.rs","to":"🗑️delete-column/🧪️tests/🗑️drops-the-middle-72c561/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🦀️.rs:287","from":"✏️edit-cell/🧪️tests/👥️rewrites-the-population-cell-of-the-second-row/🦀️.rs","to":"✏️edit-cell/🧪️tests/👥️rewrites-the-0875ac/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🦀️.rs:289","from":"📥insert-row/🧪️tests/📥️inserts-a-row-between-the-two-existing-rows/🦀️.rs","to":"📥insert-row/🧪️tests/📥️inserts-a-row-1074bb/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🦀️.rs:293","from":"🏷️rename-column/🧪️tests/✏️renames-city-to-town-without-touching-any-row/🦀️.rs","to":"🏷️rename-column/🧪️tests/✏️renames-city-to-c070b7/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🦀️.rs:295","from":"🔀reorder-columns/🧪️tests/🔀️moves-the-area-column-to-the-front-and-realigns-every-row/🦀️.rs","to":"🔀reorder-columns/🧪️tests/t071/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🦀️.rs:297","from":"🔃reorder-rows/🧪️tests/🔃️moves-the-last-row-to-the-front/🦀️.rs","to":"🔃reorder-rows/🧪️tests/🔃️moves-the-last-b623e9/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/🧬️mutations/🦀️.rs:502","from":"📸️set-snapshot/🧪️tests/⭕️dims-the-walls-layer-and-widens-the-circle/🦀️.rs","to":"📸️set-snapshot/🧪️tests/⭕️dims-the-walls-103ae9/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/🦀️.rs:242","from":"➕add-mark/🧪️tests/🔗️adds-a-link-mark-ahead-of-the-bold-mark/🦀️.rs","to":"➕add-mark/🧪️tests/🔗️adds-a-link-mark-ahead-580746/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/🦀️.rs:244","from":"🌐change-run-language/🧪️tests/🇩🇪retags-the-second-run-as-german/🦀️.rs","to":"🌐change-run-language/🧪️tests/🇩🇪retags-the-2cfe07/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/🦀️.rs:246","from":"✏️edit-run/🧪️tests/✍️rewrites-the-marked-runs-content/🦀️.rs","to":"✏️edit-run/🧪️tests/✍️rewrites-the-marked-b3d483/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/🦀️.rs:248","from":"📥insert-run/🧪️tests/📥️inserts-a-german-run-between-two-english-runs/🦀️.rs","to":"📥insert-run/🧪️tests/📥️inserts-a-german-run-96eb04/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/🦀️.rs:250","from":"➖remove-mark/🧪️tests/➖️detaches-the-italic-mark-from-the-run/🦀️.rs","to":"➖remove-mark/🧪️tests/➖️detaches-the-italic-19c064/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/🦀️.rs:254","from":"🔀reorder-runs/🧪️tests/🧭️moves-the-first-run-to-the-end/🦀️.rs","to":"🔀reorder-runs/🧪️tests/🧭️moves-the-first-2f0e97/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/🧬️mutations/🦀️.rs:531","from":"📸️set-snapshot/🧪️tests/🔤️relabels-and-repositions-the-transform-node/🦀️.rs","to":"📸️set-snapshot/🧪️tests/🔤️relabels-and-79ebb1/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/🧬️mutations/🦀️.rs:523","from":"📸️set-snapshot/🧪️tests/🌀️steps-the-spin-channel-and-appends-a-keyframe/🦀️.rs","to":"📸️set-snapshot/🧪️tests/🌀️steps-the-spin-21469b/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🦀️.rs:411","from":"🖌️change-stroke-color/🧪️tests/🎨️recolours-the-primary-styles-stroke-to-translucent-white/🦀️.rs","to":"🖌️change-stroke-color/🧪️tests/t078/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🦀️.rs:413","from":"📐change-stroke-width/🧪️tests/📐️thickens-the-primary-styles-stroke/🦀️.rs","to":"📐change-stroke-width/🧪️tests/📐️thickens-the-f29753/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🦀️.rs:415","from":"🌱create-layer/🧪️tests/🪜️inserts-a-second-layer-above-the-base-layer/🦀️.rs","to":"🌱create-layer/🧪️tests/🪜️inserts-a-second-bbc04c/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🦀️.rs:417","from":"➕create-node/🧪️tests/🔤️appends-a-caption-text-node-to-the-layer-root/🦀️.rs","to":"➕create-node/🧪️tests/🔤️appends-a-caption-d3ca33/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🦀️.rs:419","from":"🗑️delete-layer/🧪️tests/🚫️removes-the-leading-layer-and-keeps-the-overlay/🦀️.rs","to":"🗑️delete-layer/🧪️tests/🚫️removes-the-0b5995/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🦀️.rs:421","from":"➖delete-node/🧪️tests/🚫️removes-the-text-node-from-the-layer-root/🦀️.rs","to":"➖delete-node/🧪️tests/🚫️removes-the-text-48282c/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🦀️.rs:423","from":"🖐️drag-nodes/🧪️tests/🖐️drags-the-text-node-and-the-nested-group-by-the-same-offset/🦀️.rs","to":"🖐️drag-nodes/🧪️tests/t079/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🦀️.rs:425","from":"🫓flatten-node/🧪️tests/🫓️flattens-an-identity-nested-group-into-its-leaves/🦀️.rs","to":"🫓flatten-node/🧪️tests/🫓️flattens-an-6dc7d3/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🦀️.rs:427","from":"🧷group-nodes/🧪️tests/🧷️groups-the-two-leading-children-into-a-new-group/🦀️.rs","to":"🧷group-nodes/🧪️tests/🧷️groups-the-two-9b9116/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🦀️.rs:429","from":"📍move-node/🧪️tests/📍️moves-the-text-node-to-a-new-origin/🦀️.rs","to":"📍move-node/🧪️tests/📍️moves-the-text-0dcb86/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🦀️.rs:431","from":"🔀reorder-nodes/🧪️tests/🔀️moves-the-leading-path-node-to-the-end-of-the-layer-root/🦀️.rs","to":"🔀reorder-nodes/🧪️tests/🔀️moves-the-d4e0ab/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🦀️.rs:433","from":"🪣replace-fill/🧪️tests/🎨️repaints-the-primary-styles-fill-from-red-to-blue/🦀️.rs","to":"🪣replace-fill/🧪️tests/🎨️repaints-the-35f27f/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🦀️.rs:435","from":"🛤️replace-path/🧪️tests/🔺️swaps-the-open-path-for-a-closed-triangle/🦀️.rs","to":"🛤️replace-path/🧪️tests/🔺️swaps-the-open-380ece/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🦀️.rs:437","from":"🔄rotate-node/🧪️tests/🔄️rotates-the-nested-group-a-half-turn-about-z/🦀️.rs","to":"🔄rotate-node/🧪️tests/🔄️rotates-the-b7df7c/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🦀️.rs:439","from":"📏scale-node/🧪️tests/📏️scales-the-nested-group-non-uniformly/🦀️.rs","to":"📏scale-node/🧪️tests/📏️scales-the-nested-b300aa/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🦀️.rs:441","from":"🎈unflatten-node/🧪️tests/🎈️restores-the-captured-hierarchy-over-the-flat-group/🦀️.rs","to":"🎈unflatten-node/🧪️tests/🎈️restores-the-9d3258/🦀️.rs"},{"kind":"path-inherited-cfg","source":"🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🦀️.rs:443","from":"💫ungroup-node/🧪️tests/💫️dissolves-the-nested-group-into-its-parent/🦀️.rs","to":"💫ungroup-node/🧪️tests/💫️dissolves-the-730919/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🗑️remove-other-segment/🦀️.rs:60","from":"🧪️tests/🎯️direct-behavior/🦀️.rs","to":"🧪️tests/🎯️direct-behavior-39e483/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🔁️change-restart-interval/🦀️.rs:53","from":"🧪️tests/🎯️direct-behavior/🦀️.rs","to":"🧪️tests/🎯️direct-behavior-75f955/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📊️replace-quant-table/🦀️.rs:69","from":"🧪️tests/🎯️direct-behavior/🦀️.rs","to":"🧪️tests/🎯️direct-behavior-c47775/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🧹️remove-quant-table/🦀️.rs:60","from":"🧪️tests/🎯️direct-behavior/🦀️.rs","to":"🧪️tests/🎯️direct-behavior-65592a/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📥️insert-other-segment/🦀️.rs:58","from":"🧪️tests/🎯️direct-behavior/🦀️.rs","to":"🧪️tests/🎯️direct-behavior-9684c1/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🔲️replace-pixels/🦀️.rs:53","from":"🧪️tests/🎯️direct-behavior/🦀️.rs","to":"🧪️tests/🎯️direct-behavior-679189/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🌳️replace-huffman-table/🦀️.rs:72","from":"🧪️tests/🎯️direct-behavior/🦀️.rs","to":"🧪️tests/🎯️direct-behavior-751dfa/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🪓️remove-huffman-table/🦀️.rs:60","from":"🧪️tests/🎯️direct-behavior/🦀️.rs","to":"🧪️tests/🎯️direct-behavior-981c06/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🪪️change-jfif-header/🦀️.rs:72","from":"🧪️tests/🎯️direct-behavior/🦀️.rs","to":"🧪️tests/🎯️direct-behavior-cd6750/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🎚️change-re-encode-quality/🦀️.rs:53","from":"🧪️tests/🎯️direct-behavior/🦀️.rs","to":"🧪️tests/🎯️direct-behavior-36d334/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:238","from":"📸️set-snapshot/🧪️tests/🏷️retitles-the-id3v2-tit2-frame/🦀️.rs","to":"📸️set-snapshot/🧪️tests/🏷️retitles-the-beb4b8/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:227","from":"📸️set-snapshot/🧪️tests/🔊️resamples-to-16-khz-and-doubles-the-pcm16-amplitude/🦀️.rs","to":"📸️set-snapshot/🧪️tests/🔊️resamples-to-16-a155c9/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:619","from":"📸️set-snapshot/🧪️tests/🌡️warms-the-second-hour-and-restamps-the-station-city/🦀️.rs","to":"📸️set-snapshot/🧪️tests/🌡️warms-the-second-efb87c/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs:541","from":"📸️set-snapshot/🧪️tests/✏️renames-the-ifcproject-instance/🦀️.rs","to":"📸️set-snapshot/🧪️tests/✏️renames-the-7d2a8a/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/🧬️mutations/🦀️.rs:1024","from":"📸️set-snapshot/🧪️tests/⭕️widens-the-circle-entity-radius/🦀️.rs","to":"📸️set-snapshot/🧪️tests/⭕️widens-the-circle-30e522/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/🧬️mutations/🦀️.rs:371","from":"📸️set-snapshot/🧪️tests/🔑️promotes-the-second-movi-chunk-to-a-keyframe/🦀️.rs","to":"📸️set-snapshot/🧪️tests/🔑️promotes-the-8ff733/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:716","from":"📸️set-snapshot/🧪️tests/✏️renames-the-solid-and-closes-the-wedge-with-a-third-facet/🦀️.rs","to":"📸️set-snapshot/🧪️tests/✏️renames-the-solid-ff032b/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:343","from":"📸️set-snapshot/🧪️tests/🔑️promotes-the-second-sample-to-a-sync-frame/🦀️.rs","to":"📸️set-snapshot/🧪️tests/🔑️promotes-the-f2b6ba/🦀️.rs"},{"kind":"path-direct-cfg","source":"🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/🧬️mutations/🦀️.rs:659","from":"🗃️set-snapshot/🧪️tests/🤝️closes-the-clash-topic-and-answers-its-comment/🦀️.rs","to":"🗃️set-snapshot/🧪️tests/🤝️closes-the-clash-ad8069/🦀️.rs"},{"kind":"include","source":"🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🗑️remove-other-segment/🦀️.rs:57","from":"🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json","to":"🧪️tests/🎯️direct-behavior-39e483/🦠️mutation/🔣️.json"},{"kind":"include","source":"🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🔁️change-restart-interval/🦀️.rs:50","from":"🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json","to":"🧪️tests/🎯️direct-behavior-75f955/🦠️mutation/🔣️.json"},{"kind":"include","source":"🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📊️replace-quant-table/🦀️.rs:66","from":"🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json","to":"🧪️tests/🎯️direct-behavior-c47775/🦠️mutation/🔣️.json"},{"kind":"include","source":"🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🧹️remove-quant-table/🦀️.rs:57","from":"🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json","to":"🧪️tests/🎯️direct-behavior-65592a/🦠️mutation/🔣️.json"},{"kind":"include","source":"🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📥️insert-other-segment/🦀️.rs:55","from":"🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json","to":"🧪️tests/🎯️direct-behavior-9684c1/🦠️mutation/🔣️.json"},{"kind":"include","source":"🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🔲️replace-pixels/🦀️.rs:50","from":"🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json","to":"🧪️tests/🎯️direct-behavior-679189/🦠️mutation/🔣️.json"},{"kind":"include","source":"🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🌳️replace-huffman-table/🦀️.rs:69","from":"🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json","to":"🧪️tests/🎯️direct-behavior-751dfa/🦠️mutation/🔣️.json"},{"kind":"include","source":"🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🪓️remove-huffman-table/🦀️.rs:57","from":"🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json","to":"🧪️tests/🎯️direct-behavior-981c06/🦠️mutation/🔣️.json"},{"kind":"include","source":"🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🪪️change-jfif-header/🦀️.rs:69","from":"🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json","to":"🧪️tests/🎯️direct-behavior-cd6750/🦠️mutation/🔣️.json"},{"kind":"include","source":"🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🎚️change-re-encode-quality/🦀️.rs:50","from":"🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json","to":"🧪️tests/🎯️direct-behavior-36d334/🦠️mutation/🔣️.json"}]}
+```
+
+The three native-openable-provider `include_str!(concat!(env!("CARGO_MANIFEST_DIR"), ...))` inputs resolve to their current registry fixtures; they are not part of this repair. Existing PDF macro includes use the unchanged `🔄️round-trips-the-concrete-inverse` coordinates and also resolve. The already-repaired Binary target uses `🪡️rewrites-the-two-46c073`; it is not in the missing map.
+
+## GIS/VCS Compiled Stdio Dependency Commitment (2026-09-08, Source-only)
+
+### P0: the two existing generation encoders disagree once a dependency exists
+
+The Rust authority already commits package dependencies into the trusted profile
+generation: it sorts `BundlePackage.dependencies`, frames their count, then
+frames each concrete `{ plugin_id, package_id, version }`
+([`trusted-catalog:946`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:946>)). The TypeScript-side
+encoder instead emits `trustedBootstrapCount(0)` for every selected package
+([`Hub script:7515`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:7515>)). It therefore hashes a different generation as soon as
+GIS or VCS declares Stdio. This is a real publication blocker, not an
+optional fixture adjustment.
+
+The compiled GIS and VCS roots already depend on Stdio in Cargo with
+`full-artifact-catalog` ([`GIS Cargo:81`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/Cargo.toml:81>),
+[`VCS Cargo:36`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/Cargo.toml:36>)), but neither guest
+manifest builder has a dependency declaration
+([`GIS root:27`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🦀️.rs:27>),
+[`VCS root:29`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🌿️vcs/🦀️.rs:29>)). Add exactly one direct dependency to each:
+
+```rust
+.depends_on("stdio", VersionReq::Exact(Version::new(0, 1, 0)))
+```
+
+Import `Version` and `VersionReq` from the framework manifest API. `Any`, a
+range, and Cargo's crate version are insufficient: only `Exact` serializes
+the compiled contract as `=0.1.0` and lets the Hub bind it to the selected
+concrete Stdio package. This is a descriptor/guest claim, not a replacement
+for the Cargo dependency.
+
+### One receipt-derived projection must drive bundle, generation, and rotation
+
+Extend the TypeScript descriptor projection next to
+`trustedBootstrapDescriptorExecutionProtocol`
+([`Hub script:7481`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:7481>)) so it decodes the same canonical Pack bytes
+already receipt-hashed and returns a bounded immutable claim:
+
+```text
+{ executionProtocol, directDependencies: [{ pluginId, versionReq }] }
+```
+
+`materializeTrustedStdioGisBundle` must retain that projection from each
+receipt-verified descriptor, wait until both identities are known, resolve
+each direct claim to a selected `BundleIdentity`, and then produce the same
+dependency lists for all of:
+
+1. `BundlePackage.dependencies` written by `file()` (currently always `[]` at
+   [`Hub script:8763`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:8763>));
+2. the `packageSummary` hashed by
+   `trustedBootstrapProfileEncoding`; and
+3. the verification receipt/final selected-leaf fence, so it rejects a
+   descriptor whose dependency claims differ from its retained bundle record.
+
+For `local-stdio-gis-open-v1`, require exactly `gis ->
+{stdio, semio:stdio, 0.1.0}` with raw `versionReq == "=0.1.0"`, and require
+Stdio to have no direct dependency. Reject missing, duplicate, self, unknown,
+foreign-package, non-exact, and wrong-concrete-version claims before a
+candidate becomes current. The parser must preserve Pack-decoded strings;
+it must not infer this relationship from Cargo, source paths, JSON object
+order, or the profile name.
+
+The TypeScript encoder must then sort resolved identities by raw UTF-8 bytes
+(the Rust `String` order), emit their actual count, and frame the exact three
+identity fields using the existing count/field helpers. `localeCompare` is
+not an equivalent ordering primitive. The existing Rust loader only asks
+whether `VersionReq::matches`; the special local profile validation must
+also enforce the exact dependency vector, otherwise `^0.1.0` still passes
+descriptor validation.
+
+`rotateTrustedStdioGisCatalog` must carry each retained
+`record.dependencies` into its recomputed summary and re-read/compare the
+copied descriptor claim before recomputing the generation
+([`Hub script:9144`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:9144>),
+[`Hub script:9214`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:9214>)). Otherwise a rotation creates a
+Rust/TS generation divergence or advances a descriptor/bundle disagreement.
+
+### Exact fixture and law adjustments
+
+- Update the local bootstrap schema and fixture package summaries to include
+  `dependencies`; the GIS record has the exact Stdio identity and Stdio has
+  `[]` ([`bootstrap fixture`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧬️stdio-gis-bootstrap/🔣️.json>)). Recompute
+  its generation after the framing fix.
+- Make synthetic descriptors that call themselves GIS truthful. In particular,
+  the Hub producer fixture at [`Hub script:8083`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:8083>) currently declares no dependency.
+  Either encode the exact Stdio claim or rename it to a neutral fixture
+  package; do not retain a false GIS positive.
+- Change `local_stdio_gis_profile_bundle` and its descriptor bytes in the
+  Rust trusted-catalog tests from two independent packages to GIS→Stdio
+  ([`trusted-catalog:1541`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:1541>)). The actual-GIS `prepared_gis_binding_fixture` must become a
+  genuine two-package closure too—one cannot only alter its bundle vector
+  because descriptor/codec/provider validation requires Stdio's component,
+  descriptor, C contribution, and 26 codec bindings.
+- Add a guest descriptor law for each GIS and VCS component that asserts
+  precisely one `stdio` `=0.1.0` dependency. Keep generic `*` dependency
+  fixtures unchanged; they test the generic manifest grammar, not this
+  compiled relation.
+- Add hostile profile rows for missing GIS→Stdio, non-exact requirement,
+  wrong concrete version/package, duplicate, and descriptor-vs-bundle
+  disagreement. Each must prove no current replacement.
+- The generic bundle schema should also be reconciled while touching this
+  surface: its strict `package` shape currently lacks the Rust-required
+  `executionProtocol` property/required entry. That is a pre-existing schema
+  drift, separate from dependencies, but otherwise an AJV bundle cannot
+  express the record Rust accepts.
+
+### Dependency-first preview is not public partial exposure
+
+The current loader's behavior is sound provided providers obey their existing
+pure-preview port. `load_selected` first builds a local catalog and staged
+codec map, then preflights and atomically registers them
+([`trusted-catalog:606`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:606>)). Topological order correctly previews
+Stdio before GIS after this change; a malformed GIS descriptor can therefore
+leave a *local* successful Stdio preview, but no codec/factory is registered
+in `os_store`. The established no-partial-closure law at
+[`trusted-catalog:1972`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:1972>) already tests the public boundary.
+
+Extend it with three exact rows rather than adding a premature global
+two-pass requirement: malformed Stdio commitment produces no provider call;
+malformed GIS commitment may call Stdio but never GIS and registers neither;
+Stdio preview followed by GIS provider failure registers neither. This
+preserves dependency-first validation and demonstrates that partial preview
+values cannot escape before every selected descriptor and provider passes.
+
+## Two-Author GIS Map/MCP Process Harness Coverage (2026-09-08, Source-only Audit)
+
+The executable process journey is
+`GisMapProposalCheckScript --process`
+([`Hub script:10410`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:10410>)). It first runs its named native Hub laws, builds the
+Hub and MCP child, then calls `proveGisMapProposalProcess`
+([`Hub script:10457`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:10457>)). This audit did not receive a terminal receipt from that
+gate, so none of its runtime assertions are upgraded to observed evidence
+here. The following classification is about the real path that *will* be
+exercised when that registered mode completes.
+
+| Boundary | Actual process link | What it proves / does not prove |
+| --- | --- | --- |
+| Authentication and two users | The journey starts one local Hub with two distinct native/MCP profiles, creates a private space through the production directory command, promotes B via `upsert-member`, issues distinct credentials, and starts two credential-FD MCP children ([`Hub script:10184`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:10184>), [`Hub script:10200`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:10200>), [`Hub script:9998`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:9998>)). | Real HTTP/auth/MCP-child plumbing on a run; not a browser/Shell identity. |
+| Trusted current | The same process-owned `dataRoot` materializes a Stdio+GIS candidate, validates/publishes it, checks current generation and exact GIS package/protocol, and gives that root to `startLocalHub` ([`Hub script:10150`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:10150>)). | It is the right same-root selection seam. Its new compiled-dependency commitment is only demonstrated after the producer and process gate produce a terminal receipt. |
+| Initial document/checkpoint | `announce-document`, open-plan/socket-grant, and a normal document socket persist an actual command and public checkpoint pair. | The initial Pack/SPR/diff/inverse are prebuilt `checkpoint-publication-process-fixture` bytes and the mutation is a raw `WireMutationEnvelope` ([`Hub script:1155`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:1155>), [`Hub script:1210`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:1210>)). This is real authorized persistence, not a GIS guest action creating a Map. |
+| MCP document access | Each child calls `artifact_open`, then `resources/read`; the latter bounds, hashes, and wipes the returned canonical pair ([`Hub script:10016`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:10016>), [`Hub script:10048`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:10048>)). | This proves scoped pair projection, not `plugin_load_document_pack`, a guest Map instance, UiPatch, renderer ACK, or visible scene. It never decodes the returned pair into a GIS region assertion. |
+| Inference and private ownership | A and B each submit their own job; B is denied reading, cancelling, or approving A's job, while B's own job is admitted. A's server-stamped CreateRegion offer is approved and its public checkpoint/rebootstrap controls are observed ([`Hub script:10230`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:10230>)). | This is the real Hub inference/approval route and correctly does **not** forbid B's own job. It proves checkpoint/frontier/pair change, not that a guest renderer displays the new region. |
+| Second peer | Two independently authenticated normal document sockets each receive equal `RebootstrapRequired` controls; both MCP children re-read equal refreshed pairs ([`Hub script:10215`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:10215>), [`Hub script:10282`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:10282>)). | Genuine two-peer socket/pair convergence on a run. It is not two peer *scenes*: no browser worker/Shell or `SurfaceVisible`/patch-ACK witness appears. |
+| Undo | A invokes the special durable approval-undo HTTP route; B is denied; stale A undo is refused; owner undo/replay produce exact second socket/pair convergence ([`Hub script:10310`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:10310>)). | Real Hub durable approval undo. It bypasses the mounted-Shell Invocation/ActionAdapter/guest-history path, so it is not evidence for ordinary UI/guest undo. |
+| Cancellation | The selected native-law list includes retained cancellation/close/revocation laws ([`Hub script:10417`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:10417>)). | The live process never POSTs cancel or pauses an in-flight job. Its receipt explicitly declares `no-in-flight-cancellation` ([`Hub script:10384`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:10384>)). The collaboration fixture's `cancel-separate-owner-job` phase is consequently a specification, not a process observation. |
+
+The collaboration JSON is expressly a source-only acceptance contract
+([`Hub script:7905`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:7905>)). Its required scene and ordinary-undo phases must not be
+used to infer that the MCP process completed them. The process's own terminal
+log says the same thing: no Shell scene, WGPU render, durable collaborative
+redo, or in-flight cancellation.
+
+### Smallest coherent execution sequence
+
+No composition of current independent gates proves the requested end-to-end
+experience: the retained-browser gate is a closed actor description proof,
+and the two-author process uses its own isolated data root and no browser
+worker. The closest existing process command is the registered script mode
+above; it internally includes trusted materialization/current selection and
+is the correct base to extend. It needs a first-class launch entry equivalent
+to:
+
+```text
+bun nx run os-hub:gis-map-proposal-check -- --process
+```
+
+with a ticket-owned `SEMIO_TEST_ARTIFACT_DIR`; unlike the separate
+`trusted-stdio-gis-bundle-process-check` launch, it drives the two authors.
+I found the latter in [`.vscode/launch.json:7394`](</Users/ueli/Documents/semio/.vscode/launch.json:7394>) but no corresponding launch entry for
+`gis-map-proposal-check`; script registration alone is not an ergonomic
+acceptance target.
+
+The minimal *new* permanent composition must remain one process/data root
+and reuse `proveGisMapProposalProcess` through its initial current, space,
+and approval stages. Replace only the MCP-pair observation portions with two
+real authenticated Shell/browser owners that:
+
+1. consume each returned plan/grant and transfer the pair to the actual
+   worker; await the exact current `SurfaceVisible`/UiPatch receipt for the
+   selected GIS editor surface;
+2. assert two equal initial rendered GIS scenes before either inference job;
+3. submit A and B jobs as today, but pause B at the actual retained GIS
+   callback, have **B** cancel B's own job, wait for `cancelled`, then let A
+   complete/approve its independent job;
+4. use the resulting controls to acquire fresh plan/grant/pair ownership in
+   both shells and assert a visible CreateRegion scene from the genuine guest
+   Map, not a controlled scene; and
+5. invoke A's ordinary mounted action/history undo, wait for both later
+   rendered scenes to lose that region, while B's direct A-target undo
+   denial remains intact.
+
+Each step must retain the one initially published `generationId` and assert
+it again on the later plans. This is smaller and sounder than gluing a
+separate browser check to the existing process receipts: separate data roots
+cannot prove same-generation selection, and raw pair equality cannot prove a
+guest load or scene.
+
+### Concrete anti-false-positive assertions for that gate
+
+- Preserve the current pair hash/frontier checks, but add a rendered
+  semantic Map witness (`regionId == inference-<A job>`) and its absence after
+  undo. A changed Pack hash alone accepts an unrelated change.
+- Keep B's private A-job denials and B's own-job admission exactly as today;
+  cancellation must be B→B, not an invalid cross-owner operation.
+- Refuse success if either Shell skips a fresh plan/socket grant after a
+  rebootstrap control, if any UiPatch remains unacknowledged, or if either
+  scene came from a test actor. The fixture already names these prohibited
+  substitutes.
+- Retain the present child byte-clean/teardown fence and extend it to both
+  browser workers/surfaces. Do not treat MCP exit and pair-buffer wiping as
+  a renderer-owner teardown proof.
+
+## Compiled Stdio Dependency Helper Audit (2026-09-08, Source-only)
+
+The helper split is structurally sound for the closed local profile:
+`trustedBootstrapResolveDependencies` only admits the sorted concrete
+`[gis/semio:gis, stdio/semio:stdio]` closure, binds the descriptor owner to
+one selected identity, requires GIS's single exact Stdio claim, and requires
+Stdio's empty list ([`Hub script:7531`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:7531>)). The use of `Buffer.compare` over UTF-8
+encodings is the right ordering primitive for the Rust `BundleIdentity`
+derivation; the non-BMP ordering row is useful. Dependency generation framing
+also has the correct native shape—big-endian u32 count followed by three
+u64-length fields per sorted identity
+([`Hub script:7542`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:7542>),
+[`trusted-catalog:946`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:946>)).
+
+The source moved while this audit was running: materialization now captures
+these claims from the receipt-hashed descriptor and projects resolved
+dependencies into both package records and the generation summary
+([`Hub script:8844`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:8844>),
+[`Hub script:8891`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:8891>)). The final generation fence now rereads each descriptor and compares its
+resolved dependency encoding to the retained receipt
+([`Hub script:8452`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:8452>),
+[`Hub script:8521`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:8521>)). This is stronger than the initial unwired state stated in the assignment;
+the following defects remain in the helper/final-fence input boundary.
+
+### P0: canonical Pack and duplicate-field validation is still lost before claim projection
+
+`trustedBootstrapDescriptorClaims` calls `decodePackValue` and then projects
+through `packValueToExactJson` ([`Hub script:7514`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:7514>)). The TS decoder stores map
+entries in a JavaScript object; a duplicate key overwrites the earlier value
+([`OS Pack decoder:1423`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:1423>)). It also does not require the decoded position to reach EOF
+([`OS Pack decoder:1468`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:1468>)). Native catalog admission instead recursively rejects duplicate
+object fields and demands canonical re-encoding of the raw descriptor
+([`trusted-catalog:1296`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:1296>)).
+
+Before this helper is relied on at materialization or publication, decode once
+to the raw Pack value and require
+`encodePackValue(decoded)` byte-for-byte equals the supplied descriptor bytes
+before JSON projection. This single check rejects trailing data,
+noncanonical map/symbol representation, duplicate keys erased by the TS map,
+and malformed UTF-8 replacement by the non-fatal `TextDecoder`; it mirrors
+the native canonicality boundary without adding a second descriptor schema.
+Do not merely add a post-projection object-key test—it cannot recover a
+duplicate already overwritten by the decoder.
+
+Add literal raw-PACK hostile rows for a duplicate descriptor/manifest key and
+one trailing byte; `encodePackValue` alone cannot generate the duplicate row.
+Both must refuse before dependency resolution and leave no bundle/current
+candidate. The current `duplicate` case only duplicates a dependency array
+member, which is valuable but does not cover this parser loss.
+
+### P1: native grammar is narrower/different from the helper's stated parity
+
+`trustedBootstrapVersion` calls itself a native canonical u64 triple but
+rejects leading-zero segments and any surrounding whitespace
+([`Hub script:7484`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:7484>)). Native `Version::parse` currently splits then delegates each
+segment directly to `str::parse::<u64>()`, with no canonical-spelling check
+([`manifest:3804`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🛂️manifest/🦀️.rs:3804>)); `VersionReq::parse` also trims the outer requirement
+([`manifest:3862`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🛂️manifest/🦀️.rs:3862>)). Thus the fixture's `=00.1.0` rejection is a desirable strict
+local-profile policy, but it is not presently a native grammar-parity claim.
+
+Choose one contract before native/TS equivalence is claimed:
+
+1. tighten `Version::parse` itself to reject noncanonical numeric spelling
+   (and state whether whitespace is forbidden), then add shared Rust/TS rows;
+   or
+2. rename the TS rule `strict local profile version`, retain the native
+   generic grammar, and make its strictness explicit in the local
+   GIS→Stdio profile validator.
+
+The latter is minimally invasive, but neither path should call the present
+two behaviors identical. Rejecting `*`, `^`, `~`, and `>=` in the helper is
+correct for this *exact* profile and is not a defect in the generic five-form
+`VersionReq` grammar.
+
+For identity fields, native `valid_identity` requires byte length plus
+`trim() == value`, whereas the TS helper only rejects controls; and JS can
+hold a lone UTF-16 surrogate that no Rust `String` decoded from Pack can hold.
+The fixed GIS/Stdio literals make this nonexploitable today, but a shared
+identity helper should additionally require `value.trim() === value` and
+`Buffer.from(value, "utf8").toString("utf8") === value`. Add an unpaired-
+surrogate hostile in the ordering corpus. Preserve the valid paired astral
+row.
+
+### Corpus gaps that can hide a helper regression
+
+The AJV fixture fixes row *count* at 19 but neither schema nor runner asserts
+the exact ordered set of row names; a duplicate benign row could replace a
+missing hostile ([`compiled-dependencies schema`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🔗️compiled-dependencies/🧬️.schema.json>),
+[`fixture runner:8212`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:8212>)). Assert the full change-name vector before exercising it.
+Add the following bounded rows:
+
+- descriptor `packageId`, manifest `pluginId`, and manifest `version` each
+  disagree with its selected owner;
+- missing/unsupported `executionProtocol`;
+- selected concrete Stdio-version drift (separate from GIS's VersionReq
+  drift); and
+- ordering ties that share `pluginId` but differ in `packageId`, then share
+  both and differ in raw version spelling. The current UTF-8 test only
+  exercises the first tuple field.
+
+The runner's independent `DataView` framing oracle is useful, but it frames
+the helper's resolved output, not a Rust-produced generation test vector. Add
+one native-owned fixture/known byte vector containing GIS's one dependency
+and Stdio's empty vector, consumed byte-for-byte by this TS corpus. That
+catches a future Rust framing change without requiring a build in the TS
+gate.
+
+Finally, `trustedBootstrapDescriptorClaims` intentionally projects only
+identity/protocol/dependencies; it does not close the full descriptor or its
+manifest. That is safe only because the native loader remains the authoritative
+full `PackageDescriptor` decoder. Do not represent the helper as a complete
+descriptor validator, and do not let a successfully projected claim bypass
+that native load/preview fence.
+
+## Literal Raw-Pack Dependency Hostiles And Native Framing Goldens (2026-09-08, Read-only)
+
+The following four literal values are for the neutral GIS descriptor used by
+the compiled-dependencies corpus:
+
+```json
+{"packageId":"semio:gis","manifest":{"pluginId":"gis","version":"0.1.0","dependencies":[{"pluginId":"stdio","version":"=0.1.0"}]},"executionProtocol":{"appChannelVersion":14}}
+```
+
+They use the real JSON-bridge Pack framing and tags from
+[`OS Pack encoder`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:1448>). The first is canonical. The other three deliberately exploit the
+current decoder's object assignment and lack of final-position check. A
+bounded read-only Bun evaluation of the existing encoder/decoder confirmed
+that each hostile currently decodes to the **same** JSON object above and
+that only the canonical bytes survive `encodePackValue(decodePackValue(bytes))`
+byte-for-byte.
+
+```json
+[
+  {
+    "name":"canonical-gis-descriptor",
+    "acceptedNow":true,
+    "hex":"0505302e312e30063d302e312e30036769730973656d696f3a67697305737464696f01011110030711657865637574696f6e50726f746f636f6c100107116170704368616e6e656c56657273696f6e050000000000002c4007086d616e69666573741003070c646570656e64656e636965730c0110020708706c7567696e49640604070776657273696f6e06010708706c7567696e49640602070776657273696f6e060007097061636b61676549640603"
+  },
+  {
+    "name":"duplicate-top-level-packageId-earlier-null-overwritten",
+    "acceptedNow":true,
+    "hex":"0505302e312e30063d302e312e30036769730973656d696f3a67697305737464696f01011110040711657865637574696f6e50726f746f636f6c100107116170704368616e6e656c56657273696f6e050000000000002c4007086d616e69666573741003070c646570656e64656e636965730c0110020708706c7567696e49640604070776657273696f6e06010708706c7567696e49640602070776657273696f6e060007097061636b61676549641207097061636b61676549640603"
+  },
+  {
+    "name":"duplicate-manifest-earlier-null-overwritten",
+    "acceptedNow":true,
+    "hex":"0505302e312e30063d302e312e30036769730973656d696f3a67697305737464696f01011110040711657865637574696f6e50726f746f636f6c100107116170704368616e6e656c56657273696f6e050000000000002c4007086d616e69666573741207086d616e69666573741003070c646570656e64656e636965730c0110020708706c7567696e49640604070776657273696f6e06010708706c7567696e49640602070776657273696f6e060007097061636b61676549640603"
+  },
+  {
+    "name":"canonical-descriptor-with-trailing-zero",
+    "acceptedNow":true,
+    "hex":"0505302e312e30063d302e312e30036769730973656d696f3a67697305737464696f01011110030711657865637574696f6e50726f746f636f6c100107116170704368616e6e656c56657273696f6e050000000000002c4007086d616e69666573741003070c646570656e64656e636965730c0110020708706c7567696e49640604070776657273696f6e06010708706c7567696e49640602070776657273696f6e060007097061636b6167654964060300"
+  }
+]
+```
+
+The duplicate rows raise the root map count from `03` to `04`, insert an
+earlier `null` entry, then preserve the canonical later entry. Thus the
+current map decoder overwrites the hostile value with the canonical value;
+they are not merely malformed rows that fail at an unrelated semantic check.
+Native descriptor loading must reject both before claim resolution. The
+proposed raw re-encode equality rejects all three hostiles without a bespoke
+duplicate scanner.
+
+The following dependency encodings are **source-derived only** from
+[`trusted_profile_generation`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:917>) and
+[`append_document_open_catalog_field`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:890>): big-endian `u32` count followed by the three `u64`-length-prefixed UTF-8 identity fields. A native law must consume these literals before they become a runtime qualification.
+
+```json
+[
+  {
+    "name":"gis-direct-dependency-stdio",
+    "identities":[{"pluginId":"stdio","packageId":"semio:stdio","version":"0.1.0"}],
+    "hex":"000000010000000000000005737464696f000000000000000b73656d696f3a737464696f0000000000000005302e312e30"
+  },
+  {
+    "name":"stdio-direct-dependencies-empty",
+    "identities":[],
+    "hex":"00000000"
+  }
+]
+```
+
+These encode the per-package resolved direct-dependency vector, not the
+outer selected-closure digest or complete profile generation preimage. They
+are therefore the exact golden values for
+`trustedBootstrapDependencyEncoding`, not a substitute for the catalog's
+complete generation law.
+
+## Native Linked-Provider Fixture Migration For The Compiled Stdio Contract (2026-09-08, Read-only)
+
+The real GIS and VCS plugin roots are already contract-correct: both call
+`native_artifact_catalog_dependency()` and
+`native_artifact_catalog_contribution()` before `.try_build()`
+([`GIS plugin:27`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🦀️.rs:27>),
+[`VCS plugin:29`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🌿️vcs/🦀️.rs:29>)). Their emitted descriptors therefore contain one exact
+`stdio` VersionReq and the exact `stdio.artifact-catalog.v1` topic. The
+synthetic Hub fixtures below are stale, however, and will correctly fail if
+`NativeCodecProviderSetV1` starts requiring that same descriptor commitment.
+
+### Required GIS fixture migration
+
+`prepared_gis_binding_fixture` currently asserts that the real GIS descriptor
+has no dependencies, constructs only GIS in `frozen-gis-test`, and declares
+an empty bundle dependency vector
+([`trusted-catalog:1777`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:1777>),
+[`trusted-catalog:1829`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:1829>)). Replace that assertion and package shape—not the real GIS
+descriptor—with a two-package fixture:
+
+1. Retain the emitted GIS descriptor after resealing its synthetic component
+   SHA-256/BLAKE3 and descriptor self-hash. Its manifest must remain the
+   emitted sole exact `stdio =<CARGO_PKG_VERSION>` dependency and retain the
+   emitted catalog topic. Put the matching complete `BundleIdentity`
+   `{stdio, semio:stdio, same version}` in GIS's bundle `dependencies`.
+2. Materialize a second, headless Stdio record with distinct synthetic
+   component/descriptor paths and byte digests, no browser actor and no open
+   target. Its descriptor needs the exact Stdio package identity/version,
+   all 26 rows from `native_codec_factory_receipts()`,
+   `native_codec_artifact_kinds()`, and
+   `native_artifact_catalog_contribution()`. The existing
+   `native_openable_stdio_bundle` construction already does exactly this
+   descriptor projection with `Plugin<NoPluginApp>`
+   ([`Hub bin:8129`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:8129>)); reuse/extract its *headless descriptor* portion rather than call
+   `semio_s_plugin_stdio::plugin()` and drag the full app assembly into a
+   catalog-loader fixture.
+3. Make `frozen-gis-test.selectedClosure` contain GIS then Stdio and retain
+   GIS as the sole open target. `refresh_profile_generation` must run only
+   after both package records and their final descriptor hashes exist.
+   The loader will nevertheless retain packages in dependency-first order
+   (Stdio then GIS), because `validate_bundle` topologically sorts the
+   closure ([`trusted-catalog:1182`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:1182>)). Change the existing
+   `catalog.packages()[0]` retained-byte assertion to locate GIS by
+   `plugin_id()`; otherwise it silently starts inspecting Stdio.
+
+The fixture must use the exact current values, not stale literals:
+
+- version: GIS descriptor's `manifest.version`, with Stdio descriptor and
+  bundle record required to equal the public
+  `native_artifact_catalog_dependency()` exact version;
+- GIS codecs: the two values projected from
+  `semio_s_plugin_gis::native_codecs::native_codec_factory_receipts()`;
+- Stdio codecs: all 26 values projected from
+  `semio_s_plugin_stdio::registry::native_codec_factory_receipts()`;
+- semantic topic: the actual `native_artifact_catalog_contribution()` value,
+  never an independently serialized copy; and
+- component and descriptor hashes: recompute after each synthetic component
+  substitution and descriptor-self-hash reseal. The headless Stdio component
+  is intentionally not executed and must be named as such in the law.
+
+Use one private `#[cfg(any(test, feature = "test-support"))]` helper in the
+trusted-catalog module for the common synthetic-component/reseal/record work,
+so both the library test fixture and the binary-visible test-support builder
+share the same two-package construction. The present
+`verified_gis_map_test_profile` independently creates the same stale
+single-GIS closure ([`test-support:81`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🏗️test-support/🦀️.rs:81>),
+[`test-support:142`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🏗️test-support/🦀️.rs:142>)); it must consume that helper in the same change. Leaving
+it single-package would break the actual Hub binary GIS runtime laws even if
+the library fixture is repaired.
+
+### VCS and existing neutral selection fixtures
+
+There is no VCS `TrustedCatalogLoader` fixture today. The `🌿️vcs-v1` and
+`🌍️gis-v1` corpora drive the inherent three-argument
+`NativeCodecProviderSetV1::preview`, which intentionally has no decoded
+descriptor parameter ([`provider:32`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs:32>)). Do **not** add fake
+descriptor/topic fields to either neutral corpus or claim that they exercise
+the new descriptor gate.
+
+Instead add one descriptor-specific native law through the
+`NativeCodecProviderSourceV1::preview(package, descriptor, context)` port for
+each actual GIS and VCS emitted descriptor. It should prove:
+
+- exact emitted descriptor succeeds only with its exact selected
+  `NativeCodecProviderPackageV1` identity;
+- missing, duplicate, `^`/wrong-version, foreign Stdio dependency and
+  missing/duplicate/foreign-version catalog topic all refuse before the
+  provider returns bindings; and
+- the law performs no catalog load/codec registration. Every rejected row
+  observes no `document_codec` entry. This keeps the existing identity and
+  cancellation rows in `🌍️gis-v1`/`🌿️vcs-v1` generic and still useful.
+
+For a later VCS loader-profile test, use the same two-record construction
+`[vcs → stdio]`, actual one VCS receipt plus all 26 Stdio receipts, and an
+actual VCS descriptor/open target. It is not required merely to validate the
+provider descriptor port, so do not broaden the current GIS binding test
+just to fabricate an unrelated VCS current profile.
+
+### Atomicity laws required with the migration
+
+`verify_selected` processes the topological dependency order and accumulates
+bindings privately; it calls the global registration assembly only after all
+package descriptors and provider previews have completed
+([`trusted-catalog:607`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:607>),
+[`trusted-catalog:797`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:797>)). Add a two-package GIS test whose bad GIS dependency/topic is
+encountered after valid Stdio bytes and its private preview, then assert the
+two GIS plus all 26 Stdio schemas are absent. Run that refusal before any
+successful linked-provider load in the same test process; the codec registry
+is process-global and permits an identical existing codec on later loads.
+The positive row must then assert 28 verified codecs, retained package order
+`[stdio, gis]`, and the sole GIS open selection. This proves dependency-first
+loading without accidentally certifying a public partial Stdio registration.
+
+Keep `prepared_fixture`, `👥️two-package`, and the direct native selection
+corpora unchanged: they are neutral loader/provider contracts whose
+`fixture.base` dependency is deliberately not compiled Stdio. Likewise, the
+existing neutral `🧬️stdio-gis-bootstrap` fixture already models GIS's bundle
+dependency structurally ([`fixture:16`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧬️stdio-gis-bootstrap/🔣️.json:16>)); it is not a
+descriptor-topic oracle and should not be redefined as one.
+
+## Compiled Dependency Wiring Re-audit (2026-09-08, Read-only)
+
+The current production path closes the former source-only dependency receipt
+gap; I found no new publication acceptance bypass in this delta.
+
+- The TS claim reader first decodes, then requires byte-for-byte canonical
+  re-encoding **before** it projects fields
+  ([`script.ts:7613`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:7613>)).
+  Thus the three duplicate/trailing raw cases cannot become a last-key-wins
+  identity/dependency claim. Both initial materialization and the final
+  generation fence call this reader; the fence compares the resolved,
+  canonical dependency encoding to the retained receipt
+  ([`script.ts:8628`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:8628>)).
+- Rotation repeats the same descriptor claim, exact direct-dependency framing,
+  and execution-protocol comparison before it rewrites a staged record
+  ([`script.ts:9472`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:9472>)).
+  Profile-generation framing includes every package dependency vector
+  ([`script.ts:7720`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:7720>),
+  [`trusted-catalog.rs:930`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:930>)).
+  The Rust and TS encodings agree on a big-endian `u32` count followed by
+  sorted identity tuples with three big-endian `u64` byte-length fields.
+- The actual publication command calls `verify_selected` before replacement,
+  with the linked native provider
+  ([`trusted-catalog.rs:242`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:242>),
+  [`trusted-catalog.rs:271`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:271>)).
+  Therefore the TS stage fence need not duplicate the Stdio semantic-topic
+  decoder: `NativeCodecProviderSetV1::preview` rejects a GIS/VCS descriptor
+  unless it has the sole exact Stdio dependency and the exact Stdio catalog
+  topic, before private bindings can progress toward registration
+  ([`native-openable-provider.rs:45`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs:45>)).
+- The local profile is now genuinely closed: selected identities are
+  GIS+Stdio; GIS has exactly the selected Stdio dependency; Stdio has none;
+  counts remain 2, 26, and one Map target
+  ([`trusted-catalog.rs:1152`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:1152>)).
+  The shared headless Stdio fixture now constructs the same topic and 26
+  receipt records without constructing a Stdio application
+  ([`trusted-catalog.rs:1370`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:1370>)),
+  and both GIS fixture owners consume it.
+
+### Remaining P1 test seams (not a source acceptance defect)
+
+1. `nativeCases` is currently asserted only by the TypeScript source fixture
+   as a shape predicate ([`script.ts:8314`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:8314>)).
+   Rust consumes the two `encodingCases`, but no current native law feeds all
+   nine rows through the descriptor-aware
+   `NativeCodecProviderSourceV1::preview` port. Add the planned GIS/VCS
+   descriptor-law with real emitted descriptors, and use the full
+   `TrustedCatalogLoader` only for a separate two-package no-partial test.
+   The inherent three-argument `NativeCodecProviderSetV1::preview` cannot
+   cover this because it deliberately has no descriptor.
+2. The four raw Pack cases are intentionally a minimal claim projection, not
+   full `PackageDescriptor` bytes. They prove the TS pre-projection canonical
+   fence but cannot exercise Rust `decode_package_descriptor`. The native
+   descriptor law should derive duplicate-top-level, duplicate-manifest, and
+   trailing-byte mutations from one complete emitted GIS descriptor, require
+   Rust rejection before provider bindings, and observe no codec publication.
+   This supplements—not replaces—the current raw claim corpus.
+
+No native execution is claimed here.
+
+## One-Shell GIS Approval, Rebootstrap, and Undo Boundary (2026-09-08, Read-only)
+
+### P0: a durable approval undo is parsed and then lost
+
+The ordinary authenticated Hub undo capability already exists. An approval
+receipt contains the committed `undo` locator
+([`directory schema:1657`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts:1657>)), and the strict parser validates both
+`targetId` and `expectedCurrent`
+([`directory schema:2061`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts:2061>)). The Hub exposes the owner-authenticated,
+idempotent route at
+[`bin.rs:7543`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/🚀️bin.rs:7543>) and server-side replay keys undo by
+`targetId` plus the client idempotency key
+([`runtime.rs:3444`](</Users/ueli/Documents/semio/🌎️hub/💡️inference/🏃️runtime/🦀️.rs:3444>)).
+
+The worker does not retain that capability. `InferenceOperationV1` has no
+approval receipt or undo-owner field
+([`backbone-worker.ts:3611`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:3611>)); after parsing the receipt it reduces a status that intentionally
+does not contain `undo`, then immediately retires the operation
+([`backbone-worker.ts:3866`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:3866>)). The broker whitelist excludes `/approval-undos`
+([`backbone-worker.ts:3662`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:3662>)), and the wire dispatcher has no `inference-undo` request
+([`backbone-worker.ts:4260`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4260>). Therefore an approval can be durably committed yet
+cannot be reached by either the history button or any retry after a lost
+browser response.
+
+The current history UI sends the unqualified guest action `"undo"`
+([`ShellHost:6428`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:6428>)), which falls through to
+`plugin.handleAction` and applies that action's local `historyPatch`
+([`ShellHost:4533`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:4533>). It cannot reconstruct the Hub's
+server-retained inverse; this is not an alternate transport for the approval
+undo endpoint.
+
+**Smallest coherent owner and arbitration.** Add a worker-private,
+single-capacity `GisMapApprovalUndoOwnerV1` separate from the retired
+inference polling port. Construct it only after an `applied` receipt whose
+`jobId`/`proposalHash` agree with the offered port and retain:
+
+- exact Hub scope, operation epoch, job/mutation/command/proposal hashes;
+- `targetId` and immutable `expectedCurrent` from the receipt;
+- exact document execution-target generation, `clientInstanceId`, and Shell
+  `sessionInstanceId`; and
+- one 32-byte undo idempotency key minted on the first click and retained
+  across an indeterminate browser response.
+
+Add an owner-private `inference-undo` worker request and admit only the
+matching Shell operation/session/target generation. It seals the existing
+undo schema, allows `/approval-undos` in the exact broker whitelist, and
+keeps the owner until a parsed receipt agrees with the target, mutation and
+command. A transport failure must leave the same key and owner available for
+retry; an accepted replay is the terminal proof. Document close, identity
+revocation, and rebootstrap abort/erase the owner before their lease is
+dropped.
+
+Do not overload the public inference status with this authority. Instead let
+the worker publish a bounded readiness correlation (epoch, runtime key and
+the exact mounted session/target generation) after it has installed the
+private owner. In `ShellHost` intercept the ordinary history `undo` only when
+that correlation matches the **current document session**; dispatch
+`inference-undo` then. Otherwise preserve the existing guest `undo` path.
+This makes the familiar Shell button choose the durable GIS undo where it is
+actually applicable without stealing undo from another app/window or exposing
+the locator in UI state.
+
+The relevant isolated edits are the directory wire schema, the worker's
+inference lane, and
+[`host-bootstrap`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🪪️host-bootstrap/🟦️.tsx:149>) plus
+[`ShellHost`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2089>). Keep the Hub route unchanged.
+
+One current unit vector is also stale: its mocked approved receipt lacks the
+now-required `undo` field
+([`backbone-worker.ts:5937`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:5937>)), although the strict decoder requires it. Repairing the
+fixture is necessary before it can prove the new owner path; no execution
+claim is made from this source observation.
+
+### P0: rebootstrap leaves the old inference operation live
+
+`requireArtifactRebootstrap` clears the cold-pair/frontier and closes the
+socket, but it neither aborts `docAbort` nor retires the matching inference
+port ([`backbone-worker.ts:2620`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:2620>)). The comment above the lane says the
+document abort covers rebootstrap, but the actual close-only path does that
+work correctly—abort, retire exact port, then drop the target lease
+([`backbone-worker.ts:4123`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4123>)). Meanwhile `liveInferencePort` continues to
+accept the old operation while the old execution-target lease remains live
+([`backbone-worker.ts:3688`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:3688>)). The Shell discards its actor UI/session on
+`artifact-rebootstrap-required`, but retains its inference owner
+([`ShellHost:1901`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:1901>)). A late approve can thus target
+the obsolete visible generation.
+
+Factor a narrow `invalidateArtifactGeneration` operation: terminate the
+matching inference port and any retained undo owner as
+`inference.lease-unverified`, invalidate/drop the exact target lease, then
+clear the pair and issue the rebootstrap event. The Shell must clear the
+matching owner/correlation upon that event; a later status from the old epoch
+must be ignored. Do not call the normal document-close path, because
+rebootstrap deliberately needs the document runtime to remain available.
+
+### Narrow real scene observation, not canvas inference
+
+The actual UI-patch recipient applies the generation/session/surface-checked
+patch to a real `UiDocumentStore` before it acknowledges it
+([`ShellHost:1794`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:1794>)); that exact store is mounted through
+`InterpretedUiNode` for the live session
+([`ShellHost:7415`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:7415>). `TiledMapHost` consumes its
+`mapFixtureJson` and actually invokes `WasmSession.syncMapJson`
+([`TiledMapHost:899`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧭️TiledMapHost/🟦️.tsx:899>)), but its visible DOM is only a
+surface/canvas and is not a semantic Region witness.
+
+For the dev-only one-Shell process harness, add a one-shot, runner-scoped
+observation after the successful `UiDocumentStore.applyPatch` and its ACK,
+keyed by the full runtime/client/activation/session/surface tuple. Return a
+bounded exact selected tiled-map node (`surfaceId`, UI revision, canonical
+`mapFixtureJson` digest and bytes under the existing message limit). The GIS
+harness—not generic Shell—parses those bytes with the GIS map schema and
+requires the submitted Region id/ring. Then require the matching
+`.semio-tiled-map-host[data-surface-id=...]` to mount. This proves accepted
+Shell state plus the real host handoff without pretending canvas pixels prove
+the Region. A stronger renderer claim needs a new `MapWasmSession` semantic
+readback/witness; `syncMapJson` is write-only today.
+
+### Required deterministic rows
+
+1. Approved receipt installs exactly one private undo owner; first Shell Undo
+   POSTs the exact undo body; a dropped response retries with the same key;
+   matching durable/replayed receipt clears it once.
+2. Undo from a different session, runtime, activation generation, or after
+   rebootstrap sends no request and cannot consume the current owner.
+3. A normal non-GIS session's Undo still calls `plugin.handleAction`; GIS
+   owner arbitration wins only for the exact mounted document.
+4. Pause approval response, issue real rebootstrap, then release it: no
+   retained owner, no approval state/undo readiness for the old generation;
+   a fresh generation can open independently.
+5. In the dev process harness, wait approval → exact patch ACK → selected
+   `UiDocumentStore` map projection contains the expected Region → matching
+   `TiledMapHost` surface mounts → ordinary Shell Undo reaches the Hub undo
+   route and its fresh projected scene no longer contains that Region.
+
+All points in this section are source-audit findings; no native, browser, or
+two-peer execution is claimed.
+
+## Linked Stdio/GIS Atomic Descriptor Law and Descriptor Decode Budget (2026-09-08, Read-only)
+
+### Atomic publication law: source-coherent
+
+The new linked closure law is well placed. `verify_selected` completes all
+selected private provider previews and returns their candidate bindings before
+`load_selected` opens the artifact assembly; only then does it preflight and
+register the aggregate codecs
+([`trusted-catalog.rs:606`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:606>)). Thus a Stdio-private success followed by a GIS
+descriptor/provider denial cannot reach the public document codec registry.
+
+[`linked_stdio_gis_descriptor_failures_never_publish_a_partial_codec_closure`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:1915>) exercises that boundary with the actual linked
+provider and complete descriptors. Each hostile restores the original
+descriptor files and bundle, reseals the altered descriptor file record,
+updates the browser actor descriptor digest where required, recalculates the
+profile generation, and loads through `TrustedCatalogLoader`. The raw
+trailing/duplicate-manifest cases are rejected by the same descriptor decoder
+used by the loader before a provider can record success
+([`trusted-catalog.rs:1937`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:1937>)).
+
+The expected private-preview frontiers are meaningful: malformed/missing
+Stdio commitment yields `[]`; GIS-only catalog/dependency/raw/provider faults
+yield `[stdio]`; only the final exact row reaches `[stdio,gis]`
+([`compiled dependencies fixture`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🔗️compiled-dependencies/🔣️.json:41>)). For every failed row the 26 Stdio plus two GIS known
+public codec signatures are compared to their before snapshot
+([`trusted-catalog.rs:1976`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:1976>). The final exact row asserts the 28-codec, two-package,
+one-open-target closure. I found no acceptance or partial-registration bypass
+in this law.
+
+One optional strengthening, not a blocker to its stated closure proof: its
+snapshot contains all schemas the selected two-package profile is permitted
+to register, but it cannot detect an unrelated rogue schema inserted by a
+hypothetical faulty provider. The production provider requirements and
+preflight are already derived from the selected bundle
+([`trusted-catalog.rs:621`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:621>)), so that would require a separate global-registry enumeration seam
+to assert. Do not weaken the exact selected-closure law waiting for that
+diagnostic enhancement.
+
+### P1: 4 MiB descriptor input does not bound eager Pack expansion
+
+This is a concrete resource-bound gap, not a claim that ordinary generated
+descriptors are malformed. The trusted catalog reads a descriptor under the
+4 MiB raw-file ceiling
+([`trusted-catalog.rs:666`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:666>)), but `decode_package_descriptor` immediately invokes the generic
+containerless `decode_wire_value` before duplicate-field, canonical, or typed
+schema rejection ([`trusted-catalog.rs:1303`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:1303>)). That bridge uses default Pack limits:
+4 GiB `max_total_alloc`, one million symbols and 64 million items
+([`PackLimits:62`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/⚙️codec/🦀️.rs:62>)).
+
+More importantly, the eager record-body decoder does not apply
+`max_total_alloc` at all: it retains every symbol as a `String`
+([`value.rs:2199`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🦀️.rs:2199>)), and every interned use calls `resolve_symref`, which clones the
+entire string ([`value.rs:1438`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🦀️.rs:1438>)). The generic Dsl array/object decoders check only a
+per-container item count and allocate each value before the descriptor
+projection can reject it
+([`value.rs:1676`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🦀️.rs:1676>)). Consequently a raw descriptor under 4 MiB can contain a
+multi-megabyte interned symbol and roughly a million compact references; its
+decoded cloned strings can consume many GiB before the Hub reaches the
+canonical/schema gate.
+
+The minimal sound repair is not merely passing a smaller existing
+`PackLimits`: the eager path presently ignores `max_total_alloc`. Give the
+generic decode context an exact fallible allocation/clone debit (symbol
+storage, string/symref clone, bytes, and collection capacity) and expose a
+bounded `decode_wire_value_with_options` used by the catalog descriptor
+decoder with a catalog-specific aggregate ceiling. Add a hostile complete
+descriptor body with one large interned symbol repeatedly referenced in an
+unknown field; require `ResourceLimit` before `from_dsl_value`, no provider
+preview, and unchanged codec snapshot. This preserves the raw 4 MiB input
+contract while making its retained owned expansion bounded.
+
+Neither the atomic law nor this P1 has a native execution receipt in this
+report.
+
+### Narrow first-party repair seam
+
+Keep all Pack grammar in the existing first-party decoder. The public bridge
+already accepts caller-owned decode options for arbitrary record bodies
+([`os store pack_rt:4954`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:4954>)), but the private one-field value-bridge spec makes it impossible for
+the Hub to use that API without duplicating Pack structure. Add
+`pack_rt::decode_wire_value_with_options(bytes, &PackDecodeOptions)` next to
+the current default wrapper and forward it to that same private spec. Then
+call it from `decode_package_descriptor` with a descriptor-owned option set.
+
+The generic change belongs in the Pack value decoder, not the Hub: extend
+`DecCtx` with a checked materialization budget and debit before every symbol
+allocation, inline-string/byte allocation, symref clone, and collection
+element/capacity reservation. `RetainedRecordBodyCursor` is not a substitute:
+it validates byte-by-byte stream ownership but does not materialize the
+returned `DslValue`, so a second eager decode would recreate the amplification.
+The language-neutral fixture should contain one wire value whose raw bytes fit
+the descriptor ceiling but whose repeated long interned symref exceeds its
+materialization budget, plus a just-under-budget positive. The catalog law
+then proves the hostile gets no private preview or public registry change.
+
+### Descriptor-Aware Native Law Re-audit (source-only)
+
+The subsequent patch supersedes the first P1: the real GIS and VCS emitted
+descriptors are now sent through the trait port, not the identity-only helper,
+for all nine dependency vectors
+([`native-openable-provider.rs:312`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs:312>)).
+The Stdio integration target also decodes each vector through Pack before it
+calls the exact dependency validator
+([`native-openable-provider test:4`](</Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/🧪️tests/📇️native-openable-provider/🦀️.rs:4>)).
+The shared headless Stdio fixture is coherent: it derives its exact version,
+26 receipts, kind inventory, and semantic topic from the same registry APIs
+then uses `Plugin<NoPluginApp>` solely to emit the descriptor
+([`trusted-catalog.rs:1370`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs:1370>)).
+
+Two test-design repairs remain before calling this exhaustive:
+
+1. Add a `foreign-topic-version` consumer row. The implementation rejects a
+   prefixed replacement such as `stdio.artifact-catalog.v2`, but the four
+   current consumer rows cover only exact, missing, duplicate, and a payload
+   `packageVersion` replacement. Mutate the contribution's **topic name** to
+   the v2 value and require refusal. This is distinct from changing the
+   catalog payload version.
+2. Locate the required contribution by its exact topic before cloning or
+   mutating it. The current test uses index zero
+   ([`native-openable-provider.rs:341`](</Users/ueli/Documents/semio/🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs:341>)); a legitimate
+   future GIS/VCS topic preceding the catalog would make the test panic or
+   mutate the wrong commitment. Also snapshot the preexisting
+   `document_codec(schema)` state and assert it is unchanged after each
+   direct preview. An unconditional `None` is order-sensitive because the
+   catalog module's successful real-GIS test can register `gis.map` in the
+   same library-test process.
+
+The pending two-package loader refusal should perform the stronger
+no-publication proof after a valid Stdio private preview, then check all 26
+Stdio plus two GIS codec schemas before any successful linked load in that
+process. It is still source-only until a native receipt exists.

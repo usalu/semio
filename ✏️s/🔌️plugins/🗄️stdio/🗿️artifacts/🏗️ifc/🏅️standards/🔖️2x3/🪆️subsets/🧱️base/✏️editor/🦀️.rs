@@ -80,7 +80,7 @@ impl ArtifactEditor for Ifc2x3AnyEditor {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -112,7 +112,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn editor_and_viewer_share_one_dialect() {
-        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<Ifc2x3AnyEditor, crate::viewer::ifc2x3_any::Ifc2x3AnyViewer>();
+        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<Ifc2x3AnyEditor, crate::viewer::ifc2x3_any::Ifc2x3AnyViewer>().await;
     }
 }
 //#endregion 🧪️Tests

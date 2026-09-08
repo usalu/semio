@@ -176,7 +176,7 @@ impl store::InferredField<Puzzle3dSnapshot> for Puzzle3dFlatCenter {
 mod tests {
     use super::*;
     use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dObject, Puzzle3dVortex};
-    use store::{InferenceCache, InferenceCacheConfig, InferredField};
+    use store::{InferenceCache, InferenceCacheConfig};
 
     //#region 🧸️Fixtures
     fn vortex(id: &str, position: [f64; 3], direction: [f64; 3]) -> Puzzle3dVortex {

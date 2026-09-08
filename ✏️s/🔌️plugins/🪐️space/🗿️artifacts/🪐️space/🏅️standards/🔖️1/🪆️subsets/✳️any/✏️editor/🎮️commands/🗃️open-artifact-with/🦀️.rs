@@ -17,12 +17,14 @@ pub struct OpenArtifactWith {
     pub app_id: String,
 }
 
-pub fn handle(payload: &OpenArtifactWith, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
-    let row = doc.snapshot.artifacts.iter().find(|row| row.id == payload.id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.mutation.target-missing"), format!("artifact `{}` not found", payload.id)))?;
+pub fn handle(payload: &OpenArtifactWith, doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
+    let row = cfg.snapshot.indexed_artifacts.iter().find(|row| row.id == payload.id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.index.target-missing"), format!("indexed artifact `{}` not found", payload.id)))?;
     let artifact_ref = format!("{}@{}/{}", row.dialect.artifact_kind, row.dialect.standard, row.dialect.subset);
     Ok(Emit::effect(Effect::ReplayShellCommand {
         action_id: "os.open-artifact-with".into(),
-        args: Some(pack::json_to_dsl_value(&pack::json!({ "artifactRef": artifact_ref, "documentId": row.id.clone(), "spaceId": doc.snapshot.space_id.clone(), "schema": row.schema.clone(), "role": payload.role.clone(), "pluginId": payload.plugin_id.clone(), "appId": payload.app_id.clone() }))),
+        args: Some(pack::json_to_dsl_value(
+            &pack::json!({ "artifactRef": artifact_ref, "documentId": row.id.clone(), "spaceId": doc.snapshot.space_id.clone(), "schema": row.schema.clone(), "role": payload.role.clone(), "pluginId": payload.plugin_id.clone(), "appId": payload.app_id.clone() }),
+        )),
     }))
 }
 
@@ -30,18 +32,15 @@ pub fn handle(payload: &OpenArtifactWith, doc: &ArtifactView<'_, SSpaceSnapshot>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::space_index::commands::create_artifact;
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
 
     #[semio_framework_async_macros::async_test]
     async fn open_artifact_with_relays_the_explicit_choice() {
-        let mut app = testkit::new_app().await;
-        app.dispatch_typed(SpaceIndexCommand::CreateArtifact(create_artifact::CreateArtifact { name: "First".into(), kind_id: "draw".into(), now_ms: 1, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local"))
-            .await.expect("create artifact");
-        let id = app.snapshot().unwrap().artifacts[0].id.clone();
+        let (mut app, id) = testkit::new_app_with_indexed_artifact().await;
         let result = app
             .dispatch_typed(SpaceIndexCommand::OpenArtifactWith(OpenArtifactWith { id: id.clone(), role: "viewer".into(), plugin_id: "draw".into(), app_id: "draw-play".into() }), &semio_framework_plugin::testkit::meta("local"))
-            .await.expect("open with");
+            .await
+            .expect("open with");
         assert_eq!(result.requested_effects.len(), 1);
         match &result.requested_effects[0] {
             Effect::ReplayShellCommand { action_id, args } => {

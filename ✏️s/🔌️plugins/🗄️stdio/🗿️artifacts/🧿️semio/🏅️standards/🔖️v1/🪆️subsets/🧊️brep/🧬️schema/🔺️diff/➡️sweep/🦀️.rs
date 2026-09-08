@@ -156,7 +156,7 @@ pub fn sweep_along_path(body: &mut Body, profile: FaceId, path: &Wire, rec: &mut
 /// directly (point/tangent closed-form, no `Curve3` needed), sampled at `≥16` stations per turn,
 /// fed through the same rotation-minimizing-frame station chain as [`pipe`]'s general path.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn helical_sweep(body: &mut Body, profile: FaceId, axis_origin: Pnt3, axis_dir: Vec3, radius: f64, pitch: f64, turns: f64, rec: &mut OpRecorder) -> Result<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId, KernelError> {
+pub fn helical_sweep(body: &mut Body, profile: FaceId, (axis_origin, axis_dir): (Pnt3, Vec3), radius: f64, pitch: f64, turns: f64, rec: &mut OpRecorder) -> Result<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::SolidId, KernelError> {
     core::require_positive("helical radius", radius)?;
     if !turns.is_finite() || turns.abs() <= 1e-12 {
         return Err(KernelError::InvalidInput("helical turns must be non-zero".into()));
@@ -505,9 +505,9 @@ mod tests {
         let radius = 2.0;
         let pitch = 1.0;
         let turns = 3.0;
-        let solid = helical_sweep(&mut body, profile, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, radius, pitch, turns, &mut rec).unwrap();
+        let solid = helical_sweep(&mut body, profile, (Pnt3::new(0.0, 0.0, 0.0), Vec3::Z), radius, pitch, turns, &mut rec).unwrap();
         assert!(solid_volume(&body, solid, 1e-2).unwrap() > 0.0);
-        let helix_len = turns * (std::f64::consts::TAU * radius).hypot(pitch);
+        let helix_len = turns * (TAU * radius).hypot(pitch);
         assert!(helix_len > 0.0);
     }
 

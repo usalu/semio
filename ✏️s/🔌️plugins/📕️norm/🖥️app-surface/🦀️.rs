@@ -725,16 +725,8 @@ pub fn build_norm_tool_job<A: NormRetainedEditor>(request: semio_framework_plugi
         generation: request.operation.generation.0,
         canonical_base_revision: request.canonical_base_revision,
     };
-    let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new_with_context(
-        *request.command,
-        request.snapshot,
-        request.config,
-        request.history,
-        request.interaction_state,
-        request.interaction_hover,
-        request.context,
-        operation,
-        request.completion,
+    let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
+        semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion },
         A::command_id,
         NORM_RETAINED_RAW_BYTES,
         1,
@@ -844,14 +836,14 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    fn the_edit_mode_is_the_same_for_every_app() {
+    async fn the_edit_mode_is_the_same_for_every_app() {
         let mode = edit_mode_definition();
         assert_eq!(mode.id, MODE_EDIT);
         assert!(mode.tools.is_empty() && mode.commands.is_empty() && mode.layout_id.is_none());
     }
 
     #[semio_framework_async_macros::async_test]
-    fn a_window_definition_is_a_plain_canvas2d_surface() {
+    async fn a_window_definition_is_a_plain_canvas2d_surface() {
         let window = window_definition("norm-x-inputs", LocalizedLabel::native("Inputs", "Eingaben"), "norm.x.play.inputs", "download");
         assert_eq!(window.body_key, "norm.x.play.inputs");
         assert!(matches!(window.surface_kind, SurfaceKind::Canvas2d));
@@ -862,7 +854,7 @@ mod tests {
     /// `App`-kind leaf carrying the body key) — the property that keeps the manifest byte-identical
     /// after the panel declarations moved into `📌️panels/*` nodes.
     #[semio_framework_async_macros::async_test]
-    fn a_panel_definition_is_an_app_kind_leaf_carrying_its_body_key() {
+    async fn a_panel_definition_is_an_app_kind_leaf_carrying_its_body_key() {
         let panel = panel_definition("document", LocalizedLabel::native("Document", "Dokument"), PanelGroup::Workbench, "norm.x.play.document");
         assert!(matches!(&panel.kind, PanelTabKind::App(id) if id == "document"));
         assert_eq!(panel.body_key.as_deref(), Some("norm.x.play.document"));
@@ -870,7 +862,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn norm_io_declares_model_in_and_report_out_beside_the_implicit_document_ports() {
+    async fn norm_io_declares_model_in_and_report_out_beside_the_implicit_document_ports() {
         let io = norm_io("din4108", "semio.norm.din4108/v1");
         assert!(io.ports.iter().any(|port| port.id == "model:in" && port.direction == MediaPortDirection::In));
         let report_out = io.ports.iter().find(|port| port.id == "report:out").expect("report:out declared");
@@ -880,7 +872,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn the_artifact_kind_spec_is_a_data_value_document() {
+    async fn the_artifact_kind_spec_is_a_data_value_document() {
         let spec = artifact_kind_spec("en1990", "EN 1990");
         assert_eq!(spec.id, "computation.norm.en1990");
         assert_eq!(spec.source_format, "norm.en1990.document");
@@ -891,13 +883,13 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn render_report_falls_back_to_a_placeholder_when_nothing_was_computed() {
-        let json = serde_json::to_string(&render_report(&CheckReport::default())).expect("json");
+    async fn render_report_falls_back_to_a_placeholder_when_nothing_was_computed() {
+        let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_report(&CheckReport::default()).expect("node assembly") }).expect("json");
         assert!(json.contains("No checks computed."), "{json}");
     }
 
     #[semio_framework_async_macros::async_test]
-    fn render_inspection_falls_back_to_the_first_check_for_an_out_of_range_index() {
+    async fn render_inspection_falls_back_to_the_first_check_for_an_out_of_range_index() {
         let mut report = CheckReport::default();
         report.push(crate::document::CheckResult::from_utilization(
             crate::document::ClauseId::new("demo", "§1", "1.1"),
@@ -906,21 +898,21 @@ mod tests {
             "demo check",
             crate::document::AnnexChoice::De,
         ));
-        let inside = serde_json::to_string(&render_inspection(&report, Some(0))).expect("json");
-        let outside = serde_json::to_string(&render_inspection(&report, Some(99))).expect("json");
+        let inside = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_inspection(&report, Some(0)).expect("node assembly") }).expect("json");
+        let outside = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_inspection(&report, Some(99)).expect("node assembly") }).expect("json");
         assert_eq!(inside, outside, "an out-of-range index must fall back to the first check");
-        assert!(serde_json::to_string(&render_inspection(&CheckReport::default(), None)).expect("json").contains("No checks"));
+        assert!(semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_inspection(&CheckReport::default(), None).expect("node assembly") }).expect("json").contains("No checks"));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn the_view_mode_is_the_same_for_every_viewer() {
+    async fn the_view_mode_is_the_same_for_every_viewer() {
         let mode = view_mode_definition();
         assert_eq!(mode.id, MODE_VIEW);
         assert!(mode.tools.is_empty() && mode.commands.is_empty() && mode.layout_id.is_none());
     }
 
     #[semio_framework_async_macros::async_test]
-    fn single_window_layout_stacks_exactly_one_window() {
+    async fn single_window_layout_stacks_exactly_one_window() {
         let layout = single_window_layout("framework.window.table", "Report");
         let WindowLayoutRoot::Stack(stack) = layout.root else { panic!("expected a stack root") };
         assert_eq!(stack.children.len(), 1);
@@ -928,7 +920,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn report_table_columns_and_rows_line_up_with_the_check_report() {
+    async fn report_table_columns_and_rows_line_up_with_the_check_report() {
         let mut report = CheckReport::default();
         report.push(crate::document::CheckResult::from_utilization(
             crate::document::ClauseId::new("demo", "§1", "1.1"),
@@ -945,7 +937,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn selected_check_index_arg_reads_the_shell_wire_shape() {
+    async fn selected_check_index_arg_reads_the_shell_wire_shape() {
         assert_eq!(selected_check_index_arg(Some(&dsl::DslValue::from(&serde_json::json!({ "index": 3 })))), Some(3));
         assert_eq!(selected_check_index_arg(Some(&dsl::DslValue::from(&serde_json::json!({})))), None);
         assert_eq!(selected_check_index_arg(None), None);

@@ -785,11 +785,9 @@ impl TextEditAuthority {
             }
         }
         let Some(node) = self.disposer.pop() else { return false };
-        if let Ok(node) = Arc::try_unwrap(node) {
-            if let TextNode::Concat { left, right, .. } = node {
-                let _ = self.disposer.push(left);
-                let _ = self.disposer.push(right);
-            }
+        if let Ok(TextNode::Concat { left, right, .. }) = Arc::try_unwrap(node) {
+            let _ = self.disposer.push(left);
+            let _ = self.disposer.push(right);
         }
         true
     }
@@ -900,10 +898,8 @@ impl ActiveEdit {
     }
 
     fn step(&mut self, operations: &[OperationSlot; TEXT_OPERATION_SLOTS], pages: &[PageSlot; TEXT_PAGE_SLOTS]) -> Result<TextEditProgress, TextEditFault> {
-        if !self.inserted && self.offset >= self.start {
-            if self.append_insert_page(operations, pages)? {
-                return Ok(TextEditProgress::Yield);
-            }
+        if !self.inserted && self.offset >= self.start && self.append_insert_page(operations, pages)? {
+            return Ok(TextEditProgress::Yield);
         }
         if self.inserted {
             if let Some(suffix) = self.deferred_suffix.take() {

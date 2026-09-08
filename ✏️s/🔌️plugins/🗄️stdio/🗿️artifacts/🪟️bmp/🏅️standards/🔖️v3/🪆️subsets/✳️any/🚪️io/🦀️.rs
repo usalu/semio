@@ -90,7 +90,7 @@ fn read_i32(b: &[u8], pos: usize) -> Result<i32, String> {
 /// so `../🧬️schema`'s own `demo_bmp_snapshot()` can compute a real `image_size`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn row_bytes(width: u32, bpp: u16) -> usize {
-    (((width as usize * bpp as usize) + 31) / 32) * 4
+    (width as usize * bpp as usize).div_ceil(32) * 4
 }
 //#endregion RowGeometry
 
@@ -129,7 +129,7 @@ fn unpack_index(row: &[u8], x: usize, bpp: u16) -> usize {
         8 => row[x] as usize,
         4 => {
             let byte = row[x / 2];
-            if x % 2 == 0 {
+            if x.is_multiple_of(2) {
                 (byte >> 4) as usize
             } else {
                 (byte & 0x0F) as usize
@@ -152,7 +152,7 @@ fn pack_index(row: &mut [u8], x: usize, bpp: u16, index: u8) {
         8 => row[x] = index,
         4 => {
             let byte = &mut row[x / 2];
-            if x % 2 == 0 {
+            if x.is_multiple_of(2) {
                 *byte = (*byte & 0x0F) | (index << 4);
             } else {
                 *byte = (*byte & 0xF0) | (index & 0x0F);
@@ -398,7 +398,7 @@ pub fn encode_bmp(snap: &BmpSnapshot) -> Result<Vec<u8>, String> {
     if matches!(snap.bits_per_pixel, 1 | 4 | 8) && !snap.palette.is_empty() {
         encode_bmp_indexed(snap, w, h)
     } else {
-        encode_bmp_direct(snap, w, h)
+        Ok(encode_bmp_direct(snap, w, h))
     }
 }
 
@@ -478,7 +478,7 @@ fn encode_bmp_indexed(snap: &BmpSnapshot, w: u32, h: u32) -> Result<Vec<u8>, Str
 /// only reached when the snapshot declares no usable palette. See `encode_bmp`'s own
 /// `EncodeScopeNote` for the full contract.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_bmp_direct(snap: &BmpSnapshot, w: u32, h: u32) -> Result<Vec<u8>, String> {
+fn encode_bmp_direct(snap: &BmpSnapshot, w: u32, h: u32) -> Vec<u8> {
     let rb = row_bytes(w, 24);
     let pixel_bytes = rb * h as usize;
     let file_size = 14 + 40 + pixel_bytes;
@@ -518,7 +518,7 @@ fn encode_bmp_direct(snap: &BmpSnapshot, w: u32, h: u32) -> Result<Vec<u8>, Stri
         }
         out.extend_from_slice(&row_buf);
     }
-    Ok(out)
+    out
 }
 //#endregion Codec
 
@@ -531,7 +531,7 @@ pub fn register() {
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
-    let _ = store::register_document_codec(store::ArtifactCodec::of::<BmpSnapshot, BmpMutation>(STDIO_BMP_DOCUMENT_SCHEMA));
+    store::register_document_codec(store::ArtifactCodec::of::<BmpSnapshot, BmpMutation>(STDIO_BMP_DOCUMENT_SCHEMA)).expect("static Stdio registration must be available and conflict-free");
 }
 
 /// 📇️ P2-FG2: `dsl::registry::register_schema_spec` (P2-M3's `FullResolver` insertion API) —

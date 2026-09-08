@@ -578,6 +578,10 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+
+
+---
+
 fixtures should only hold pure fixtures and tests should hold tests,
 
 ✏️s/🔌️plugins/🌍️gis/🧪️fixtures/🌉️component-cold-map-patch/🦀️.rs

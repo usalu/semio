@@ -40,7 +40,6 @@ pub const IFC_ARTIFACT_SCHEMA_ID: &str = "s.stdio.ifc";
 /// failure at `register_all()` build time that this pass's verification budget cannot fully rule
 /// out. Composers ARE unioned safely already (`crate::artifacts::ifc::io_registry::entries()`
 /// below merges `v4`+`v2x3`, same shape as `dwg`) but that's insufficient on its own — see above.
-
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -88,8 +87,8 @@ pub mod io_registry {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        let _ = register_composer_entries(v4::entries());
-        let _ = register_composer_entries(v2x3::entries());
+        register_composer_entries(v4::entries()).expect("static Stdio registration must be available and conflict-free");
+        register_composer_entries(v2x3::entries()).expect("static Stdio registration must be available and conflict-free");
     }
 }
 //#endregion 🚪️DerivedIoRegistry

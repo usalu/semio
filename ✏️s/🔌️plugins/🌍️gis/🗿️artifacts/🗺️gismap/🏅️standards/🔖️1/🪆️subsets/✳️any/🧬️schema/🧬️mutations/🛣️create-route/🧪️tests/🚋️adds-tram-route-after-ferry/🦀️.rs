@@ -32,14 +32,14 @@ const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 /// 🗺️ The committed `⬅️before`, with its two DERIVED child handles minted by the artifact's own
 /// composition funnel (see this file's module doc) rather than read from the placeholder JSON.
 fn before() -> GisMapSnapshot {
-    gis_map_snapshot_with_derived_children(serde_json::from_str(BEFORE).expect("before snapshot decodes"))
+    gis_map_snapshot_with_derived_children(dsl::json::from_json_str(BEFORE).expect("before snapshot decodes"))
 }
 /// 🗺️ The committed `➡️after`, funnelled through the identical derivation.
 fn expected_after() -> GisMapSnapshot {
-    gis_map_snapshot_with_derived_children(serde_json::from_str(AFTER).expect("after snapshot decodes"))
+    gis_map_snapshot_with_derived_children(dsl::json::from_json_str(AFTER).expect("after snapshot decodes"))
 }
 fn mutation() -> GisMapMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// ▶️ `create-route` carries `before` to exactly the committed `after`, and — because the edited
@@ -76,12 +76,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: GisMapSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: GisMapSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "create-route/adds-tram-route-after-ferry: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "create-route/adds-tram-route-after-ferry: committed mutation JSON is not canonical");
 }
@@ -105,7 +105,7 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &before());
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-route/adds-tram-route-after-ferry: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -113,8 +113,8 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: GisMapDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let decoded: GisMapDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "create-route/adds-tram-route-after-ferry: committed diff JSON is not canonical");
 }
@@ -124,7 +124,7 @@ async fn committed_diff_is_canonical() {
 /// composed children itself, exactly as `apply_gis_map_mutation` does.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: GisMapDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: GisMapDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <GisMapDiff as protocol::MutationDiff<GisMapSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-route/adds-tram-route-after-ferry: committed diff did not carry before to after");
 }

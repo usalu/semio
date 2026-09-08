@@ -177,7 +177,7 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
         ColdPairIngressStatus::Fault { cursor, fault: code.as_bytes()[..code.len().min(COLD_PAIR_FAULT_MAXIMUM_BYTES)].to_vec() }
     }
 
-    pub(crate) fn accept_page(&mut self, page: ColdDocumentPairPage, live: Option<ActorInstanceLifetime>) -> ColdPairIngressStatus {
+    pub(crate) fn accept_page(&mut self, page: &ColdDocumentPairPage, live: Option<ActorInstanceLifetime>) -> ColdPairIngressStatus {
         let cursor = page.header.cursor(page.page_index);
         if let Err(code) = page.header.validate() {
             return Self::fault(cursor, code);
@@ -234,7 +234,7 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
         if !matches!(owner.phase, ColdDocumentPairPhase::Receiving) {
             return ColdPairIngressStatus::Backpressure(owner.cursor());
         }
-        let terminal = match owner.accept(&page) {
+        let terminal = match owner.accept(page) {
             Ok(terminal) => terminal,
             Err(code) => return Self::fault(cursor, code),
         };

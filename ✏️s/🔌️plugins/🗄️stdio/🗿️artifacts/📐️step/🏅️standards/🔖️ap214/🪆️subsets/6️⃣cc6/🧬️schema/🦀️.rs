@@ -85,7 +85,7 @@ pub mod derived_construction {
 
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn conforming_snapshot() -> StepSnapshot {
-            StepSnapshot::from_part21_document(Part21Document {
+            StepSnapshot::from_part21_document(&Part21Document {
                 header: Part21Header { file_schema: vec![Part21Value::List(vec![Part21Value::Str("AUTOMOTIVE_DESIGN".into())])], ..Part21Header::default() },
                 instances: vec![
                     Part21Instance { id: 1, entities: vec![("PRODUCT".into(), vec![])] },
@@ -109,7 +109,7 @@ pub mod derived_construction {
             let mut snapshot = conforming_snapshot();
             let mut doc = snapshot.to_part21_document();
             doc.instances.push(Part21Instance { id: 99, entities: vec![("ADVANCED_BREP_SHAPE_REPRESENTATION".into(), vec![])] });
-            snapshot = StepSnapshot::from_part21_document(doc);
+            snapshot = StepSnapshot::from_part21_document(&doc);
             let (mutated, _diff) = StepCc6BuilderConstruction::from_snapshot(StepSnapshot::default()).mutate(StepMutation::SetSnapshot(crate::artifacts::step::standards::v_ap214::subsets::base::schema::mutations::set_snapshot::SetSnapshot { snapshot }));
             mutated.build().expect("cc6 is the top of the ladder -- ADVANCED_BREP_SHAPE_REPRESENTATION is never a violation");
         }
@@ -221,7 +221,7 @@ pub mod derived_analysis {
 
         #[semio_framework_async_macros::async_test]
         async fn conforming_document_reports_no_diagnostics() {
-            let snapshot = StepSnapshot::from_part21_document(base_doc());
+            let snapshot = StepSnapshot::from_part21_document(&base_doc());
             let diagnostics = check_cc6_conformance(&snapshot);
             assert!(diagnostics.is_empty(), "got {diagnostics:?}");
         }
@@ -230,7 +230,7 @@ pub mod derived_analysis {
         async fn missing_file_schema_is_hard() {
             let mut doc = base_doc();
             doc.header.file_schema = vec![];
-            let snapshot = StepSnapshot::from_part21_document(doc);
+            let snapshot = StepSnapshot::from_part21_document(&doc);
             let diagnostics = check_cc6_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_FILE_SCHEMA && d.severity == Severity::Error), "got {diagnostics:?}");
         }
@@ -239,7 +239,7 @@ pub mod derived_analysis {
         async fn missing_product_chain_is_soft() {
             let mut doc = base_doc();
             doc.instances.clear();
-            let snapshot = StepSnapshot::from_part21_document(doc);
+            let snapshot = StepSnapshot::from_part21_document(&doc);
             let diagnostics = check_cc6_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_PRODUCT_CHAIN && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
@@ -248,7 +248,7 @@ pub mod derived_analysis {
         async fn representation_at_max_rung_is_clean() {
             let mut doc = base_doc();
             doc.instances.push(Part21Instance { id: 4, entities: vec![("ADVANCED_BREP_SHAPE_REPRESENTATION".into(), vec![])] });
-            let snapshot = StepSnapshot::from_part21_document(doc);
+            let snapshot = StepSnapshot::from_part21_document(&doc);
             let diagnostics = check_cc6_conformance(&snapshot);
             assert!(diagnostics.iter().all(|d| d.code.0 != CODE_LADDER), "got {diagnostics:?}");
         }

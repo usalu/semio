@@ -21,9 +21,7 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
 pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
     let distribution = super::distribution(context);
     distribution
-        .standard_deviation
-        .map(|value| estimate(value, GltfUnit::Metre, super::samples(context).len(), Some(context.topology)))
-        .unwrap_or_else(|| unavailable(GltfUnit::Metre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology)))
+        .standard_deviation.map_or_else(|| unavailable(GltfUnit::Metre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology)), |value| estimate(value, GltfUnit::Metre, super::samples(context).len(), Some(context.topology)))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

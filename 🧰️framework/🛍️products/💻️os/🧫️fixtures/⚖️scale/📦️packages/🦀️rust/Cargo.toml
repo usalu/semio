@@ -4,7 +4,7 @@ cargo-features = ["trim-paths"]
 name = "semio-framework-os-scale-fixture"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME F1: one parametric wasm32-wasip2 actor component whose manifest profile (idle/cpu/ui/io/hang/crash/stateful) selects its handwritten reactor behaviour, proving the ABI at 50-plugin x 50-extension scale."
 
 [lints]

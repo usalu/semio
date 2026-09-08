@@ -44,7 +44,7 @@ impl MutationDiff<SemioObjectSnapshot> for SemioObjectDiff {
     fn apply(&self, base: &SemioObjectSnapshot) -> protocol::MutationApplyResult<SemioObjectSnapshot> {
         let mut next = base.clone();
         if let Some(t) = &self.transform {
-            next.transform = t.clone();
+            next.transform = *t;
         }
         if let Some(b) = &self.brep {
             next.brep = b.clone();
@@ -78,7 +78,7 @@ impl MutationDiff<SemioObjectSnapshot> for SemioObjectDiff {
 impl protocol::command::DiffAlgebra<SemioObjectSnapshot> for SemioObjectDiff {
     fn between(base: &SemioObjectSnapshot, other: &SemioObjectSnapshot) -> Self {
         SemioObjectDiff {
-            transform: (base.transform != other.transform).then(|| other.transform.clone()),
+            transform: (base.transform != other.transform).then_some(other.transform),
             brep: (base.brep != other.brep).then(|| other.brep.clone()),
             mesh: (base.mesh != other.mesh).then(|| other.mesh.clone()),
             properties: (base.properties != other.properties).then(|| other.properties.clone()),
@@ -86,7 +86,7 @@ impl protocol::command::DiffAlgebra<SemioObjectSnapshot> for SemioObjectDiff {
     }
     fn inverse(&self, base: &SemioObjectSnapshot) -> Self {
         SemioObjectDiff {
-            transform: self.transform.as_ref().map(|_| base.transform.clone()),
+            transform: self.transform.as_ref().map(|_| base.transform),
             brep: self.brep.as_ref().map(|_| base.brep.clone()),
             mesh: self.mesh.as_ref().map(|_| base.mesh.clone()),
             properties: self.properties.as_ref().map(|_| base.properties.clone()),

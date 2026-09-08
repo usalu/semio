@@ -2,7 +2,7 @@
 name = "semio-framework-pack"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "The .spk binary document container: header/footer/segment/manifest/chunk-table framing, the value codec, recovery, and native/async/http sources. A file format, product-neutral like the .spr record format it shares a codec with."
 
 [package.metadata.semio]

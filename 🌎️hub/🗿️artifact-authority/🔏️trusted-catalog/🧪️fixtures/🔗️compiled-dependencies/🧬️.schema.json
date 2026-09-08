@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schemas/hub/compiled-stdio-dependencies-v1.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "publicationFiles", "descriptorPreviewCases", "selectedClosure", "cases", "nativeCases", "consumerCatalogCases", "atomicCases", "rawCases", "encodingCases", "ordering"],
+  "properties": {
+    "schema": { "const": "semio.hub.compiled-stdio-dependencies/v1" },
+    "publicationFiles": { "const": ["component.wasm", "descriptor.semio", "closed-actor.mjs", "stdio-component.wasm", "stdio-descriptor.semio", "trusted-catalog.json"] },
+    "descriptorPreviewCases": { "const": [
+      { "id": "first-selected-descriptor-invalid", "packageIndex": 1, "previews": [] },
+      { "id": "second-selected-descriptor-invalid", "packageIndex": 0, "previews": ["semio:fixture-base"] }
+    ] },
+    "selectedClosure": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "$ref": "#/$defs/identity" } },
+    "cases": {
+      "type": "array", "minItems": 25, "maxItems": 25,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["change", "owner", "accepted"],
+        "properties": {
+          "change": { "enum": ["exact", "selected-order", "missing", "duplicate", "self", "unknown", "any", "caret", "wrong-version", "noncanonical-version", "overflow-version", "foreign-package", "duplicate-selected", "missing-selected", "extra-field", "missing-manifest", "oversized-claim", "stdio-dependent", "owner-plugin", "owner-package", "owner-version", "selected-version", "missing-protocol", "unsupported-protocol"] },
+          "owner": { "enum": ["gis", "stdio"] }, "accepted": { "type": "boolean" }
+        }
+      }
+    },
+    "consumerCatalogCases": { "const": [
+      { "change": "exact", "accepted": true },
+      { "change": "missing", "accepted": false },
+      { "change": "duplicate", "accepted": false },
+      { "change": "wrong-version", "accepted": false },
+      { "change": "foreign-topic-version", "accepted": false }
+    ] },
+    "atomicCases": { "const": [
+      { "change": "stdio-catalog", "accepted": false, "previews": [] },
+      { "change": "gis-catalog", "accepted": false, "previews": ["stdio"] },
+      { "change": "gis-dependency", "accepted": false, "previews": ["stdio"] },
+      { "change": "gis-provider", "accepted": false, "previews": ["stdio"] },
+      { "change": "gis-trailing-byte", "accepted": false, "previews": ["stdio"] },
+      { "change": "gis-duplicate-field", "accepted": false, "previews": ["stdio"] },
+      { "change": "exact", "accepted": true, "previews": ["stdio", "gis"] }
+    ] },
+    "nativeCases": {
+      "type": "array", "minItems": 9, "maxItems": 9, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["id", "dependencies", "accepted"],
+        "properties": {
+          "id": { "enum": ["exact", "missing", "duplicate", "foreign", "any", "caret", "tilde", "at-least", "wrong-version"] },
+          "accepted": { "type": "boolean" },
+          "dependencies": { "type": "array", "maxItems": 2, "items": {
+            "type": "object", "additionalProperties": false, "required": ["pluginId", "version"],
+            "properties": { "pluginId": { "type": "string", "minLength": 1, "maxLength": 256 }, "version": { "type": "string", "minLength": 1, "maxLength": 63 } }
+          } }
+        }
+      }
+    },
+    "rawCases": {
+      "type": "array", "minItems": 4, "maxItems": 4, "uniqueItems": true,
+      "items": { "type": "object", "additionalProperties": false, "required": ["name", "hex", "accepted"], "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 128 }, "hex": { "$ref": "#/$defs/hex" }, "accepted": { "type": "boolean" }
+      } }
+    },
+    "encodingCases": {
+      "type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true,
+      "items": { "type": "object", "additionalProperties": false, "required": ["name", "identities", "hex"], "properties": {
+        "name": { "enum": ["gis-direct-dependency-stdio", "stdio-direct-dependencies-empty"] }, "hex": { "$ref": "#/$defs/hex" },
+        "identities": { "type": "array", "maxItems": 1, "items": { "$ref": "#/$defs/identity" } }
+      } }
+    },
+    "ordering": {
+      "type": "object", "additionalProperties": false, "required": ["input", "expected"],
+      "properties": {
+        "input": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "$ref": "#/$defs/identity" } },
+        "expected": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "string" } }
+      }
+    }
+  },
+  "$defs": {
+    "hex": { "type": "string", "minLength": 8, "maxLength": 2048, "pattern": "^(?:[0-9a-f]{2})+$" },
+    "identity": {
+      "type": "object", "additionalProperties": false, "required": ["pluginId", "packageId", "version"],
+      "properties": {
+        "pluginId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "packageId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "version": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    }
+  }
+}

@@ -701,7 +701,7 @@ mod tests {
         let root: protocol::os_pack::json::Value = protocol::json::parse(source).expect("fixture");
         let geometry_value = root.pointer("/models/0/model/geometry").map(protocol::json::to_dsl_value);
         let geometry = parse_geometry(geometry_value.as_ref());
-        let objects: Vec<protocol::DslValue> = root.pointer("/models/0/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::json::to_dsl_value).collect()).unwrap_or_default();
+        let objects: Vec<DslValue> = root.pointer("/models/0/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::json::to_dsl_value).collect()).unwrap_or_default();
         let mut kernel = Brep::new();
         let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
         assert_eq!(imported.len(), 1);
@@ -721,7 +721,7 @@ mod tests {
         let root: protocol::os_pack::json::Value = protocol::json::parse(source).expect("fixture");
         let geometry_value = root.pointer("/models/2/model/geometry").map(protocol::json::to_dsl_value);
         let geometry = parse_geometry(geometry_value.as_ref());
-        let objects: Vec<protocol::DslValue> = root.pointer("/models/2/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::json::to_dsl_value).collect()).unwrap_or_default();
+        let objects: Vec<DslValue> = root.pointer("/models/2/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::json::to_dsl_value).collect()).unwrap_or_default();
         let mut kernel = Brep::new();
         let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
         assert_eq!(imported.len(), 1);
@@ -740,7 +740,7 @@ mod tests {
         let root: protocol::os_pack::json::Value = protocol::json::parse(source).expect("fixture");
         let geometry_value = root.pointer("/models/3/model/geometry").map(protocol::json::to_dsl_value);
         let geometry = parse_geometry(geometry_value.as_ref());
-        let objects: Vec<protocol::DslValue> = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::json::to_dsl_value).collect()).unwrap_or_default();
+        let objects: Vec<DslValue> = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::json::to_dsl_value).collect()).unwrap_or_default();
         let mut kernel = Brep::new();
         let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
         let slab = imported.iter().find(|object| object.primitives.iter().any(|primitive| primitive.kind == "surface")).expect("surface object");
@@ -755,7 +755,7 @@ mod tests {
         let root: protocol::os_pack::json::Value = protocol::json::parse(source).expect("fixture");
         let geometry_value = root.pointer("/models/3/model/geometry").map(protocol::json::to_dsl_value);
         let geometry = parse_geometry(geometry_value.as_ref());
-        let objects: Vec<protocol::DslValue> = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::json::to_dsl_value).collect()).unwrap_or_default();
+        let objects: Vec<DslValue> = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::json::to_dsl_value).collect()).unwrap_or_default();
         let mut kernel = Brep::new();
         let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
         assert!(!imported.is_empty());

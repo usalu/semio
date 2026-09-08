@@ -2,7 +2,7 @@
 name = "semio-framework-ui-backend-metal"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Hand-written Metal backend for macOS/iOS"
 
 [package.metadata.semio]

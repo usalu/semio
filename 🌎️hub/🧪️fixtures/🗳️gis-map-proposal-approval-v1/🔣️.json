@@ -85,7 +85,7 @@
       "postCutover": ["verification", "public-checkpoint", "ledger-applied"]
     },
     "documentFence": "mounted-actor-generation-including-zero",
-    "genesisPublication": "no-active-checkpoint-exact-zero-frontier",
+    "genesisPublication": "active-indexed-genesis-parent-before-first-edit",
     "peerNotification": {
       "after": ["committed-wal-event", "actor-frontier", "public-checkpoint", "ledger-applied"],
       "frame": "rebootstrap-required",

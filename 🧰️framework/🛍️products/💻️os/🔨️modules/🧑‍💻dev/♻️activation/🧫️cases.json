@@ -1,0 +1,97 @@
+{
+  "variant": "note",
+  "profile": "dev",
+  "cycles": [
+    {
+      "now": 100,
+      "plugins": [
+        [
+          "note",
+          "a"
+        ],
+        [
+          "puzzle",
+          "b"
+        ]
+      ],
+      "expected": [
+        [
+          "note",
+          "a",
+          100
+        ],
+        [
+          "puzzle",
+          "b",
+          100
+        ]
+      ]
+    },
+    {
+      "now": 200,
+      "plugins": [
+        [
+          "puzzle",
+          "b"
+        ],
+        [
+          "note",
+          "a"
+        ]
+      ],
+      "expected": [
+        [
+          "note",
+          "a",
+          100
+        ],
+        [
+          "puzzle",
+          "b",
+          100
+        ]
+      ]
+    },
+    {
+      "now": 50,
+      "plugins": [
+        [
+          "note",
+          "c"
+        ],
+        [
+          "puzzle",
+          "b"
+        ]
+      ],
+      "expected": [
+        [
+          "note",
+          "c",
+          101
+        ],
+        [
+          "puzzle",
+          "b",
+          100
+        ]
+      ]
+    },
+    {
+      "now": 300,
+      "plugins": [
+        [
+          "note",
+          "c"
+        ]
+      ],
+      "expected": [
+        [
+          "note",
+          "c",
+          101
+        ]
+      ]
+    }
+  ]
+}

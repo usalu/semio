@@ -74,13 +74,13 @@ mod tests {
     use protocol::Inference;
 
     #[semio_framework_async_macros::async_test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = En1991Snapshot::default();
         assert_eq!(En1991Inference::infer(&snapshot), En1991Inference::infer(&snapshot));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(En1991Inference::infer(&En1991Snapshot::default()), En1991Inference::default());
     }
 }
@@ -151,7 +151,7 @@ mod compliance_report_tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    fn full_actions_de_na_numeric() {
+    async fn full_actions_de_na_numeric() {
         let doc = En1991Snapshot::default();
         let annex = NaDe;
         let report = check_full_actions(&doc);
@@ -181,7 +181,7 @@ mod compliance_report_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn evaluate_reaches_every_part_module() {
+    async fn evaluate_reaches_every_part_module() {
         let report = evaluate(&En1991Snapshot::default());
         assert!(report.checks.iter().any(|c| c.clause.family.contains("1991-1-1")));
         assert!(report.checks.iter().any(|c| c.clause.family.contains("1991-1-2")));

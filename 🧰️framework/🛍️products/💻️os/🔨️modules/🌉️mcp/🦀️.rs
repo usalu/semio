@@ -621,6 +621,7 @@ pub fn build_server_with_workspace(principal: AgentPrincipal, audit: std::sync::
     let idempotency = std::sync::Arc::new(IdempotencyStore::new());
     let client = ClientInfo { name: "semio-os-mcp".to_string(), version: env!("CARGO_PKG_VERSION").to_string() };
     let actions = std::sync::Arc::new(ActionAdapter::new(channel, handles, idempotency, audit, AutoApprovePolicy::Never, client));
+    actions.bind_history_undo_port(workspace.clone());
     let tools = WorkspaceToolRegistry { workspace: workspace.clone(), actions, principal, bridge: bridge.clone() };
     let resources = WorkspaceResourceRegistry::with_workspace(catalog, workspace.clone()).with_bridge(bridge);
     McpServer::new(Box::new(tools), Box::new(resources), Box::new(build_prompt_registry()), Box::new(GatewayBackends::WorkspaceArc(workspace)))

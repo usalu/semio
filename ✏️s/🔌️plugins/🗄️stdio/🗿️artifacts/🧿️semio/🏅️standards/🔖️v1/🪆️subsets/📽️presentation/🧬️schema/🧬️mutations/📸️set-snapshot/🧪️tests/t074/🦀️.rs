@@ -25,13 +25,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioPresentationSnapshot {
-    serde_json::from_str(BEFORE).expect("before presentation snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("before presentation snapshot decodes")
 }
 fn expected_after() -> SemioPresentationSnapshot {
-    serde_json::from_str(AFTER).expect("after presentation snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("after presentation snapshot decodes")
 }
 fn mutation() -> SemioPresentationMutation {
-    serde_json::from_str(MUTATION).expect("set-snapshot mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("set-snapshot mutation decodes")
 }
 
 /// ▶️ `set-snapshot` carries the deck to exactly the committed `after`: a final agenda slide with
@@ -72,12 +72,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioPresentationSnapshot = serde_json::from_str(text).expect("presentation snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("presentation snapshot encodes");
+        let decoded: SemioPresentationSnapshot = dsl::json::from_json_str(text).expect("presentation snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("presentation snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("presentation snapshot reparses");
         assert_eq!(reencoded, original, "semio-presentation/set-snapshot: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("set-snapshot mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("set-snapshot mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("set-snapshot mutation reparses");
     assert_eq!(reencoded, original, "semio-presentation/set-snapshot: committed mutation JSON is not canonical");
 }
@@ -102,7 +102,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioPresentationMutation as protocol::Mutation<SemioPresentationSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced presentation diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced presentation diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed presentation diff decodes");
     assert_eq!(produced, committed, "semio-presentation/set-snapshot: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -111,7 +111,7 @@ async fn produces_committed_diff() {
 /// patched in place, its text box patched as a `TextBox` (frame unset), its notes purely appended.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: SemioPresentationDiff = serde_json::from_str(DIFF).expect("committed presentation diff decodes");
+    let decoded: SemioPresentationDiff = dsl::json::from_json_str(DIFF).expect("committed presentation diff decodes");
     assert!(decoded.masters.is_none() && decoded.layouts.is_none(), "semio-presentation/set-snapshot: neither the master nor the layout table may be re-emitted");
     let slides = decoded.slides.as_ref().expect("the committed diff carries a slides triple");
     assert!(slides.removed.is_empty() && slides.added.is_empty() && slides.modified.len() == 1 && slides.modified[0].index == 1, "semio-presentation/set-snapshot: exactly the second slide may be patched in place");
@@ -125,7 +125,7 @@ async fn committed_diff_is_canonical() {
     assert!(blocks.as_ref().is_some_and(|blocks| blocks.modified.len() == 1 && blocks.added.is_empty() && blocks.removed.is_empty()), "semio-presentation/set-snapshot: the single body block is replaced whole, never removed and re-added");
     let notes = slide.notes.as_ref().expect("the patched slide carries a notes triple");
     assert!(notes.removed.is_empty() && notes.modified.is_empty() && notes.added.len() == 1 && notes.added[0].index == 0, "semio-presentation/set-snapshot: the speaker note must arrive as a pure append at final position 0");
-    let reencoded = serde_json::to_value(&decoded).expect("presentation diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("presentation diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed presentation diff reparses");
     assert_eq!(reencoded, original, "semio-presentation/set-snapshot: committed diff JSON is not canonical");
 }
@@ -134,7 +134,7 @@ async fn committed_diff_is_canonical() {
 /// block plus the appended note is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioPresentationDiff = serde_json::from_str(DIFF).expect("committed presentation diff decodes");
+    let decoded: SemioPresentationDiff = dsl::json::from_json_str(DIFF).expect("committed presentation diff decodes");
     let produced = <SemioPresentationDiff as protocol::MutationDiff<SemioPresentationSnapshot>>::apply(&decoded, &before()).expect("committed presentation diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "semio-presentation/set-snapshot: committed diff did not carry before to after");
 }

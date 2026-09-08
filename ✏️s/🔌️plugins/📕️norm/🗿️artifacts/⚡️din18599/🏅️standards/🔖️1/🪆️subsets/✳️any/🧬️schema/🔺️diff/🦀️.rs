@@ -27,6 +27,7 @@ pub struct Din18599Diff {
     #[state(artifact)]
     pub h_v: Option<f64>,
     #[state(artifact)]
+    #[cfg_attr(test, serde(with = "crate::document::child_identity_oracle::optional"))]
     pub climate: Option<crate::artifacts::din18599::Din18599ClimateChild>,
     #[state(artifact)]
     pub internal_gains_w_m2: Option<f64>,

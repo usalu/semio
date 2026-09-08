@@ -79,6 +79,7 @@ impl PendingPatchAuthority {
         !self.exhausted && self.slots.iter().any(Option::is_none)
     }
 
+    #[expect(clippy::result_large_err, reason = "Refusal must hand back the exact retained patch owner without allocating or releasing its publication credit.")]
     pub(super) fn push_reconcile(&mut self, owner: SurfaceReconcileReadyPatch) -> Result<(), SurfaceReconcileReadyPatch> {
         let instance = owner.surface().and_then(|surface| parse_surface_instance(&surface.0));
         if self.closing_instances.iter().flatten().any(|closing| Some(closing.key.instance()) == instance) {
@@ -90,6 +91,7 @@ impl PendingPatchAuthority {
         Ok(())
     }
 
+    #[expect(clippy::result_large_err, reason = "Refusal must hand back the exact retained patch owner without allocating or releasing its publication credit.")]
     pub(super) fn push_external(&mut self, patch: UiPatch) -> Result<(), UiPatch> {
         let instance = parse_surface_instance(&patch.surface.0);
         if self.closing_instances.iter().flatten().any(|closing| Some(closing.key.instance()) == instance) {
@@ -147,6 +149,7 @@ impl PendingPatchAuthority {
         }
     }
 
+    #[expect(clippy::result_large_err, reason = "Refusal must hand back the exact retained patch owner without allocating or releasing its publication credit.")]
     pub(super) fn hand_back_turn(&mut self, patch: UiPatch) -> Result<(), UiPatch> {
         if !self.turn_handback.terminal_is_empty() || self.turn_handback_sequence.is_none() || self.turn_handback_instance != parse_surface_instance(&patch.surface.0) {
             return Err(patch);

@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "recoveryCandidates",
+        "terminal",
+        "facts"
+      ],
+      "properties": {
+        "kind": {
+          "const": "live"
+        },
+        "recoveryCandidates": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "accepted"
+        },
+        "facts": {
+          "const": 1
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "recoveryCandidates",
+        "terminal",
+        "facts"
+      ],
+      "properties": {
+        "kind": {
+          "const": "revoked"
+        },
+        "recoveryCandidates": {
+          "const": 0
+        },
+        "terminal": {
+          "const": "failed"
+        },
+        "facts": {
+          "const": 2
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "recoveryCandidates",
+        "terminal",
+        "facts"
+      ],
+      "properties": {
+        "kind": {
+          "const": "expired"
+        },
+        "recoveryCandidates": {
+          "const": 1
+        },
+        "terminal": {
+          "const": "failed"
+        },
+        "facts": {
+          "const": 2
+        }
+      }
+    }
+  ]
+}

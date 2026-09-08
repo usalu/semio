@@ -12465,8 +12465,21 @@
             "schema": "generation.2d",
             "exportFormats": [],
             "importFormats": [],
-            "exportStdioKinds": [],
-            "importStdioKinds": []
+            "exportStdioKinds": [
+              "stdio.dxf",
+              "stdio.json",
+              "stdio.pdf",
+              "stdio.png",
+              "stdio.svg"
+            ],
+            "importStdioKinds": [
+              "stdio.dwg",
+              "stdio.dxf",
+              "stdio.json",
+              "stdio.pdf",
+              "stdio.png",
+              "stdio.svg"
+            ]
           }
         ],
         "config": {
@@ -28583,8 +28596,24 @@
             "schema": "generation.3d",
             "exportFormats": [],
             "importFormats": [],
-            "exportStdioKinds": [],
-            "importStdioKinds": []
+            "exportStdioKinds": [
+              "stdio.dwg",
+              "stdio.gltf",
+              "stdio.las",
+              "stdio.obj",
+              "stdio.ply",
+              "stdio.stl"
+            ],
+            "importStdioKinds": [
+              "stdio.dwg",
+              "stdio.gltf",
+              "stdio.json",
+              "stdio.las",
+              "stdio.obj",
+              "stdio.ply",
+              "stdio.png",
+              "stdio.stl"
+            ]
           }
         ],
         "config": {
@@ -29801,6 +29830,9 @@
     }
   ],
   "execution": "isolated",
+  "executionProtocol": {
+    "appChannelVersion": 14
+  },
   "quotas": {},
   "contributions": {
     "panels": [
@@ -30358,8 +30390,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "31d43b41ca249fa0ca25c9f57facf7d9a34f5ee44056d93b69fa00383d4d8380",
-    "coreWasmSha256": "95794f5683c727d4cd92c93e671c64f3f7d4e1d2e191f75fc8016a0e16525867",
-    "descriptorSha256": "d553e5b2e0eec776ead9cd26d4ec67d4f563df0bb57e4d9c07bff137ab5c7340"
+    "wasmSha256": "d7d359ef9c214eeb0d58160db8b474247b8c13de3a1f3c376fd73d46ed87c629",
+    "coreWasmSha256": "5976716270bab4bf7d008d77083a62ac6b1a9c22babec74bb2a986ccbc2d9f5e",
+    "descriptorSha256": "75f2bdcddb3f0d759d9f2dbffeb35d3687555f8ef2993da3deecd9ec23f45ca6"
   }
 }

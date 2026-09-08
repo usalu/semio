@@ -21,7 +21,6 @@ use store::{ArtifactEnvelope, ArtifactStore};
 /// four-verb vocabulary (`create`/`delete`/`replace-<noun>-data`/`reorder-<plural>`) per
 /// `derivation-rules.md`'s per-id-keyed-collection recipe.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum, dsl::Mutations, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutations(snapshot = GisMapSnapshot, diff = GisMapDiff, schema = "gis.gismap")]
 pub enum GisMapMutation {
     CreatePosition(create_position::CreatePosition),
@@ -143,8 +142,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn gis_map_document_vcs_replays_operations() {
-        let mut store = GisMapStore::new(create_document_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_snapshot(), None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: feature("p1") })], description: None }).expect("apply");
+        let mut store = GisMapStore::new(create_document_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_snapshot(), None)).await.expect("map store");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: feature("p1") })], description: None }).await.expect("apply");
         assert_eq!(store.snapshot().expect("snapshot").positions.len(), 1);
     }
 

@@ -35,7 +35,7 @@ fn encode_hex(bytes: &[u8]) -> String {
 }
 
 fn decode_hex(value: &str) -> Result<Vec<u8>, String> {
-    if value.len() % 2 != 0 || value.len() > MAX_PAYLOAD_BYTES * 2 {
+    if !value.len().is_multiple_of(2) || value.len() > MAX_PAYLOAD_BYTES * 2 {
         return Err("PDF/E mutation text payload exceeds its budget".into());
     }
     fn nibble(value: u8) -> Option<u8> {
@@ -44,7 +44,7 @@ fn decode_hex(value: &str) -> Result<Vec<u8>, String> {
         }
         (b'a'..=b'f').contains(&value).then_some(value - b'a' + 10)
     }
-    value.as_bytes().chunks_exact(2).map(|pair| {
+    value.as_bytes().as_chunks::<2>().0.iter().map(|pair| {
         let high = nibble(pair[0]).ok_or_else(|| "PDF/E mutation payload must be lowercase hexadecimal".to_string())?;
         let low = nibble(pair[1]).ok_or_else(|| "PDF/E mutation payload must be lowercase hexadecimal".to_string())?;
         Ok((high << 4) | low)

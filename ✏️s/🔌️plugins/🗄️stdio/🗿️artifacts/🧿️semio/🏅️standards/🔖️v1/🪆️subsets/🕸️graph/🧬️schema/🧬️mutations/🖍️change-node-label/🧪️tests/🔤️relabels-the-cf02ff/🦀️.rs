@@ -16,13 +16,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioGraphSnapshot {
-    serde_json::from_str(BEFORE).expect("change-node-label before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("change-node-label before snapshot decodes")
 }
 fn expected_after() -> SemioGraphSnapshot {
-    serde_json::from_str(AFTER).expect("change-node-label after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("change-node-label after snapshot decodes")
 }
 fn mutation() -> SemioGraphMutation {
-    serde_json::from_str(MUTATION).expect("change-node-label mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("change-node-label mutation decodes")
 }
 
 /// ▶️ The node's display label changes and its type tag does not.
@@ -56,12 +56,12 @@ async fn the_undo_change_node_label_restores_the_original_label() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioGraphSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: SemioGraphSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-node-label/relabels-the-source-node-without-retyping-it: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("change-node-label mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("change-node-label mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-node-label mutation reparses");
     assert_eq!(reencoded, original, "change-node-label/relabels-the-source-node-without-retyping-it: committed mutation JSON is not canonical");
 }
@@ -80,7 +80,7 @@ async fn declared_outcome_holds_with_no_guard_branch_firing() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-node-label/relabels-the-source-node-without-retyping-it: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -89,19 +89,19 @@ async fn produces_committed_diff() {
 /// and nothing else.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_omits_edges_entirely() {
-    let decoded: SemioGraphDiff = serde_json::from_str(DIFF).expect("committed change-node-label diff decodes");
+    let decoded: SemioGraphDiff = dsl::json::from_json_str(DIFF).expect("committed change-node-label diff decodes");
     assert!(decoded.edges.is_none(), "change-node-label must leave the edges slot untouched");
     assert_eq!(decoded.nodes.as_ref().map(|list| list.values.len()), Some(2), "the diff must carry the whole rebuilt nodes list");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert!(committed.get("edges").is_none(), "the committed diff JSON must not carry a edges key at all");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     assert_eq!(reencoded, committed, "change-node-label/relabels-the-source-node-without-retyping-it: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioGraphDiff = serde_json::from_str(DIFF).expect("committed change-node-label diff decodes");
+    let decoded: SemioGraphDiff = dsl::json::from_json_str(DIFF).expect("committed change-node-label diff decodes");
     let produced = decoded.apply(&before()).expect("committed change-node-label diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-node-label/relabels-the-source-node-without-retyping-it: committed diff did not carry before to after");
 }

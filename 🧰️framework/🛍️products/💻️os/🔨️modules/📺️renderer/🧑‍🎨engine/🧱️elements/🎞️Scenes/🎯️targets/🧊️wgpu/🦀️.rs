@@ -6,19 +6,28 @@
 //! call site elsewhere in the crate keeps resolving with zero other changes.
 //! 🎬️ Native component scene hosts for canvas-2d, tables, graphs, and 3D views.
 
+
 use crate::engine_canvas;
 use crate::interpreter::FrameworkWidgetContext;
+#[cfg(test)]
 use base64::Engine;
-use infinite_world::world::{render_world_3d, World3dBuildContext, World3dState};
+#[cfg(test)]
 use semio_framework::IconName;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::io::Write as _;
+#[cfg(test)]
 use ui_wgpu::wgpu::input::{DragAxis, KeyAction};
-use ui_wgpu::wgpu::{draw_text, draw_text_wrapped, render_widget, HitKind, HitTarget, Rect, Rgba, Theme, WidgetNode};
-use ui_wgpu::wgpu::{ActionDescriptor, PreparedRasterProducer, PreparedRasterRejected, PreparedRasterReservation, SurfaceKind, UiComponentSceneNode, UiPresence};
+#[cfg(test)]
+use ui_wgpu::wgpu::{draw_text, draw_text_wrapped, render_widget, HitKind, HitTarget, Theme, WidgetNode};
+use ui_wgpu::wgpu::Rect;
+#[cfg(test)]
+use ui_wgpu::wgpu::Rgba;
+use ui_wgpu::wgpu::{ActionDescriptor, PreparedRasterProducer, PreparedRasterRejected, PreparedRasterReservation, SurfaceKind, UiComponentSceneNode};
+#[cfg(test)]
+use ui_wgpu::wgpu::UiPresence;
 
 //#region SceneRuntime
 pub const SCENE_SURFACE_CAPACITY: usize = 256;
@@ -352,6 +361,7 @@ struct Viewport {
 }
 
 impl Viewport {
+    #[cfg(test)]
     fn from_json(raw: &str) -> Self {
         serde_json::from_str::<Value>(raw)
             .ok()
@@ -359,6 +369,7 @@ impl Viewport {
             .unwrap_or_default()
     }
 
+    #[cfg(test)]
     fn from_typed(viewport: Option<&ui_wgpu::wgpu::NodeGraphViewport>) -> Self {
         viewport.map(|viewport| Self { x: viewport.x as f32, y: viewport.y as f32, zoom: viewport.zoom as f32 }).unwrap_or(Self { x: 0.0, y: 0.0, zoom: 1.0 })
     }
@@ -1036,6 +1047,7 @@ fn scene_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> Acti
     ActionDescriptor { controller_id: scene.controller_id.clone(), action: action.into(), args: semio_framework::optional_json_to_dsl(Some(args)) }
 }
 
+#[cfg(test)]
 fn queue_surface_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, scene: &UiComponentSceneNode, action: &str) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, action, "surfaceId", &scene.surface_id])?;
     let mut reservation = input.reserve_action(&scene.controller_id, action, bytes)?;
@@ -1046,40 +1058,7 @@ fn queue_surface_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
     reservation.publish()
 }
 
-fn queue_document_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, scene: &UiComponentSceneNode, action: &str, document: &str) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
-    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, action, "surfaceId", &scene.surface_id, "document", document])?;
-    let mut reservation = input.reserve_action(&scene.controller_id, action, bytes)?;
-    let builder = reservation.builder();
-    builder.begin_object(None)?;
-    builder.string(Some("surfaceId"), &scene.surface_id)?;
-    builder.string(Some("document"), document)?;
-    builder.end_container()?;
-    reservation.publish()
-}
 
-fn queue_commit_rename_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, scene: &UiComponentSceneNode, occurrences: &[(usize, usize)]) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
-    let text_bytes = input.text_view().len();
-    let base = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "commitRename", "surfaceId", &scene.surface_id, "occurrences", "text"])?;
-    let occurrence_bytes = occurrences.len().checked_mul("start".len() + "end".len()).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
-    let bytes = base.checked_add(occurrence_bytes).and_then(|bytes| bytes.checked_add(text_bytes)).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
-    if bytes > ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY {
-        return Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits);
-    }
-    input.publish_action(&scene.controller_id, "commitRename", bytes, |builder, text| {
-        builder.begin_object(None)?;
-        builder.string(Some("surfaceId"), &scene.surface_id)?;
-        builder.begin_array(Some("occurrences"))?;
-        for (start, end) in occurrences {
-            builder.begin_object(None)?;
-            builder.number(Some("start"), *start as f64)?;
-            builder.number(Some("end"), *end as f64)?;
-            builder.end_container()?;
-        }
-        builder.end_container()?;
-        builder.string(Some("text"), text)?;
-        builder.end_container()
-    })
-}
 
 #[cfg(test)]
 #[test]
@@ -1250,12 +1229,10 @@ fn now_ms() -> f64 {
     0.0
 }
 
-fn digest_pixels(pixels: &[u8]) -> u64 {
-    pixels.iter().fold(0u64, |acc, byte| acc.wrapping_mul(31).wrapping_add(*byte as u64))
-}
 
 //#endregion SceneRuntime
 
+#[cfg(test)]
 fn canvas_world_pointer_json(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, extra: Value) -> Value {
     let state = scene_state(&scene.surface_id);
     let (wx, wy) = state.viewport.screen_to_world(x, y, inner);
@@ -1793,6 +1770,7 @@ pub fn handle_scene_pointer_button(scene: &UiComponentSceneNode, bounds: Rect, x
     actions
 }
 
+#[cfg(test)]
 fn hit_double_click_target(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Option<String> {
     match scene.component_kind {
         SurfaceKind::VirtualFileSystem => {
@@ -1810,6 +1788,7 @@ fn hit_double_click_target(scene: &UiComponentSceneNode, inner: Rect, x: f32, y:
     }
 }
 
+#[cfg(test)]
 fn double_click_action(scene: &UiComponentSceneNode, target: &str, inner: Rect, _x: f32, y: f32) -> Option<ActionDescriptor> {
     match scene.component_kind {
         SurfaceKind::VirtualFileSystem => {
@@ -1886,65 +1865,6 @@ pub fn render_component_scene_step(scene: &UiComponentSceneNode, bounds: Rect, c
     }
 }
 
-#[cfg(test)]
-pub fn render_component_scene(
-    scene: &UiComponentSceneNode,
-    bounds: Rect,
-    ctx: &mut FrameworkWidgetContext<'_>,
-    engine_resources: &mut engine_canvas::EngineCanvasBuildContext,
-    world_resources: &mut World3dBuildContext,
-    world3d_states: &mut AdmittedSurfaceMap<World3dState>,
-    node_graph_states: &mut AdmittedSurfaceMap<NodeGraphSurface>,
-    tiled_map_states: &mut AdmittedSurfaceMap<TiledMapSurface>,
-    icon_render_states: &mut HashMap<String, World3dState>,
-    board2d_states: &mut AdmittedSurfaceMap<Board2dSurface>,
-) {
-    if let Err(message) = validate_component_scene(scene, &RENDER_PLAN_LIMITS) {
-        let theme = ctx.theme;
-        ctx.draw.set_screen_height(bounds.y + bounds.h);
-        ctx.draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], theme.panel, theme.border_radius);
-        draw_text(ctx, &format!("Render plan rejected: {message}"), bounds.x + 12.0, bounds.y + 24.0, theme.font_size_body, theme.text_muted);
-        return;
-    }
-    let theme = ctx.theme;
-    ctx.draw.set_screen_height(bounds.y + bounds.h);
-    ctx.draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], theme.panel, theme.border_radius);
-    match scene.component_kind {
-        SurfaceKind::Paint2d => render_paint_2d(scene, bounds, ctx),
-        SurfaceKind::Table => render_table(scene, bounds, ctx),
-        SurfaceKind::Canvas2d => render_canvas_2d(scene, bounds, ctx),
-        SurfaceKind::NodeGraph => render_node_graph(scene, bounds, ctx, engine_resources, node_graph_states),
-        SurfaceKind::TiledMap => render_tiled_map(scene, bounds, ctx, engine_resources, tiled_map_states),
-        SurfaceKind::VirtualFileSystem => render_vfs(scene, bounds, ctx),
-        SurfaceKind::TextEditor => render_text_editor(scene, bounds, ctx, engine_resources),
-        SurfaceKind::InkCanvas => render_ink_canvas(scene, bounds, ctx),
-        SurfaceKind::World3d => {
-            let Some(state) = world3d_states.get_or_insert_with(scene.surface_id.clone(), || World3dState::new(scene.surface_id.clone(), scene.controller_id.clone())) else { return };
-            render_world_3d(scene, bounds, ctx, state, world_resources);
-        }
-        SurfaceKind::IconRender => render_icon_render(scene, bounds, ctx, world_resources, icon_render_states),
-        SurfaceKind::Board2d => render_board2d(scene, bounds, ctx, engine_resources, board2d_states),
-        SurfaceKind::GraphTimeline => render_graph_timeline(scene, bounds, ctx),
-        SurfaceKind::BlockList => render_block_list(scene, bounds, ctx),
-        SurfaceKind::DiffView => render_diff_view(scene, bounds, ctx),
-        SurfaceKind::EventFeed => render_event_feed(scene, bounds, ctx),
-        // 🚨️ Deliberately exhaustive, no `_` wildcard: every `SurfaceKind` variant has a real arm
-        // above, so a future variant addition fails to compile here until it's wired up, instead of
-        // silently falling through to `render_placeholder` forever (see `region-claims.json`/this
-        // ticket's task 5 — `render_placeholder` itself is kept for other callers that still want an
-        // explicit "unimplemented" chrome, e.g. an unresolved `ExternalSlot`).
-    }
-    // 🐛️➡️✅️ W4 (`.🧬semio/🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w4-scene-input.md`): this used to
-    // end with `apply_scene_wheel(scene, bounds, ctx); apply_scene_pointer(scene, bounds, ctx);` — a
-    // once-per-render-frame sample of the aggregate `InputState` with its own manual "was it down last
-    // frame" edge detection, which could drop fast clicks/double-clicks and had asymmetries (e.g. a
-    // right-click passthrough silently inert because `pointer_down_screen` no-op'd unless `button ==
-    // 0`). Real pointer/wheel input for these 11 surfaces now arrives per real event, hit-tested by
-    // `ui_wgpu::wgpu::events::EventRouter::dispatch` and routed here via `UiCommand::Scene` ->
-    // `interpreter::apply_scene_ui_command`, which calls the SAME `handle_scene_wheel`/
-    // `handle_scene_pointer_button`/`handle_scene_pointer_move` below — so nothing is called from this
-    // render pass any longer.
-}
 
 /** @emoji 🧭️ Surface kinds that already receive pointer/wheel input through their own bespoke per-frame host state (`world3d_states`/`node_graph_states`/`tiled_map_states`/`board2d_states`, driven directly by the OS event loop) and must not be double-dispatched through the generic `handle_scene_*` handlers below. `pub(crate)` so `interpreter::apply_scene_ui_command` (the real per-event `UiCommand::Scene` handler, and now the ONLY caller of `handle_scene_wheel`/`handle_scene_pointer_button`/`handle_scene_pointer_move` — see that fn's own doc comment) applies this SAME exclusion list. */
 pub(crate) fn scene_has_bespoke_pointer_dispatch(kind: SurfaceKind) -> bool {
@@ -1967,6 +1887,7 @@ mod render_entry_tests {
 }
 //#endregion RenderEntry
 
+#[cfg(test)]
 fn render_placeholder(kind: &str, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     draw_text(ctx, &format!("{kind} host"), bounds.x + 12.0, bounds.y + 24.0, theme.font_size_body, theme.text_muted);
@@ -2060,12 +1981,7 @@ struct Paint2dDocSyncJson {
     layers: Vec<Paint2dLayerJson>,
 }
 
-#[derive(Deserialize)]
-struct Paint2dAssetJson {
-    mime: String,
-    data: String,
-}
-
+#[cfg(test)]
 struct Paint2dFlatLayer {
     id: String,
     image_key: Option<String>,
@@ -2078,37 +1994,9 @@ struct Paint2dFlatLayer {
     height: u32,
 }
 
-fn collect_paint2d_pixel_layers(layers: &[Paint2dLayerJson], parent_x: f64, parent_y: f64, parent_sx: f64, parent_sy: f64, parent_opacity: f32, out: &mut Vec<Paint2dFlatLayer>) {
-    for layer in layers {
-        match layer {
-            Paint2dLayerJson::Pixel { id, visible, opacity, transform, width, height, image_key } => {
-                if !*visible {
-                    continue;
-                }
-                out.push(Paint2dFlatLayer {
-                    id: id.clone(),
-                    image_key: image_key.clone(),
-                    x: parent_x + transform.x * parent_sx,
-                    y: parent_y + transform.y * parent_sy,
-                    scale_x: parent_sx * transform.scale_x,
-                    scale_y: parent_sy * transform.scale_y,
-                    opacity: opacity * parent_opacity,
-                    width: width.unwrap_or(512),
-                    height: height.unwrap_or(512),
-                });
-            }
-            Paint2dLayerJson::Group { visible, opacity, transform, children } => {
-                if !*visible {
-                    continue;
-                }
-                collect_paint2d_pixel_layers(children, parent_x + transform.x * parent_sx, parent_y + transform.y * parent_sy, parent_sx * transform.scale_x, parent_sy * transform.scale_y, opacity * parent_opacity, out);
-            }
-            Paint2dLayerJson::Adjustment { .. } => {}
-        }
-    }
-}
 
 //#region Paint2dNavigator
+#[cfg(test)]
 const PAINT2D_NAVIGATOR_PADDING: f32 = 24.0;
 
 /** 🧭️ Fits a camera to the document's pixel-layer bounds so a `viewMode === "navigator"` surface
@@ -2117,6 +2005,7 @@ const PAINT2D_NAVIGATOR_PADDING: f32 = 24.0;
  * sibling used by the React `Paint2dHost`'s WASM raster session and is not wired into this wgpu
  * renderer's dependency graph, so the fit math is reimplemented here with this file's own
  * `Viewport`/`Rect`). Falls back to a neutral centered camera when the document has no pixel content. */
+#[cfg(test)]
 fn paint2d_navigator_fit_viewport(flat: &[Paint2dFlatLayer], inner: Rect) -> Viewport {
     let mut min_x = f32::INFINITY;
     let mut min_y = f32::INFINITY;
@@ -2153,6 +2042,7 @@ fn paint2d_navigator_fit_viewport(flat: &[Paint2dFlatLayer], inner: Rect) -> Vie
  * the React reference's `setCompositeViewport` action / this renderer's `ResizeObserver` equivalent
  * — see report for the pointer/resize wiring gap notes). Returns `None` when the main viewport size
  * hasn't been reported yet. */
+#[cfg(test)]
 fn paint2d_navigator_overlay_rect(content_camera_json: &str, content_viewport_json: Option<&str>, navigator_viewport: &Viewport, navigator_inner: Rect) -> Option<Rect> {
     let content_viewport_json = content_viewport_json?;
     let content_camera = Viewport::from_json(content_camera_json);
@@ -2171,75 +2061,10 @@ fn paint2d_navigator_overlay_rect(content_camera_json: &str, content_viewport_js
 }
 //#endregion Paint2dNavigator
 
-/** 🖼️ Composites paint-2d document layers as textured quads; blend modes, masks and adjustment layers are not yet applied (see FIX-LOWPOLY-DEV-BOOT sibling ticket 26/07/11/WGPU-RENDERER-FULL-PARITY for follow-up scope). `viewMode === "navigator"` renders the same layer stack fit-to-view with a composite-viewport overlay instead of following the local/camera viewport. */
-fn render_paint_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
-    let theme = ctx.theme;
-    let Some(paint_2d) = &scene.paint_2d else {
-        return render_placeholder("paint-2d", bounds, ctx);
-    };
-    let inner = bounds;
-    ctx.draw.push_solid([inner.x, inner.y, inner.w, inner.h], theme.canvas_clear);
-    let doc: Paint2dDocSyncJson = serde_json::from_str(&paint_2d.document_sync_json).unwrap_or_default();
-    let assets: HashMap<String, Paint2dAssetJson> = serde_json::from_str(&paint_2d.assets_json).unwrap_or_default();
-    let is_navigator = paint_2d.view_mode == "navigator";
-    let mut flat = Vec::new();
-    collect_paint2d_pixel_layers(&doc.layers, 0.0, 0.0, 1.0, 1.0, 1.0, &mut flat);
-    let viewport = if is_navigator {
-        paint2d_navigator_fit_viewport(&flat, inner)
-    } else {
-        let mut vp = Viewport::from_json(&paint_2d.camera_json);
-        if vp.zoom <= 0.0 {
-            vp = Viewport { x: doc.camera.x as f32, y: doc.camera.y as f32, zoom: doc.camera.zoom as f32 };
-        }
-        let local = scene_state(&scene.surface_id);
-        if local.viewport.zoom > 0.0 {
-            vp = local.viewport;
-        }
-        vp
-    };
-    draw_checkerboard(ctx.draw, &viewport, inner, theme, 4096.0);
-    if flat.is_empty() {
-        draw_text(ctx, "Empty paint-2d document", inner.x + 8.0, inner.y + 20.0, theme.font_size_small, theme.text_muted);
-    }
-    for layer in &flat {
-        let w = (layer.width as f32 * layer.scale_x as f32 * viewport.zoom).max(1.0);
-        let h = (layer.height as f32 * layer.scale_y as f32 * viewport.zoom).max(1.0);
-        let (sx, sy) = viewport.world_to_screen(layer.x as f32, layer.y as f32, inner);
-        let quad = [sx - w * 0.5, sy - h * 0.5, w, h];
-        if let Some(image_key) = &layer.image_key {
-            let Some(asset) = assets.get(image_key) else {
-                ctx.draw.push_solid(quad, theme.panel.with_alpha(layer.opacity.clamp(0.0, 1.0)));
-                continue;
-            };
-            let data_url = format!("data:{};base64,{}", asset.mime, asset.data);
-            let Some(key) = queue_canvas_image_upload(&scene.surface_id, &layer.id, &data_url) else {
-                ctx.draw.push_solid(quad, theme.panel.with_alpha(layer.opacity.clamp(0.0, 1.0)));
-                continue;
-            };
-            ctx.draw.push_raster_quad(&key, quad, [0.0, 0.0, 1.0, 1.0], layer.opacity);
-        } else {
-            ctx.draw.push_solid(quad, theme.panel.with_alpha(layer.opacity.clamp(0.0, 1.0)));
-        }
-    }
-    // 🧭️ "You are here" overlay: the main surface's visible world rect, mapped into this
-    // navigator's fitted screen space — matches the React reference's `overlayRect` border div.
-    if is_navigator {
-        if let Some(overlay) = paint2d_navigator_overlay_rect(&paint_2d.camera_json, paint_2d.composite_viewport_json.as_deref(), &viewport, inner) {
-            draw_ink_rect_outline(ctx.draw, overlay.x, overlay.y, overlay.w, overlay.h, theme.accent, 2.0);
-        }
-    }
-    ctx.input.register_hit(HitTarget {
-        rect: inner,
-        event: Some(scene_action(scene, "paint2dClick", json!({ "surfaceId": scene.surface_id, "activeUtility": paint_2d.active_utility, "brushSize": paint_2d.brush_size, "brushOpacity": paint_2d.brush_opacity }))),
-        control_id: Some(scene.surface_id.clone()),
-        kind: HitKind::Generic,
-        drag_axis: None,
-        drag_data: None,
-    });
-}
 //#endregion Paint2d
 
 //#region Table
+#[cfg(test)]
 #[derive(Deserialize)]
 struct TableColumn {
     id: String,
@@ -2250,6 +2075,7 @@ struct TableColumn {
 
 /// 🔀️ Mirrors `sourcing::TableSort`'s wire format (`{columnId, direction}`) — the active sort
 /// state for a [`TableScene`] whose columns opt into `sortable`.
+#[cfg(test)]
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct TableSortJson {
@@ -2258,6 +2084,7 @@ struct TableSortJson {
 }
 
 /// 🧾️ Mirrors `ui_wgpu::wgpu::TableCell` — a typed table cell value parsed out of a row's raw JSON.
+#[cfg(test)]
 #[derive(Debug, Clone, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 enum TableCellPayload {
@@ -2267,6 +2094,7 @@ enum TableCellPayload {
     Buttons { buttons: Vec<TableCellButtonPayload> },
 }
 
+#[cfg(test)]
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct TableCellButtonPayload {
@@ -2292,6 +2120,7 @@ fn merge_action_args(base: &ActionDescriptor, patch: Value) -> ActionDescriptor 
 }
 
 /// 🧾️ Renders a table cell's interactive controls (stepper/buttons) directly, or returns the plain text to draw for text/number/legacy-string cells.
+#[cfg(test)]
 fn render_table_cell(cell: &Value, rect: Rect, ctx: &mut FrameworkWidgetContext<'_>) -> Option<String> {
     let Ok(payload) = serde_json::from_value::<TableCellPayload>(cell.clone()) else {
         return Some(match cell {
@@ -2323,6 +2152,7 @@ fn render_table_cell(cell: &Value, rect: Rect, ctx: &mut FrameworkWidgetContext<
     }
 }
 
+#[cfg(test)]
 fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(table) = &scene.table else {
@@ -2537,6 +2367,7 @@ mod table_tests {
 /// 🧩️ Mirrors `playbook::PlaybookBlock`'s renderer-relevant fields — a typed block inside a
 /// [`BlockListScene`] step. Unknown/extra JSON fields (the block-kind-specific property editor
 /// fields owned by the host app) are ignored by `serde` since this crate never edits them.
+#[cfg(test)]
 #[derive(Deserialize)]
 struct BlockListBlockJson {
     id: String,
@@ -2545,6 +2376,7 @@ struct BlockListBlockJson {
 }
 
 /// 🧩️ Mirrors `playbook::PlaybookStep`'s renderer-relevant fields.
+#[cfg(test)]
 #[derive(Deserialize)]
 struct BlockListStepJson {
     id: String,
@@ -2556,6 +2388,7 @@ struct BlockListStepJson {
 }
 
 /// 🧩️ Mirrors `ui_wgpu::wgpu::BlockPaletteEntry`'s wire format (`{blockKind, label, iconId}`).
+#[cfg(test)]
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct BlockListPaletteEntryJson {
@@ -2576,6 +2409,7 @@ struct BlockListPaletteEntryJson {
 /// building one is out of this ticket's scope (`w2-scene-wiring` owns generic pointer routing).
 /// Selection highlighting reads `selected_id` directly (mirrors `render_table`'s selected-row
 /// highlight) even though `block-list-host.tsx` does not yet render it either.
+#[cfg(test)]
 fn render_block_list(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(block_list) = &scene.block_list else {
@@ -2937,6 +2771,7 @@ mod block_list_tests {
 //#endregion BlockListTests
 
 //#region DiffView
+#[cfg(test)]
 #[derive(Clone, Copy, PartialEq, Debug)]
 enum DiffLineOperation {
     Equal,
@@ -2944,6 +2779,7 @@ enum DiffLineOperation {
     Added,
 }
 
+#[cfg(test)]
 #[derive(Clone, Copy, Debug)]
 struct DiffLine<'a> {
     operation: DiffLineOperation,
@@ -2954,10 +2790,12 @@ struct DiffLine<'a> {
 /// falls back to a positional compare so a single huge [`SurfaceKind::DiffView`] payload can't blow
 /// up per-frame recompute cost (this crate re-derives the diff every render pass, mirroring how
 /// `render_graph_timeline` re-parses `columns_json` every frame rather than caching it).
+#[cfg(test)]
 const DIFF_LCS_CELL_BUDGET: usize = 200_000;
 
 /// 🔀️ Line-level LCS diff (classic DP backtrace). Falls back to a naive positional compare above
 /// [`DIFF_LCS_CELL_BUDGET`] cells.
+#[cfg(test)]
 fn diff_lines<'a>(before: &[&'a str], after: &[&'a str]) -> Vec<DiffLine<'a>> {
     let (n, m) = (before.len(), after.len());
     if n.saturating_mul(m) > DIFF_LCS_CELL_BUDGET {
@@ -3016,6 +2854,7 @@ fn diff_lines<'a>(before: &[&'a str], after: &[&'a str]) -> Vec<DiffLine<'a>> {
 /// full-brightness `theme.text`), matching `DIFF_LINE_CLASS`'s per-line text-color classes in
 /// `diff-view-host.tsx` — this used to instead wash the whole row background and dim the *unchanged*
 /// majority of lines, the opposite of what the React source of truth does.
+#[cfg(test)]
 fn render_diff_view(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(diff) = &scene.diff_view else {
@@ -3216,6 +3055,7 @@ mod diff_view_tests {
 //#region EventFeed
 /// 🪶️ Mirrors a `SurfaceKind::EventFeed` entry (`{id, timestampMs, iconId, title, detail?, tone?}`,
 /// `ui_wgpu::wgpu::EventFeedScene`'s doc comment / `EventFeedEntry` in `framework/core/js/index.ts`).
+#[cfg(test)]
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct EventFeedEntryJson {
@@ -3234,6 +3074,7 @@ struct EventFeedEntryJson {
 
 /// 🕒️ Renders a ms-since-epoch timestamp as a bare `HH:MM:SS` UTC time-of-day — no calendar/timezone
 /// library in this crate, so this deliberately doesn't attempt a full date.
+#[cfg(test)]
 fn event_feed_time_of_day_utc(timestamp_ms: i64) -> String {
     let ms_in_day = timestamp_ms.rem_euclid(86_400_000);
     let total_seconds = ms_in_day / 1000;
@@ -3246,6 +3087,7 @@ fn event_feed_time_of_day_utc(timestamp_ms: i64) -> String {
 /// 🎨️ Maps an entry's free-form `tone` to an existing theme token — no new color literals. Only the
 /// tones this crate already has a token for get a distinct color; anything else (including no tone)
 /// stays neutral. Widen this as more tones prove common once the host apps start emitting them.
+#[cfg(test)]
 fn event_feed_tone_color(tone: Option<&str>, theme: &Theme) -> Rgba {
     match tone {
         Some("error") | Some("danger") => theme.error,
@@ -3255,6 +3097,7 @@ fn event_feed_tone_color(tone: Option<&str>, theme: &Theme) -> Rgba {
     }
 }
 
+#[cfg(test)]
 fn event_feed_row_height(entry: &EventFeedEntryJson, row_h: f32, theme: &Theme) -> f32 {
     row_h + entry.detail.as_ref().map_or(0.0, |_| theme.font_size_small + theme.padding_standard * 0.25)
 }
@@ -3265,6 +3108,7 @@ fn event_feed_row_height(entry: &EventFeedEntryJson, row_h: f32, theme: &Theme) 
 /// wheel-scroll on a following feed is overridden on the next render, same tradeoff a live log tail
 /// makes. Rows dispatch `activate_action` (when set) with `{ "entryId": ... }`, mirroring
 /// `render_graph_timeline`'s per-row `checkoutCheckpoint` hit.
+#[cfg(test)]
 fn render_event_feed(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(feed) = &scene.event_feed else {
@@ -3465,6 +3309,7 @@ mod event_feed_tests {
 
 //#region GraphTimeline
 /** @emoji 🗄️ Mirrors `store::HistoryColumn` / React `HistoryColumn` (`ui/js/react/index.tsx:19116`). */
+#[cfg(test)]
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct HistoryColumnAuthorJson {
@@ -3472,6 +3317,7 @@ struct HistoryColumnAuthorJson {
     name: String,
 }
 
+#[cfg(test)]
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct HistoryColumnJson {
@@ -3488,21 +3334,27 @@ struct HistoryColumnJson {
     lane: usize,
 }
 
+#[cfg(test)]
 const HISTORY_LANE_PITCH: f32 = 16.0;
+#[cfg(test)]
 const HISTORY_LANE_PAD: f32 = 8.0;
+#[cfg(test)]
 const HISTORY_AUTHOR_SLOT: f32 = 40.0;
 
 /** Ports `historyLaneCount` (`ui/js/react/index.tsx:19141`). */
+#[cfg(test)]
 fn history_lane_count(columns: &[HistoryColumnJson]) -> usize {
     columns.iter().map(|column| column.lane + 1).max().unwrap_or(1).max(1)
 }
 
 /** Ports `historyGraphWidth` (`ui/js/react/index.tsx:19145`). */
+#[cfg(test)]
 fn history_graph_width(lane_count: usize) -> f32 {
     (HISTORY_LANE_PAD * 2.0 + lane_count as f32 * HISTORY_LANE_PITCH).max(56.0)
 }
 
 /** Ports `historyLaneX` (`ui/js/react/index.tsx:19153`). */
+#[cfg(test)]
 fn history_lane_x(lane: usize, lane_count: usize, graph_width: f32) -> f32 {
     if lane_count <= 1 {
         return graph_width * 0.5;
@@ -3512,6 +3364,7 @@ fn history_lane_x(lane: usize, lane_count: usize, graph_width: f32) -> f32 {
 
 /** Ports `historyRowLaneGuides` (`ui/js/react/index.tsx:19162`): per-row, per-lane guide-line
  * visibility, including the elbow-row propagation when a checkpoint's parent sits on another lane. */
+#[cfg(test)]
 fn history_row_lane_guides(columns: &[HistoryColumnJson], lane_count: usize) -> Vec<Vec<bool>> {
     let mut guides = vec![vec![false; lane_count]; columns.len()];
     let row_by_id: HashMap<&str, usize> = columns.iter().enumerate().map(|(index, column)| (column.checkpoint_id.as_str(), index)).collect();
@@ -3547,6 +3400,7 @@ fn history_row_lane_guides(columns: &[HistoryColumnJson], lane_count: usize) -> 
 /// 🔤️ Two-letter initials from the first two words of an author name (e.g. "Jane Doe" → "JD"),
 /// matching the avatar-initials helper in `index.tsx` — previously the caller only took the very
 /// first character of the whole string (e.g. "Jane Doe" → "J").
+#[cfg(test)]
 fn graph_timeline_avatar_initials(name: &str) -> String {
     let letters: String = name.split_whitespace().filter_map(|word| word.chars().next()).take(2).flat_map(char::to_uppercase).collect();
     if letters.is_empty() {
@@ -3556,6 +3410,7 @@ fn graph_timeline_avatar_initials(name: &str) -> String {
     }
 }
 
+#[cfg(test)]
 fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(history) = &scene.graph_timeline else {
@@ -3790,6 +3645,7 @@ mod graph_timeline_tests {
  * `fillStyleToPaint` in `canvas-2d-host.tsx`. Coordinates (`x1/y1/x2/y2`, `cx/cy/r`) are in the same
  * local space as the owning layer's `x`/`y` (this renderer has no per-layer transform matrix yet, so
  * they are treated as offsets from the layer's own `x`/`y` origin). */
+#[cfg(test)]
 #[derive(Deserialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 struct CanvasFillJson {
@@ -3816,6 +3672,7 @@ struct CanvasFillJson {
 }
 
 /** 🎨️ One `CanvasGradientStop` — `offset` in `[0,1]`, `color` an `[r,g,b,a?]` channel array in `0..1`. */
+#[cfg(test)]
 #[derive(Deserialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 struct CanvasGradientStopJson {
@@ -3826,6 +3683,7 @@ struct CanvasGradientStopJson {
 }
 
 /** 🖊️ A `CanvasLayerRecord["stroke"]` mirror. */
+#[cfg(test)]
 #[derive(Deserialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 struct CanvasStrokeJson {
@@ -3839,6 +3697,7 @@ struct CanvasStrokeJson {
 
 /** 🖼️ A `CanvasLayerRecord["image"]` mirror — the nested per-node image field (as opposed to the
  * legacy top-level `dataUrl` used by `kind === "image"` records). */
+#[cfg(test)]
 #[derive(Deserialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 struct CanvasImageFieldJson {
@@ -3851,6 +3710,7 @@ struct CanvasImageFieldJson {
 }
 
 /** 📝️ A `CanvasLayerRecord["text"]` mirror. */
+#[cfg(test)]
 #[derive(Deserialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 struct CanvasTextFieldJson {
@@ -3860,6 +3720,7 @@ struct CanvasTextFieldJson {
     size: Option<f64>,
 }
 
+#[cfg(test)]
 #[derive(Deserialize)]
 struct CanvasLayer {
     #[serde(default)]
@@ -3913,6 +3774,7 @@ struct CanvasLayer {
     text: Option<CanvasTextFieldJson>,
 }
 
+#[cfg(test)]
 #[derive(Deserialize)]
 struct Canvas2dPacketText<'a> {
     #[serde(borrow)]
@@ -3921,6 +3783,7 @@ struct Canvas2dPacketText<'a> {
     size: f64,
 }
 
+#[cfg(test)]
 #[derive(Deserialize)]
 struct Canvas2dPacketItem<'a> {
     #[serde(borrow)]
@@ -3947,19 +3810,24 @@ struct Canvas2dPacketItem<'a> {
     text: Option<Canvas2dPacketText<'a>>,
 }
 
+
+#[cfg(test)]
 fn canvas2d_packet_text_size() -> f64 {
     11.0
 }
 
+#[cfg(test)]
 fn canvas_layer_should_render(layer: &CanvasLayer) -> bool {
     layer.role.as_deref() != Some("meta") && layer.visible.unwrap_or(true)
 }
 
+#[cfg(test)]
 fn decode_canvas_image_source(data_url: &str) -> Option<Vec<u8>> {
     let payload = data_url.strip_prefix("data:image/png;base64,").or_else(|| data_url.strip_prefix("data:image/jpeg;base64,")).unwrap_or(data_url);
     base64::engine::general_purpose::STANDARD.decode(payload).ok()
 }
 
+#[cfg(test)]
 fn decode_canvas_image_bytes(bytes: &[u8]) -> Option<(Vec<u8>, u32, u32)> {
     let image = image::load_from_memory(&bytes).ok()?;
     let rgba = image.to_rgba8();
@@ -4081,6 +3949,7 @@ pub(crate) fn queue_canvas_image_upload_with(surface_id: &str, layer_id: &str, s
 }
 
 /** 🖼️ Reserves first, then decodes one encoded Canvas image backing exactly once. */
+#[cfg(test)]
 pub(crate) fn queue_canvas_image_upload_sized(surface_id: &str, layer_id: &str, data_url: &str) -> (Option<String>, Option<(u32, u32)>) {
     let dimensions = std::cell::Cell::new(None);
     let key = queue_canvas_image_upload_with(
@@ -4101,6 +3970,7 @@ pub(crate) fn queue_canvas_image_upload_sized(surface_id: &str, layer_id: &str, 
     (key, dimensions.get())
 }
 
+#[cfg(test)]
 pub(crate) fn queue_canvas_image_upload(surface_id: &str, layer_id: &str, data_url: &str) -> Option<String> {
     queue_canvas_image_upload_sized(surface_id, layer_id, data_url).0
 }
@@ -4109,6 +3979,7 @@ pub(crate) fn queue_canvas_image_upload(surface_id: &str, layer_id: &str, data_u
  * (intersected with the full `±extent/2` grid) instead of always walking the whole grid — a
  * continuously-rendering surface (paint-2d) was pushing up to `(extent/cell)^2` solid quads every
  * single frame regardless of zoom/pan, which starves headless WebGPU frame pacing. */
+#[cfg(test)]
 fn draw_checkerboard(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, inner: Rect, theme: &Theme, extent: f32) {
     let cell = 16.0;
     let half = extent * 0.5;
@@ -4146,6 +4017,7 @@ fn draw_checkerboard(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, in
 }
 
 /** 📐️ Theme-aware LOD world grid for canvas-2d — same large/medium/small/micro steps as flow and infinite boards. */
+#[cfg(test)]
 fn draw_canvas_infinite_grid(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, inner: Rect, theme: &Theme) {
     if viewport.zoom <= 0.0 {
         return;
@@ -4183,6 +4055,7 @@ fn draw_canvas_infinite_grid(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &View
     }
 }
 
+#[cfg(test)]
 fn draw_dashed_line(draw: &mut ui_wgpu::wgpu::DrawList, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgba, width: f32) {
     let dx = x1 - x0;
     let dy = y1 - y0;
@@ -4212,6 +4085,7 @@ fn draw_dashed_line(draw: &mut ui_wgpu::wgpu::DrawList, x0: f32, y0: f32, x1: f3
 /** 🎨️ Reads an `[r,g,b,a?]` channel array (each `0..1`, matches `rgbaToCss` in `canvas-2d-host.tsx`)
  * into an `Rgba`, multiplying alpha by the layer's resolved `opacity`. Missing channels fall back to
  * a neutral slate gray (matches the React reference's `rgba(148, 163, 184, opacity)` default). */
+#[cfg(test)]
 fn canvas_color_channels(v: &[f64], opacity: f32) -> Rgba {
     let r = v.first().copied().unwrap_or(0.58) as f32;
     let g = v.get(1).copied().unwrap_or(0.64) as f32;
@@ -4220,6 +4094,7 @@ fn canvas_color_channels(v: &[f64], opacity: f32) -> Rgba {
     Rgba::new(r, g, b, (a * opacity).clamp(0.0, 1.0))
 }
 
+#[cfg(test)]
 fn canvas_mix_rgba(a: Rgba, b: Rgba, t: f32) -> Rgba {
     let t = t.clamp(0.0, 1.0);
     Rgba::new(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t, a.b + (b.b - a.b) * t, a.a + (b.a - a.a) * t)
@@ -4227,6 +4102,7 @@ fn canvas_mix_rgba(a: Rgba, b: Rgba, t: f32) -> Rgba {
 
 /** 🌈️ Samples a `CanvasGradientStop[]` list at `t ∈ [0,1]`, linearly interpolating between the
  * bracketing stops — mirrors `CanvasGradient.addColorStop` sampling semantics. */
+#[cfg(test)]
 fn canvas_gradient_color_at(stops: &[CanvasGradientStopJson], t: f32, opacity: f32) -> Rgba {
     if stops.is_empty() {
         return Rgba::new(0.58, 0.64, 0.72, 0.95 * opacity);
@@ -4252,6 +4128,7 @@ fn canvas_gradient_color_at(stops: &[CanvasGradientStopJson], t: f32, opacity: f
 
 /** 🌗️ A single separable-blend-mode channel formula (W3C Compositing and Blending Level 1 §5.2) —
  * `cb` is the backdrop channel, `cs` the source channel, both `0..1`. */
+#[cfg(test)]
 fn canvas_blend_channel(mode: &str, cb: f32, cs: f32) -> f32 {
     match mode {
         "multiply" => cb * cs,
@@ -4298,10 +4175,12 @@ fn canvas_blend_channel(mode: &str, cb: f32, cs: f32) -> f32 {
     }
 }
 
+#[cfg(test)]
 fn canvas_lum(c: [f32; 3]) -> f32 {
     0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2]
 }
 
+#[cfg(test)]
 fn canvas_clip_color(c: [f32; 3]) -> [f32; 3] {
     let l = canvas_lum(c);
     let n = c[0].min(c[1]).min(c[2]);
@@ -4320,15 +4199,18 @@ fn canvas_clip_color(c: [f32; 3]) -> [f32; 3] {
     out
 }
 
+#[cfg(test)]
 fn canvas_set_lum(c: [f32; 3], l: f32) -> [f32; 3] {
     let d = l - canvas_lum(c);
     canvas_clip_color([c[0] + d, c[1] + d, c[2] + d])
 }
 
+#[cfg(test)]
 fn canvas_sat(c: [f32; 3]) -> f32 {
     c[0].max(c[1]).max(c[2]) - c[0].min(c[1]).min(c[2])
 }
 
+#[cfg(test)]
 fn canvas_set_sat(c: [f32; 3], s: f32) -> [f32; 3] {
     let mut idx = [0usize, 1, 2];
     idx.sort_by(|&a, &b| c[a].partial_cmp(&c[b]).unwrap_or(std::cmp::Ordering::Equal));
@@ -4348,6 +4230,7 @@ fn canvas_set_sat(c: [f32; 3], s: f32) -> [f32; 3] {
  * draw call in the shared `ui_wgpu` pipeline (out of scope for this ticket's Canvas2d/Paint2d
  * regions; see ticket 26/07/11/WGPU-RENDERER-FULL-PARITY). The four non-separable modes
  * (hue/saturation/color/luminosity) follow the W3C SetLum/SetSat algorithm exactly. */
+#[cfg(test)]
 fn canvas_apply_blend_mode(mode: Option<&str>, backdrop: Rgba, source: Rgba) -> Rgba {
     let mode = match mode {
         None | Some("") | Some("normal") => return source,
@@ -4367,9 +4250,12 @@ fn canvas_apply_blend_mode(mode: Option<&str>, backdrop: Rgba, source: Rgba) -> 
 //#endregion Canvas2dFillBlend
 
 //#region Canvas2dShapes
+#[cfg(test)]
 const CANVAS_GRADIENT_BANDS: usize = 10;
+#[cfg(test)]
 const CANVAS_CIRCLE_SEGMENTS: usize = 28;
 
+#[cfg(test)]
 fn canvas_circle_points(cx: f32, cy: f32, radius: f32, segments: usize) -> Vec<[f32; 2]> {
     (0..segments)
         .map(|i| {
@@ -4379,6 +4265,7 @@ fn canvas_circle_points(cx: f32, cy: f32, radius: f32, segments: usize) -> Vec<[
         .collect()
 }
 
+#[cfg(test)]
 fn push_shape_fill(draw: &mut ui_wgpu::wgpu::DrawList, rect: Rect, color: Rgba, is_circle: bool) {
     if is_circle {
         let cx = rect.x + rect.w * 0.5;
@@ -4390,6 +4277,7 @@ fn push_shape_fill(draw: &mut ui_wgpu::wgpu::DrawList, rect: Rect, color: Rgba, 
     }
 }
 
+#[cfg(test)]
 fn push_circle_outline(draw: &mut ui_wgpu::wgpu::DrawList, cx: f32, cy: f32, radius: f32, color: Rgba, width: f32) {
     let points = canvas_circle_points(cx, cy, radius.max(0.5), CANVAS_CIRCLE_SEGMENTS);
     for i in 0..points.len() {
@@ -4399,6 +4287,7 @@ fn push_circle_outline(draw: &mut ui_wgpu::wgpu::DrawList, cx: f32, cy: f32, rad
     }
 }
 
+#[cfg(test)]
 fn push_shape_outline(draw: &mut ui_wgpu::wgpu::DrawList, rect: Rect, color: Rgba, width: f32, is_circle: bool, dash: Option<&[f64]>) {
     if is_circle {
         let cx = rect.x + rect.w * 0.5;
@@ -4420,6 +4309,7 @@ fn push_shape_outline(draw: &mut ui_wgpu::wgpu::DrawList, rect: Rect, color: Rgb
 /** 🌈️ Bands a linear gradient across `clip` (scissor-bounded to the shape's screen bbox) as
  * `CANVAS_GRADIENT_BANDS` solid quads perpendicular to the `(x1,y1)-(x2,y2)` axis — `ui_wgpu::wgpu::
  * DrawList` has no per-vertex gradient primitive, see `canvas_apply_blend_mode` doc comment. */
+#[cfg(test)]
 fn push_linear_gradient_fill(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, inner: Rect, clip: Rect, origin_x: f64, origin_y: f64, fill: &CanvasFillJson, opacity: f32, blend: Option<&str>, backdrop: Rgba) {
     let (sx1, sy1) = viewport.world_to_screen((origin_x + fill.x1) as f32, (origin_y + fill.y1) as f32, inner);
     let (sx2, sy2) = viewport.world_to_screen((origin_x + fill.x2) as f32, (origin_y + fill.y2) as f32, inner);
@@ -4456,6 +4346,7 @@ fn push_linear_gradient_fill(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &View
 
 /** 🌈️ Bands a radial gradient as `CANVAS_GRADIENT_BANDS` concentric circles painted outer-to-inner
  * (painter's algorithm — smaller/later circles overpaint the center), scissor-bounded to `clip`. */
+#[cfg(test)]
 fn push_radial_gradient_fill(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, inner: Rect, clip: Rect, origin_x: f64, origin_y: f64, fill: &CanvasFillJson, opacity: f32, blend: Option<&str>, backdrop: Rgba) {
     let (scx, scy) = viewport.world_to_screen((origin_x + fill.cx) as f32, (origin_y + fill.cy) as f32, inner);
     let sr = (fill.r as f32 * viewport.zoom).max(0.5);
@@ -4472,6 +4363,7 @@ fn push_radial_gradient_fill(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &View
 
 /** 🖌️ Resolves and draws a Canvas2dScene draw record's `fill` (solid / linear / radial gradient) and
  * `stroke`, matching `drawSceneNode`'s fill/stroke resolution in `canvas-2d-host.tsx`. */
+#[cfg(test)]
 fn render_canvas_shape_fill(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, inner: Rect, shape_rect: Rect, layer: &CanvasLayer, opacity: f32, fallback_fill: Rgba, backdrop: Rgba, is_circle: bool) {
     let blend = layer.blend_mode.as_deref();
     match &layer.fill {
@@ -4502,9 +4394,12 @@ fn render_canvas_shape_fill(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewp
  * `"rgba(251, 191, 36, 0.95|0.28)"` strings in `canvas-2d-host.tsx` — an amber that isn't backed by
  * any `Theme` token, so it's kept local to this region rather than mapped onto `theme.accent`
  * (which resolves to the app's red/crimson accent and previously made the ring the wrong hue). */
+#[cfg(test)]
 const CANVAS2D_SELECTION_RING: Rgba = Rgba::new(0.984_314, 0.749_02, 0.141_176, 0.95);
+#[cfg(test)]
 const CANVAS2D_SELECTION_GLOW: Rgba = Rgba::new(0.984_314, 0.749_02, 0.141_176, 0.28);
 
+#[cfg(test)]
 fn render_canvas2d_packet_item(item: &Canvas2dPacketItem<'_>, viewport: &Viewport, inner: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let color = if item.id.starts_with("residual-field-") {
@@ -4532,6 +4427,7 @@ fn render_canvas2d_packet_item(item: &Canvas2dPacketItem<'_>, viewport: &Viewpor
     }
 }
 
+#[cfg(test)]
 fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(canvas) = &scene.canvas_2d else {
@@ -4910,9 +4806,6 @@ fn ink_item_kind(block: &Value) -> &str {
     ink_item_str(block, "kind")
 }
 
-fn ink_item_visible(block: &Value) -> bool {
-    block.get("visible").and_then(Value::as_bool).unwrap_or(true)
-}
 
 fn ink_item_locked(block: &Value) -> bool {
     block.get("locked").and_then(Value::as_bool).unwrap_or(false)
@@ -4949,6 +4842,7 @@ fn ink_item_bounds(block: &Value) -> InkBoundsF {
     InkBoundsF { x, y, w, h }
 }
 
+#[cfg(test)]
 fn ink_effective_bounds(block: &Value, overrides: &HashMap<String, Value>) -> InkBoundsF {
     match overrides.get(ink_item_id(block)) {
         Some(over) => ink_item_bounds(over),
@@ -4956,6 +4850,7 @@ fn ink_effective_bounds(block: &Value, overrides: &HashMap<String, Value>) -> In
     }
 }
 
+#[cfg(test)]
 fn flatten_ink_items(blocks: &[Value]) -> Vec<&Value> {
     let mut out = Vec::new();
     fn visit<'a>(blocks: &'a [Value], out: &mut Vec<&'a Value>) {
@@ -4972,20 +4867,24 @@ fn flatten_ink_items(blocks: &[Value]) -> Vec<&Value> {
     out
 }
 
+#[cfg(test)]
 fn find_ink_item<'a>(blocks: &'a [Value], id: &str) -> Option<&'a Value> {
     flatten_ink_items(blocks).into_iter().find(|block| ink_item_id(block) == id)
 }
 
+#[cfg(test)]
 fn ink_items_at_point<'a>(blocks: &'a [Value], overrides: &HashMap<String, Value>, x: f64, y: f64) -> Vec<&'a Value> {
     let mut flat = flatten_ink_items(blocks);
     flat.reverse();
     flat.into_iter().filter(|block| ink_effective_bounds(block, overrides).contains_point(x, y)).collect()
 }
 
+#[cfg(test)]
 fn ink_items_intersecting_rect(blocks: &[Value], overrides: &HashMap<String, Value>, rect: InkBoundsF) -> Vec<String> {
     flatten_ink_items(blocks).into_iter().filter(|block| ink_effective_bounds(block, overrides).intersects(&rect)).map(|block| ink_item_id(block).to_string()).collect()
 }
 
+#[cfg(test)]
 fn ink_selection_bounds(blocks: &[Value], overrides: &HashMap<String, Value>, ids: &[String]) -> Option<InkBoundsF> {
     let id_set: HashSet<&str> = ids.iter().map(String::as_str).collect();
     let selected: Vec<InkBoundsF> = flatten_ink_items(blocks).into_iter().filter(|block| id_set.contains(ink_item_id(block))).map(|block| ink_effective_bounds(block, overrides)).collect();
@@ -5079,6 +4978,7 @@ fn ink_snap_point(x: f64, y: f64, spacing: f64) -> (f64, f64) {
     (ink_snap_coordinate(x, spacing), ink_snap_coordinate(y, spacing))
 }
 
+#[cfg(test)]
 fn ink_maybe_snap(doc: &InkDocumentJson, x: f64, y: f64) -> (f64, f64) {
     ink_maybe_snap_fields(doc.snap_enabled, doc.snap_grid_spacing, x, y)
 }
@@ -5136,6 +5036,7 @@ fn create_ink_item(kind: &str, x: f64, y: f64) -> Value {
     }
 }
 
+#[cfg(test)]
 fn ink_text_plain(block: &Value) -> String {
     block
         .get("paragraphs")
@@ -5184,6 +5085,7 @@ fn ink_hits_point(block: &Value, x: f64, y: f64, threshold: f64) -> bool {
     points.windows(2).any(|w| point_segment_distance(x, y, w[0].0, w[0].1, w[1].0, w[1].1) <= threshold + stroke_width / 2.0)
 }
 
+#[cfg(test)]
 fn erase_ink_stroke_events(blocks: &[Value], x: f64, y: f64, threshold: f64) -> Vec<Value> {
     flatten_ink_items(blocks).into_iter().filter(|block| ink_item_kind(block) == "stroke" && ink_hits_point(block, x, y, threshold)).map(|block| json!({ "operation": "removeBlock", "blockId": ink_item_id(block) })).collect()
 }
@@ -5238,6 +5140,7 @@ fn erase_ink_stroke_points_in_item(block: &Value, x: f64, y: f64, radius: f64) -
         .collect()
 }
 
+#[cfg(test)]
 fn erase_ink_stroke_points_events(blocks: &[Value], x: f64, y: f64, radius: f64) -> Vec<Value> {
     let mut events = Vec::new();
     for block in flatten_ink_items(blocks) {
@@ -5262,17 +5165,11 @@ fn ink_screen_to_world(camera: InkCameraF, inner: Rect, sx: f32, sy: f32) -> (f6
     ((lx - camera.x) / camera.zoom, (ly - camera.y) / camera.zoom)
 }
 
+#[cfg(test)]
 fn ink_world_to_screen(camera: InkCameraF, inner: Rect, wx: f64, wy: f64) -> (f32, f32) {
     (inner.x + (wx * camera.zoom + camera.x) as f32, inner.y + (wy * camera.zoom + camera.y) as f32)
 }
 
-fn positive_mod_f32(v: f32, m: f32) -> f32 {
-    if m <= 0.0 {
-        0.0
-    } else {
-        ((v % m) + m) % m
-    }
-}
 //#endregion InkCanvasModel
 
 //#region InkCanvasState
@@ -6454,6 +6351,7 @@ impl InkInteractionJob {
     }
 }
 
+#[cfg(test)]
 fn ink_current_camera(scene: &UiComponentSceneNode) -> InkCameraF {
     let state = scene_state(&scene.surface_id);
     if let Some((x, y, zoom)) = state.ink_camera {
@@ -6495,8 +6393,10 @@ fn ink_set_camera_action(scene: &UiComponentSceneNode, camera: InkCameraF) -> Ac
     scene_action(scene, "setCamera", json!({ "surfaceId": scene.surface_id, "camera": { "x": camera.x, "y": camera.y, "zoom": camera.zoom } }))
 }
 
+#[cfg(test)]
 const INK_RESIZE_HANDLES: [&str; 8] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
 
+#[cfg(test)]
 fn ink_resize_handle_screen_pos(handle: &str, sx: f32, sy: f32, w: f32, h: f32, size: f32) -> (f32, f32) {
     let half = size * 0.5;
     let x = if handle.contains('w') {
@@ -6516,6 +6416,7 @@ fn ink_resize_handle_screen_pos(handle: &str, sx: f32, sy: f32, w: f32, h: f32, 
     (x, y)
 }
 
+#[cfg(test)]
 fn ink_resize_handle_at(bounds: InkBoundsF, camera: InkCameraF, inner: Rect, sx: f32, sy: f32, hit_radius: f32) -> Option<&'static str> {
     let (bx, by) = ink_world_to_screen(camera, inner, bounds.x, bounds.y);
     let w = (bounds.w * camera.zoom) as f32;
@@ -6760,6 +6661,7 @@ fn ink_wheel(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, delta: f
 //#endregion InkCanvasState
 
 //#region InkCanvasRender
+#[cfg(test)]
 fn draw_ink_rect_outline(draw: &mut ui_wgpu::wgpu::DrawList, x: f32, y: f32, w: f32, h: f32, color: Rgba, width: f32) {
     draw.push_line(x, y, x + w, y, color, width);
     draw.push_line(x + w, y, x + w, y + h, color, width);
@@ -6767,49 +6669,8 @@ fn draw_ink_rect_outline(draw: &mut ui_wgpu::wgpu::DrawList, x: f32, y: f32, w: 
     draw.push_line(x, y + h, x, y, color, width);
 }
 
-fn draw_ink_grid(draw: &mut ui_wgpu::wgpu::DrawList, camera: InkCameraF, inner: Rect, theme: &Theme, spacing: f64, subdivisions: u32, opacity: f64) {
-    let major_px = (spacing * camera.zoom) as f32;
-    if major_px < 2.0 {
-        return;
-    }
-    let minor_px = major_px / subdivisions.max(1) as f32;
-    let offset_x = positive_mod_f32(camera.x as f32, major_px);
-    let offset_y = positive_mod_f32(camera.y as f32, major_px);
-    let color = theme.separator.with_alpha((theme.separator.a * opacity as f32).max(0.05));
-    let minor_color = color.with_alpha(color.a * 0.55);
 
-    let mut wx = inner.x + positive_mod_f32(offset_x, major_px) - major_px;
-    while wx < inner.x + inner.w {
-        if subdivisions > 1 {
-            for s in 1..subdivisions {
-                let mx = wx + s as f32 * minor_px;
-                if mx >= inner.x && mx <= inner.x + inner.w {
-                    draw.push_line(mx, inner.y, mx, inner.y + inner.h, minor_color, 0.5);
-                }
-            }
-        }
-        if wx >= inner.x && wx <= inner.x + inner.w {
-            draw.push_line(wx, inner.y, wx, inner.y + inner.h, color, 1.0);
-        }
-        wx += major_px;
-    }
-    let mut wy = inner.y + positive_mod_f32(offset_y, major_px) - major_px;
-    while wy < inner.y + inner.h {
-        if subdivisions > 1 {
-            for s in 1..subdivisions {
-                let my = wy + s as f32 * minor_px;
-                if my >= inner.y && my <= inner.y + inner.h {
-                    draw.push_line(inner.x, my, inner.x + inner.w, my, minor_color, 0.5);
-                }
-            }
-        }
-        if wy >= inner.y && wy <= inner.y + inner.h {
-            draw.push_line(inner.x, wy, inner.x + inner.w, wy, color, 1.0);
-        }
-        wy += major_px;
-    }
-}
-
+#[cfg(test)]
 fn draw_ink_table(ctx: &mut FrameworkWidgetContext<'_>, block: &Value, sx: f32, sy: f32, w: f32, h: f32, theme: &Theme) {
     let columns: Vec<String> = block.get("columns").and_then(Value::as_array).map(|c| c.iter().filter_map(|v| v.as_str().map(str::to_string)).collect()).unwrap_or_default();
     let rows: Vec<Vec<String>> = block
@@ -6841,6 +6702,7 @@ fn draw_ink_table(ctx: &mut FrameworkWidgetContext<'_>, block: &Value, sx: f32, 
     }
 }
 
+#[cfg(test)]
 fn draw_ink_image(ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, block: &Value, doc: &InkDocumentJson, sx: f32, sy: f32, w: f32, h: f32) {
     let theme = ctx.theme;
     let image_key = ink_item_str(block, "imageKey");
@@ -6856,6 +6718,7 @@ fn draw_ink_image(ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentScene
     draw_text(ctx, image_key, sx + 6.0, sy + h * 0.5, theme.font_size_small, theme.text_muted);
 }
 
+#[cfg(test)]
 fn draw_ink_item(ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, block: &Value, camera: InkCameraF, inner: Rect, doc: &InkDocumentJson, selected: bool, hovered: bool) {
     let theme = ctx.theme;
     let kind = ink_item_kind(block);
@@ -6919,73 +6782,7 @@ fn draw_ink_item(ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneN
     draw_ink_rect_outline(ctx.draw, sx, sy, w.max(4.0), h.max(4.0), border, border_w);
 }
 
-fn draw_ink_selection_chrome(draw: &mut ui_wgpu::wgpu::DrawList, theme: &Theme, camera: InkCameraF, inner: Rect, bounds: InkBoundsF, show_handles: bool) {
-    let (sx, sy) = ink_world_to_screen(camera, inner, bounds.x, bounds.y);
-    let w = (bounds.w * camera.zoom) as f32;
-    let h = (bounds.h * camera.zoom) as f32;
-    draw_ink_rect_outline(draw, sx, sy, w, h, theme.accent, 1.5);
-    if !show_handles {
-        return;
-    }
-    let handle_size = 8.0;
-    for handle in INK_RESIZE_HANDLES {
-        let (hx, hy) = ink_resize_handle_screen_pos(handle, sx, sy, w, h, handle_size);
-        draw.push_rounded([hx, hy, handle_size, handle_size], theme.background, 1.0);
-        draw_ink_rect_outline(draw, hx, hy, handle_size, handle_size, theme.accent, 1.0);
-    }
-}
 
-fn render_ink_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
-    let theme = ctx.theme;
-    let Some(ink) = &scene.ink_canvas else {
-        return render_placeholder("ink-canvas", bounds, ctx);
-    };
-    let doc: InkDocumentJson = serde_json::from_str(&ink.document_json).unwrap_or_default();
-    let selected_ids: Vec<String> = serde_json::from_str(&ink.selection_json).unwrap_or_default();
-    let selected_set: HashSet<&str> = selected_ids.iter().map(String::as_str).collect();
-    let hovered_id = ink.hovered_id.clone();
-    let is_navigator = ink.view_mode == "navigator";
-    let inner = bounds;
-
-    let state = scene_state(&scene.surface_id);
-    let camera = state.ink_camera.map(|(x, y, zoom)| InkCameraF { x, y, zoom }).unwrap_or_else(|| InkCameraF::from(doc.camera.clone()));
-
-    ctx.draw.push_solid([inner.x, inner.y, inner.w, inner.h], theme.canvas_clear);
-    ctx.draw.push_scissor(inner);
-
-    if doc.grid_visible.unwrap_or(true) && !is_navigator {
-        draw_ink_grid(ctx.draw, camera, inner, theme, doc.grid_spacing.unwrap_or(32.0), doc.grid_subdivisions.unwrap_or(4.0).max(1.0) as u32, doc.grid_opacity.unwrap_or(0.35));
-    }
-
-    let overrides = state.ink_overrides.clone();
-    let blocks = flatten_ink_items(&doc.blocks);
-    for block in blocks.iter().copied() {
-        let effective = overrides.get(ink_item_id(block)).unwrap_or(block);
-        if !ink_item_visible(effective) {
-            continue;
-        }
-        let id = ink_item_id(block);
-        let selected = selected_set.contains(id);
-        let hovered = hovered_id.as_deref() == Some(id);
-        draw_ink_item(ctx, scene, effective, camera, inner, &doc, selected, hovered);
-    }
-
-    let selection_bounds = ink_selection_bounds(&doc.blocks, &overrides, &selected_ids);
-    let utility = doc.active_utility.clone().unwrap_or_else(|| "selectDirect".into());
-    let show_handles = !is_navigator && (utility == "selectDirect" || utility == "selectMarquee") && selection_bounds.is_some() && !selected_ids.is_empty();
-    if let Some(sel) = selection_bounds {
-        draw_ink_selection_chrome(ctx.draw, theme, camera, inner, sel, show_handles);
-    }
-
-    if state.ink_marquee_points.len() >= 2 {
-        let points: Vec<[f32; 2]> = state.ink_marquee_points.iter().map(|p| [p.0, p.1]).collect();
-        ui_wgpu::wgpu::paint_selection_marquee(ctx.draw, theme, false, false, &points, false);
-    }
-
-    ctx.draw.pop_scissor();
-
-    ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(scene.surface_id.clone()), kind: HitKind::Generic, drag_axis: None, drag_data: None });
-}
 //#endregion InkCanvasRender
 
 //#region RasterFrameCostTests
@@ -7076,7 +6873,7 @@ mod raster_frame_cost_tests {
                 _ => panic!("returned checkout"),
             }
         };
-        let mut producer = checked.take().expect("same owner remains in FIFO");
+        let mut producer = checked.take().unwrap_or_else(|_| panic!("same owner remains in FIFO"));
         assert_eq!(producer.source_generation(), generation);
         producer.begin_close();
         while !producer.close_step() {}
@@ -7502,10 +7299,12 @@ pub fn resolve_graph_context_action(action: &ActionDescriptor, node_id: Option<&
     resolved
 }
 
+#[cfg(test)]
 fn find_graph_node(scene: &UiComponentSceneNode, node_id: &str) -> Option<ui_wgpu::wgpu::NodeGraphNodeRecord> {
     scene.node_graph.as_ref().and_then(|graph| graph.nodes.iter().find(|n| n.id == node_id).cloned())
 }
 
+#[cfg(test)]
 fn hit_graph_node(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Option<String> {
     let graph = scene.node_graph.as_ref()?;
     let state = scene_state(&scene.surface_id);
@@ -7523,36 +7322,6 @@ fn hit_graph_node(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> 
     None
 }
 
-#[cfg(test)]
-fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, engine_resources: &mut engine_canvas::EngineCanvasBuildContext, node_graph_states: &mut AdmittedSurfaceMap<NodeGraphSurface>) {
-    let Some(graph) = &scene.node_graph else {
-        return render_placeholder("node-graph", bounds, ctx);
-    };
-    for node in &graph.nodes {
-        register_graph_node(&node.id, node.instance_id.as_deref());
-        let label = node.label.as_deref().or(node.instance_id.as_deref()).unwrap_or(&node.id);
-        let _ = try_push_find_item(ShellFindItem { id: node.id.clone(), label: label.to_string(), description: node.instance_id.clone(), category: Some("Nodes".into()), surface_id: scene.surface_id.clone(), node_id: node.id.clone() });
-    }
-    let inner = bounds;
-    if let Some(surface) = node_graph_states.get_mut(&scene.surface_id) {
-        if surface.controller_id != scene.controller_id {
-            node_graph_states.record_fault("node graph controller replacement requires retained publication");
-            return;
-        }
-        surface.bounds = inner;
-    } else {
-        if node_graph_states.admission_blocked() {
-            return;
-        }
-        if let Err(rejected) = node_graph_states.try_insert(scene.surface_id.clone(), NodeGraphSurface { bounds: inner, controller_id: scene.controller_id.clone() }) {
-            node_graph_states.retain_first_rejected(rejected);
-            return;
-        }
-    }
-    engine_canvas::paint_node_graph(engine_resources, ctx, scene, inner);
-    engine_canvas::paint_node_graph_labels(ctx, scene, inner);
-    engine_canvas::paint_node_graph_overlays(ctx, scene, inner);
-}
 
 //#endregion NodeGraph
 
@@ -7580,24 +7349,6 @@ fn query_map_feature_hits(host: &framework_surface_tiled_map::tiled_map::MapHost
     }
 }
 
-fn paint_tiled_map_marquee(ctx: &mut FrameworkWidgetContext<'_>, surface_id: &str, inner: Rect, theme: &Theme) {
-    let state = scene_state(surface_id);
-    if !state.map_marquee_active {
-        return;
-    }
-    let points = state.map_marquee_points;
-    if points.len() < 2 {
-        return;
-    }
-    let method = match &state.drag {
-        Some(SceneDrag { mode: SceneDragMode::MapMarquee { method, .. }, .. }) => method.as_str(),
-        _ => "rectangle",
-    };
-    let lasso = method == "lasso" && points.len() >= 3;
-    let global: Vec<[f32; 2]> = points.iter().map(|(x, y)| [inner.x + x, inner.y + y]).collect();
-    let crossing = ui_wgpu::wgpu::marquee_is_crossing_from_path(&global, lasso);
-    ui_wgpu::wgpu::paint_selection_marquee(&mut ctx.draw, theme, crossing, lasso, &global, false);
-}
 
 /** @emoji 🗺️ Pushes GIS map context-menu items for a screen-space hit. */
 
@@ -7938,32 +7689,10 @@ pub fn tiled_map_drag_active(surface_id: &str) -> bool {
     scene_state(surface_id).drag.as_ref().is_some_and(|drag| matches!(drag.mode, SceneDragMode::MapMarquee { .. } | SceneDragMode::MapPan))
 }
 
-fn render_tiled_map(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, engine_resources: &mut engine_canvas::EngineCanvasBuildContext, tiled_map_states: &mut AdmittedSurfaceMap<TiledMapSurface>) {
-    let Some(map_scene) = &scene.tiled_map else {
-        return render_placeholder("tiled-map", bounds, ctx);
-    };
-    let inner = bounds;
-    if let Some(surface) = tiled_map_states.get_mut(&scene.surface_id) {
-        if surface.controller_id != scene.controller_id || surface.selection_method != map_scene.selection_method {
-            tiled_map_states.record_fault("tiled map owned string replacement requires retained publication");
-            return;
-        }
-        surface.bounds = inner;
-    } else {
-        if tiled_map_states.admission_blocked() {
-            return;
-        }
-        if let Err(rejected) = tiled_map_states.try_insert(scene.surface_id.clone(), TiledMapSurface { bounds: inner, controller_id: scene.controller_id.clone(), selection_method: map_scene.selection_method.clone() }) {
-            tiled_map_states.retain_first_rejected(rejected);
-            return;
-        }
-    }
-    engine_canvas::paint_tiled_map(engine_resources, ctx, scene, inner);
-    paint_tiled_map_marquee(ctx, &scene.surface_id, inner, ctx.theme);
-}
 //#endregion TiledMap
 
 //#region IconRender
+#[cfg(test)]
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct IconRenderCameraFields {
@@ -7977,10 +7706,13 @@ struct IconRenderCameraFields {
     up: Option<[f64; 3]>,
 }
 
+
+#[cfg(test)]
 fn icon_render_default_zoom() -> f64 {
     1.0
 }
 
+#[cfg(test)]
 #[derive(Deserialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 struct IconRenderLightsFields {
@@ -7998,6 +7730,7 @@ struct IconRenderLightsFields {
     sun_color: Option<String>,
 }
 
+#[cfg(test)]
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct IconRenderMaterialFields {
@@ -8013,6 +7746,7 @@ struct IconRenderMaterialFields {
     emissive_intensity: Option<f64>,
 }
 
+#[cfg(test)]
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct IconRenderRequestFields {
@@ -8032,135 +7766,15 @@ struct IconRenderRequestFields {
     material: Option<IconRenderMaterialFields>,
 }
 
-/** @emoji 🎥️ Folds the request's three.js `zoom` into an equivalent vertical FOV, since the native orbit camera has no independent zoom factor, see https://threejs.org/docs/#api/en/cameras/PerspectiveCamera.zoom. */
-fn icon_render_camera_json(camera: &IconRenderCameraFields) -> String {
-    let fov = camera.fov.unwrap_or(50.0).max(1.0);
-    let zoom = if camera.zoom.abs() > 1e-6 { camera.zoom } else { 1.0 };
-    let effective_fov = if (zoom - 1.0).abs() > 1e-6 {
-        let half = (fov * 0.5).to_radians();
-        (2.0 * (half.tan() / zoom).atan()).to_degrees()
-    } else {
-        fov
-    };
-    let up = camera.up.unwrap_or([0.0, 0.0, 1.0]);
-    json!({
-        "position": camera.position,
-        "target": camera.target,
-        "up": up,
-        "fov": effective_fov,
-    })
-    .to_string()
-}
 
-fn icon_render_environment_json(request: &IconRenderRequestFields) -> String {
-    let lights = request.lights.clone().unwrap_or_default();
-    let mut value = json!({
-        "ambient": { "intensity": lights.ambient_intensity, "color": lights.ambient_color },
-        "sun": {
-            "azimuth": lights.sun_azimuth,
-            "elevation": lights.sun_elevation,
-            "intensity": lights.sun_intensity,
-            "color": lights.sun_color,
-        },
-        "shadow": { "enabled": request.shadow_enabled.unwrap_or(false) },
-    });
-    if let Some(object) = value.as_object_mut() {
-        if let Some(material) = &request.material {
-            object.insert(
-                "material".into(),
-                json!({
-                    "color": material.color,
-                    "metalness": material.metalness,
-                    "roughness": material.roughness,
-                    "emissive": material.emissive,
-                    "emissiveIntensity": material.emissive_intensity,
-                }),
-            );
-        }
-        if let Some(background) = &request.background {
-            object.insert("background".into(), json!(background));
-        }
-    }
-    value.to_string()
-}
 
-fn render_icon_render_empty(bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, message: &str) {
-    let theme = ctx.theme;
-    let size = theme.font_size_body;
-    let width = ctx.atlas.measure_text(message, size).0;
-    draw_text(ctx, message, bounds.x + (bounds.w - width) * 0.5, bounds.y + bounds.h * 0.5, size, theme.text_muted);
-}
 
-/** @emoji 🖼️ Native counterpart of framework/renderer/react/components/icon-render-host.tsx: reframes the request into a synthetic World3dScene and delegates the actual GLB draw to infinite_world::world::render_world_3d, then paints the aspect-fit frame/badge/footer chrome on top. */
-fn render_icon_render(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, world_resources: &mut World3dBuildContext, icon_render_states: &mut HashMap<String, World3dState>) {
-    let Some(icon_render) = &scene.icon_render else {
-        return render_icon_render_empty(bounds, ctx, "No shot");
-    };
-    let Ok(request) = serde_json::from_str::<IconRenderRequestFields>(&icon_render.request_json) else {
-        return render_icon_render_empty(bounds, ctx, "No shot");
-    };
-
-    let shape = request.shape.clone().unwrap_or_else(|| "rectangle".into());
-    let width = request.width.max(1.0) as f32;
-    let height = request.height.max(1.0) as f32;
-    let fit_scale = (bounds.w / width).min(bounds.h / height).max(0.01);
-    let frame_w = width * fit_scale;
-    let frame_h = height * fit_scale;
-    let frame = Rect::new(bounds.x + (bounds.w - frame_w) * 0.5, bounds.y + (bounds.h - frame_h) * 0.5, frame_w, frame_h);
-
-    let mesh_id = semio_framework_plugin::world3d_mesh_id_from_url(&request.asset_url);
-    let instances_json = json!([{
-        "id": "icon-render-subject",
-        "meshId": mesh_id,
-        "position": [0.0, 0.0, 0.0],
-        "rotation": [0.0, 0.0, 0.0, 1.0],
-        "scale": [1.0, 1.0, 1.0],
-    }])
-    .to_string();
-    let mut synthetic_world = semio_framework_plugin::world3d_scene(
-        icon_render_camera_json(&request.camera),
-        semio_framework_plugin::world3d_meshes_json_from_urls(std::slice::from_ref(&request.asset_url)),
-        instances_json,
-        semio_framework_plugin::default_world3d_selection(),
-        &semio_framework_plugin::WorldSunConfig::default(),
-    );
-    synthetic_world.environment_json = Some(icon_render_environment_json(&request));
-
-    let synthetic_scene = UiComponentSceneNode {
-        presence: UiPresence::default(),
-        surface_id: scene.surface_id.clone(),
-        controller_id: scene.controller_id.clone(),
-        component_kind: SurfaceKind::World3d,
-        pane_id: None,
-        binding_id: None,
-        canvas_2d: None,
-        world_3d: Some(synthetic_world),
-        node_graph: None,
-        text_editor: None,
-        table: None,
-        paint_2d: None,
-        virtual_file_system: None,
-        tiled_map: None,
-        board2d: None,
-        icon_render: None,
-        ink_canvas: None,
-        graph_timeline: None,
-        diff_view: None,
-        event_feed: None,
-        block_list: None,
-        menu: None,
-    };
-
-    let state = icon_render_states.entry(scene.surface_id.clone()).or_insert_with(|| World3dState::new(scene.surface_id.clone(), scene.controller_id.clone()));
-    render_world_3d(&synthetic_scene, frame, ctx, state, world_resources);
-
-    paint_icon_render_chrome(ctx, bounds, frame, &request, &shape, icon_render.footer.as_deref());
-}
 
 /// 🖼️ The aspect-fit frame border, size/shape badge, and optional footer caption painted on top of
 /// the delegated `render_world_3d` GLB draw — split out from `render_icon_render` (which needs a
 /// live `GpuContext` and so can't run in a headless unit test) so this chrome-only paint can be
 /// exercised directly against a `DrawList`.
+#[cfg(test)]
 fn paint_icon_render_chrome(ctx: &mut FrameworkWidgetContext<'_>, bounds: Rect, frame: Rect, request: &IconRenderRequestFields, shape: &str, footer: Option<&str>) {
     let theme = ctx.theme;
     // 🖼️ 2px, matching `IconShotFrame`'s `border-2 border-accent` in `icon-render-host.tsx` —
@@ -8240,28 +7854,6 @@ pub struct Board2dSurface {
     pub fixture_json: String,
 }
 
-fn render_board2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, engine_resources: &mut engine_canvas::EngineCanvasBuildContext, board2d_states: &mut AdmittedSurfaceMap<Board2dSurface>) {
-    let Some(board_scene) = &scene.board2d else {
-        return render_placeholder("board-2d", bounds, ctx);
-    };
-    let inner = bounds;
-    if let Some(surface) = board2d_states.get_mut(&scene.surface_id) {
-        if surface.controller_id != scene.controller_id || surface.fixture_json != board_scene.fixture_json {
-            board2d_states.record_fault("board owned string replacement requires retained publication");
-            return;
-        }
-        surface.bounds = inner;
-    } else {
-        if board2d_states.admission_blocked() {
-            return;
-        }
-        if let Err(rejected) = board2d_states.try_insert(scene.surface_id.clone(), Board2dSurface { bounds: inner, controller_id: scene.controller_id.clone(), fixture_json: board_scene.fixture_json.clone() }) {
-            board2d_states.retain_first_rejected(rejected);
-            return;
-        }
-    }
-    engine_canvas::paint_puzzle_board(engine_resources, ctx, scene, inner);
-}
 
 pub fn puzzle_board_pointer_down(surface_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl_or_meta: bool) {
     engine_canvas::puzzle_board_pointer_down(surface_id, inner, x, y, button, shift, ctrl_or_meta);
@@ -8411,12 +8003,14 @@ pub fn build_puzzle2d_selection_menu_items(fixture_json: &str, selection_ids: &[
 //#endregion Board2d
 
 //#region VirtualFileSystem
+#[cfg(test)]
 #[derive(Deserialize)]
 struct VfsDescriptorKind {
     #[serde(default)]
     presentation: String,
 }
 
+#[cfg(test)]
 #[derive(Deserialize)]
 struct VfsFileNodeKind {
     #[serde(default)]
@@ -8425,6 +8019,7 @@ struct VfsFileNodeKind {
     descriptors: Vec<VfsDescriptorColumn>,
 }
 
+#[cfg(test)]
 #[derive(Deserialize)]
 struct VfsDescriptorColumn {
     id: String,
@@ -8434,6 +8029,7 @@ struct VfsDescriptorColumn {
     descriptor_kind_id: String,
 }
 
+#[cfg(test)]
 #[derive(Deserialize)]
 struct VfsSchema {
     #[serde(rename = "descriptorColumnIds", default)]
@@ -8444,55 +8040,8 @@ struct VfsSchema {
     file_node_kinds: HashMap<String, VfsFileNodeKind>,
 }
 
-#[derive(Clone)]
-struct VfsVisibleRow {
-    row: Value,
-    level: u32,
-    has_children: bool,
-    expanded: bool,
-}
 
-fn vfs_children_by_parent(rows: &[Value]) -> HashMap<String, Vec<Value>> {
-    let mut map: HashMap<String, Vec<Value>> = HashMap::new();
-    for row in rows {
-        let parent = row.get("parentId").and_then(|v| v.as_str()).unwrap_or("").to_string();
-        map.entry(parent).or_default().push(row.clone());
-    }
-    map
-}
 
-fn build_vfs_visible_rows(rows: &[Value], expanded_ids: &HashSet<String>) -> Vec<VfsVisibleRow> {
-    let children_by_parent = vfs_children_by_parent(rows);
-    let mut visible = Vec::new();
-    fn visit(node: &Value, level: u32, out: &mut Vec<VfsVisibleRow>, children_by_parent: &HashMap<String, Vec<Value>>, expanded_ids: &HashSet<String>) {
-        let id = node.get("id").and_then(|v| v.as_str()).unwrap_or("").to_string();
-        let has_children = node.get("hasChildren").and_then(|v| v.as_bool()).unwrap_or_else(|| children_by_parent.get(&id).is_some_and(|c| !c.is_empty()));
-        let expanded = has_children && expanded_ids.contains(&id);
-        out.push(VfsVisibleRow { row: node.clone(), level, has_children, expanded });
-        if !expanded {
-            return;
-        }
-        if let Some(children) = children_by_parent.get(&id) {
-            for child in children {
-                visit(child, level + 1, out, children_by_parent, expanded_ids);
-            }
-        }
-    }
-    let roots: Vec<Value> = rows.iter().filter(|row| row.get("parentId").map(|v| v.is_null() || v.as_str() == Some("")).unwrap_or(true)).cloned().collect();
-    for root in roots {
-        if root.get("hasChildren").and_then(|v| v.as_bool()).unwrap_or(false) {
-            let root_id = root.get("id").and_then(|v| v.as_str()).unwrap_or("");
-            if let Some(children) = children_by_parent.get(root_id) {
-                for child in children {
-                    visit(child, 0, &mut visible, &children_by_parent, expanded_ids);
-                }
-            }
-        } else {
-            visit(&root, 0, &mut visible, &children_by_parent, expanded_ids);
-        }
-    }
-    visible
-}
 
 /// 🗂️ Resolves the row glyph, matching `VirtualFileSystemNodeGlyph`'s kind→icon lookup in
 /// `index.tsx`. Previously a configured `fileNodeKinds[kindId].icon` only gated an `.is_some()`
@@ -8501,6 +8050,7 @@ fn build_vfs_visible_rows(rows: &[Value], expanded_ids: &HashSet<String>) -> Vec
 /// Extension-based file-type glyphs (React's ~40-entry `zip`→file-archive table) are not ported
 /// here: the native icon atlas's available id set overlaps an in-flight `IconName` migration in
 /// another session, so guessing unverified ids risks silently blank icons — left as a known gap.
+#[cfg(test)]
 fn vfs_glyph_icon<'a>(schema: &'a VfsSchema, row: &Value) -> &'a str {
     let kind_id = row.get("fileNodeKindId").and_then(|v| v.as_str()).unwrap_or("file");
     if let Some(icon) = schema.file_node_kinds.get(kind_id).and_then(|k| k.icon.as_deref()) {
@@ -8513,131 +8063,10 @@ fn vfs_glyph_icon<'a>(schema: &'a VfsSchema, row: &Value) -> &'a str {
     }
 }
 
-fn vfs_descriptor_label(schema: &VfsSchema, column_id: &str) -> String {
-    for kind in schema.file_node_kinds.values() {
-        if let Some(col) = kind.descriptors.iter().find(|c| c.id == column_id) {
-            if !col.label.is_empty() {
-                return col.label.clone();
-            }
-        }
-    }
-    column_id.to_string()
-}
 
-fn vfs_descriptor_value(schema: &VfsSchema, row: &Value, column_id: &str) -> String {
-    let raw = row
-        .get("descriptorValues")
-        .and_then(|values| values.get(column_id))
-        .map(|v| match v {
-            Value::String(s) => s.clone(),
-            other => other.to_string(),
-        })
-        .unwrap_or_default();
-    let kind_id = schema.file_node_kinds.values().flat_map(|kind| kind.descriptors.iter()).find(|col| col.id == column_id).map(|col| col.descriptor_kind_id.as_str()).unwrap_or("text");
-    let presentation = schema.descriptor_kinds.get(kind_id).map(|k| k.presentation.as_str()).unwrap_or("text");
-    if presentation == "time" {
-        if let Ok(ms) = raw.parse::<f64>() {
-            let secs = (ms / 1000.0) as i64;
-            let mins = secs / 60;
-            let hours = mins / 60;
-            return format!("{:02}:{:02}:{:02}", hours, mins % 60, secs % 60);
-        }
-    }
-    raw
-}
 
-fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
-    let theme = ctx.theme;
-    let Some(vfs) = &scene.virtual_file_system else {
-        return render_placeholder("virtualFileSystem", bounds, ctx);
-    };
-    let schema: VfsSchema = serde_json::from_str(&vfs.schema_json).unwrap_or(VfsSchema { descriptor_column_ids: vec![], descriptor_kinds: HashMap::new(), file_node_kinds: HashMap::new() });
-    let rows: Vec<Value> = serde_json::from_str(&vfs.rows_json).unwrap_or_default();
-    let root_expand_ids: Vec<String> = rows.iter().filter(|row| row.get("hasChildren").and_then(|v| v.as_bool()).unwrap_or(false)).filter_map(|row| row.get("id").and_then(|v| v.as_str()).map(str::to_string)).collect();
-    seed_vfs_expanded(&scene.surface_id, &root_expand_ids);
-    let selected: HashSet<String> = vfs.selected_row_ids_json.as_deref().and_then(|json| serde_json::from_str::<Vec<String>>(json).ok()).unwrap_or_default().into_iter().collect();
-    let state = scene_state(&scene.surface_id);
-    let expanded_ids = state.vfs_expanded_ids;
-    let visible_rows = build_vfs_visible_rows(&rows, &expanded_ids);
-    let inner = bounds;
-    let header_h = theme.control_height * 1.33;
-    let row_h = theme.control_height;
-    let pad = theme.padding_standard;
-    let name_col_w = inner.w * 0.32;
-    let descriptor_ids: Vec<String> = if schema.descriptor_column_ids.is_empty() { vec![] } else { schema.descriptor_column_ids.clone() };
-    let descriptor_col_w = if descriptor_ids.is_empty() { 0.0 } else { (inner.w - name_col_w) / descriptor_ids.len() as f32 };
-    ctx.draw.push_solid([inner.x, inner.y, inner.w, header_h], theme.panel);
-    draw_text(ctx, "Name", inner.x + pad, inner.y + header_h * 0.65, theme.font_size_small, theme.text_muted);
-    for (index, column_id) in descriptor_ids.iter().enumerate() {
-        let x = inner.x + name_col_w + index as f32 * descriptor_col_w;
-        draw_text(ctx, &vfs_descriptor_label(&schema, column_id), x + pad, inner.y + header_h * 0.65, theme.font_size_small, theme.text_muted);
-    }
-    let body = Rect::new(inner.x, inner.y + header_h, inner.w, inner.h - header_h);
-    let scroll = scroll_offset(&scene.surface_id, "vfs");
-    ctx.input.register_hit(HitTarget { rect: body, event: None, control_id: Some(scroll_key(&scene.surface_id, "vfs")), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
-    ctx.draw.push_scissor(body);
-    let hovered_row = vfs.hovered_row_id.clone().or_else(|| ctx.input.hovered_id.clone());
-    if visible_rows.is_empty() {
-        let message = vfs.empty_message.as_deref().unwrap_or("No file system nodes");
-        draw_text(ctx, message, body.x + pad, body.y + row_h * 0.65, theme.font_size_small, theme.text_muted);
-    }
-    for entry in &visible_rows {
-        let row = &entry.row;
-        let row_index = visible_rows.iter().position(|v| v.row.get("id") == row.get("id")).unwrap_or(0);
-        let y = body.y + row_index as f32 * row_h - scroll;
-        if y + row_h < body.y || y > body.y + body.h {
-            continue;
-        }
-        let row_id = row.get("id").and_then(|v| v.as_str()).unwrap_or("").to_string();
-        let control_id = format!("{}.vfs.{}", scene.surface_id, row_id);
-        let row_rect = Rect::new(body.x, y, body.w, row_h);
-        let selected_row = selected.contains(&row_id);
-        let hovered = hovered_row.as_deref() == Some(control_id.as_str());
-        if selected_row {
-            ctx.draw.push_solid([row_rect.x, row_rect.y, row_rect.w, row_rect.h], theme.selected);
-        } else if hovered {
-            ctx.draw.push_solid([row_rect.x, row_rect.y, row_rect.w, row_rect.h], theme.row_hover);
-        }
-        ctx.draw.push_line(row_rect.x, row_rect.y + row_rect.h - theme.stroke_hairline, row_rect.x + row_rect.w, row_rect.y + row_rect.h - theme.stroke_hairline, theme.separator, 1.0);
-        let indent = entry.level as f32 * 14.0;
-        let mut name_x = body.x + pad + indent;
-        if entry.has_children {
-            let chevron_rect = Rect::new(name_x, y, 14.0, row_h);
-            let chevron = if entry.expanded { "chevron-down" } else { "chevron-right" };
-            if let Some(icons) = ctx.icons {
-                if let Some(uv) = icons.icon_uv(chevron) {
-                    ctx.draw.push_textured([chevron_rect.x, y + (row_h - 14.0) * 0.5, 14.0, 14.0], uv, ctx.theme.text_element);
-                }
-            }
-            ctx.input.register_hit(HitTarget { rect: chevron_rect, event: None, control_id: Some(format!("{}.vfs.chevron.{}", scene.surface_id, row_id)), kind: HitKind::Generic, drag_axis: None, drag_data: None });
-            name_x += 14.0;
-        }
-        let icon_id = vfs_glyph_icon(&schema, row);
-        if let Some(icons) = ctx.icons {
-            if let Some(uv) = icons.icon_uv(icon_id) {
-                ctx.draw.push_textured([name_x, y + (row_h - 14.0) * 0.5, 14.0, 14.0], uv, ctx.theme.text_element);
-            }
-        }
-        name_x += 18.0;
-        let name = row.get("name").and_then(|v| v.as_str()).unwrap_or("—");
-        draw_text(ctx, name, name_x, y + row_h * 0.65, theme.font_size_small, if selected_row || hovered { theme.active_foreground } else { theme.text });
-        for (col_index, column_id) in descriptor_ids.iter().enumerate() {
-            let x = body.x + name_col_w + col_index as f32 * descriptor_col_w;
-            let value = vfs_descriptor_value(&schema, row, column_id);
-            draw_text(ctx, &value, x + pad, y + row_h * 0.65, theme.font_size_small, if selected_row { theme.active_foreground } else { theme.text_muted });
-        }
-        let drag_data = if vfs.drag_drop_enabled.unwrap_or(false) {
-            let mut data = HashMap::new();
-            data.insert("application/x-semio-vfs-node".into(), serde_json::to_string(row).unwrap_or_default());
-            Some(data)
-        } else {
-            None
-        };
-        ctx.input.register_hit(HitTarget { rect: row_rect, event: None, control_id: Some(control_id), kind: HitKind::Generic, drag_axis: None, drag_data });
-    }
-    ctx.draw.pop_scissor();
-}
 
+#[cfg(test)]
 fn vfs_double_click_action(scene: &UiComponentSceneNode, row: &Value) -> Option<ActionDescriptor> {
     let uri = row.get("navigateUri").and_then(|v| v.as_str())?;
     if uri.starts_with("os://instance/") {
@@ -8730,6 +8159,7 @@ mod virtual_file_system_tests {
 /// button (only a primary press also starts a drag-selection), so this region's `pointer_down`/
 /// `pointer_up` pair below passes the real button through instead of forcing it.
 #[derive(Clone, Debug, Default)]
+#[cfg(test)]
 struct TextEditorUiState {
     was_pointer_down: bool,
     /// 🖱️ `now_ms()`-based double-click detection — same convention (and the same always-`0.0`-on-native
@@ -8745,6 +8175,7 @@ struct TextEditorUiState {
 }
 
 #[derive(Clone, Debug)]
+#[cfg(test)]
 struct TextEditorContextMenu {
     x: f32,
     y: f32,
@@ -8752,6 +8183,7 @@ struct TextEditorContextMenu {
 }
 
 #[derive(Clone, Copy, Debug)]
+#[cfg(test)]
 struct TextEditorMenuItem {
     id: &'static str,
     label: &'static str,
@@ -8760,6 +8192,7 @@ struct TextEditorMenuItem {
 /// 📋️ Mirrors `CompletionItem` (`text-editor-host.tsx`); `insertText` has no producer yet anywhere in the
 /// codebase (`jack_completions_json` only ever emits `label`/`detail`) so `insert_text` falls back to
 /// `label`, exactly like `identifierPrefixStart`/`applyCompletion` do on the React side.
+#[cfg(test)]
 #[derive(Clone, Deserialize)]
 struct TextEditorCompletionItem {
     label: String,
@@ -8769,6 +8202,7 @@ struct TextEditorCompletionItem {
     insert_text: Option<String>,
 }
 
+#[cfg(test)]
 #[derive(Clone, Copy, Deserialize)]
 struct TextEditorSpan {
     start: usize,
@@ -8776,40 +8210,30 @@ struct TextEditorSpan {
 }
 
 /// ✏️ Mirrors `RenameInfo` (`text-editor-host.tsx`), parsed from `TextEditorScene::rename_json`.
+#[cfg(test)]
 #[derive(Clone, Deserialize)]
 struct TextEditorRenameInfo {
     name: String,
     occurrences: Vec<TextEditorSpan>,
 }
 
-#[cfg(target_arch = "wasm32")]
-thread_local! {
-    static TEXT_EDITOR_UI_STATE: RefCell<HashMap<String, TextEditorUiState>> = RefCell::new(HashMap::new());
-}
 
-#[cfg(not(target_arch = "wasm32"))]
-static TEXT_EDITOR_UI_STATE: WorkerCell<HashMap<String, TextEditorUiState>> = WorkerCell::new();
 
-fn text_editor_ui_state(surface_id: &str) -> TextEditorUiState {
-    TEXT_EDITOR_UI_STATE.with(|cell| cell.borrow().get(surface_id).cloned().unwrap_or_default())
-}
 
-fn store_text_editor_ui_state(surface_id: &str, state: TextEditorUiState) {
-    TEXT_EDITOR_UI_STATE.with(|cell| {
-        cell.borrow_mut().insert(surface_id.to_string(), state);
-    });
-}
 
+#[cfg(test)]
 fn text_editor_completions(editor: &ui_wgpu::wgpu::TextEditorScene) -> Vec<TextEditorCompletionItem> {
     editor.completions_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default()
 }
 
+#[cfg(test)]
 fn text_editor_rename_info(editor: &ui_wgpu::wgpu::TextEditorScene) -> Option<TextEditorRenameInfo> {
     editor.rename_json.as_deref().and_then(|json| serde_json::from_str(json).ok())
 }
 
 /// ✂️ Identifier-prefix scan back from `caret`, mirroring `identifierPrefixStart`
 /// (`framework/renderer/react/components/text-editor-host.tsx`) for the completion-commit replacement range.
+#[cfg(test)]
 fn identifier_prefix_start(text: &str, caret: usize) -> usize {
     let bytes = text.as_bytes();
     let mut start = caret.min(bytes.len());
@@ -8821,6 +8245,7 @@ fn identifier_prefix_start(text: &str, caret: usize) -> usize {
 
 /// 📏️ `[start, end)` byte range of the buffer line containing `cursor`, via the (previously unwired)
 /// `line_col_at` helper below — mirrors `lineRangeAt` (`text-editor-host.tsx`)'s "Select Line" semantics.
+#[cfg(test)]
 fn text_editor_line_range(buffer: &str, cursor: usize) -> (usize, usize) {
     let (line_index, _) = line_col_at(buffer, cursor);
     let mut offset = 0usize;
@@ -8839,6 +8264,7 @@ fn text_editor_line_range(buffer: &str, cursor: usize) -> (usize, usize) {
 /// `UiCommand::ClipboardCopy/Cut/PasteRequested`, which even there says the OS read/write is a
 /// "host-region concern" still unwired) and the domain-specific "pick target" rows (those need a new
 /// `EditorHost::pick_targets_at_screen_json` wrapper; deferred, noted in the ticket report).
+#[cfg(test)]
 fn text_editor_context_menu_items(editor: &ui_wgpu::wgpu::TextEditorScene) -> Vec<TextEditorMenuItem> {
     let mut items = Vec::new();
     if !text_editor_completions(editor).is_empty() {
@@ -8858,6 +8284,7 @@ fn text_editor_context_menu_items(editor: &ui_wgpu::wgpu::TextEditorScene) -> Ve
 /// ▶️ Executes one context-menu row. `inner` re-derives the click point in surface-local screen space for
 /// "Select Token"/"Select Line"; "Select All" reuses `engine_canvas::text_editor_apply_key`'s existing
 /// Ctrl/Cmd+A path instead of adding a sixth wrapper.
+#[cfg(test)]
 fn text_editor_run_menu_action(scene: &UiComponentSceneNode, editor: &ui_wgpu::wgpu::TextEditorScene, inner: Rect, menu: &TextEditorContextMenu, action_id: &str, ctx: &mut FrameworkWidgetContext<'_>, ui_state: &mut TextEditorUiState) -> bool {
     match action_id {
         "suggest" => {
@@ -8913,25 +8340,25 @@ fn text_editor_run_menu_action(scene: &UiComponentSceneNode, editor: &ui_wgpu::w
 //#region Popups
 /// 📍️ Anchor (surface-local screen space) for the completions dropdown: near the caret, falling back to a
 /// fixed offset if the host isn't ready yet — mirrors `WasmEditorSurface`'s `position ? ... : { left: 12, top: 12 }`.
+#[cfg(test)]
 fn text_editor_completion_anchor(scene: &UiComponentSceneNode, inner: Rect) -> (f32, f32) {
     engine_canvas::text_editor_caret_screen(scene, inner).unwrap_or((inner.x + 12.0, inner.y + 12.0))
 }
 
+#[cfg(test)]
 fn text_editor_completion_row_rect(anchor: (f32, f32), theme: &Theme, index: usize) -> Rect {
     let row_h = theme.control_height_small;
     Rect::new(anchor.0, anchor.1 + 18.0 + index as f32 * row_h, 220.0, row_h)
 }
 
-fn text_editor_completion_hit(scene: &UiComponentSceneNode, inner: Rect, theme: &Theme, len: usize, x: f32, y: f32) -> Option<usize> {
-    let anchor = text_editor_completion_anchor(scene, inner);
-    (0..len).find(|&index| text_editor_completion_row_rect(anchor, theme, index).contains(x, y))
-}
 
+#[cfg(test)]
 fn text_editor_menu_row_rect(menu: &TextEditorContextMenu, theme: &Theme, index: usize) -> Rect {
     let row_h = theme.control_height;
     Rect::new(menu.x + 4.0, menu.y + 4.0 + index as f32 * row_h, 200.0 - 8.0, row_h)
 }
 
+#[cfg(test)]
 fn text_editor_menu_hit(menu: &TextEditorContextMenu, theme: &Theme, x: f32, y: f32) -> Option<usize> {
     (0..menu.items.len()).find(|&index| text_editor_menu_row_rect(menu, theme, index).contains(x, y))
 }
@@ -8944,6 +8371,7 @@ fn text_editor_menu_hit(menu: &TextEditorContextMenu, theme: &Theme, x: f32, y: 
 /// unlike `shell`'s own `render_context_menu` (drawn into a dedicated top-level overlay `DrawList`), this
 /// draws into the regular in-flow layer, so it can't guarantee being on top of *other* panels — only of
 /// this surface's own content and anything already drawn earlier in the frame.
+#[cfg(test)]
 fn render_text_editor_completions(ctx: &mut FrameworkWidgetContext<'_>, inner: Rect, scene: &UiComponentSceneNode, completions: &[TextEditorCompletionItem], active_index: usize) {
     let theme = ctx.theme;
     let anchor = text_editor_completion_anchor(scene, inner);
@@ -8974,6 +8402,7 @@ fn render_text_editor_completions(ctx: &mut FrameworkWidgetContext<'_>, inner: R
     }
 }
 
+#[cfg(test)]
 fn render_text_editor_context_menu(ctx: &mut FrameworkWidgetContext<'_>, menu: &TextEditorContextMenu) {
     let theme = ctx.theme;
     let row_h = theme.control_height;
@@ -8992,6 +8421,7 @@ fn render_text_editor_context_menu(ctx: &mut FrameworkWidgetContext<'_>, menu: &
     }
 }
 
+#[cfg(test)]
 fn render_text_editor_rename_input(ctx: &mut FrameworkWidgetContext<'_>, inner: Rect, scene: &UiComponentSceneNode) {
     let theme = ctx.theme;
     let text = ctx.input.text_view().to_string();
@@ -9006,6 +8436,7 @@ fn render_text_editor_rename_input(ctx: &mut FrameworkWidgetContext<'_>, inner: 
 //#endregion Popups
 
 //#region Geometry
+#[cfg(test)]
 fn cursor_from_click(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, scroll: f32) -> usize {
     let Some(editor) = &scene.text_editor else {
         return 0;
@@ -9029,6 +8460,7 @@ fn cursor_from_click(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, 
     lines.iter().take(line_index).map(|l| l.len() + 1).sum::<usize>() + cursor
 }
 
+#[cfg(test)]
 fn line_col_at(text: &str, cursor: usize) -> (usize, usize) {
     let mut index = 0usize;
     for (line_index, line) in text.lines().enumerate() {
@@ -9044,242 +8476,6 @@ fn line_col_at(text: &str, cursor: usize) -> (usize, usize) {
 //#endregion Geometry
 
 //#region Render
-fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, engine_resources: &mut engine_canvas::EngineCanvasBuildContext) {
-    let Some(editor) = &scene.text_editor else {
-        return render_placeholder("text-editor", bounds, ctx);
-    };
-    let inner = bounds;
-    engine_canvas::paint_text_editor(engine_resources, ctx, scene, inner);
-    let editor_id = format!("{}.editor", scene.surface_id);
-    let rename_id = format!("{}.editor.rename", scene.surface_id);
-    let seed_focused = ctx.input.focused_id.as_deref() == Some(editor_id.as_str());
-    if seed_focused && ctx.input.text_buffer.is_empty() && !editor.buffer.is_empty() {
-        ctx.input.focus_id_owned(editor_id.clone());
-    }
-
-    let mut ui_state = text_editor_ui_state(&scene.surface_id);
-    if let Some((x, y, button)) = ui_state.pending_context_click.take() {
-        match engine_canvas::text_editor_pointer_click_into(scene, inner, x, y, button, ctx.input) {
-            Ok(_) => {
-                ui_state.context_menu = Some(TextEditorContextMenu { x, y, items: text_editor_context_menu_items(editor) });
-            }
-            Err(fault) => {
-                ctx.input.record_action_fault(fault);
-                ui_state.pending_context_click = Some((x, y, button));
-            }
-        }
-    }
-    let hovered = inner.contains(ctx.input.pointer_x, ctx.input.pointer_y);
-    let pressed_edge = ctx.input.pointer_down && !ui_state.was_pointer_down;
-
-    //#region PointerInput
-    // 🔀️ Plain single-click-to-caret and drag-to-select are handled by the generic real per-event
-    // `ui_wgpu::wgpu::UiCommand::Scene` -> `interpreter::apply_scene_ui_command` ->
-    // `handle_scene_pointer_button`/`handle_scene_pointer_move` route now (see `TextEditorUiState`'s
-    // doc comment) — this block only covers what that path doesn't: double-click word-select and the
-    // right-click context menu.
-    if pressed_edge {
-        let mut consumed_press = false;
-        // 🍿️ Completions popup rows take priority: commit on hit; a miss just falls through so the click
-        // still positions the caret, matching `WasmEditorSurface`'s document-pane click handling.
-        if ui_state.completions_open {
-            let completions = text_editor_completions(editor);
-            if let Some(index) = text_editor_completion_hit(scene, inner, ctx.theme, completions.len(), ctx.input.pointer_x, ctx.input.pointer_y) {
-                if let Some(item) = completions.get(index) {
-                    let (_, caret) = engine_canvas::text_editor_caret(scene);
-                    let prefix_start = identifier_prefix_start(&editor.buffer, caret);
-                    let insert_text = item.insert_text.as_deref().unwrap_or(&item.label);
-                    if let Err(fault) = engine_canvas::text_editor_apply_completion_into(scene, prefix_start, caret, insert_text, ctx.input) {
-                        ctx.input.record_action_fault(fault);
-                        ui_state.completions_open = true;
-                    } else {
-                        ui_state.completions_open = false;
-                    }
-                }
-                consumed_press = true;
-            }
-        }
-        // 🖱️ Context-menu rows: any press while one is open dismisses it; a hit also runs the action.
-        if !consumed_press {
-            if let Some(menu) = ui_state.context_menu.clone() {
-                let mut keep_menu = false;
-                if let Some(index) = text_editor_menu_hit(&menu, ctx.theme, ctx.input.pointer_x, ctx.input.pointer_y) {
-                    if let Some(item) = menu.items.get(index).copied() {
-                        if !text_editor_run_menu_action(scene, editor, inner, &menu, item.id, ctx, &mut ui_state) {
-                            keep_menu = true;
-                        }
-                    }
-                }
-                ui_state.context_menu = keep_menu.then_some(menu);
-                consumed_press = true;
-            }
-        }
-        if !consumed_press && !ui_state.rename_active {
-            if ctx.input.pointer_button == 2 && hovered {
-                // 🖱️➡️ Reposition the caret first (real button `2`, matching `WasmEditorSurface.onContextMenu`'s
-                // `pointerDownScreen(sx, sy, 2)`), then open the menu at the click point. 🐛️➡️✅️ W4 fix: this used
-                // to force `button` to `0` since `EditorHost::pointer_down_screen` no-operated entirely for
-                // `button != 0` — now that it repositions the caret for every button (see that fn's own doc
-                // comment), passing the real button through is both correct AND avoids incorrectly flagging
-                // `drag_selecting` for what is not a primary-button press.
-                if let Err(fault) = engine_canvas::text_editor_pointer_click_into(scene, inner, ctx.input.pointer_x, ctx.input.pointer_y, ctx.input.pointer_button, ctx.input) {
-                    ctx.input.record_action_fault(fault);
-                    ui_state.pending_context_click = Some((ctx.input.pointer_x, ctx.input.pointer_y, ctx.input.pointer_button));
-                } else {
-                    ui_state.context_menu = Some(TextEditorContextMenu { x: ctx.input.pointer_x, y: ctx.input.pointer_y, items: text_editor_context_menu_items(editor) });
-                }
-                ctx.input.focus_id_owned(editor_id.clone());
-                ui_state.completions_open = false;
-            } else if ctx.input.pointer_button == 0 && hovered {
-                // ✋️ The generic `UiCommand::Scene` route already repositions the caret / extends the
-                // drag-selection for this same press (via `apply_scene_ui_command`); this only tracks
-                // double-click timing/offset locally and closes the completions popup / (re)focuses for
-                // keyboard routing.
-                ctx.input.focus_id_owned(editor_id.clone());
-                ui_state.completions_open = false;
-                let click_offset = cursor_from_click(scene, inner, ctx.input.pointer_x, ctx.input.pointer_y, 0.0);
-                let now = now_ms();
-                let is_double = ui_state.last_click_offset == Some(click_offset) && (now - ui_state.last_click_ms).abs() < 400.0;
-                if is_double {
-                    if let Err(fault) = engine_canvas::text_editor_select_span_into(scene, inner, ctx.input.pointer_x, ctx.input.pointer_y, ctx.input) {
-                        ctx.input.record_action_fault(fault);
-                    }
-                }
-                ui_state.last_click_ms = now;
-                ui_state.last_click_offset = Some(click_offset);
-            }
-        }
-    }
-    ui_state.was_pointer_down = ctx.input.pointer_down;
-    //#endregion PointerInput
-
-    //#region Keyboard
-    let focused = ctx.input.focused_id.as_deref() == Some(editor_id.as_str());
-    let renaming = ui_state.rename_active && ctx.input.focused_id.as_deref() == Some(rename_id.as_str());
-    if renaming {
-        for key in ctx.input.take_key_step().into_iter() {
-            match key {
-                KeyAction::Escape => {
-                    ui_state.rename_active = false;
-                    ctx.input.blur_input();
-                }
-                KeyAction::Enter => {
-                    if let Err(fault) = queue_commit_rename_action(ctx.input, scene, &ui_state.rename_occurrences) {
-                        ctx.input.record_action_fault(fault);
-                        ctx.input.retry_key(KeyAction::Enter).expect("popped key credit remains reserved");
-                        break;
-                    }
-                    ui_state.rename_active = false;
-                    ctx.input.blur_input();
-                }
-                KeyAction::Char(ch) => {
-                    for c in ch.chars() {
-                        ctx.input.insert_char(c);
-                    }
-                }
-                KeyAction::Backspace => ctx.input.backspace(),
-                KeyAction::Delete => ctx.input.delete_forward(),
-                _ => {}
-            }
-        }
-    } else if focused {
-        let modifiers = ctx.input.modifiers.clone();
-        let completions = text_editor_completions(editor);
-        for key in ctx.input.take_key_step().into_iter() {
-            if ui_state.completions_open && !completions.is_empty() {
-                match key {
-                    KeyAction::ArrowDown => {
-                        ui_state.completion_index = (ui_state.completion_index + 1) % completions.len();
-                        continue;
-                    }
-                    KeyAction::ArrowUp => {
-                        ui_state.completion_index = (ui_state.completion_index + completions.len() - 1) % completions.len();
-                        continue;
-                    }
-                    key @ (KeyAction::Tab | KeyAction::Enter) => {
-                        let item = &completions[ui_state.completion_index.min(completions.len() - 1)];
-                        let (_, caret) = engine_canvas::text_editor_caret(scene);
-                        let prefix_start = identifier_prefix_start(&editor.buffer, caret);
-                        let insert_text = item.insert_text.as_deref().unwrap_or(&item.label);
-                        if let Err(fault) = engine_canvas::text_editor_apply_completion_into(scene, prefix_start, caret, insert_text, ctx.input) {
-                            ctx.input.record_action_fault(fault);
-                            ctx.input.retry_key(key).expect("popped key credit remains reserved");
-                            break;
-                        }
-                        ui_state.completions_open = false;
-                        continue;
-                    }
-                    KeyAction::Escape => {
-                        ui_state.completions_open = false;
-                        continue;
-                    }
-                    _ => {}
-                }
-            }
-            match key {
-                KeyAction::Space(true) if (modifiers.meta || modifiers.ctrl) && !completions.is_empty() => {
-                    ui_state.completions_open = true;
-                    ui_state.completion_index = 0;
-                }
-                KeyAction::Enter if modifiers.meta || modifiers.ctrl => {
-                    if let Err(fault) = queue_document_action(ctx.input, scene, "submit", &editor.buffer) {
-                        ctx.input.record_action_fault(fault);
-                        ctx.input.retry_key(KeyAction::Enter).expect("popped key credit remains reserved");
-                        break;
-                    }
-                }
-                KeyAction::Char(ch) if (modifiers.meta || modifiers.ctrl) && ch.eq_ignore_ascii_case("s") => {
-                    if let Err(fault) = queue_surface_action(ctx.input, scene, "formatDocument") {
-                        ctx.input.record_action_fault(fault);
-                        ctx.input.retry_key(KeyAction::Char(ch)).expect("popped key credit remains reserved");
-                        break;
-                    }
-                }
-                key @ (KeyAction::Enter | KeyAction::Escape) => {
-                    if let Err(fault) = queue_document_action(ctx.input, scene, "textEdit", &editor.buffer) {
-                        ctx.input.record_action_fault(fault);
-                        ctx.input.retry_key(key).expect("popped key credit remains reserved");
-                        break;
-                    }
-                    if matches!(key, KeyAction::Escape) {
-                        ctx.input.blur_input();
-                    }
-                }
-                key @ (KeyAction::Char(_) | KeyAction::Backspace | KeyAction::Delete) => {
-                    if let Err(fault) = engine_canvas::text_editor_apply_key_into(scene, &key, &modifiers, ctx.input) {
-                        ctx.input.record_action_fault(fault);
-                        ctx.input.retry_key(key).expect("popped key credit remains reserved");
-                        break;
-                    }
-                }
-                _ => {}
-            }
-        }
-    }
-    //#endregion Keyboard
-
-    //#region Popups
-    if ui_state.completions_open {
-        let completions = text_editor_completions(editor);
-        if completions.is_empty() {
-            ui_state.completions_open = false;
-        } else {
-            if ui_state.completion_index >= completions.len() {
-                ui_state.completion_index = 0;
-            }
-            render_text_editor_completions(ctx, inner, scene, &completions, ui_state.completion_index);
-        }
-    }
-    if let Some(menu) = ui_state.context_menu.clone() {
-        render_text_editor_context_menu(ctx, &menu);
-    }
-    if ui_state.rename_active {
-        render_text_editor_rename_input(ctx, inner, scene);
-    }
-    //#endregion Popups
-
-    store_text_editor_ui_state(&scene.surface_id, ui_state);
-}
 //#endregion Render
 
 #[cfg(test)]
@@ -9530,7 +8726,7 @@ mod text_editor_tests {
             let mut ctx = fixture.ctx();
             text_editor_run_menu_action(&scene, &editor, inner, &menu, "format", &mut ctx, &mut ui_state);
         }
-        let events = fixture.input.drain_events();
+        let events = crate::collect_fixture_actions(&mut fixture.input);
         assert!(events.iter().any(|action| action.action == "formatDocument"));
     }
 
@@ -9546,7 +8742,7 @@ mod text_editor_tests {
             let mut ctx = fixture.ctx();
             text_editor_run_menu_action(&scene, &editor, inner, &menu, "lint", &mut ctx, &mut ui_state);
         }
-        let events = fixture.input.drain_events();
+        let events = crate::collect_fixture_actions(&mut fixture.input);
         assert!(events.iter().any(|action| action.action == "lintDocument"));
     }
 

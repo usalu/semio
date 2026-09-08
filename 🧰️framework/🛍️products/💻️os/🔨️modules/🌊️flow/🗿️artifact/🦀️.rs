@@ -731,7 +731,7 @@ pub(crate) fn widget_to_dag_node(widget: &Widget, index: usize, layout: &Ordered
     let mut node = match widget {
         Widget::Neuron { id: neuron_id, neuron_kind, params, input_ports, output_ports, .. } => {
             let (inputs, outputs, variadic_inputs, variadic_outputs) = neuron_io_layout(neuron_id, neuron_kind, input_ports, output_ports, params, synapses, kind_infos);
-            DagNodeSpec::computation(id, name, abbreviation, icon, inputs, outputs, variadic_inputs, variadic_outputs, x, y, width, height)
+            DagNodeSpec::computation(id, &name, &abbreviation, icon, inputs, outputs, variadic_inputs, variadic_outputs, x, y, width, height)
         }
         Widget::InputSlider { value, min, max, step, .. } => DagNodeSpec {
             id,
@@ -786,11 +786,11 @@ pub(crate) fn widget_to_dag_node(widget: &Widget, index: usize, layout: &Ordered
         }
         Widget::Variable { name, schema, .. } => {
             let (inputs, outputs) = variable_io_ports(name, schema);
-            DagNodeSpec::computation(id, name.clone(), abbreviation, icon, inputs, outputs, false, false, x, y, width, height)
+            DagNodeSpec::computation(id, &name, &abbreviation, icon, inputs, outputs, false, false, x, y, width, height)
         }
         Widget::Cluster { id: cluster_id, name: cluster_name, tree, .. } => {
             let (inputs, outputs) = cluster_io_layout(cluster_id, cluster_name, tree, synapses);
-            DagNodeSpec::cluster(id, name, abbreviation, icon, inputs, outputs, x, y, width, height)
+            DagNodeSpec::cluster(id, &name, &abbreviation, icon, inputs, outputs, x, y, width, height)
         }
     };
     node.operator_kind = widget_operator_kind(widget);

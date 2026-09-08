@@ -451,16 +451,8 @@ impl ArtifactEditor for ShootingPlayApp {
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
         };
-        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            request.context,
-            operation_context,
-            request.completion,
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
             shooting_command_id,
             SHOOTING_BOUNDED_RAW_BYTES,
             SHOOTING_BOUNDED_WORK_ITEMS,
@@ -627,8 +619,8 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
                 schema: "2d.image".into(),
                 export_formats: vec![],
                 import_formats: vec![],
-                    export_stdio_kinds: vec!["stdio.png"],
-        import_stdio_kinds: vec!["stdio.png"],
+                    export_stdio_kinds: vec!["stdio.png".into()],
+        import_stdio_kinds: vec!["stdio.png".into()],
     })
             .media_output(shooting_photos_out_port())
             .icon_id("camera")
@@ -708,11 +700,11 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("importAssetRequest", InteractiveJobClassification::Migrated)
             // 📝️ Staged argument forms for the panel-visible create actions (defaults materialized host-side).
             .action_args("addShot", vec![
-                ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), vec![ActionArgOption::new("svg", LocalizedLabel::native("SVG", "SVG")), ActionArgOption::new("png", LocalizedLabel::native("PNG", "PNG"))]).default_value("png"),
-                ActionArgDef::select("shape", LocalizedLabel::native("Shape", "Form"), vec![ActionArgOption::new("rectangle", LocalizedLabel::native("Rectangle", "Rechteck")), ActionArgOption::new("ellipse", LocalizedLabel::native("Ellipse", "Ellipse"))]).default_value("rectangle"),
+                ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), vec![ActionArgOption::new("svg", LocalizedLabel::native("SVG", "SVG")), ActionArgOption::new("png", LocalizedLabel::native("PNG", "PNG"))]).default_value(&"png"),
+                ActionArgDef::select("shape", LocalizedLabel::native("Shape", "Form"), vec![ActionArgOption::new("rectangle", LocalizedLabel::native("Rectangle", "Rechteck")), ActionArgOption::new("ellipse", LocalizedLabel::native("Ellipse", "Ellipse"))]).default_value(&"rectangle"),
             ])
             .action_args("addAsset", vec![
-                ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), vec![ActionArgOption::new("glb", LocalizedLabel::native("GLB", "GLB"))]).default_value("glb"),
+                ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), vec![ActionArgOption::new("glb", LocalizedLabel::native("GLB", "GLB"))]).default_value(&"glb"),
             ])
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
@@ -1149,8 +1141,8 @@ mod tests {
         assert_eq!(io.import_formats.len(), 0);
         let kind = crate::artifacts::shooting::artifact_kind();
         assert_eq!(kind.export_stdio_kinds, kind.import_stdio_kinds);
-        assert!(kind.export_stdio_kinds.contains(&"stdio.svg"));
-        assert!(kind.export_stdio_kinds.contains(&"stdio.png"));
+        assert!(kind.export_stdio_kinds.iter().any(|kind| kind == "stdio.svg"));
+        assert!(kind.export_stdio_kinds.iter().any(|kind| kind == "stdio.png"));
     }
 
     /// 🔌️ WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE Wave 2 port recipe:

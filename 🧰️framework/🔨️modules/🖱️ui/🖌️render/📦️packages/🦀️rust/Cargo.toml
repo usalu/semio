@@ -2,7 +2,7 @@
 name = "semio-framework-ui-render"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Backend-neutral GPU UI core: transient elements, taffy layout, coherent frame snapshots, and the RenderPacket every graphics backend replays"
 
 [package.metadata.semio]

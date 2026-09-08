@@ -137,7 +137,7 @@
           }
         },
         "documentFence": { "const": "mounted-actor-generation-including-zero" },
-        "genesisPublication": { "const": "no-active-checkpoint-exact-zero-frontier" },
+        "genesisPublication": { "const": "active-indexed-genesis-parent-before-first-edit" },
         "peerNotification": {
           "const": {
             "after": ["committed-wal-event", "actor-frontier", "public-checkpoint", "ledger-applied"],

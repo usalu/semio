@@ -2300,7 +2300,7 @@ mod native_actor {
                             self.fail_artifact_bootstrap("database-private snapshot cannot seed an artifact client").await;
                         }
                         Bootstrap::ArtifactBootstrap(bootstrap) => {
-                            self.start_artifact_bootstrap(bootstrap, resume_token, server_frontier).await;
+                            self.start_artifact_bootstrap(*bootstrap, resume_token, server_frontier).await;
                         }
                     }
                 }
@@ -3174,7 +3174,7 @@ mod native_actor {
         #[test]
         fn stale_generation_wake_cannot_schedule_or_mutate_current_turn() {
             let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
-            pool.shutdown();
+            pool.shutdown().expect("fixture pool shuts down without retained uses");
             let (_, receiver) = artifact_mailbox_pair();
             let runner = runner_with(pool, None, receiver.close_handle());
             runner.request_wake(0);
@@ -3188,7 +3188,7 @@ mod native_actor {
         #[test]
         fn turn_fault_and_cancel_retain_then_close_one_owner_per_grant() {
             let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
-            pool.shutdown();
+            pool.shutdown().expect("fixture pool shuts down without retained uses");
             let (sender, receiver) = artifact_mailbox_pair();
             sender.send(ArtifactActorMsg::ExternalChanged).expect("first terminal mailbox owner");
             sender.send(ArtifactActorMsg::Detach).expect("second terminal mailbox owner");
@@ -3236,7 +3236,7 @@ mod native_actor {
                 let kind = error.kind();
                 let job = error.into_job();
                 release.wait();
-                pool.shutdown();
+                pool.shutdown().expect("fixture pool shuts down without retained uses");
                 job();
                 panic!("fill exact quiet queue slot: {kind:?}");
             }
@@ -3251,7 +3251,7 @@ mod native_actor {
         #[test]
         fn idle_runner_is_strongly_retained_and_quiet_late_wake_schedules_once() {
             let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
-            pool.shutdown();
+            pool.shutdown().expect("fixture pool shuts down without retained uses");
             let (_, receiver) = artifact_mailbox_pair();
             let handle = fixture_runner_handle(pool, 41, receiver.close_handle());
             let weak = Arc::downgrade(&handle.runner);
@@ -3272,7 +3272,7 @@ mod native_actor {
         #[test]
         fn external_ticket_held_across_close_delays_completion_until_exact_return() {
             let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
-            pool.shutdown();
+            pool.shutdown().expect("fixture pool shuts down without retained uses");
             let (_, receiver) = artifact_mailbox_pair();
             let handle = fixture_runner_handle(pool, 73, receiver.close_handle());
             let host = Arc::new(std::sync::Mutex::new(ArtifactHostState::new()));
@@ -3289,7 +3289,7 @@ mod native_actor {
         #[test]
         fn external_ticket_dropped_before_close_and_generation_aba_are_exact() {
             let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
-            pool.shutdown();
+            pool.shutdown().expect("fixture pool shuts down without retained uses");
             let (_, old_receiver) = artifact_mailbox_pair();
             let old = fixture_runner_handle(pool.clone(), 91, old_receiver.close_handle());
             let host = Arc::new(std::sync::Mutex::new(ArtifactHostState::new()));
@@ -3314,7 +3314,7 @@ mod native_actor {
         #[test]
         fn terminal_job_take_resume_and_close_preserve_exact_owner() {
             let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
-            pool.shutdown();
+            pool.shutdown().expect("fixture pool shuts down without retained uses");
             let (_, receiver) = artifact_mailbox_pair();
             let handle = fixture_runner_handle(pool, 101, receiver.close_handle());
             handle.cancel();
@@ -3371,7 +3371,7 @@ mod native_actor {
                 },
                 component: crate::os_directory::DocumentExecutionTargetComponentV1 { sha256: "33".repeat(32), blake3: "44".repeat(32), byte_length: 1024 },
                 descriptor: crate::os_directory::DocumentExecutionTargetDescriptorV1 { sha256: "55".repeat(32), byte_length: 512 },
-                browser_actor: crate::os_directory::DocumentExecutionTargetBrowserActorV1::None,
+                browser_actor: crate::os_directory::schema::DocumentExecutionTargetBrowserActorV1::None,
                 artifact: crate::os_directory::DocumentOpenArtifactV1 { kind: "fixture".into(), schema: "fixture/v1".into(), pack_schema_hash: "66".repeat(32) },
                 parent_dialect: crate::os_directory::DocumentOpenParentDialectV1 { artifact_kind: "fixture".into(), standard: "1".into(), subset: "*".into() },
                 surface: crate::os_directory::DocumentOpenSurfaceV1 {
@@ -3382,7 +3382,18 @@ mod native_actor {
                     renderer_target: crate::os_directory::DocumentOpenRendererTargetV1::Wgpu,
                 },
                 grant: crate::os_directory::DocumentOpenGrantV1 { read: true, write: true, observe: true },
-                checkpoint: None,
+                checkpoint: crate::os_directory::DocumentOpenCheckpointV1 {
+                    checkpoint_id: "77".repeat(32),
+                    descriptor_digest_v1: "11".repeat(32),
+                    baseline_frontier: crate::os_directory::ArtifactFrontier {
+                        document_id: "shared-document".into(),
+                        head_edit_ordinal: 0,
+                        head_edit_id: String::new(),
+                        last_commit_seq: 0,
+                        chain_hash: crate::os_directory::ArtifactHash::new([0; 32]),
+                    },
+                    aggregate_sha256: "88".repeat(32),
+                },
                 revalidation: crate::os_directory::DocumentOpenRevalidationV1 { directory_revision: 7, membership_generation: 7, session_generation: Some(3), share_generation: None },
             }
         }
@@ -3390,7 +3401,7 @@ mod native_actor {
         #[semio_framework_async_macros::async_test]
         async fn hub_document_actor_and_surface_authority_are_isolated_by_full_scope() {
             let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
-            pool.shutdown();
+            pool.shutdown().expect("fixture pool shuts down without retained uses");
             let host = ArtifactHost::new(pool);
             let space_a = ArtifactDocumentKey::hub("space-a", "shared-document");
             let space_b = ArtifactDocumentKey::hub("space-b", "shared-document");
@@ -3434,7 +3445,7 @@ mod native_actor {
         #[semio_framework_async_macros::async_test]
         async fn host_close_registry_survives_external_ticket_until_return() {
             let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
-            pool.shutdown();
+            pool.shutdown().expect("fixture pool shuts down without retained uses");
             let host = ArtifactHost::new(pool);
             let channels = host.open(ArtifactActorConfig { document_id: "held".into(), schema: "fixture/v1".into(), bindings: Vec::new(), watch_external: false, actor: "fixture".into() }).await;
             let generation = channels.runner.generation();
@@ -3451,7 +3462,7 @@ mod native_actor {
         #[semio_framework_async_macros::async_test]
         async fn ticket_return_before_host_close_allows_immediate_retirement() {
             let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
-            pool.shutdown();
+            pool.shutdown().expect("fixture pool shuts down without retained uses");
             let host = ArtifactHost::new(pool);
             let channels = host.open(ArtifactActorConfig { document_id: "returned".into(), schema: "fixture/v1".into(), bindings: Vec::new(), watch_external: false, actor: "fixture".into() }).await;
             let generation = channels.runner.generation();
@@ -3466,7 +3477,7 @@ mod native_actor {
         #[test]
         fn detach_while_pending_retains_future_then_cancel_closes_one_owner() {
             let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
-            pool.shutdown();
+            pool.shutdown().expect("fixture pool shuts down without retained uses");
             let (_, receiver) = artifact_mailbox_pair();
             let pending: ActorTurnFuture = Box::pin(async { std::future::pending::<(ArtifactActor, ArtifactDrive)>().await });
             let runner = runner_with(pool, Some(ActorTurnOwner::Future(pending)), receiver.close_handle());
@@ -3768,7 +3779,7 @@ mod wasm_actor {
                             self.finish_catchup_if_ready().await;
                         }
                         Bootstrap::Snapshot { .. } => self.disconnect(),
-                        Bootstrap::ArtifactBootstrap(bootstrap) => self.start_artifact_bootstrap(bootstrap, resume_token, server_frontier).await,
+                        Bootstrap::ArtifactBootstrap(bootstrap) => self.start_artifact_bootstrap(*bootstrap, resume_token, server_frontier).await,
                     }
                 }
                 ServerFrame::SnapshotChunk { .. } | ServerFrame::SnapshotDone { .. } => self.disconnect(),
@@ -4525,16 +4536,17 @@ impl crate::os_store::BlobStore for FolderEventLogStorage {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::os_spr::{ArtifactId, Edit, Mutation, MutationDiff, OpBinary, OpText};
+    use crate::os_spr::{ArtifactId, Edit, Mutation, MutationComposition, MutationDiff, MutationDiffParticipation, MutationInvertibility, MutationLanguageSurface, MutationLeafDescriptor, MutationOutcomeClass, OpBinary, OpText};
+    use std::sync::Arc;
     use crate::os_store::{
         create_document_envelope, pack_rt, parse_document_pack, parse_document_text, print_document_pack, print_document_text, print_edit_lines, register_document_codec, ArtifactCodec, ArtifactCommand, ArtifactDsl, ArtifactPack, BlobStore,
         PackDecodeOptions, PackEncodeOptions, PackError, ParsedDocumentText,
     };
     use serde::{Deserialize, Serialize};
 
-    fn test_pool() -> std::sync::Arc<semio_framework_async::WorkerPool> {
-        static POOL: std::sync::OnceLock<std::sync::Arc<semio_framework_async::WorkerPool>> = std::sync::OnceLock::new();
-        POOL.get_or_init(|| std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)))).clone()
+    fn test_pool() -> Arc<semio_framework_async::WorkerPool> {
+        static POOL: std::sync::OnceLock<Arc<semio_framework_async::WorkerPool>> = std::sync::OnceLock::new();
+        POOL.get_or_init(|| Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)))).clone()
     }
 
     #[semio_framework_async_macros::async_test]
@@ -4584,9 +4596,9 @@ mod tests {
     #[test]
     fn artifact_mailbox_wake_storm_coalesces_until_fifo_becomes_empty() {
         let (sender, receiver) = artifact_mailbox_pair();
-        let wakes = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let wakes = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let observed = wakes.clone();
-        receiver.set_wake(std::sync::Arc::new(move || {
+        receiver.set_wake(Arc::new(move || {
             observed.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
         }));
         for _ in 0..ARTIFACT_MAILBOX_ITEMS {
@@ -4770,6 +4782,28 @@ mod tests {
 
     impl Mutation<DemoSnapshot> for DemoMutation {
         type Diff = DemoDiff;
+        const DESCRIPTORS: &'static [MutationLeafDescriptor] = &[MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync",
+            semantic_kind: "set-n",
+            display_name: "Set N",
+            emoji: "🔢️",
+            aggregate_variant: "SetN",
+            payload_schema: "DemoMutation::SetN",
+            text_opcode: Some("set-n"),
+            binary_tag: Some(0),
+            invertibility: MutationInvertibility::ExplicitMutation,
+            diff_participation: MutationDiffParticipation::ApplyOnly,
+            outcome_classes: &[MutationOutcomeClass::Applied],
+            composition: MutationComposition::Atomic,
+            required_language_surfaces: &[MutationLanguageSurface::Rust, MutationLanguageSurface::Text, MutationLanguageSurface::Binary],
+        }];
+
+        fn descriptor(&self) -> &'static MutationLeafDescriptor {
+            match self {
+                Self::SetN { .. } => &Self::DESCRIPTORS[0],
+            }
+        }
 
         fn diff(&self, _snapshot: &DemoSnapshot) -> crate::os_spr::MutationOutcome<DemoDiff> {
             crate::os_spr::MutationOutcome::new(match self {
@@ -4789,7 +4823,7 @@ mod tests {
     async fn ensure_demo_codec_registered() {
         static ONCE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
         if !ONCE.swap(true, std::sync::atomic::Ordering::AcqRel) {
-            let _ = register_document_codec(ArtifactCodec::of::<DemoSnapshot, DemoMutation>("demo/v1")).await.expect("register demo codec");
+            let _ = register_document_codec(ArtifactCodec::of::<DemoSnapshot, DemoMutation>("demo/v1")).expect("register demo codec");
         }
     }
 
@@ -4875,24 +4909,24 @@ mod tests {
         let stale = "hub.v1.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
         let fresh = "hub.v1.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
         actor.install_test_socket_actor(stale);
-        actor.inject_hub_frame(ServerFrame::Session { actor: ActorId(stale.into()), color: 3 }).await;
+        actor.inject_hub_frame(ServerFrame::Session { actor: stale.into(), color: 3 }).await;
         assert_eq!(actor.socket_epoch_test_state(), (Some(stale.into()), true, 0, Vec::new()));
         actor.fail_test_bootstrap().await;
         assert_eq!(actor.socket_epoch_test_state(), (None, false, 0, Vec::new()));
         let first = sample_operation_envelope("after-bootstrap-failure", 1).await;
         let first_actor = first.actor.0.clone();
         actor.relay_test_envelope(first).await;
-        assert_eq!(actor.socket_epoch_test_state(), (None, false, 0, vec![first_actor]));
+        assert_eq!(actor.socket_epoch_test_state(), (None, false, 0, vec![first_actor.clone()]));
 
         actor.install_test_socket_actor(stale);
-        actor.inject_hub_frame(ServerFrame::Session { actor: ActorId(stale.into()), color: 4 }).await;
+        actor.inject_hub_frame(ServerFrame::Session { actor: stale.into(), color: 4 }).await;
         actor.fail_test_connection().await;
         assert_eq!(actor.socket_epoch_test_state().0, None);
         assert!(!actor.socket_epoch_test_state().1);
         let second = sample_operation_envelope("after-eof", 2).await;
         let second_actor = second.actor.0.clone();
         actor.relay_test_envelope(second).await;
-        assert_eq!(actor.socket_epoch_test_state(), (None, false, 0, vec![first_actor, second_actor]));
+        assert_eq!(actor.socket_epoch_test_state(), (None, false, 0, vec![first_actor.clone(), second_actor.clone()]));
 
         let mut socket = connect(&mut actor, fresh).await;
         assert!(matches!(receive_frame(&mut socket).await, ClientFrame::SocketHelloV1 { .. }));
@@ -4901,7 +4935,7 @@ mod tests {
         actor.relay_test_envelope(before_session).await;
         assert_eq!(actor.socket_epoch_test_state(), (Some(fresh.into()), false, 0, vec![first_actor, second_actor, before_session_actor]));
         assert!(tokio::time::timeout(std::time::Duration::from_millis(30), socket.next()).await.is_err(), "queued mutations cannot cross the socket before Session confirms the receipt actor");
-        actor.inject_hub_frame(ServerFrame::Session { actor: ActorId(fresh.into()), color: 5 }).await;
+        actor.inject_hub_frame(ServerFrame::Session { actor: fresh.into(), color: 5 }).await;
         let first_batch = receive_frame(&mut socket).await;
         let ClientFrame::Commands { batch_id, envelopes } = first_batch else { panic!("fresh Session must flush one command batch") };
         assert_eq!(envelopes.len(), 3);
@@ -4918,7 +4952,7 @@ mod tests {
         let mut reconnected_socket = connect(&mut actor, reconnected).await;
         assert!(matches!(receive_frame(&mut reconnected_socket).await, ClientFrame::SocketHelloV1 { .. }));
         assert!(tokio::time::timeout(std::time::Duration::from_millis(30), reconnected_socket.next()).await.is_err(), "reconnect cannot flush before its own Session");
-        actor.inject_hub_frame(ServerFrame::Session { actor: ActorId(reconnected.into()), color: 6 }).await;
+        actor.inject_hub_frame(ServerFrame::Session { actor: reconnected.into(), color: 6 }).await;
         let ClientFrame::Commands { envelopes, .. } = receive_frame(&mut reconnected_socket).await else { panic!("reconnect Session must flush queued mutation") };
         assert_eq!(envelopes.len(), 1);
         assert_eq!(envelopes[0].actor.0, reconnected);
@@ -4960,7 +4994,7 @@ mod tests {
         let local = sample_operation_envelope("pending-local", 8).await;
         actor.queue_test_outbox(vec![local.clone(), local.clone()]);
         actor.inject_bootstrap_local_replay_failure();
-        let welcome = |bootstrap: ArtifactBootstrap| ServerFrame::Welcome { session_id: "session-bootstrap".into(), resume_token: "resume-bootstrap".into(), server_frontier: required.clone(), bootstrap: Bootstrap::ArtifactBootstrap(bootstrap) };
+        let welcome = |bootstrap: ArtifactBootstrap| ServerFrame::Welcome { session_id: "session-bootstrap".into(), resume_token: "resume-bootstrap".into(), server_frontier: required.clone(), bootstrap: Bootstrap::ArtifactBootstrap(Box::new(bootstrap)) };
 
         actor.inject_hub_frame(welcome(bootstrap.clone())).await;
         let first = channel.receive().await.expect("baseline queue");
@@ -5032,7 +5066,7 @@ mod tests {
         let (inline_bootstrap, pair) = demo_artifact_bootstrap(true).await;
         let (mut chunked_bootstrap, _) = demo_artifact_bootstrap(false).await;
         let required = inline_bootstrap.required_tail_frontier.clone();
-        let welcome = |bootstrap: ArtifactBootstrap| ServerFrame::Welcome { session_id: "session-bootstrap".into(), resume_token: "resume-bootstrap".into(), server_frontier: required.clone(), bootstrap: Bootstrap::ArtifactBootstrap(bootstrap) };
+        let welcome = |bootstrap: ArtifactBootstrap| ServerFrame::Welcome { session_id: "session-bootstrap".into(), resume_token: "resume-bootstrap".into(), server_frontier: required.clone(), bootstrap: Bootstrap::ArtifactBootstrap(Box::new(bootstrap)) };
 
         let (mut inline_actor, mut inline_channel) = actor_pair("native-bootstrap-inline").await;
         inline_actor.inject_hub_frame(welcome(inline_bootstrap)).await;
@@ -5193,7 +5227,18 @@ mod tests {
                             renderer_target: DocumentOpenRendererTargetV1::Wgpu,
                         },
                         grant: DocumentOpenGrantV1 { read: true, write: true, observe: true },
-                        checkpoint: None,
+                        checkpoint: crate::os_directory::DocumentOpenCheckpointV1 {
+                            checkpoint_id: "9".repeat(64),
+                            descriptor_digest_v1: "4".repeat(64),
+                            baseline_frontier: crate::os_directory::ArtifactFrontier {
+                                document_id: document_id.to_string(),
+                                head_edit_ordinal: 0,
+                                head_edit_id: String::new(),
+                                last_commit_seq: 0,
+                                chain_hash: crate::os_directory::ArtifactHash::new([0; 32]),
+                            },
+                            aggregate_sha256: "a".repeat(64),
+                        },
                         revalidation: DocumentOpenRevalidationV1 { directory_revision: 1, membership_generation: 1, session_generation: Some(1), share_generation: None },
                     },
                 })

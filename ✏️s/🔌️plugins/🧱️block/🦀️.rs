@@ -232,32 +232,32 @@ pub fn plugin() -> Result<Plugin<BlockApps>, PluginAssemblyError> {
 mod surface_tests {
     #[semio_framework_async_macros::async_test]
     async fn block2d_viewer_never_mutates() {
-        semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::block2d::Block2dViewer>();
+        semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::block2d::Block2dViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn block2d_editor_and_viewer_share_dialect() {
-        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::block2d::Block2dPlayApp, crate::viewer::block2d::Block2dViewer>();
+        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::block2d::Block2dPlayApp, crate::viewer::block2d::Block2dViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn block3d_viewer_never_mutates() {
-        semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::block3d::Block3dViewer>();
+        semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::block3d::Block3dViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn block3d_editor_and_viewer_share_dialect() {
-        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::block3d::Block3dPlayApp, crate::viewer::block3d::Block3dViewer>();
+        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::block3d::Block3dPlayApp, crate::viewer::block3d::Block3dViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn block5d_viewer_never_mutates() {
-        semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::block5d::Block5dViewer>();
+        semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::block5d::Block5dViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn block5d_editor_and_viewer_share_dialect() {
-        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::block5d::Block5dPlayApp, crate::viewer::block5d::Block5dViewer>();
+        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::block5d::Block5dPlayApp, crate::viewer::block5d::Block5dViewer>().await;
     }
 }
 //#endregion 🧪️SurfaceTests

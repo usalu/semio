@@ -114,9 +114,9 @@ pub fn decode_stl_binary(bytes: &[u8]) -> Result<StlSnapshot, String> {
 
 /// 📤 Writes real binary STL: 80-byte header (`solid_name`, truncated to 80 bytes / zero-padded)
 /// + u32 triangle count at offset 80..84 (the count belongs INSIDE the 84-byte header, not
-/// appended after it — an 80-byte header vec here, not 84, is what makes the count land at the
-/// right offset). Each facet's persisted `f64` normal/vertices narrow to `f32` (binary STL's
-/// spec-mandated precision — a documented, lossy normalization, not fabrication).
+///   appended after it — an 80-byte header vec here, not 84, is what makes the count land at the
+///   right offset). Each facet's persisted `f64` normal/vertices narrow to `f32` (binary STL's
+///   spec-mandated precision — a documented, lossy normalization, not fabrication).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_stl_binary(snap: &StlSnapshot) -> Vec<u8> {
     let mut out = vec![0u8; 80];

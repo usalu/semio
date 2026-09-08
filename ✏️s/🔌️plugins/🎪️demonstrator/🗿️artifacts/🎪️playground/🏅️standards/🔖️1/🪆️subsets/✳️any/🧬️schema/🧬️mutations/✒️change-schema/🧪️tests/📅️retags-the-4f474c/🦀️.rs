@@ -25,13 +25,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> PlaygroundSnapshot {
-    serde_json::from_str(BEFORE).expect("before playground document decodes")
+    dsl::json::from_json_str(BEFORE).expect("before playground document decodes")
 }
 fn expected_after() -> PlaygroundSnapshot {
-    serde_json::from_str(AFTER).expect("after playground document decodes")
+    dsl::json::from_json_str(AFTER).expect("after playground document decodes")
 }
 fn mutation() -> PlaygroundMutation {
-    serde_json::from_str(MUTATION).expect("change-schema mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("change-schema mutation decodes")
 }
 fn built_outcome() -> protocol::MutationOutcome<PlaygroundDiff> {
     <PlaygroundMutation as protocol::Mutation<PlaygroundSnapshot>>::diff(&mutation(), &before())
@@ -66,12 +66,12 @@ fn retagging_back_restores_before() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: PlaygroundSnapshot = serde_json::from_str(text).expect("playground document decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("playground document encodes");
+        let decoded: PlaygroundSnapshot = dsl::json::from_json_str(text).expect("playground document decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("playground document encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("playground document reparses");
         assert_eq!(reencoded, original, "change-schema/retags-the-playground-document-schema: committed {label} playground JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("ChangeSchema payload encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("ChangeSchema payload encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("ChangeSchema payload reparses");
     assert_eq!(reencoded, original, "change-schema/retags-the-playground-document-schema: committed ChangeSchema JSON is not canonical");
 }
@@ -91,7 +91,7 @@ fn declared_outcome_holds() {
 /// `schema` field. This mutation may set the second one only.
 #[test]
 fn produces_committed_diff() {
-    let produced = serde_json::to_value(built_outcome().diff()).expect("produced change-schema diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(built_outcome().diff())).expect("produced change-schema diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-schema/retags-the-playground-document-schema: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -100,10 +100,10 @@ fn produces_committed_diff() {
 /// an explicit `null` because `PlaygroundDiff` carries no `skip_serializing_if`.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: PlaygroundDiff = serde_json::from_str(DIFF).expect("committed change-schema diff decodes");
+    let decoded: PlaygroundDiff = dsl::json::from_json_str(DIFF).expect("committed change-schema diff decodes");
     assert_eq!(decoded.schema.as_deref(), Some("playground.experiment"), "change-schema/retags-the-playground-document-schema: the committed diff must set the new tag");
     assert!(decoded.artifact.is_none(), "change-schema/retags-the-playground-document-schema: a one-field retag must never escalate into a whole-artifact replacement");
-    let reencoded = serde_json::to_value(&decoded).expect("committed diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-schema/retags-the-playground-document-schema: committed diff JSON is not canonical");
 }
@@ -111,7 +111,7 @@ fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-document to the after-document.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: PlaygroundDiff = serde_json::from_str(DIFF).expect("committed change-schema diff decodes");
+    let decoded: PlaygroundDiff = dsl::json::from_json_str(DIFF).expect("committed change-schema diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("committed diff applies to the before-document");
     assert_eq!(produced, expected_after(), "change-schema/retags-the-playground-document-schema: committed diff did not carry before to after");
 }

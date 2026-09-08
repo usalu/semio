@@ -586,14 +586,7 @@ impl ArtifactEditor for LayoutPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            operation_context,
-            request.completion,
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
             LayoutCommand::command_id,
             LAYOUT_RETAINED_RAW_BYTES,
             LAYOUT_RETAINED_WORK_ITEMS,
@@ -702,8 +695,8 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
                 schema: "layout.layout".into(),
                 export_formats: vec![],
                 import_formats: vec![],
-                export_stdio_kinds: vec!["stdio.svg", "stdio.png"],
-                import_stdio_kinds: vec!["stdio.svg", "stdio.png"],
+                export_stdio_kinds: vec!["stdio.svg".into(), "stdio.png".into()],
+                import_stdio_kinds: vec!["stdio.svg".into(), "stdio.png".into()],
             })
             .document(["semio", "layout"])
             .icon_id("layout")
@@ -724,7 +717,7 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
                     ActionArgOption::new("rect", LocalizedLabel::native("Rectangle", "Rechteck")),
                     ActionArgOption::new("text", LocalizedLabel::native("Text Frame", "Textrahmen")),
                     ActionArgOption::new("image", LocalizedLabel::native("Image Frame", "Bildrahmen")),
-                ]).default_value("rect"),
+                ]).default_value(&"rect"),
                 ActionArgDef::number("x", LocalizedLabel::native("X", "X")),
                 ActionArgDef::number("y", LocalizedLabel::native("Y", "Y")),
             ])

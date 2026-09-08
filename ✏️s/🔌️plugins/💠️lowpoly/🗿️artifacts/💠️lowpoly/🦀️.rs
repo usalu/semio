@@ -288,8 +288,8 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "lowpoly.fixture".into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
-        import_stdio_kinds: vec!["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl"],
+        export_stdio_kinds: vec!["stdio.dwg".into(), "stdio.gltf".into(), "stdio.json".into(), "stdio.las".into(), "stdio.obj".into(), "stdio.ply".into(), "stdio.png".into(), "stdio.stl".into()],
+        import_stdio_kinds: vec!["stdio.dwg".into(), "stdio.gltf".into(), "stdio.json".into(), "stdio.las".into(), "stdio.obj".into(), "stdio.ply".into(), "stdio.png".into(), "stdio.stl".into()],
     }
 }
 
@@ -494,7 +494,7 @@ async fn artifact_schema_descriptor_leaves_parse_and_field_states_match_snapshot
         .iter()
         .map(|(name, prop)| {
             let raw = prop["x-semio-state"].as_str().expect("state");
-            (name.clone(), parse_state_class_kebab(raw).expect("parse"))
+            (name.to_string(), parse_state_class_kebab(raw).expect("parse"))
         })
         .collect();
     json_states.sort_by(|a, b| a.0.cmp(&b.0));

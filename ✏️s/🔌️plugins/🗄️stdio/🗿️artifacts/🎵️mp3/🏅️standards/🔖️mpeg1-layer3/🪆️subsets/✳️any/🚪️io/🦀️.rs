@@ -46,9 +46,9 @@ pub mod derived_composition {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mp3_artifact_schema_descriptor());
-        let _ = store::register_document_codec(store::ArtifactCodec::of::<Mp3Snapshot, crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation>(
+        store::register_document_codec(store::ArtifactCodec::of::<Mp3Snapshot, crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation>(
             crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::STDIO_MP3_DOCUMENT_SCHEMA,
-        ));
+        )).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
 
@@ -286,21 +286,12 @@ pub fn decode_mp3(bytes: &[u8]) -> Result<Mp3Snapshot, String> {
     };
 
     let mut frames = Vec::new();
-    loop {
-        match find_frame_sync(&bytes[pos..]) {
-            Some(offset) => {
-                let frame_pos = pos + offset;
-                match parse_frame_header(bytes, frame_pos) {
-                    Some((header, frame_size)) => {
-                        let payload = bytes[frame_pos + 4..frame_pos + frame_size].to_vec();
-                        frames.push(Mp3Frame { header, payload });
-                        pos = frame_pos + frame_size;
-                    }
-                    None => break, // sync word without a decodable header — stop (honest boundary)
-                }
-            }
-            None => break,
-        }
+    while let Some(offset) = find_frame_sync(&bytes[pos..]) {
+        let frame_pos = pos + offset;
+        let Some((header, frame_size)) = parse_frame_header(bytes, frame_pos) else { break };
+        let payload = bytes[frame_pos + 4..frame_pos + frame_size].to_vec();
+        frames.push(Mp3Frame { header, payload });
+        pos = frame_pos + frame_size;
     }
 
     let id3v1 = if bytes.len() - pos == 128 && &bytes[pos..pos + 3] == b"TAG" {

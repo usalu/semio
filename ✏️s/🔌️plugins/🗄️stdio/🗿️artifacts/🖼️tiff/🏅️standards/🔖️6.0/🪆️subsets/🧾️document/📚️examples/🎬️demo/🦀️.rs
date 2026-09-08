@@ -108,7 +108,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn demo_subset_integrated_roundtrip() {
         let asset = store::os_store::test_support::ExampleAsset { bytes: NATIVE_BYTES, text: None, provenance: "✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/🖼️.tiff" };
-        store::os_store::test_support::assert_subset_roundtrip::<TiffAnyRoundtrip>(&asset, None);
+        store::os_store::test_support::assert_subset_roundtrip::<TiffAnyRoundtrip>(&asset, None).await;
     }
     //#endregion 🧪️SubsetRoundtrip
 }

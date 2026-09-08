@@ -26,6 +26,20 @@
         "logical": { "type": "integer", "minimum": 0 }
       }
     },
+    "DocumentIndexEntryV1": {
+      "type": "object", "additionalProperties": false, "required": ["name", "dialect"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[^\\u0000-\\u0020\\u007f-\\u009f](?:[^\\u0000-\\u001f\\u007f-\\u009f]*[^\\u0000-\\u0020\\u007f-\\u009f])?$" },
+        "dialect": {
+          "type": "object", "additionalProperties": false, "required": ["artifactKind", "standard", "subset"],
+          "properties": {
+            "artifactKind": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$" },
+            "standard": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$" },
+            "subset": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$" }
+          }
+        }
+      }
+    },
     "DirectoryEventBody": {
       "type": "object",
       "required": ["kind"],
@@ -133,6 +147,17 @@
           "properties": {
             "kind": { "const": "document.announced" },
             "descriptor": { "$ref": "#/$defs/DocumentDescriptor" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "scope", "descriptorDigestV1", "entry"],
+          "properties": {
+            "kind": { "const": "document.indexed" },
+            "scope": { "$ref": "#/$defs/DocumentScope" },
+            "descriptorDigestV1": { "$ref": "#/$defs/NonzeroArtifactHash" },
+            "entry": { "$ref": "#/$defs/DocumentIndexEntryV1" }
           }
         },
         {
@@ -998,16 +1023,25 @@
       }
     },
     "ArtifactFrontier": {
-      "type": "object",
-      "additionalProperties": false,
+      "type": "object", "additionalProperties": false,
       "required": ["documentId", "headEditOrdinal", "headEditId", "lastCommitSeq", "chainHash"],
       "properties": {
-        "documentId": { "type": "string", "minLength": 1 },
+        "documentId": { "type": "string", "minLength": 1, "maxLength": 256 },
         "headEditOrdinal": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
-        "headEditId": { "type": "string", "minLength": 1 },
+        "headEditId": { "type": "string", "maxLength": 256 },
         "lastCommitSeq": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
         "chainHash": { "$ref": "#/$defs/ArtifactHash" }
-      }
+      },
+      "oneOf": [
+        { "properties": {
+          "headEditOrdinal": { "const": 0 }, "headEditId": { "const": "" }, "lastCommitSeq": { "const": 0 },
+          "chainHash": { "const": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] }
+        } },
+        { "properties": {
+          "headEditOrdinal": { "type": "integer", "minimum": 1 }, "headEditId": { "type": "string", "minLength": 1 }, "lastCommitSeq": { "type": "integer", "minimum": 1 },
+          "chainHash": { "$ref": "#/$defs/NonzeroArtifactHash" }
+        } }
+      ]
     },
     "ArtifactBlobRef": {
       "type": "object",
@@ -1098,7 +1132,7 @@
     "DocumentExecutionTargetLeaseFieldsV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "version", "scope", "descriptorDigestV1", "catalog", "package", "component", "descriptor", "browserActor", "artifact", "parentDialect", "surface", "grant", "revalidation"],
+      "required": ["schema", "version", "scope", "descriptorDigestV1", "catalog", "package", "component", "descriptor", "browserActor", "artifact", "parentDialect", "surface", "grant", "checkpoint", "revalidation"],
       "properties": {
         "schema": { "const": "semio.os.document-execution-target-lease/v1" },
         "version": { "const": 1 },
@@ -1221,6 +1255,7 @@
         "surface",
         "browserActor",
         "grant",
+        "checkpoint",
         "revalidation"
       ],
       "properties": {

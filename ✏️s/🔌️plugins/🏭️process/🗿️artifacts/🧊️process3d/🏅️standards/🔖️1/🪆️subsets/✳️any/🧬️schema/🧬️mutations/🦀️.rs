@@ -147,10 +147,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
-            let descriptor = protocol::SemanticMutation::semantics(&mutation);
+            let descriptor = SemanticMutation::semantics(&mutation);
             assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {mutation:?}", descriptor.verb);
         }
-        assert_eq!(<Process3dMutation as protocol::SemanticMutation<Process3dSnapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
+        assert_eq!(<Process3dMutation as SemanticMutation<Process3dSnapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
     }
 
     //#region 🔖️StepMutations
@@ -441,13 +441,13 @@ mod tests {
     /// regular test run — mirrors `📸️snapshot/📝️text/🦀️.rs`'s own
     /// `regenerate_example_fixtures`.
     fn write_vector(dir: &std::path::Path, kind: &str, before: &Process3dSnapshot, mutation: &Process3dMutation) {
-        let outcome = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(mutation, before);
+        let outcome = <Process3dMutation as Mutation<Process3dSnapshot>>::diff(mutation, before);
         let mut after = before.clone();
         let forward = outcome.apply_to(&mut after);
-        let inverse = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::inverse(mutation, before);
+        let inverse = <Process3dMutation as Mutation<Process3dSnapshot>>::inverse(mutation, before);
         let mut undone = after.clone();
         for step in &inverse {
-            <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(step, &undone).apply_to(&mut undone);
+            <Process3dMutation as Mutation<Process3dSnapshot>>::diff(step, &undone).apply_to(&mut undone);
         }
         assert_eq!(&undone, before, "regenerate-{kind}: inverse must restore before");
         let messages: Vec<semio_framework_os_kernel::json::Value> = forward

@@ -6,7 +6,6 @@ use crate::shell::ShellState;
 use crate::{AppInteractionState, AppPresenter, AppRuntime, RendererAssetFetchOwner, RuntimeMailbox};
 use infinite_world::world::{WorldAssetResponsePage, WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::rc::Rc;
 use ui_host::{WindowDelegate, WindowMetrics};
 use ui_render::{CursorRequest, DispatchEvent, EventModifiers, ImeEvent, InvalidationReason, PhysicalSize, PointerButton, PointerId, PointerInfo, PointerKind};

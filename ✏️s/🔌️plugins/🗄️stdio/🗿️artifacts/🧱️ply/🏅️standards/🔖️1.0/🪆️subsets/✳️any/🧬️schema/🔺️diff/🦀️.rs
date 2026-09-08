@@ -15,6 +15,9 @@
 //! `PlyRowFieldChange::value`). `DiffCodec` for `PlyDiff` is hand-rolled below instead, following
 //! the ticket's §5 grammar template (verbatim primitives from the gif89a/svg pilots).
 
+/// 🧩 Ordered removed keys, modified values, and inserted items.
+pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>);
+
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use crate::artifacts::ply::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow, PlyScalarType, PlyValue};
@@ -206,7 +209,7 @@ fn row_simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) ->
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn row_base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
-    removed.iter().copied().chain(modified_indices).chain(added_indices).max().map(|m| m + 1).unwrap_or(0)
+    removed.iter().copied().chain(modified_indices).chain(added_indices).max().map_or(0, |m| m + 1)
 }
 
 /// ➕️ Structural, total, base-free absorb of two `rows` triples belonging to the SAME element
@@ -221,7 +224,7 @@ fn absorb_rows(d1: PlyRowsDiff, d2: PlyRowsDiff) -> PlyRowsDiff {
         r.dedup();
         r.len()
     };
-    let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map(|m| m + 1).unwrap_or(0);
+    let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map_or(0, |m| m + 1);
     let base_len = row_base_len_hint(&d1.removed, d1.modified.iter().map(|m| m.index), d1_added_indices.iter().copied()).max((needed_mid_len + removed_count).saturating_sub(d1.added.len()));
     let mid_slots = row_simulate_slots(base_len, &d1.removed, &d1_added_indices);
 
@@ -272,7 +275,7 @@ fn absorb_rows(d1: PlyRowsDiff, d2: PlyRowsDiff) -> PlyRowsDiff {
         })
         .collect();
     let d2_added_indices: Vec<usize> = d2.added.iter().map(|a| a.index).collect();
-    let mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map(|m| m + 1).unwrap_or(0);
+    let mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map_or(0, |m| m + 1);
     let after_slots = row_simulate_slots(mid_len, &d2.removed, &d2_added_indices);
     let mut mid_to_after: std::collections::HashMap<usize, usize> = std::collections::HashMap::new();
     for (pos, slot) in after_slots.iter().enumerate() {
@@ -336,7 +339,7 @@ pub struct PlyElementDiff {
 impl PlyElementDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn is_empty(&self) -> bool {
-        self.properties.is_none() && self.rows.as_ref().map_or(true, PlyRowsDiff::is_empty)
+        self.properties.is_none() && self.rows.as_ref().is_none_or(PlyRowsDiff::is_empty)
     }
 }
 
@@ -540,23 +543,21 @@ fn validate_rows_diff(properties: &[PlyProperty], rows: &[PlyRow], diff: &PlyRow
             let mut target = prefix.to_vec();
             target.extend(["rows".to_string(), entry.index.to_string(), "fields".to_string(), field.name.clone()]);
             let position = property_positions.get(field.name.as_str()).copied();
-            if !fields.insert(field.name.as_str()) || position.is_none() || position.map_or(false, |value| value >= rows[entry.index].values.len()) {
+            if !fields.insert(field.name.as_str()) || position.is_none() || position.is_some_and(|value| value >= rows[entry.index].values.len()) {
                 return Err(target_error("invalid-field-target", "row field target must be unique and resolve to an existing cell", target));
             }
         }
     }
-    let mut length = rows.len() - removed.len();
     let mut additions: Vec<usize> = diff.added.iter().map(|entry| entry.index).collect();
     additions.sort_unstable();
     let mut previous = None;
-    for index in additions {
+    for (length, index) in (rows.len() - removed.len()..).zip(additions) {
         let mut target = prefix.to_vec();
         target.extend(["rows".to_string(), index.to_string()]);
         if index > length || previous == Some(index) {
             return Err(target_error("invalid-add-index", "row addition target must be unique and within the evolving sequence", target));
         }
         previous = Some(index);
-        length += 1;
     }
     Ok(())
 }
@@ -586,17 +587,15 @@ fn validate_elements_diff(base: &[PlyElement], diff: &PlyElementsDiff) -> Mutati
             validate_rows_diff(properties, &element.rows, rows, &["elements".to_string(), entry.name.clone()])?;
         }
     }
-    let mut length = base.len() - removed.len();
     let mut additions: Vec<&PlyElementAdded> = diff.added.iter().collect();
     additions.sort_by_key(|entry| entry.index);
     let mut added_names = BTreeSet::new();
     let mut previous = None;
-    for entry in additions {
+    for (length, entry) in (base.len() - removed.len()..).zip(additions) {
         if base_by_name.contains_key(entry.element.name.as_str()) || !added_names.insert(entry.element.name.as_str()) || entry.index > length || previous == Some(entry.index) {
             return Err(target_error("invalid-add-target", "element name and position must be unique and valid", vec!["elements".to_string(), entry.element.name.clone()]));
         }
         previous = Some(entry.index);
-        length += 1;
     }
     Ok(())
 }
@@ -694,7 +693,7 @@ impl DiffAlgebra<PlySnapshot> for PlyDiff {
     }
 
     fn is_empty(&self) -> bool {
-        self.format.is_none() && self.comments.is_none() && self.elements.as_ref().map_or(true, PlyElementsDiff::is_empty)
+        self.format.is_none() && self.comments.is_none() && self.elements.as_ref().is_none_or(PlyElementsDiff::is_empty)
     }
 }
 //#endregion 🔖️Diff
@@ -782,7 +781,7 @@ fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -1011,7 +1010,7 @@ fn dec_row_diff(s: &str) -> Result<PlyRowDiff, String> {
 /// `key=value`, so the key already carries the name). Used for `rows` (index-keyed on both
 /// `removed` and `modified`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_index_triple_body(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<(usize, String)>), String> {
+fn dec_index_triple_body(body: &str) -> Result<IndexedDiffParts<String, String>, String> {
     let inner = body.strip_prefix('{').and_then(|s| s.strip_suffix('}')).ok_or_else(|| format!("triple: expected {{...}}, got {body:?}"))?;
     let three = split_top_level(inner, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("triple: expected 3 sections, got {}", three.len())) };
@@ -1356,7 +1355,7 @@ pub(crate) fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<PlySnapsh
     Ok(PlySnapshot { schema, format, comments, elements })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
+fn diff_pack_err(e: &dsl::PackError) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "ply diff binary", offset: 0, detail: e.to_string() }
 }
 //#endregion 🔖️RealBinaryPrimitives
@@ -1515,14 +1514,14 @@ impl DiffCodec for PlyDiff {
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut r = dsl::ByteReader::new(bytes);
-        let format = read_bin_option(&mut r, |r| read_bin_format(r)).map_err(diff_pack_err)?;
+        let format = read_bin_option(&mut r, read_bin_format).map_err(|error| diff_pack_err(&error))?;
         let comments = read_bin_option(&mut r, |r| {
             let blob = read_bin_blob(r)?;
             let mut inner = dsl::ByteReader::new(&blob);
             read_bin_vec(&mut inner, read_bin_str)
         })
-        .map_err(diff_pack_err)?;
-        let elements = read_bin_option(&mut r, |r| dec_elements_diff_bin(&read_bin_blob(r)?)).map_err(diff_pack_err)?;
+        .map_err(|error| diff_pack_err(&error))?;
+        let elements = read_bin_option(&mut r, |r| dec_elements_diff_bin(&read_bin_blob(r)?)).map_err(|error| diff_pack_err(&error))?;
         Ok(PlyDiff { format, comments, elements })
     }
 }

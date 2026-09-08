@@ -384,7 +384,7 @@ impl Body {
                 loop_index.insert(loop_id, i);
                 i
             };
-            let outer = f.outer.map(|l| resolve_loop(l));
+            let outer = f.outer.map(&mut resolve_loop);
             let inners: Vec<usize> = f.inners.iter().map(|&l| resolve_loop(l)).collect();
             faces.push(SeedFace { label: f.label, surface: self.surfaces.get(f.surface).expect("live surface").clone(), outer, inners, flipped: f.flipped, tol: f.tol });
         }

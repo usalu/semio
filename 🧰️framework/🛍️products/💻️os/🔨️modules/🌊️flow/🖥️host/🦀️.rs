@@ -492,7 +492,7 @@ impl FlowHost {
         true
     }
 
-    pub fn pointer_projection_snapshot(&self, plan: &dag::DagPointerPlan) -> Result<(Vec<String>, Option<String>, [f64; 3]), dag::DagInteractionPlanFault> {
+    pub fn pointer_projection_snapshot(&self, plan: &dag::DagPointerPlan) -> Result<dag::DagPointerSnapshot, dag::DagInteractionPlanFault> {
         let projection = plan.projection();
         let mut bytes = 0usize;
         for id in self.dag.projection_selected_id_refs(projection).chain(self.dag.projection_hovered_id_ref(projection)) {
@@ -501,7 +501,7 @@ impl FlowHost {
                 return Err(dag::DagInteractionPlanFault::StringCredits);
             }
         }
-        Ok((self.dag.projection_selected_id_refs(projection).map(str::to_owned).collect(), self.dag.projection_hovered_id_ref(projection).map(str::to_owned), projection.camera()))
+        Ok(dag::DagPointerSnapshot { node_ids: self.dag.projection_selected_id_refs(projection).map(str::to_owned).collect(), hovered_id: self.dag.projection_hovered_id_ref(projection).map(str::to_owned), camera: projection.camera() })
     }
 
     pub fn wheel_zoom_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
@@ -2811,7 +2811,7 @@ mod tests {
     use dag::{computation_node_width, slider_widget_height, DagPreviewContent, HandleRole};
     use graph::dsl::{WireEdge, WireNode};
     use graph::manifest::PropertyBag;
-    use neural::{ChannelSpec as InputSpec, OperatorInfo as NeuronKindInfo, Registry};
+    use neural::{ChannelSpec as InputSpec, OperatorInfo as NeuronKindInfo};
     use std::sync::{Mutex, OnceLock};
 
     const NUMBER_OPS: &[&str] = &["core.number"];
@@ -3058,7 +3058,7 @@ mod tests {
 
     #[test]
     fn apply_eval_outputs_json_establishes_baseline_for_dirty_probe() {
-        let mut host = host_with_test_bridge();
+        let host = host_with_test_bridge();
         let eval_json = host.last_eval_json.clone();
         let mut fresh = FlowHost::default();
         fresh.set_eval_bridge_fn(Box::new(test_math_bridge));

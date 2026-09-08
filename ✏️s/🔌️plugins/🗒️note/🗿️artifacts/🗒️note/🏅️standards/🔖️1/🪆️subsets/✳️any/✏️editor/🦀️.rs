@@ -369,14 +369,14 @@ pub fn create_note_app() -> AppDefinition {
                     ActionArgOption::new("math", LocalizedLabel::native("Math", "Mathe")),
                     ActionArgOption::new("stroke", LocalizedLabel::native("Ink", "Tinte")),
                     ActionArgOption::new("group", LocalizedLabel::native("Group", "Gruppe")),
-                ]).required().default_value("text"),
-                ActionArgDef::number("x", LocalizedLabel::native("X", "X")).default_value(0.0),
-                ActionArgDef::number("y", LocalizedLabel::native("Y", "Y")).default_value(0.0),
+                ]).required().default_value(&"text"),
+                ActionArgDef::number("x", LocalizedLabel::native("X", "X")).default_value(&0.0),
+                ActionArgDef::number("y", LocalizedLabel::native("Y", "Y")).default_value(&0.0),
             ])
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
                     ActionArgOption::new("semio", LocalizedLabel::native("Semio", "Semio")),
-                ]).required().default_value("semio"),
+                ]).required().default_value(&"semio"),
             ])
             .action_args("setFixtureJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Document JSON", "Dokument-JSON")).required()])
             .action_interactive_job("setGridVisible", semio_framework_plugin::InteractiveJobClassification::Migrated)

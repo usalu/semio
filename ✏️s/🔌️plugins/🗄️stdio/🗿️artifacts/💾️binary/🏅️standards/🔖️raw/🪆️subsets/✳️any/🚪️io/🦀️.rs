@@ -74,15 +74,15 @@ pub mod io_registry {
 /// re-export shim in `🦀️.rs`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {
-    let _ = semio_framework_plugin::register_composer_entries(io_registry::entries());
+    semio_framework_plugin::register_composer_entries(io_registry::entries()).expect("static Stdio registration must be available and conflict-free");
     register_artifact_schema();
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
-    let _ = store::register_document_codec(store::ArtifactCodec::of::<
+    store::register_document_codec(store::ArtifactCodec::of::<
         crate::artifacts::binary::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot,
         crate::artifacts::binary::standards::v_raw::subsets::any::schema::mutations::BinaryMutation,
-    >(crate::artifacts::binary::STDIO_BINARY_DOCUMENT_SCHEMA));
+    >(crate::artifacts::binary::STDIO_BINARY_DOCUMENT_SCHEMA)).expect("static Stdio registration must be available and conflict-free");
 }
 
 /// 📇️ P2-P3 follow-up fix: `dsl::registry::register_schema_spec` (P2-M3's `FullResolver` insertion

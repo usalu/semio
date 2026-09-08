@@ -141,7 +141,7 @@ fn convert_pset(ps: &IfcPropertySet) -> PropertySet {
 //#region 🔖️Walk
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn guid_of(doc: &Part21Document, id: u64) -> String {
-    doc.instance(id).and_then(|i| i.primary()).and_then(|(_, args)| args.first()).and_then(Part21Value::as_str).map(str::to_string).unwrap_or_else(|| format!("ifc-{id}"))
+    doc.instance(id).and_then(|i| i.primary()).and_then(|(_, args)| args.first()).and_then(Part21Value::as_str).map_or_else(|| format!("ifc-{id}"), str::to_string)
 }
 
 /// 🌳️ Recursively converts one `analyze_spatial` tree node into `spatial`/`elements`/`relations`
@@ -149,34 +149,34 @@ fn guid_of(doc: &Part21Document, id: u64) -> String {
 /// project root). See the module doc comment for every documented gap this walk introduces.
 #[allow(clippy::too_many_arguments)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn walk(doc: &Part21Document, node: &IfcSpatialNode, parent_spatial_id: Option<String>, analysis: &SpatialAnalysis, out_spatial: &mut Vec<SpatialNode>, out_elements: &mut Vec<SemioModelElement>, out_relations: &mut Vec<ModelRelation>) {
-    let placement = node.object_placement.and_then(|pid| analysis.placements.get(&pid)).map(transform_from_mat4).unwrap_or_else(SemioTransform::identity);
+fn walk(doc: &Part21Document, node: &IfcSpatialNode, parent_spatial_id: Option<&str>, analysis: &SpatialAnalysis, out_spatial: &mut Vec<SpatialNode>, out_elements: &mut Vec<SemioModelElement>, out_relations: &mut Vec<ModelRelation>) {
+    let placement = node.object_placement.and_then(|pid| analysis.placements.get(&pid)).map_or_else(SemioTransform::identity, transform_from_mat4);
 
     if let Some(kind) = spatial_kind_of(&node.ifc_type) {
         let id = guid_of(doc, node.id);
-        out_spatial.push(SpatialNode { id: id.clone(), kind, name: node.name.clone().unwrap_or_default(), parent_id: parent_spatial_id.clone(), placement });
-        if let Some(parent) = &parent_spatial_id {
-            out_relations.push(ModelRelation { id: format!("rel-aggregates-{parent}-{id}"), kind: RelationKind::Aggregates, from: id.clone(), to: parent.clone() });
+        out_spatial.push(SpatialNode { id: id.clone(), kind, name: node.name.clone().unwrap_or_default(), parent_id: parent_spatial_id.map(str::to_owned), placement });
+        if let Some(parent) = parent_spatial_id {
+            out_relations.push(ModelRelation { id: format!("rel-aggregates-{parent}-{id}"), kind: RelationKind::Aggregates, from: id.clone(), to: parent.to_owned() });
         }
         for child in &node.children {
-            walk(doc, child, Some(id.clone()), analysis, out_spatial, out_elements, out_relations);
+            walk(doc, child, Some(&id), analysis, out_spatial, out_elements, out_relations);
         }
     } else if node.ifc_type.eq_ignore_ascii_case("IFCPROJECT") {
         for child in &node.children {
-            walk(doc, child, parent_spatial_id.clone(), analysis, out_spatial, out_elements, out_relations);
+            walk(doc, child, parent_spatial_id, analysis, out_spatial, out_elements, out_relations);
         }
     } else {
         let id = guid_of(doc, node.id);
         let class = element_class_from_ifc_type(&node.ifc_type);
         let psets = analysis.property_sets.get(&node.id).map(|v| v.iter().map(convert_pset).collect()).unwrap_or_default();
-        out_elements.push(SemioModelElement { id: id.clone(), class, placement, geometry: GeometryRef::None, spatial_id: parent_spatial_id.clone(), psets });
-        if let Some(parent) = &parent_spatial_id {
-            out_relations.push(ModelRelation { id: format!("rel-containedin-{id}-{parent}"), kind: RelationKind::ContainedIn, from: id.clone(), to: parent.clone() });
+        out_elements.push(SemioModelElement { id: id.clone(), class, placement, geometry: GeometryRef::None, spatial_id: parent_spatial_id.map(str::to_owned), psets });
+        if let Some(parent) = parent_spatial_id {
+            out_relations.push(ModelRelation { id: format!("rel-containedin-{id}-{parent}"), kind: RelationKind::ContainedIn, from: id, to: parent.to_owned() });
         }
         for child in &node.children {
             // 🧩️ Flattened: a nested element (e.g. an opening) attaches to the SAME spatial
             // ancestor, not to `id` — `model.elements` has no element-parent field.
-            walk(doc, child, parent_spatial_id.clone(), analysis, out_spatial, out_elements, out_relations);
+            walk(doc, child, parent_spatial_id, analysis, out_spatial, out_elements, out_relations);
         }
     }
 }

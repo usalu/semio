@@ -18,9 +18,15 @@ export const FlowOperationFields = Object.freeze({
 
 //#region 🌉️ReactiveHost
 
-export function createFlowHost({ exports, memory, schedule = queueMicrotask, now = Date.now, maximumInFlight = FLOW_MAX_IN_FLIGHT } = {}) {
-  if (!exports || !memory) throw new Error("Flow Wasm exports and memory are required");
-  const state = { nextRequest: 1n, generation: 1, pending: new Map(), pages: new Map(), blocked: undefined, pumping: false, closing: false, closed: false, closePromise: undefined };
+const ownedFlowExports = new WeakSet();
+class FlowMessageRejected extends Error {}
+class FlowSessionOpenRejected extends Error {}
+
+export function createFlowHost({ exports, memory, schedule = (step) => setTimeout(step, 0), now = Date.now, maximumInFlight = FLOW_MAX_IN_FLIGHT } = {}) {
+  if (!exports || !(memory instanceof WebAssembly.Memory) || memory !== exports.memory || ["flow_bridge_allocate", "flow_bridge_release", "flow_bridge_send", "flow_bridge_poll", "flow_bridge_begin_close", "flow_bridge_terminal_is_empty"].some((name) => typeof exports[name] !== "function")) throw new Error("Flow Wasm exports and exact memory are required");
+  if (ownedFlowExports.has(exports.flow_bridge_send)) throw new Error("Flow Wasm exports already have a runtime owner");
+  ownedFlowExports.add(exports.flow_bridge_send);
+  const state = { nextRequest: 1n, generation: 1, pending: new Map(), uncertainOpens: new Set(), sessions: new Map(), pages: new Map(), blocked: undefined, pumping: false, closing: false, closed: false, closePromise: undefined };
 
   const budget = () => { const time = BigInt(Math.trunc(now())); return [4_096, time, time + 8n]; };
   const transfer = (bytes) => {
@@ -30,7 +36,7 @@ export function createFlowHost({ exports, memory, schedule = queueMicrotask, now
     try {
       new Uint8Array(memory.buffer, pointer, bytes.length).set(bytes);
       const [credit, time, deadline] = budget();
-      if (exports.flow_bridge_send(pointer, bytes.length, credit, time, deadline) !== 1) throw new Error("Flow message rejected");
+      if (exports.flow_bridge_send(pointer, bytes.length, credit, time, deadline) !== 1) throw new FlowMessageRejected("Flow message rejected");
     } finally { exports.flow_bridge_release(pointer, bytes.length); }
   };
   const pollExact = () => {
@@ -54,10 +60,26 @@ export function createFlowHost({ exports, memory, schedule = queueMicrotask, now
       return { length, bytes: new Uint8Array(memory.buffer, pointer, length).slice() };
     } finally { exports.flow_bridge_release(pointer, capacity); }
   };
-  const transferControl = (bytes, commit) => { try { transfer(bytes); } catch { return false; } commit(); return true; };
+  const transferControl = (bytes, commit) => { try { transfer(bytes); } catch (error) { if (error instanceof FlowMessageRejected) return false; throw error; } commit(); return true; };
   const accept = (message) => {
     if (message.tag === 3) {
       const origin = message.requestId ^ (BigInt(message.sequence) << 32n);
+      if (message.event === 2_657) {
+        const reader = new Reader(message.body);
+        const handle = readHandle(reader);
+        reader.finish();
+        const owner = state.sessions.get(handleKey(handle));
+        const uncertainOpen = `${origin}:${message.generation}`;
+        if (message.status !== 0 || ((!owner || owner.requestId !== origin || owner.generation !== message.generation) && !(state.closing && state.uncertainOpens.has(uncertainOpen))) || (owner && !(owner.closing && owner.controlSent) && !state.closing)) throw new Error("Flow session terminal receipt has no exact closing owner");
+        return transferControl(encodeReply(message.requestId, message.generation, new Uint8Array()), () => {
+          state.uncertainOpens.delete(uncertainOpen);
+          if (owner) {
+            owner.retired = true;
+            state.sessions.delete(handleKey(handle));
+            owner.resolve?.();
+          }
+        });
+      }
       let operation;
       if (message.event === 2_650) operation = readHandle(new Reader(message.body));
       if (message.event === 2_655) {
@@ -86,7 +108,11 @@ export function createFlowHost({ exports, memory, schedule = queueMicrotask, now
     const pending = state.pending.get(message.requestId);
     if (!pending) return true;
     state.pending.delete(message.requestId);
-    if (message.status !== 0) { pending.reject(new Error(message.errorMessage || `Flow status ${message.status}`)); return true; }
+    if (message.status !== 0) {
+      if (pending.operation) state.pages.delete(handleKey(pending.operation));
+      const messageText = message.errorMessage || `Flow status ${message.status}`;
+      pending.reject(pending.requestedOperation === FlowOperation.open ? new FlowSessionOpenRejected(messageText) : new Error(messageText)); return true;
+    }
     let body = message.body;
     if (pending.operation) {
       const page = state.pages.get(handleKey(pending.operation));
@@ -104,6 +130,9 @@ export function createFlowHost({ exports, memory, schedule = queueMicrotask, now
     state.pumping = true;
     const step = () => {
       try {
+        if (!state.closing) for (const owner of state.sessions.values()) {
+          if (owner.closing && !owner.controlSent) transferControl(encodeClose(owner.handle), () => { owner.controlSent = true; });
+        }
         for (let count = 0; count < 64; count += 1) {
           if (state.blocked) { if (!accept(state.blocked)) break; state.blocked = undefined; continue; }
           const result = pollExact();
@@ -113,11 +142,15 @@ export function createFlowHost({ exports, memory, schedule = queueMicrotask, now
           if (!accept(message)) { state.blocked = message; break; }
         }
       } catch (error) {
-        for (const pending of state.pending.values()) pending.reject(error);
+        for (const [requestId, pending] of state.pending) {
+          if (pending.requestedOperation === FlowOperation.open) state.uncertainOpens.add(`${requestId}:${state.generation}`);
+          pending.reject(error);
+        }
         state.pending.clear();
+        for (const owner of state.sessions.values()) owner.reject?.(error);
         state.closed = true;
       } finally {
-        if (!state.closed && !state.closing && (state.pending.size || state.blocked)) schedule(step);
+        if (!state.closed && !state.closing && (state.pending.size || state.blocked || [...state.sessions.values()].some((owner) => owner.closing))) schedule(step);
         else state.pumping = false;
       }
     };
@@ -138,6 +171,7 @@ export function createFlowHost({ exports, memory, schedule = queueMicrotask, now
     state.nextRequest += 1n;
     let settled;
     const result = new Promise((resolve, reject) => { settled = { resolve, reject, operation: undefined, observers: new Set() }; });
+    settled.requestedOperation = operation;
     state.pending.set(requestId, settled);
     try { pump(); } catch (error) { state.pending.delete(requestId); settled.reject(error); }
     return { requestId, result, cancel: () => cancel(requestId), subscribe(observer) { settled.observers.add(observer); return () => settled.observers.delete(observer); } };
@@ -148,32 +182,58 @@ export function createFlowHost({ exports, memory, schedule = queueMicrotask, now
     pump();
     return true;
   };
-  const closeHandle = (handle) => { transfer(encodeClose(handle)); return true; };
+  const sessionLifetime = (handle, requestId) => {
+    const key = handleKey(handle);
+    if (state.sessions.has(key)) throw new Error("Flow session already has an owner");
+    const owner = { handle, requestId, generation: state.generation, closing: false, controlSent: false, retired: false, closePromise: undefined, resolve: undefined, reject: undefined };
+    state.sessions.set(key, owner);
+    return {
+      session: handle,
+      close() {
+        if (owner.closePromise) return owner.closePromise;
+        owner.closing = true;
+        owner.closePromise = new Promise((resolve, reject) => { owner.resolve = resolve; owner.reject = reject; });
+        try { if (state.closed) throw new Error("Flow host is closed"); pump(); } catch (error) { owner.reject(error); }
+        return owner.closePromise;
+      },
+      terminalIsEmpty: () => owner.retired,
+      isClosing: () => owner.closing || state.closing || state.closed,
+    };
+  };
   const close = () => {
     if (state.closePromise) return state.closePromise;
-    if (state.closed) return Promise.resolve();
+    if (state.closed && exports.flow_bridge_terminal_is_empty() === 1) return Promise.resolve();
     exports.flow_bridge_begin_close();
     state.closing = true;
     state.closePromise = new Promise((resolve, reject) => {
+      const finish = () => { state.closed = true; state.closing = false; state.pending.clear(); state.uncertainOpens.clear(); state.pages.clear(); state.sessions.clear(); resolve(); };
       const drain = () => {
         try {
           for (let count = 0; count < 64; count += 1) {
             if (state.blocked) { if (!accept(state.blocked)) break; state.blocked = undefined; continue; }
-            if (exports.flow_bridge_terminal_is_empty() === 1) { state.closed = true; state.closing = false; state.pages.clear(); resolve(); return; }
+            if (exports.flow_bridge_terminal_is_empty() === 1) { finish(); return; }
             const result = pollExact();
-            if (result.length < 0) throw new Error("Flow closed before terminal-empty");
+            if (result.length < 0) {
+              if (exports.flow_bridge_terminal_is_empty() === 1) { finish(); return; }
+              throw new Error("Flow closed before terminal-empty");
+            }
             if (result.length === 0) break;
             const message = decodeFlowMessage(result.bytes);
             if (!accept(message)) { state.blocked = message; break; }
           }
           schedule(drain);
-        } catch (error) { state.closed = true; state.closing = false; reject(error); }
+        } catch (error) {
+          state.closed = true; state.closing = false;
+          for (const pending of state.pending.values()) pending.reject(error);
+          for (const owner of state.sessions.values()) owner.reject?.(error);
+          reject(error);
+        }
       };
       schedule(drain);
     });
     return state.closePromise;
   };
-  return { state, start, cancel, closeHandle, close, terminalIsEmpty: () => exports.flow_bridge_terminal_is_empty() === 1 };
+  return { state, start, cancel, sessionLifetime, close, terminalIsEmpty: () => exports.flow_bridge_terminal_is_empty() === 1 };
 }
 
 export async function createFlowFeatures(host) {
@@ -181,13 +241,18 @@ export async function createFlowFeatures(host) {
   const openedReader = new Reader(await opened.result);
   const session = readHandle(openedReader);
   openedReader.finish();
-  const feature = (name, args = {}) => mapTask(host.start(FlowOperation[name], args, session), name.startsWith("vcs") ? decodeFlowVcsPage : decodeJsonOutput);
+  const lifetime = host.sessionLifetime(session, opened.requestId);
+  const feature = (name, args = {}) => lifetime.isClosing() ? rejectedTask(new Error("Flow session is closed")) : mapTask(host.start(FlowOperation[name], args, session), name.startsWith("vcs") ? decodeFlowVcsPage : decodeJsonOutput);
   const groups = {};
   for (const [group, names] of Object.entries(FlowFeatureGroups)) {
     groups[group] = Object.fromEntries(names.map((name) => [name, (args) => feature(name, args)]));
   }
-  groups.lifetime = { session, close: async () => { host.closeHandle(session); await host.close(); }, terminalIsEmpty: host.terminalIsEmpty };
+  groups.lifetime = lifetime;
   return groups;
+}
+
+export function isFlowSessionOpenRejected(error) {
+  return error instanceof FlowSessionOpenRejected;
 }
 
 let nextSurfaceId = 1;

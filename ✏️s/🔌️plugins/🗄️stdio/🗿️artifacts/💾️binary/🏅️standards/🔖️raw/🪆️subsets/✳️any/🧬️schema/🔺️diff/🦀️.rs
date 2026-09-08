@@ -86,7 +86,7 @@ fn validate_binary_diff(diff: &BinaryDiff, base: &BinarySnapshot) -> protocol::M
 fn apply_binary_diff_unchecked(diff: &BinaryDiff, base: &BinarySnapshot) -> BinarySnapshot {
     let mut bytes = base.bytes.clone();
     let mut splices = diff.splices.clone();
-    splices.sort_by(|a, b| b.offset.cmp(&a.offset));
+    splices.sort_by_key(|a| std::cmp::Reverse(a.offset));
     for s in splices {
         let start = s.offset;
         let end = s.offset + s.remove_len;
@@ -198,7 +198,7 @@ fn absorb_splices(d1: &[ByteSplice], d2: &[ByteSplice]) -> Vec<ByteSplice> {
     // not just `d1`'s -- a `d1` that's empty/a no-op must not collapse the virtual base to zero
     // elements when `d2` still references real base positions `d1` never touched.
     let max_ref = d1.iter().chain(d2.iter()).map(|s| s.offset + s.remove_len.max(s.insert.len())).max();
-    let l1 = max_ref.map(|m| m + 8).unwrap_or(0);
+    let l1 = max_ref.map_or(0, |m| m + 8);
 
     let base_labels: Vec<Lbl> = (0..l1).map(Lbl::Base).collect();
     let d1_removed = splice_removed_indices(d1);

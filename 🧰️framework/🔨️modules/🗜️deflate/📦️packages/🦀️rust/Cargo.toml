@@ -2,7 +2,7 @@
 name = "semio-framework-deflate"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "First-party raw DEFLATE (RFC 1951) codec — resumable byte-granular inflate plus a real LZ77 + fixed-Huffman compressor. Relocated out of the replication wire contract so it is reachable by any framework module (e.g. a first-party PNG encoder), not only pack segment compression."
 
 [package.metadata.semio]

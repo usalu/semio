@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 /** 🖥️ Runs owned plugin-host checks and exact native test filters. */
+import { SCALE_COMPONENT_ARTIFACT } from "../../../../../🧫️fixtures/⚖️scale/🟦️.ts";
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import Ajv2020 from "ajv/dist/2020.js";
@@ -310,13 +311,7 @@ class UiPatchMarshallingCheckScript extends BundleScript {
     if (!segments.includes("--native")) return;
     const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
     assert(artifactRoot, "SEMIO_TEST_ARTIFACT_DIR is required");
-    const scaleTarget = join(artifactRoot, "..", "ui-patch-scale-wasi-target");
-    runCmd("bun", [join(this.repoRoot, "📜️script.ts"), "nx", "run", "@semio-tech/framework-os-scale-fixture:build-wasm", "--skip-nx-cache"], {
-      cwd: this.repoRoot,
-      budgetMs: 3_600_000,
-      env: { ...process.env, CARGO_TARGET_DIR: scaleTarget, CARGO_BUILD_JOBS: "1" },
-    });
-    const scaleWasm = join(scaleTarget, "wasm32-wasip2", "wasm-dev", "semio_framework_os_scale_fixture.wasm");
+    const scaleWasm = join(this.repoRoot, SCALE_COMPONENT_ARTIFACT);
     assert(existsSync(scaleWasm), "registered scale component was not materialized");
     const receipts = await runExactCargoLaws({
       cwd: this.root,

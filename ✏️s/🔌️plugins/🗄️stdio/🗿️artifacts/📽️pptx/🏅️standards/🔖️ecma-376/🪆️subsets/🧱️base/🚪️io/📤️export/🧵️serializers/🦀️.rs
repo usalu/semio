@@ -217,7 +217,7 @@ fn fresh_rel_id(taken: &mut Vec<String>) -> String {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn presentation_relationships(existing: &[OpcRelationship], slide_count: usize) -> (String, Vec<String>, Vec<OpcRelationship>) {
     let is_slide = |rel: &OpcRelationship| rel.rel_type.ends_with("/slide");
-    let slide_type = existing.iter().find(|r| is_slide(r)).map(|r| r.rel_type.clone()).unwrap_or_else(|| REL_TYPE_SLIDE.to_string());
+    let slide_type = existing.iter().find(|r| is_slide(r)).map_or_else(|| REL_TYPE_SLIDE.to_string(), |r| r.rel_type.clone());
     let mut taken: Vec<String> = existing.iter().map(|r| r.id.clone()).collect();
 
     let master = existing.iter().find(|r| r.rel_type.ends_with("/slideMaster")).cloned();

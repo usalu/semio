@@ -8,9 +8,7 @@ use schema::ArtifactSchema;
 //#region 🔖️Artifact
 /// 🧬️ Full program artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.architect.program")]
 pub struct ProgramArtifact {
     #[state(artifact)]

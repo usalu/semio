@@ -131,7 +131,8 @@ mod tests {
         default_remodeling_scene, CameraCalibration, CameraPosePreview, CameraTrajectory, DenseCloud, FrameRef, GcpObservation, GroundControlPoint, ImageAsset, MediaKind, MediaStream, MeshSource, PackedF32, PackedU8, QcReportSnapshot,
         ReconstructionJob, ReconstructionStage, RemodelingMesh, RigExtrinsic, SparseCloud, TrackClass, VideoCodec, VideoSource, WatertightReportSnapshot,
     };
-    use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use semio_framework_os_kernel::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use protocol::SemanticMutation;
 
     //#region 🔖️Fixture
     /// 🏗️ Shared fixture — a scene that exercises every optional/collection field at least once
@@ -226,104 +227,104 @@ mod tests {
     async fn create_delete_stream_inverse_law() {
         let base = populated_scene_fixture();
         let stream = MediaStream { id: "stream-99".into(), name: "extra".into(), ..MediaStream::default() };
-        assert_mutation_inverse_law(&base, &create_stream(stream));
-        assert_mutation_inverse_law(&base, &delete_stream("stream-1".into()));
+        assert_mutation_inverse_law(&base, &create_stream(stream)).await;
+        assert_mutation_inverse_law(&base, &delete_stream("stream-1".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn change_stream_sync_inverse_law() {
         let base = populated_scene_fixture();
-        assert_mutation_inverse_law(&base, &change_stream_sync("stream-1".into(), 99.0));
+        assert_mutation_inverse_law(&base, &change_stream_sync("stream-1".into(), 99.0)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn add_remove_stream_frame_inverse_law() {
         let base = populated_scene_fixture();
-        assert_mutation_inverse_law(&base, &add_stream_frame("stream-1".into(), FrameRef { index: 1, timestamp_ms: 33.0, asset_id: "asset-2".into() }, MediaKind::Video));
+        assert_mutation_inverse_law(&base, &add_stream_frame("stream-1".into(), FrameRef { index: 1, timestamp_ms: 33.0, asset_id: "asset-2".into() }, MediaKind::Video)).await;
         // 🎯️ `remove-stream-frame`'s inverse only round-trips exactly for the LAST frame (see its
         // payload's doc comment) — target index 0, the only frame `populated_scene_fixture` seeds.
-        assert_mutation_inverse_law(&base, &remove_stream_frame("stream-1".into(), 0));
+        assert_mutation_inverse_law(&base, &remove_stream_frame("stream-1".into(), 0)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn replace_stream_source_inverse_law() {
         let base = populated_scene_fixture();
-        assert_mutation_inverse_law(&base, &replace_stream_source("stream-1".into(), None));
+        assert_mutation_inverse_law(&base, &replace_stream_source("stream-1".into(), None)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn create_delete_asset_inverse_law() {
         let base = populated_scene_fixture();
         let asset = ImageAsset { mime: "image/png".into(), data: "zzzz".into(), width: 2, height: 2 };
-        assert_mutation_inverse_law(&base, &create_asset("asset-1".into(), asset.clone()));
-        assert_mutation_inverse_law(&base, &create_asset("asset-2".into(), asset));
-        assert_mutation_inverse_law(&base, &delete_asset("asset-1".into()));
+        assert_mutation_inverse_law(&base, &create_asset("asset-1".into(), asset.clone())).await;
+        assert_mutation_inverse_law(&base, &create_asset("asset-2".into(), asset)).await;
+        assert_mutation_inverse_law(&base, &delete_asset("asset-1".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn camera_calibration_inverse_law() {
         let base = populated_scene_fixture();
         let camera = CameraCalibration { id: "cam-99".into(), model: "pinhole".into(), ..CameraCalibration::default() };
-        assert_mutation_inverse_law(&base, &create_camera_calibration(camera));
+        assert_mutation_inverse_law(&base, &create_camera_calibration(camera)).await;
         let updated = CameraCalibration { id: "cam-1".into(), fx: 2000.0, ..base.calibration.cameras[0].clone() };
-        assert_mutation_inverse_law(&base, &update_camera_calibration(updated));
-        assert_mutation_inverse_law(&base, &delete_camera_calibration("cam-1".into()));
+        assert_mutation_inverse_law(&base, &update_camera_calibration(updated)).await;
+        assert_mutation_inverse_law(&base, &delete_camera_calibration("cam-1".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn rig_extrinsic_inverse_law() {
         let base = populated_scene_fixture();
         let extrinsic = RigExtrinsic { camera_id: "cam-99".into(), ..RigExtrinsic::default() };
-        assert_mutation_inverse_law(&base, &create_rig_extrinsic(extrinsic));
+        assert_mutation_inverse_law(&base, &create_rig_extrinsic(extrinsic)).await;
         let updated = RigExtrinsic { translation_m: [1.0, 0.0, 0.0], ..base.calibration.rig[0].clone() };
-        assert_mutation_inverse_law(&base, &update_rig_extrinsic(updated));
-        assert_mutation_inverse_law(&base, &delete_rig_extrinsic(base.calibration.rig[0].camera_id.clone()));
+        assert_mutation_inverse_law(&base, &update_rig_extrinsic(updated)).await;
+        assert_mutation_inverse_law(&base, &delete_rig_extrinsic(base.calibration.rig[0].camera_id.clone())).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn gcp_inverse_law() {
         let base = populated_scene_fixture();
         let gcp = GroundControlPoint { id: "gcp-99".into(), name: "New".into(), ..GroundControlPoint::default() };
-        assert_mutation_inverse_law(&base, &create_gcp(gcp));
-        assert_mutation_inverse_law(&base, &delete_gcp("gcp-1".into()));
-        assert_mutation_inverse_law(&base, &add_gcp_observation("gcp-1".into(), GcpObservation { stream_id: "stream-1".into(), frame_index: 1, pixel: [1.0, 2.0] }));
+        assert_mutation_inverse_law(&base, &create_gcp(gcp)).await;
+        assert_mutation_inverse_law(&base, &delete_gcp("gcp-1".into())).await;
+        assert_mutation_inverse_law(&base, &add_gcp_observation("gcp-1".into(), GcpObservation { stream_id: "stream-1".into(), frame_index: 1, pixel: [1.0, 2.0] })).await;
         // 🎯️ Same last-index constraint as `remove-stream-frame` — target the only seeded observation.
-        assert_mutation_inverse_law(&base, &remove_gcp_observation("gcp-1".into(), 0));
+        assert_mutation_inverse_law(&base, &remove_gcp_observation("gcp-1".into(), 0)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn update_params_inverse_law() {
         let base = populated_scene_fixture();
-        assert_mutation_inverse_law(&base, &update_ingest_params(crate::artifacts::remodeling::IngestParams { min_sharpness: 0.9, ..base.params.ingest.clone() }));
-        assert_mutation_inverse_law(&base, &update_feature_params(crate::artifacts::remodeling::FeatureParams { target_count: 1, ..base.params.feature.clone() }));
-        assert_mutation_inverse_law(&base, &update_match_params(crate::artifacts::remodeling::MatchParams { ratio_test: 0.1, ..base.params.matching.clone() }));
-        assert_mutation_inverse_law(&base, &update_sfm_params(crate::artifacts::remodeling::SfmParams { ransac_iterations: 1, ..base.params.sfm.clone() }));
-        assert_mutation_inverse_law(&base, &update_dense_params(crate::artifacts::remodeling::DenseParams { max_points: 1, ..base.params.dense.clone() }));
-        assert_mutation_inverse_law(&base, &update_mesh_params(crate::artifacts::remodeling::MeshParams { texture_size: 1, ..base.params.mesh.clone() }));
-        assert_mutation_inverse_law(&base, &update_motion_params(crate::artifacts::remodeling::MotionParams { enabled: true, ..base.params.motion.clone() }));
-        assert_mutation_inverse_law(&base, &update_geo_params(crate::artifacts::remodeling::GeoParams { enabled: true, ..base.params.geo.clone() }));
+        assert_mutation_inverse_law(&base, &update_ingest_params(crate::artifacts::remodeling::IngestParams { min_sharpness: 0.9, ..base.params.ingest.clone() })).await;
+        assert_mutation_inverse_law(&base, &update_feature_params(crate::artifacts::remodeling::FeatureParams { target_count: 1, ..base.params.feature.clone() })).await;
+        assert_mutation_inverse_law(&base, &update_match_params(crate::artifacts::remodeling::MatchParams { ratio_test: 0.1, ..base.params.matching.clone() })).await;
+        assert_mutation_inverse_law(&base, &update_sfm_params(crate::artifacts::remodeling::SfmParams { ransac_iterations: 1, ..base.params.sfm.clone() })).await;
+        assert_mutation_inverse_law(&base, &update_dense_params(crate::artifacts::remodeling::DenseParams { max_points: 1, ..base.params.dense.clone() })).await;
+        assert_mutation_inverse_law(&base, &update_mesh_params(crate::artifacts::remodeling::MeshParams { texture_size: 1, ..base.params.mesh.clone() })).await;
+        assert_mutation_inverse_law(&base, &update_motion_params(crate::artifacts::remodeling::MotionParams { enabled: true, ..base.params.motion.clone() })).await;
+        assert_mutation_inverse_law(&base, &update_geo_params(crate::artifacts::remodeling::GeoParams { enabled: true, ..base.params.geo.clone() })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn replace_job_and_results_inverse_law() {
         let base = populated_scene_fixture();
-        assert_mutation_inverse_law(&base, &replace_job(ReconstructionJob { stage: ReconstructionStage::Failed, ..base.job.clone() }));
-        assert_mutation_inverse_law(&base, &replace_sparse(None));
-        assert_mutation_inverse_law(&base, &replace_dense(None));
-        assert_mutation_inverse_law(&base, &replace_mesh_result(Box::new(RemodelingMesh::default())));
-        assert_mutation_inverse_law(&base, &replace_trajectory(None));
-        assert_mutation_inverse_law(&base, &replace_tracks(Vec::new()));
-        assert_mutation_inverse_law(&base, &replace_geo_products(None));
-        assert_mutation_inverse_law(&base, &replace_qc(None));
+        assert_mutation_inverse_law(&base, &replace_job(ReconstructionJob { stage: ReconstructionStage::Failed, ..base.job.clone() })).await;
+        assert_mutation_inverse_law(&base, &replace_sparse(None)).await;
+        assert_mutation_inverse_law(&base, &replace_dense(None)).await;
+        assert_mutation_inverse_law(&base, &replace_mesh_result(Box::new(RemodelingMesh::default()))).await;
+        assert_mutation_inverse_law(&base, &replace_trajectory(None)).await;
+        assert_mutation_inverse_law(&base, &replace_tracks(Vec::new())).await;
+        assert_mutation_inverse_law(&base, &replace_geo_products(None)).await;
+        assert_mutation_inverse_law(&base, &replace_qc(None)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn move_step_style_diff_absorb_law() {
         let base = populated_scene_fixture();
-        let d1 = change_stream_sync("stream-1".into(), 10.0).diff(&base);
+        let d1 = change_stream_sync("stream-1".into(), 10.0).diff(&base).into_parts().0;
         let mid = protocol::MutationDiff::apply(&d1, &base).expect("valid mutation diff");
-        let d2 = change_stream_sync("stream-1".into(), 20.0).diff(&mid);
-        assert_mutation_diff_absorb_law(&base, d1, d2);
+        let d2 = change_stream_sync("stream-1".into(), 20.0).diff(&mid).into_parts().0;
+        assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
     #[semio_framework_async_macros::async_test]

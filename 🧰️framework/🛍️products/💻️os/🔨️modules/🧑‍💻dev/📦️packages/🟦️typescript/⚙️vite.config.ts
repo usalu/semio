@@ -7,21 +7,27 @@ import { defineConfig } from "vite";
 import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirVitePlugin, semioAssetsVitePlugin } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🟦️.ts";
 import { DEFAULT_HOST_VARIANT, PLAYGROUND_BUILD_TARGETS } from "../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts";
 import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts";
-import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, moduleStaticDirectoryNames } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { isHostPlaygroundFilter } from "../../../🔌️plugin/📇️registry/🟦️.ts";
 import { resolveShellBrandById } from "../../🏷️brand/🟦️.ts";
-import { semioBackboneVitePlugin, semioBlobVitePlugin, semioDescriptorRouteGuardVitePlugin, semioPluginHotSwapVitePlugin, semioProductionTestBoundaryVitePlugin } from "./🔌️vite-plugins.ts";
-import { defaultExtensionInstallRoot, semioExtensionStoreVitePlugin } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️store.ts";
+import { semioBackboneVitePlugin, semioBlobVitePlugin, semioDescriptorRouteGuardVitePlugin, semioActivationVitePlugin, semioProductionTestBoundaryVitePlugin } from "./🔌️vite-plugins.ts";
+import { semioExtensionStoreVitePlugin } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️store.ts";
+import { developmentRuntimeRoot, readActivationReceipt } from "../../♻️activation/🟦️.ts";
 import { DISTRIBUTION_LAYOUT, distributionChunkName, distributionAssetName } from "../../🚚️distribution/🟦️.ts";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
 const playDir = path.resolve(configDir, "../..");
 const repoRoot = path.resolve(playDir, "../../../../..");
-const pluginModulesDir = path.join(playDir, "🔌️plugin-modules");
-const installedExtensionsDir = defaultExtensionInstallRoot(repoRoot);
 const rendererModulesDir = path.join(repoRoot, ".🧬semio/🦑️repo/⚡️cache/📺️renderer-modules");
 const renderer = process.env.SEMIO_RENDERER ?? "react";
 const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT;
+const profile = process.env.SEMIO_BUILD_MODE === "ship" ? "release" : "dev";
+const runtimeRoot = developmentRuntimeRoot(configDir, plugin, profile), receiptDirectory = path.join(runtimeRoot, "activation");
+const activated = readActivationReceipt(receiptDirectory);
+const pluginModulesDir = path.resolve(configDir, "../../../🔌️plugin/📦️packages/🟦️typescript/dist", profile, "🔌️plugin-modules");
+const installedExtensionsDir = path.join(runtimeRoot, "extensions");
+const fontsDir = path.resolve(configDir, "../../../♾️infinite/📦️packages/🦀️rust/dist/fonts");
+const sessionPath = path.resolve(configDir, "../../../🔌️plugin/📇️registry/dist/sessions", plugin, "🟦️session.ts");
 const brandId = process.env.SEMIO_BRAND ?? PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin || target.aliases.includes(plugin))?.brand;
 const brand = resolveShellBrandById(brandId);
 const distributionSource = (source: string) => path.relative(repoRoot, path.resolve(playDir, source)).replaceAll("\\", "/");
@@ -50,7 +56,7 @@ function engineNpmPackage(cratePath: string): string {
   return name;
 }
 
-const registryEngineOptimizeDepsExclude = [...new Set(PLAYGROUND_BUILD_TARGETS.flatMap((target) => target.engines))].map(engineNpmPackage);
+const registryEngineOptimizeDepsExclude = [...new Set((isHostPlaygroundFilter(plugin) ? PLAYGROUND_BUILD_TARGETS : PLAYGROUND_BUILD_TARGETS.filter((target) => target.variant === plugin)).flatMap((target) => target.engines))].map(engineNpmPackage);
 
 /** @emoji 🗄️ Isolates dependency-optimizer state for concurrent playground variants and renderers. */
 const playgroundCacheDir = path.join(repoRoot, "node_modules/.vite-os-dev", `${plugin}-${renderer}`);
@@ -75,7 +81,8 @@ const resolvedPluginId = PLAYGROUND_BUILD_TARGETS.find((target) => target.varian
 // `resolvedPluginId` names. Omitting it meant `dist/🔌️plugin-modules/🧵️shard/🟨️shard-worker.js` was never
 // copied and every single-variant production build 404s the shard worker at first plugin activation.
 if (!resolvedPluginId) throw new Error(`Unknown playground module identity: ${plugin}`);
-const pluginModuleDirNames = moduleStaticDirectoryNames(resolvedPluginId, isHostPlaygroundFilter(plugin));
+const extensionIds = new Set(EXTENSION_TARGETS.map((target) => target.pluginId));
+const pluginModuleDirNames = [MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, ...activated.plugins.filter((row) => !extensionIds.has(row.pluginId)).map((row) => moduleDirectoryName(row.pluginId))];
 //#endregion 🔖️RegistryDrivenAssetsAndEngines
 
 export default defineConfig({
@@ -96,6 +103,7 @@ export default defineConfig({
   },
   resolve: {
     alias: [
+      { find: "virtual:semio-playground-session", replacement: sessionPath },
       ...playgroundSceneHostResolveAliases(repoRoot),
       { find: "@semio-tech/ui-react/test", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🖌️render.ts") },
       { find: "@semio-tech/ui-react/runtime", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/⚛️runtime.ts") },
@@ -153,7 +161,7 @@ export default defineConfig({
     ]),
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
-    semioPluginHotSwapVitePlugin(),
+    semioActivationVitePlugin({ receiptDirectory }),
     semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot }),
     ...semioAssetsVitePlugin(repoRoot),
     // 🔌️ `resolve.alias`'s `/🔌️plugin-modules` entry above only covers *bundler* resolution (static imports
@@ -169,6 +177,7 @@ export default defineConfig({
     ...(pluginModuleDirNames
       ? pluginModuleDirNames.flatMap((name) => staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/${name}`, root: path.relative(repoRoot, path.join(pluginModulesDir, name)) }))
       : staticDirVitePlugin(repoRoot, { kind: "static-dir", route: MODULE_PLUGIN_ROUTE, root: path.relative(repoRoot, pluginModulesDir) })),
+    staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/${MODULE_VENDOR_DIRECTORY}`, root: path.relative(repoRoot, fontsDir) }),
     staticDirVitePlugin(repoRoot, { kind: "static-dir", route: MODULE_EXTENSION_ROUTE, root: path.relative(repoRoot, installedExtensionsDir) }),
     // 🏷️ A brand's own static assets (e.g. the Aggregator's funding/partner logos) mount at `/<assetsDir>`
     // alongside the shared `framework/ui/asset` mount above.

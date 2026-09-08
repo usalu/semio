@@ -940,14 +940,7 @@ impl ArtifactEditor for Fem3dPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            operation_context,
-            request.completion,
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
             Fem3dCommand::command_id,
             FEM3D_RETAINED_RAW_BYTES,
             FEM3D_RETAINED_WORK_ITEMS,
@@ -1170,14 +1163,14 @@ pub fn create_fem3d_app() -> AppDefinition {
                 ActionArgDef::number("depth", LocalizedLabel::native("Depth", "Tiefe")).required(),
                 ActionArgDef::number("height", LocalizedLabel::native("Height", "Höhe")).required(),
                 ActionArgDef::text("materialId", LocalizedLabel::data("Material")).required(),
-                ActionArgDef::number("baseZ", LocalizedLabel::native("Base Z", "Basis Z")).default_value(0.0),
-                ActionArgDef::number("layers", LocalizedLabel::native("Layers", "Schichten")).default_value(1),
-                ActionArgDef::number("meshSize", LocalizedLabel::native("Mesh Size", "Netzgröße")).default_value(0.5),
+                ActionArgDef::number("baseZ", LocalizedLabel::native("Base Z", "Basis Z")).default_value(&0.0),
+                ActionArgDef::number("layers", LocalizedLabel::native("Layers", "Schichten")).default_value(&1),
+                ActionArgDef::number("meshSize", LocalizedLabel::native("Mesh Size", "Netzgröße")).default_value(&0.5),
             ])
             .mutation("addLoadCase", LocalizedLabel::native("Add Load Case", "Lastfall hinzufügen"))
             .action_args("addLoadCase", vec![
                 ActionArgDef::text("name", LocalizedLabel::data("Name")).required(),
-                ActionArgDef::toggle("selfWeight", LocalizedLabel::native("Self Weight", "Eigengewicht")).default_value(false),
+                ActionArgDef::toggle("selfWeight", LocalizedLabel::native("Self Weight", "Eigengewicht")).default_value(&false),
             ])
             .mutation("addCombination", LocalizedLabel::native("Add Combination", "Kombination hinzufügen"))
             .action_args("addCombination", vec![
@@ -1199,7 +1192,7 @@ pub fn create_fem3d_app() -> AppDefinition {
             .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .action_args("setActiveExample", vec![
-                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new(crate::artifacts::fem3d::examples::demo::ID, LocalizedLabel::native("Default", "Standard"))]).default_value(crate::artifacts::fem3d::examples::demo::ID),
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new(crate::artifacts::fem3d::examples::demo::ID, LocalizedLabel::native("Default", "Standard"))]).default_value(&crate::artifacts::fem3d::examples::demo::ID),
             ])
             .view_action("setResultDisplay", LocalizedLabel::native("Set Result Display", "Ergebnisanzeige festlegen"))
             .action_args("setResultDisplay", crate::app_surface::result_display_action_args())

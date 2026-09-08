@@ -462,8 +462,8 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "drawing.document".into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.svg", "stdio.png"],
-        import_stdio_kinds: vec!["stdio.svg", "stdio.png"],
+        export_stdio_kinds: vec!["stdio.svg".into(), "stdio.png".into()],
+        import_stdio_kinds: vec!["stdio.svg".into(), "stdio.png".into()],
     }
 }
 

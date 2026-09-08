@@ -1,7 +1,5 @@
 //#region 🚪️InstanceLifecycleWire
 use semio_framework_value_derive::{FromValue, ToValue};
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
 
 #[path = "🩹️patch/🦀️.rs"]
 mod patch_receipt;
@@ -370,7 +368,9 @@ pub(crate) mod decimal_generation {
     }
 
     pub fn from_value(value: ::protocol::value::DslValue) -> Result<u64, ::protocol::value::ValueError> {
-        let text = value.as_str().ok_or_else(|| ::protocol::value::ValueError::new("expected a canonical nonzero unsigned 64-bit decimal string"))?;
+        let ::protocol::value::DslValue::String(text) = value else {
+            return Err(::protocol::value::ValueError::new("expected a canonical nonzero unsigned 64-bit decimal string"));
+        };
         if text.is_empty() || text.len() > 20 || text.as_bytes()[0] == b'0' || !text.bytes().all(|byte| byte.is_ascii_digit()) {
             return Err(::protocol::value::ValueError::new("noncanonical lifecycle generation"));
         }
@@ -406,7 +406,7 @@ pub(crate) mod request_sequence {
     }
 
     pub fn from_value(value: ::protocol::value::DslValue) -> Result<u64, ::protocol::value::ValueError> {
-        let value = value.as_u64().ok_or_else(|| ::protocol::value::ValueError::new("expected an unsigned 64-bit integer"))?;
+        let value = <u64 as ::protocol::value::FromValue>::from_value(value).map_err(|_| ::protocol::value::ValueError::new("expected an unsigned 64-bit integer"))?;
         if !super::valid_request(value) {
             return Err(::protocol::value::ValueError::new("invalid lifecycle request"));
         }

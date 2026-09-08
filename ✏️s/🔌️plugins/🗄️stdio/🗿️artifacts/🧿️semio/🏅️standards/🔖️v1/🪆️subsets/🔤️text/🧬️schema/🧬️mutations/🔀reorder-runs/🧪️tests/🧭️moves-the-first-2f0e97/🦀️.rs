@@ -18,13 +18,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioTextSnapshot {
-    serde_json::from_str(BEFORE).expect("reorder-runs before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("reorder-runs before snapshot decodes")
 }
 fn expected_after() -> SemioTextSnapshot {
-    serde_json::from_str(AFTER).expect("reorder-runs after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("reorder-runs after snapshot decodes")
 }
 fn reorder_runs() -> SemioTextMutation {
-    serde_json::from_str(MUTATION).expect("reorder-runs mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("reorder-runs mutation decodes")
 }
 
 /// ▶️ `one` leaves the head and lands at the tail; `two`/`three` each shift one position down.
@@ -61,12 +61,12 @@ async fn the_undo_reorder_moves_the_run_back_to_the_head() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioTextSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: SemioTextSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "reorder-runs/moves-the-first-run-to-the-end: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(reorder_runs()).expect("reorder-runs mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(reorder_runs()))).expect("reorder-runs mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("reorder-runs mutation reparses");
     assert_eq!(reencoded, original, "reorder-runs/moves-the-first-run-to-the-end: committed mutation JSON is not canonical");
 }
@@ -86,7 +86,7 @@ async fn declared_outcome_holds_without_a_no_op_warning() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioTextMutation as Mutation<SemioTextSnapshot>>::diff(&reorder_runs(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "reorder-runs/moves-the-first-run-to-the-end: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -94,10 +94,10 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is canonical and is a strict permutation of the base sequence.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: SemioTextDiff = serde_json::from_str(DIFF).expect("committed reorder-runs diff decodes");
+    let decoded: SemioTextDiff = dsl::json::from_json_str(DIFF).expect("committed reorder-runs diff decodes");
     let list = decoded.runs.as_ref().expect("an applied reorder-runs diff carries a runs list");
     assert_eq!(list.values.len(), before().runs.len(), "the reorder diff must carry exactly as many runs as the base");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "reorder-runs/moves-the-first-run-to-the-end: committed diff JSON is not canonical");
 }
@@ -105,7 +105,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioTextDiff = serde_json::from_str(DIFF).expect("committed reorder-runs diff decodes");
+    let decoded: SemioTextDiff = dsl::json::from_json_str(DIFF).expect("committed reorder-runs diff decodes");
     let produced = decoded.apply(&before()).expect("committed reorder-runs diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-runs/moves-the-first-run-to-the-end: committed diff did not carry before to after");
 }

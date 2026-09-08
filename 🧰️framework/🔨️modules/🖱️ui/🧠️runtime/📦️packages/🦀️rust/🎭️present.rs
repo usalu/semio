@@ -141,6 +141,7 @@ pub struct ComponentTreeProducer {
 }
 
 impl ComponentTreeProducer {
+    #[expect(clippy::result_large_err, reason = "Rejected tree admission returns the exact root and its child ownership without allocating.")]
     pub fn try_new(root: TreeNode, generation: u64) -> Result<Self, TreeNode> {
         if generation == 0 {
             return Err(root);

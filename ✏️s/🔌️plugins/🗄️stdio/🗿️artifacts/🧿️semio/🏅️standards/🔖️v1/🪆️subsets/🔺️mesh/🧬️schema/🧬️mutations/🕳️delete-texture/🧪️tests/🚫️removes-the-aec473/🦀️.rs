@@ -19,13 +19,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioMeshSnapshot {
-    serde_json::from_str(BEFORE).expect("delete-texture before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("delete-texture before snapshot decodes")
 }
 fn expected_after() -> SemioMeshSnapshot {
-    serde_json::from_str(AFTER).expect("delete-texture after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("delete-texture after snapshot decodes")
 }
 fn mutation() -> SemioMeshMutation {
-    serde_json::from_str(MUTATION).expect("delete-texture mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("delete-texture mutation decodes")
 }
 
 /// ▶️ The leading texture goes; the trailing one slides down to index 0.
@@ -60,12 +60,12 @@ async fn the_undo_strips_the_tail_recreates_the_texture_then_rebuilds_the_tail()
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioMeshSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: SemioMeshSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-texture/removes-the-leading-texture-and-keeps-the-trailing-one: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("delete-texture mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("delete-texture mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("delete-texture mutation reparses");
     assert_eq!(reencoded, original, "delete-texture/removes-the-leading-texture-and-keeps-the-trailing-one: committed mutation JSON is not canonical");
 }
@@ -84,7 +84,7 @@ async fn declared_outcome_holds_as_committed() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-texture/removes-the-leading-texture-and-keeps-the-trailing-one: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -93,12 +93,12 @@ async fn produces_committed_diff() {
 /// allowed to touch appears in it at all.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioMeshDiff = serde_json::from_str(DIFF).expect("committed delete-texture diff decodes");
+    let decoded: SemioMeshDiff = dsl::json::from_json_str(DIFF).expect("committed delete-texture diff decodes");
     let textures = decoded.textures.as_ref().expect("delete-texture must write the textures triple");
     assert_eq!(textures.removed, vec!["tex-a".to_string()], "the removal is addressed by texture id");
     assert!(textures.modified.is_empty() && textures.added.is_empty(), "a removal neither modifies nor adds");
     assert!(decoded.meshes.is_none() && decoded.materials.is_none(), "no mesh or material slot may appear in the diff");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-texture/removes-the-leading-texture-and-keeps-the-trailing-one: committed diff JSON is not canonical");
 }
@@ -106,7 +106,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioMeshDiff = serde_json::from_str(DIFF).expect("committed delete-texture diff decodes");
+    let decoded: SemioMeshDiff = dsl::json::from_json_str(DIFF).expect("committed delete-texture diff decodes");
     let produced = decoded.apply(&before()).expect("committed delete-texture diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-texture/removes-the-leading-texture-and-keeps-the-trailing-one: committed diff did not carry before to after");
 }

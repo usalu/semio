@@ -328,7 +328,7 @@ mod subject {
     fn apply_and_encode(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
         let text = std::str::from_utf8(input).map_err(|error| format!("input is not UTF-8: {error}"))?;
         let document = parse_part21(text).map_err(|error| format!("parse_part21 failed: {error}"))?;
-        let mut snapshot = StepSnapshot::from_part21_document(document);
+        let mut snapshot = StepSnapshot::from_part21_document(&document);
         let base = snapshot.clone();
         let mutation = mutation_from_spec(spec, &base)?;
         apply_step_mutation(&mut snapshot, &mutation);

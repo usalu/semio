@@ -87,8 +87,8 @@ pub(crate) fn depth_stencil_state(spec: &DepthStencilSpec) -> wgpu::DepthStencil
         wgpu::StencilFaceState { compare: compare_function(spec.stencil.compare), fail_op: stencil_operation(spec.stencil.fail_op), depth_fail_op: stencil_operation(spec.stencil.depth_fail_op), pass_op: stencil_operation(spec.stencil.pass_op) };
     wgpu::DepthStencilState {
         format: DEPTH_STENCIL_FORMAT,
-        depth_write_enabled: spec.depth_write_enabled,
-        depth_compare: compare_function(spec.depth_compare),
+        depth_write_enabled: Some(spec.depth_write_enabled),
+        depth_compare: Some(compare_function(spec.depth_compare)),
         stencil: wgpu::StencilState { front: face, back: face, read_mask: spec.stencil.read_mask, write_mask: spec.stencil.write_mask },
         bias: wgpu::DepthBiasState { constant: spec.bias.constant, slope_scale: spec.bias.slope_scale, clamp: spec.bias.clamp },
     }
@@ -174,8 +174,8 @@ mod tests {
         };
         let state = depth_stencil_state(&spec);
         assert_eq!(state.format, DEPTH_STENCIL_FORMAT);
-        assert!(state.depth_write_enabled);
-        assert_eq!(state.depth_compare, wgpu::CompareFunction::LessEqual);
+        assert_eq!(state.depth_write_enabled, Some(true));
+        assert_eq!(state.depth_compare, Some(wgpu::CompareFunction::LessEqual));
         assert_eq!(state.bias.constant, -2);
         assert_eq!(state.stencil.read_mask, 0xff);
         assert_eq!(state.stencil.write_mask, 0x00);

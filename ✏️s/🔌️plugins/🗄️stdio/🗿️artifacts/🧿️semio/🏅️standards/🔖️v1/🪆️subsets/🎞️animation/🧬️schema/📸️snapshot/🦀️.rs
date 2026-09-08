@@ -21,7 +21,9 @@ pub const STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA: &str = "s.stdio.semio.animation"
 /// (`KHR_*` animation-pointer style extensions target arbitrary properties by name).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
+#[derive(Default)]
 pub enum AnimTargetProperty {
+    #[default]
     Translation,
     Rotation,
     Scale,
@@ -29,11 +31,6 @@ pub enum AnimTargetProperty {
     Custom { name: String },
 }
 
-impl Default for AnimTargetProperty {
-    fn default() -> Self {
-        AnimTargetProperty::Translation
-    }
-}
 
 /// 🎯️ A channel's animated node + which of its properties is driven.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -49,17 +46,14 @@ pub struct AnimTarget {
 /// 📈️ gltf `sampler.interpolation` — how `keyframes` are resampled between `t` values.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
+#[derive(Default)]
 pub enum AnimInterpolation {
+    #[default]
     Linear,
     Step,
     CubicSpline,
 }
 
-impl Default for AnimInterpolation {
-    fn default() -> Self {
-        AnimInterpolation::Linear
-    }
-}
 //#endregion 🔖️Interpolation
 
 //#region 🔖️Value
@@ -170,7 +164,7 @@ fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -205,7 +199,7 @@ fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
-    format!("[{}]", items.iter().map(|i| enc(i)).collect::<Vec<_>>().join(","))
+    format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {

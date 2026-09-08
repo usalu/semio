@@ -226,18 +226,10 @@ impl HuffDecoder {
 
 fn fixed_lit_lengths() -> Vec<u8> {
     let mut l = vec![0u8; 288];
-    for i in 0..=143 {
-        l[i] = 8;
-    }
-    for i in 144..=255 {
-        l[i] = 9;
-    }
-    for i in 256..=279 {
-        l[i] = 7;
-    }
-    for i in 280..=287 {
-        l[i] = 8;
-    }
+    l[..=143].fill(8);
+    l[144..=255].fill(9);
+    l[256..=279].fill(7);
+    l[280..=287].fill(8);
     l
 }
 
@@ -914,15 +906,15 @@ fn dynamic_decoders(br: &mut BitReader<'_>) -> Result<(HuffDecoder, HuffDecoder)
             16 => {
                 let rep = br.read_bits(2)? as usize + 3;
                 let prev = *lens.last().ok_or("bad repeat")?;
-                lens.extend(std::iter::repeat(prev).take(rep));
+                lens.extend(std::iter::repeat_n(prev, rep));
             }
             17 => {
                 let rep = br.read_bits(3)? as usize + 3;
-                lens.extend(std::iter::repeat(0u8).take(rep));
+                lens.extend(std::iter::repeat_n(0u8, rep));
             }
             18 => {
                 let rep = br.read_bits(7)? as usize + 11;
-                lens.extend(std::iter::repeat(0u8).take(rep));
+                lens.extend(std::iter::repeat_n(0u8, rep));
             }
             _ => return Err("bad code-length symbol".into()),
         }
@@ -997,7 +989,7 @@ pub fn zlib_decompress(data: &[u8]) -> Result<Vec<u8>, String> {
     if (cmf & 0x0F) != 8 {
         return Err("unsupported zlib compression method".into());
     }
-    if ((cmf as u16) * 256 + flg as u16) % 31 != 0 {
+    if !((cmf as u16) * 256 + flg as u16).is_multiple_of(31) {
         return Err("zlib CMF/FLG check failed".into());
     }
     if flg & 0x20 != 0 {
@@ -1068,7 +1060,7 @@ pub fn decode_deflate_snapshot(data: &[u8]) -> Result<DeflateSnapshot, String> {
     if compression_method != 8 {
         return Err("unsupported zlib compression method".into());
     }
-    if ((cmf as u16) * 256 + flg as u16) % 31 != 0 {
+    if !((cmf as u16) * 256 + flg as u16).is_multiple_of(31) {
         return Err("zlib CMF/FLG check failed".into());
     }
     let fdict = flg & 0x20 != 0;

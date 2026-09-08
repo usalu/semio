@@ -74,13 +74,13 @@ mod tests {
     use protocol::Inference;
 
     #[semio_framework_async_macros::async_test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = Din4108Snapshot::default();
         assert_eq!(Din4108Inference::infer(&snapshot), Din4108Inference::infer(&snapshot));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(Din4108Inference::infer(&Din4108Snapshot::default()), Din4108Inference::default());
     }
 }
@@ -251,13 +251,13 @@ mod compliance_report_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn opaque_wall_passes_din_4108_suite() {
+    async fn opaque_wall_passes_din_4108_suite() {
         let report = check_opaque_wall(part_2::BuildingCategory::Residential, &sample_wall(), ClimateZoneDe::Zone2, 2.5).expect("inputs complete");
         assert!(report.all_pass(), "checks: {:?}", report.checks);
     }
 
     #[semio_framework_async_macros::async_test]
-    fn full_envelope_evaluate_covers_all_eight_parts() {
+    async fn full_envelope_evaluate_covers_all_eight_parts() {
         let document = Din4108Snapshot::default();
         let report = evaluate(&document);
         assert!(report.checks.len() >= 15, "expected parts 1–8 checks, got {}", report.checks.len());

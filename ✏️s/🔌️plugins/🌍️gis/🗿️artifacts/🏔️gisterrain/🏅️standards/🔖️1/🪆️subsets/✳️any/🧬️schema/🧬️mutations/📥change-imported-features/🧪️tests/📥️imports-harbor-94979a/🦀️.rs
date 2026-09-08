@@ -31,14 +31,14 @@ const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 /// 🏔️ The committed `⬅️before`, with its DERIVED mesh handle minted by the artifact's own
 /// composition funnel (see this file's module doc) rather than read from the placeholder JSON.
 fn before() -> GisTerrainSnapshot {
-    gis_terrain_snapshot_with_derived_mesh(serde_json::from_str(BEFORE).expect("before snapshot decodes"))
+    gis_terrain_snapshot_with_derived_mesh(dsl::json::from_json_str(BEFORE).expect("before snapshot decodes"))
 }
 /// 🏔️ The committed `➡️after`, funnelled through the identical derivation.
 fn expected_after() -> GisTerrainSnapshot {
-    gis_terrain_snapshot_with_derived_mesh(serde_json::from_str(AFTER).expect("after snapshot decodes"))
+    gis_terrain_snapshot_with_derived_mesh(dsl::json::from_json_str(AFTER).expect("after snapshot decodes"))
 }
 fn mutation() -> GisTerrainMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// ▶️ `change-imported-features` carries `before` to exactly the committed `after`, and — because the field it
@@ -73,12 +73,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: GisTerrainSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: GisTerrainSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-imported-features/imports-harbor-position-descriptor: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "change-imported-features/imports-harbor-position-descriptor: committed mutation JSON is not canonical");
 }
@@ -101,7 +101,7 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = <GisTerrainMutation as protocol::Mutation<GisTerrainSnapshot>>::diff(&mutation(), &before());
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-imported-features/imports-harbor-position-descriptor: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -109,8 +109,8 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: GisTerrainDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let decoded: GisTerrainDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-imported-features/imports-harbor-position-descriptor: committed diff JSON is not canonical");
 }
@@ -120,7 +120,7 @@ async fn committed_diff_is_canonical() {
 /// the composed mesh itself, exactly as `apply_gis_terrain_mutation` does.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: GisTerrainDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: GisTerrainDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <GisTerrainDiff as protocol::MutationDiff<GisTerrainSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-imported-features/imports-harbor-position-descriptor: committed diff did not carry before to after");
 }

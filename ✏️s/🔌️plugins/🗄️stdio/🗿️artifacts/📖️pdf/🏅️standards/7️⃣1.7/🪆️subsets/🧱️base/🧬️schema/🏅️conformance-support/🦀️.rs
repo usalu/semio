@@ -221,7 +221,7 @@ pub fn signature_fields(snapshot: &PdfSnapshot) -> Vec<ObjRef> {
     fields
         .iter()
         .filter_map(|item| item.as_ref())
-        .filter(|id| object(snapshot, *id).map(|value| dict_name(value, "FT") == Some("Sig")).unwrap_or(false))
+        .filter(|id| object(snapshot, *id).is_some_and(|value| dict_name(value, "FT") == Some("Sig")))
         .collect()
 }
 
@@ -306,7 +306,6 @@ pub fn set_output_intent(snapshot: &mut PdfSnapshot, subtype: &str, identifier: 
 /// "put an `/S /JavaScript` action in the graph" is the same graph surgery whether PDF/A, PDF/E,
 /// PDF/H or PDF/X is the class forbidding it — while WHICH axes a subset declares, and therefore
 /// which of these it composes, is that subset's own vocabulary and is not shared at all.
-
 /// 🔒️ A real Standard Security Handler dictionary: the `/Filter /Standard` + `/V` + `/R` + `/O` +
 /// `/U` shape every conformance checker in this standard scans for, with the 32-byte owner and
 /// user strings ISO 32000-1 §7.6.3.3 fixes the length of.

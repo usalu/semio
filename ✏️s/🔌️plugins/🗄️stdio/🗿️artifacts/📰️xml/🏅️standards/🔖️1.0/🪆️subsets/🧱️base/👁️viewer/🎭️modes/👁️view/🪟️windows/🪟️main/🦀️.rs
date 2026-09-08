@@ -25,14 +25,14 @@ pub fn definition() -> WindowKindDefinition {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &XmlSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let root = match &document.doc.root {
-        Some(node) => node_view(Vec::new(), node),
+        Some(node) => node_view(&[], node),
         None => TreeNodeView { id: String::new(), label: "(empty document)".to_string(), children: Vec::new() },
     };
     TreeWindowKit::render(&TreeView { roots: vec![root] })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn node_view(path: Vec<usize>, node: &XmlNode) -> TreeNodeView {
+fn node_view(path: &[usize], node: &XmlNode) -> TreeNodeView {
     let id = path.iter().map(|index| index.to_string()).collect::<Vec<_>>().join("/");
     match node {
         XmlNode::Element { name, attrs, children } => {
@@ -40,9 +40,9 @@ fn node_view(path: Vec<usize>, node: &XmlNode) -> TreeNodeView {
                 .iter()
                 .enumerate()
                 .map(|(index, child)| {
-                    let mut child_path = path.clone();
+                    let mut child_path = path.to_vec();
                     child_path.push(index);
-                    node_view(child_path, child)
+                    node_view(&child_path, child)
                 })
                 .collect();
             TreeNodeView { id, label: format!("<{name}> ({} attrs, {} children)", attrs.len(), children.len()), children: child_views }

@@ -159,7 +159,7 @@ mod tests {
     /// ⚖️ Every variant — full-coverage `OpText` round trip over the closed vocabulary, one sample
     /// value per field.
     #[semio_framework_async_macros::async_test]
-    fn every_variant_op_text_round_trips() {
+    async fn every_variant_op_text_round_trips() {
         for mutation in every_mutation() {
             store::os_store::test_support::assert_op_line_round_trip(&mutation);
         }
@@ -167,7 +167,7 @@ mod tests {
 
     fn every_mutation() -> Vec<En1995Mutation> {
         vec![
-            En1995Mutation::ChangeAnnex(set_snapshot::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
+            En1995Mutation::ChangeAnnex(set_snapshot::ChangeAnnex { new_annex: AnnexChoice::En }),
             En1995Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: 25.0 }),
             En1995Mutation::ChangeNEdKn(change_n_ed_kn::ChangeNEdKn { new_n_ed_kn: 50.0 }),
             En1995Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 15.0 }),

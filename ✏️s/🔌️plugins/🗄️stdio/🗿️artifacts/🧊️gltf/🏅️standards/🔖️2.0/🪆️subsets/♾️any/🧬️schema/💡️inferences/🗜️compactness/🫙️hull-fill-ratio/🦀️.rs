@@ -19,15 +19,13 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn from_raw(context: &GltfGeometryContext<'_>, raw: &super::GltfCompactnessRaw) -> GltfMeasure<f64> {
     raw.hull_volume
-        .filter(|volume| *volume > 0.0)
-        .map(|volume| {
+        .filter(|volume| *volume > 0.0).map_or_else(|| unavailable(GltfUnit::Unitless, GltfAvailability::Degenerate, Vec::new(), context.sample_count, Some(context.topology)), |volume| {
             if context.solid.is_some() {
                 estimate((context.volume / volume).clamp(0.0, 1.0), GltfUnit::Unitless, context.sample_count, Some(context.topology))
             } else {
                 unavailable(GltfUnit::Unitless, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology))
             }
         })
-        .unwrap_or_else(|| unavailable(GltfUnit::Unitless, GltfAvailability::Degenerate, Vec::new(), context.sample_count, Some(context.topology)))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

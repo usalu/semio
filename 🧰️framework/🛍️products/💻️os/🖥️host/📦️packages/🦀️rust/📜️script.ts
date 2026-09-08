@@ -45,7 +45,7 @@ class MediaProjectionScript extends BundleScript {
     assert(source.includes("fn workflow_media_contract_projection_matches_neutral_document_binary_and_conversion_cases"), "an exact native projection law is registered");
     console.log(`[DEBUG] media contract presentation oracle: ${fixture.cases.length} document/binary/conversion vectors, ${denied} strict hostile denials; no native claim`);
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runExactCargoLaws({ cwd: this.repoRoot, groups: [{ package: "semio-framework-os", target: { kind: "lib" }, cargoArgs: ["--features", "os-host-full"], laws: ["workflow_media_contract_projection_matches_neutral_document_binary_and_conversion_cases"] }] });
+    const receipts = await runExactCargoLaws({ cwd: this.repoRoot, groups: [{ package: "semio-framework-os", target: { kind: "lib" }, cargoArgs: ["--features", "os-host-full"], laws: ["workflow_media_contract_projection_matches_neutral_document_binary_and_conversion_cases", "owned_artifact_kind_formats_survive_host_registry_projection"] }] });
     console.log(`[DEBUG] media contract presentation native assertions=${receipts[0]!.assertions}; executable=${receipts[0]!.sha256}`);
   }
 }

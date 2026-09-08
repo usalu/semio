@@ -839,7 +839,7 @@ pub(crate) fn cancel_instance_tasks_step(instance: u32, cursor: &mut usize) -> b
     #[cfg(not(test))]
     {
         let budget = executor::ReactorTaskBudget { operation: 0, generation: 0, cancellation_generation: 0, maximum_units: 1, maximum_bytes: 4_096, deadline: std::time::Instant::now() + std::time::Duration::from_millis(8) };
-        return matches!(REACTOR_EXECUTOR.with(|executor| executor.close_instance_step(instance, cursor, budget)), executor::ReactorTaskStep::Complete);
+        matches!(REACTOR_EXECUTOR.with(|executor| executor.close_instance_step(instance, cursor, budget)), executor::ReactorTaskStep::Complete)
     }
     #[cfg(test)]
     {
@@ -927,7 +927,7 @@ fn release_reactor_close(key: instance_lifetime::NativeCloseKey) -> Result<(), s
         if !closes.slots.get(index).is_some_and(|state| state.key == key && state.complete) {
             return Err(reactor_close_fault("reactor close receipt is not terminal"));
         }
-        drop(closes.take_at(index));
+        let _ = closes.take_at(index);
         Ok(())
     })
 }
@@ -1119,7 +1119,7 @@ mod command_ingress_terminal_tests {
 //#endregion 🔁️CommandIngressTerminal
 
 /// 🧬️ Everything below crosses the wasm component boundary — gated identically to `component`
-/// (`🦀️.rs` at crate root) since it names `crate::component::component::exports::...` types that
+/// (`🦀️.rs` at crate root) since it names `crate::component::wasip2::exports::...` types that
 /// simply do not exist outside a `component-guest`/`component-extension-guest` wasm32-wasip2
 /// build (mirrors the OLD `host_port`'s per-function `#[cfg(...)]` pattern, just hoisted to one
 /// module instead of repeated per function).
@@ -1141,22 +1141,22 @@ mod wit_bridge {
     /// deliberately wrong `wit::OpenWindowEffect` import made `cargo check --target wasm32-wasip2
     /// --features component-guest` emit `help: consider importing … effects::OpenWindowEffect`
     /// (and the `events`/`ui` siblings the same way) — not guessed.
-    use crate::component::component::semio::framework::effects as wit_effects;
-    use crate::component::component::semio::framework::events as wit_events;
-    use crate::component::component::semio::framework::instance_lifetime as wit_lifetime;
-    use crate::component::component::semio::framework::types as wit_types;
-    use crate::component::component::semio::framework::ui as wit_ui;
+    use crate::component::wasip2::semio::framework::effects as wit_effects;
+    use crate::component::wasip2::semio::framework::events as wit_events;
+    use crate::component::wasip2::semio::framework::instance_lifetime as wit_lifetime;
+    use crate::component::wasip2::semio::framework::types as wit_types;
+    use crate::component::wasip2::semio::framework::ui as wit_ui;
 
     /// ▶️ The real `reactor::poll` body — see module doc for the shape. `events`/`budget` are the
     /// WIT-generated types from `exports::semio::framework::reactor`; the return is that same
     /// module's `TurnResult`.
     pub async fn poll<PA: crate::app::PluginApp + 'static>(
         runtime: &crate::plugin_runtime::PluginRuntime<PA>,
-        events: Vec<crate::component::component::exports::semio::framework::reactor::Event>,
-        command_page: Option<crate::component::component::exports::semio::framework::reactor::CommandIngressPage>,
-        cold_pair_page: Option<crate::component::component::exports::semio::framework::reactor::ColdDocumentPairPage>,
-        budget: crate::component::component::exports::semio::framework::reactor::Budget,
-    ) -> Result<crate::component::component::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
+        events: Vec<crate::component::wasip2::exports::semio::framework::reactor::Event>,
+        command_page: Option<crate::component::wasip2::exports::semio::framework::reactor::CommandIngressPage>,
+        cold_pair_page: Option<crate::component::wasip2::exports::semio::framework::reactor::ColdDocumentPairPage>,
+        budget: crate::component::wasip2::exports::semio::framework::reactor::Budget,
+    ) -> Result<crate::component::wasip2::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
         let mut kernel_events = Vec::with_capacity(events.len());
         for event in events {
             kernel_events.push(wit_event_to_kernel(event));
@@ -1172,7 +1172,7 @@ mod wit_bridge {
     /// back to `default()` (no field set — read as "no limit declared" by every reader, e.g.
     /// `instance_task_quota`'s `unwrap_or(16)`) on a decode failure rather than failing `InstanceOpen`
     /// outright.
-    fn wit_command_page_to_kernel(page: crate::component::component::exports::semio::framework::reactor::CommandIngressPage) -> Result<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage), semio_framework::Fault> {
+    fn wit_command_page_to_kernel(page: crate::component::wasip2::exports::semio::framework::reactor::CommandIngressPage) -> Result<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage), semio_framework::Fault> {
         let cursor = page.cursor;
         let page = page.page;
         if page.length as usize > semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES {
@@ -1271,8 +1271,8 @@ mod wit_bridge {
         ))
     }
 
-    fn kernel_command_cursor_to_wit(cursor: semio_framework::kernel::CommandPageCursor) -> crate::component::component::exports::semio::framework::reactor::CommandPageCursor {
-        use crate::component::component::exports::semio::framework::reactor as wit;
+    fn kernel_command_cursor_to_wit(cursor: &semio_framework::kernel::CommandPageCursor) -> crate::component::wasip2::exports::semio::framework::reactor::CommandPageCursor {
+        use crate::component::wasip2::exports::semio::framework::reactor as wit;
         wit::CommandPageCursor {
             owner: cursor.owner,
             generation: cursor.generation,
@@ -1289,21 +1289,21 @@ mod wit_bridge {
     }
 
     /// 💤️ Canonical cursor payload for the scalar idle command-ingress record.
-    fn idle_command_cursor_to_wit() -> crate::component::component::exports::semio::framework::reactor::CommandPageCursor {
-        use crate::component::component::exports::semio::framework::reactor as wit;
+    fn idle_command_cursor_to_wit() -> crate::component::wasip2::exports::semio::framework::reactor::CommandPageCursor {
+        use crate::component::wasip2::exports::semio::framework::reactor as wit;
         wit::CommandPageCursor { owner: 0, generation: 0, command_index: 0, command_count: 0, instance: 0, seq: 0, kind: 0, page_index: 0, page_count: 0, item_count: 0, metadata: 0 }
     }
 
     /// 🔢️ Kernel command ingress → scalar WIT record, avoiding nested variant discriminants in async results.
-    fn kernel_command_ingress_to_wit(status: semio_framework::kernel::CommandIngressStatus) -> crate::component::component::exports::semio::framework::reactor::CommandIngressStatus {
-        use crate::component::component::exports::semio::framework::reactor as wit;
+    fn kernel_command_ingress_to_wit(status: semio_framework::kernel::CommandIngressStatus) -> crate::component::wasip2::exports::semio::framework::reactor::CommandIngressStatus {
+        use crate::component::wasip2::exports::semio::framework::reactor as wit;
         let (kind, cursor, fault) = match status {
             semio_framework::kernel::CommandIngressStatus::Idle => (0, idle_command_cursor_to_wit(), Vec::new()),
-            semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor) => (1, kernel_command_cursor_to_wit(cursor), Vec::new()),
-            semio_framework::kernel::CommandIngressStatus::Backpressure(cursor) => (2, kernel_command_cursor_to_wit(cursor), Vec::new()),
-            semio_framework::kernel::CommandIngressStatus::CommandPending(cursor) => (3, kernel_command_cursor_to_wit(cursor), Vec::new()),
-            semio_framework::kernel::CommandIngressStatus::CommandComplete(cursor) => (4, kernel_command_cursor_to_wit(cursor), Vec::new()),
-            semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault } => (5, kernel_command_cursor_to_wit(cursor), fault),
+            semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor) => (1, kernel_command_cursor_to_wit(&cursor), Vec::new()),
+            semio_framework::kernel::CommandIngressStatus::Backpressure(cursor) => (2, kernel_command_cursor_to_wit(&cursor), Vec::new()),
+            semio_framework::kernel::CommandIngressStatus::CommandPending(cursor) => (3, kernel_command_cursor_to_wit(&cursor), Vec::new()),
+            semio_framework::kernel::CommandIngressStatus::CommandComplete(cursor) => (4, kernel_command_cursor_to_wit(&cursor), Vec::new()),
+            semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault } => (5, kernel_command_cursor_to_wit(&cursor), fault),
         };
         wit::CommandIngressStatus { kind, cursor, fault }
     }
@@ -1312,7 +1312,7 @@ mod wit_bridge {
         bytes.try_into().map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.cold-pair-hash-width"), field))
     }
 
-    fn wit_cold_pair_page_to_kernel(page: crate::component::component::exports::semio::framework::reactor::ColdDocumentPairPage) -> Result<semio_framework::kernel::ColdDocumentPairPage, semio_framework::Fault> {
+    fn wit_cold_pair_page_to_kernel(page: crate::component::wasip2::exports::semio::framework::reactor::ColdDocumentPairPage) -> Result<semio_framework::kernel::ColdDocumentPairPage, semio_framework::Fault> {
         let header = page.header;
         let frontier = header.baseline_frontier;
         Ok(semio_framework::kernel::ColdDocumentPairPage {
@@ -1339,18 +1339,18 @@ mod wit_bridge {
         })
     }
 
-    fn kernel_cold_frontier_to_wit(frontier: semio_framework::kernel::ColdDocumentPairFrontier) -> crate::component::component::exports::semio::framework::reactor::ColdDocumentPairFrontier {
-        use crate::component::component::exports::semio::framework::reactor as wit;
+    fn kernel_cold_frontier_to_wit(frontier: semio_framework::kernel::ColdDocumentPairFrontier) -> crate::component::wasip2::exports::semio::framework::reactor::ColdDocumentPairFrontier {
+        use crate::component::wasip2::exports::semio::framework::reactor as wit;
         wit::ColdDocumentPairFrontier { document_id: frontier.document_id, head_edit_ordinal: frontier.head_edit_ordinal, head_edit_id: frontier.head_edit_id, last_commit_seq: frontier.last_commit_seq, chain_sha256: frontier.chain_sha256.to_vec() }
     }
 
-    fn kernel_cold_cursor_to_wit(cursor: semio_framework::kernel::ColdDocumentPairCursor) -> crate::component::component::exports::semio::framework::reactor::ColdDocumentPairCursor {
-        use crate::component::component::exports::semio::framework::reactor as wit;
+    fn kernel_cold_cursor_to_wit(cursor: semio_framework::kernel::ColdDocumentPairCursor) -> crate::component::wasip2::exports::semio::framework::reactor::ColdDocumentPairCursor {
+        use crate::component::wasip2::exports::semio::framework::reactor as wit;
         wit::ColdDocumentPairCursor { lifetime: kernel_lifetime_to_wit(cursor.lifetime), transfer_generation: cursor.transfer_generation, page_index: cursor.page_index, page_count: cursor.page_count }
     }
 
-    fn kernel_cold_pair_ingress_to_wit(status: semio_framework::kernel::ColdPairIngressStatus) -> crate::component::component::exports::semio::framework::reactor::ColdPairIngressStatus {
-        use crate::component::component::exports::semio::framework::reactor as wit;
+    fn kernel_cold_pair_ingress_to_wit(status: semio_framework::kernel::ColdPairIngressStatus) -> crate::component::wasip2::exports::semio::framework::reactor::ColdPairIngressStatus {
+        use crate::component::wasip2::exports::semio::framework::reactor as wit;
         match status {
             semio_framework::kernel::ColdPairIngressStatus::Idle => wit::ColdPairIngressStatus::Idle,
             semio_framework::kernel::ColdPairIngressStatus::PageAccepted(cursor) => wit::ColdPairIngressStatus::PageAccepted(kernel_cold_cursor_to_wit(cursor)),
@@ -1406,8 +1406,8 @@ mod wit_bridge {
         }
     }
 
-    fn wit_event_to_kernel(event: crate::component::component::exports::semio::framework::reactor::Event) -> Event {
-        use crate::component::component::exports::semio::framework::reactor::Event as W;
+    fn wit_event_to_kernel(event: crate::component::wasip2::exports::semio::framework::reactor::Event) -> Event {
+        use crate::component::wasip2::exports::semio::framework::reactor::Event as W;
         match event {
             W::InstanceOpen(payload) => Event::InstanceOpen {
                 request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: payload.activation_generation, instance_id: payload.instance, request_sequence: payload.request_sequence },
@@ -1491,9 +1491,9 @@ mod wit_bridge {
     /// (doc-comment-only, plus a field rename for clarity) WIT diff as a registrar lease-request.
     fn kernel_turn_result_to_wit(
         result: &semio_framework::kernel::TurnResult,
-        _budget: crate::component::component::exports::semio::framework::reactor::Budget,
-    ) -> Result<crate::component::component::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
-        use crate::component::component::exports::semio::framework::reactor as wit;
+        _budget: crate::component::wasip2::exports::semio::framework::reactor::Budget,
+    ) -> Result<crate::component::wasip2::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
+        use crate::component::wasip2::exports::semio::framework::reactor as wit;
         Ok(wit::TurnResult {
             ui_patches: result.ui_patches.iter().map(kernel_ui_patch_to_wit).collect(),
             effects: result.effects.iter().cloned().map(kernel_effect_to_wit).collect::<Result<Vec<_>, _>>()?,
@@ -1516,13 +1516,13 @@ mod wit_bridge {
     /// 👥️ M2: pack-encodes a whole `ui_contract::PresenceUpdate` into the WIT `presence-update.update`
     /// field — same `pack_patch_field` helper every `patch-op` variant already uses, since a
     /// render-plane presence update is exactly as opaque to the WIT boundary as a patch op's payload.
-    fn kernel_presence_update_to_wit(update: &ui_contract::PresenceUpdate) -> crate::component::component::exports::semio::framework::reactor::PresenceUpdate {
-        use crate::component::component::exports::semio::framework::reactor as wit;
+    fn kernel_presence_update_to_wit(update: &ui_contract::PresenceUpdate) -> crate::component::wasip2::exports::semio::framework::reactor::PresenceUpdate {
+        use crate::component::wasip2::exports::semio::framework::reactor as wit;
         wit::PresenceUpdate { update: pack_patch_field(&update) }
     }
 
-    fn kernel_ui_patch_to_wit(patch: &UiPatch) -> crate::component::component::exports::semio::framework::reactor::UiPatch {
-        use crate::component::component::exports::semio::framework::reactor as wit;
+    fn kernel_ui_patch_to_wit(patch: &UiPatch) -> crate::component::wasip2::exports::semio::framework::reactor::UiPatch {
+        use crate::component::wasip2::exports::semio::framework::reactor as wit;
         let (instance, surface) = patch.surface.0.split_once(':').unwrap_or(("0", patch.surface.0.as_str()));
         wit::UiPatch {
             surface: wit_ui::SurfaceRef { instance: instance.parse().unwrap_or(0), surface: surface.to_owned() },
@@ -1539,7 +1539,7 @@ mod wit_bridge {
     // this packet's `path_scope`, `🏪️store/**`); safe to resolve synchronously here for the same "world
     // actor has no host-async import" reason as this file's other WIT-boundary bridges.
     fn pack_patch_field<T: serde::Serialize>(value: &T) -> Vec<u8> {
-        let value = serde_json::to_value(value).map(|json| dsl::DslValue::from(&json)).unwrap_or(dsl::DslValue::Null);
+        let value = serde_json::to_value(value).map_or(dsl::DslValue::Null, |json| dsl::DslValue::from(&json));
         store::pack_rt::encode_wire_value(&value)
     }
 
@@ -1580,15 +1580,15 @@ mod wit_bridge {
     /// Rust-only field types (`WindowKindId`, `DslValue`, `MediaType`, `ClipboardFragment`, ...) are
     /// wire-encoded through the SAME `store::pack_rt::encode_wire_value`/`dsl::to_dsl_value` idiom
     /// every existing host boundary in this crate already uses.
-    fn kernel_effect_to_wit(effect: Effect) -> Result<crate::component::component::exports::semio::framework::reactor::Effect, semio_framework::Fault> {
-        use crate::component::component::exports::semio::framework::reactor as wit;
+    fn kernel_effect_to_wit(effect: Effect) -> Result<crate::component::wasip2::exports::semio::framework::reactor::Effect, semio_framework::Fault> {
+        use crate::component::wasip2::exports::semio::framework::reactor as wit;
         // 🚫️async: E5 executor bridge — `store::pack_rt::encode_wire_value` is genuinely `async fn`
         // (out of this packet's `path_scope`, `🏪️store/**`), but every caller in this match below is
         // itself sync (R9: `kernel_effect_to_wit`'s only consumer is the WIT-fixed sync `world actor`
         // boundary, no suspension point of its own) — `resolve_ready` is safe here because `world
         // actor` imports no `host-async`, so this store call never has anything real to suspend on.
         fn pack<T: serde::Serialize>(value: &T) -> Vec<u8> {
-            let value = serde_json::to_value(value).map(|json| dsl::DslValue::from(&json)).unwrap_or(dsl::DslValue::Null);
+            let value = serde_json::to_value(value).map_or(dsl::DslValue::Null, |json| dsl::DslValue::from(&json));
             store::pack_rt::encode_wire_value(&value)
         }
         Ok(match effect {

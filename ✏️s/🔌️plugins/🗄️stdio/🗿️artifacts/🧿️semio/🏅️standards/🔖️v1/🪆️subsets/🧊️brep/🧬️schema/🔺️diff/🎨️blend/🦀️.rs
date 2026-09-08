@@ -258,7 +258,7 @@ fn circular_arc_bezier(center: Pnt3, a: Pnt3, b: Pnt3, r: f64) -> ([Pnt3; 3], [f
 /// [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::offset::ruled_surface_from_curves`]'s callers elsewhere, and just as valid here for building
 /// the blend face's own trim edges.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn build_fillet_geometry(body: &Body, edge: EdgeId, f0: FaceId, f1: FaceId, s0: &Surface, s1: &Surface, t_lo: f64, t_hi: f64, radius_at: &dyn Fn(f64) -> f64) -> Result<(Surface, Curve3, Curve3), KernelError> {
+fn build_fillet_geometry(body: &Body, edge: EdgeId, (f0, f1): (FaceId, FaceId), (s0, s1): (&Surface, &Surface), (t_lo, t_hi): (f64, f64), radius_at: &dyn Fn(f64) -> f64) -> Result<(Surface, Curve3, Curve3), KernelError> {
     let n = BLEND_SAMPLES;
     let mut rows = Vec::with_capacity(n);
     let mut wts = Vec::with_capacity(n);
@@ -282,7 +282,7 @@ fn build_fillet_geometry(body: &Body, edge: EdgeId, f0: FaceId, f1: FaceId, s0: 
     let u_knots = KnotVector::clamped_uniform(n, 1);
     let v_knots = KnotVector { knots: vec![0.0, 0.0, 0.0, 1.0, 1.0, 1.0], degree: 2 };
     let surface = Surface::Nurbs { u_knots, v_knots, controls: rows, weights: wts };
-    let deg = (n - 1).min(3).max(1);
+    let deg = (n - 1).clamp(1, 3);
     let c0 = interpolate_curve(&tan0, deg, ParamMethod::Uniform, None, false).ok_or_else(|| KernelError::Operation("fillet: tangency curve fit failed".into()))?;
     let c1 = interpolate_curve(&tan1, deg, ParamMethod::Uniform, None, false).ok_or_else(|| KernelError::Operation("fillet: tangency curve fit failed".into()))?;
     Ok((surface, Curve3::Nurbs { knots: c0.knots, controls: c0.controls, weights: c0.weights }, Curve3::Nurbs { knots: c1.knots, controls: c1.controls, weights: c1.weights }))
@@ -311,7 +311,7 @@ fn fillet_one_edge(body: &mut Body, solid_faces: &HashSet<FaceId>, edge: EdgeId,
     // one edge, traversed forward then reverse) — the blend face becomes a real closed
     // torus-band, not an open strip.
     let is_closed = edge_ent.v0 == edge_ent.v1;
-    let (blend_surface, tan0_curve, tan1_curve) = build_fillet_geometry(body, edge, f0, f1, &s0, &s1, t_lo, t_hi, radius_at)?;
+    let (blend_surface, tan0_curve, tan1_curve) = build_fillet_geometry(body, edge, (f0, f1), (&s0, &s1), (t_lo, t_hi), radius_at)?;
     let blend_id = body.surfaces.insert(blend_surface.clone());
 
     let (nt0, nt1) = (tan0_curve.domain(), tan1_curve.domain());
@@ -421,7 +421,7 @@ fn chamfer_one_edge(body: &mut Body, solid_faces: &HashSet<FaceId>, edge: EdgeId
         let b1 = *c1pts.last().unwrap();
         (Curve3::Line { origin: a0, dir: a1 - a0 }, Curve3::Line { origin: b0, dir: b1 - b0 }, (0.0, 1.0))
     } else {
-        let deg = (n - 1).min(3).max(1);
+        let deg = (n - 1).clamp(1, 3);
         let n0c = interpolate_curve(&c0pts, deg, ParamMethod::Uniform, None, false).ok_or_else(|| KernelError::Operation("chamfer: tangent curve fit failed".into()))?;
         let n1c = interpolate_curve(&c1pts, deg, ParamMethod::Uniform, None, false).ok_or_else(|| KernelError::Operation("chamfer: tangent curve fit failed".into()))?;
         (Curve3::Nurbs { knots: n0c.knots, controls: n0c.controls, weights: n0c.weights }, Curve3::Nurbs { knots: n1c.knots, controls: n1c.controls, weights: n1c.weights }, (0.0, 1.0))

@@ -2,15 +2,15 @@
 //! hierarchy (site/building/storey/space, parent-pointer graph — mirrors ifc/4's
 //! `IfcRelAggregates`/`IfcRelContainedInSpatialStructure` shape rather than a recursive tree type)
 //! + elements (typed class enum, placement, a BY-ID `GeometryRef` into the sibling `brep`/`mesh`
-//! subsets, and named property sets) + relations (typed kind enum, from/to id endpoints). Owned by
-//! `model` (w1b-type-ownership.md): `SemioModelElement`, `GeometryRef`, plus this file's own
-//! `SpatialNode`/`ModelRelation`/`ElementClass`/`PropertySet`/`Property`/`PsetValue`/
-//! `RelationKind`/`SpatialKind`. `model` never inlines brep/mesh geometry data — `GeometryRef`
-//! resolves by id into those subsets' own snapshots (spec-mandated cross-reuse, master plan
-//! Architecture section); referential integrity of THAT cross-subset link is out of this
-//! snapshot's own scope (it is not decodable from `model` alone), but every reference WITHIN this
-//! subset's own collections (spatial parent pointers, element→spatial containment, relation
-//! endpoints) is checked by the composer's `SemioModelValidator`.
+//!   subsets, and named property sets) + relations (typed kind enum, from/to id endpoints). Owned by
+//!   `model` (w1b-type-ownership.md): `SemioModelElement`, `GeometryRef`, plus this file's own
+//!   `SpatialNode`/`ModelRelation`/`ElementClass`/`PropertySet`/`Property`/`PsetValue`/
+//!   `RelationKind`/`SpatialKind`. `model` never inlines brep/mesh geometry data — `GeometryRef`
+//!   resolves by id into those subsets' own snapshots (spec-mandated cross-reuse, master plan
+//!   Architecture section); referential integrity of THAT cross-subset link is out of this
+//!   snapshot's own scope (it is not decodable from `model` alone), but every reference WITHIN this
+//!   subset's own collections (spatial parent pointers, element→spatial containment, relation
+//!   endpoints) is checked by the composer's `SemioModelValidator`.
 
 use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
 use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
@@ -213,7 +213,7 @@ fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -252,11 +252,11 @@ fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
-    format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
+    format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

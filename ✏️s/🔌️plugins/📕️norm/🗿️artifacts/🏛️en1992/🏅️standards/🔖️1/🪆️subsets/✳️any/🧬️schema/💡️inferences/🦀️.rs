@@ -74,13 +74,13 @@ mod tests {
     use protocol::Inference;
 
     #[semio_framework_async_macros::async_test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = En1992Snapshot::default();
         assert_eq!(En1992Inference::infer(&snapshot), En1992Inference::infer(&snapshot));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(En1992Inference::infer(&En1992Snapshot::default()), En1992Inference::default());
     }
 }
@@ -145,7 +145,7 @@ mod compliance_report_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn evaluate_analytical_with_prestress() {
+    async fn evaluate_analytical_with_prestress() {
         let doc = En1992Snapshot { p_kn: 800.0, ..En1992Snapshot::default() };
         let report = evaluate(&doc);
         assert_eq!(report.checks.len(), 10);
@@ -153,7 +153,7 @@ mod compliance_report_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn evaluate_covers_all_parts() {
+    async fn evaluate_covers_all_parts() {
         let report = evaluate(&En1992Snapshot::default());
         assert_eq!(report.checks.len(), 9);
         let families: Vec<&str> = report.checks.iter().map(|c| c.clause.family.as_str()).collect();

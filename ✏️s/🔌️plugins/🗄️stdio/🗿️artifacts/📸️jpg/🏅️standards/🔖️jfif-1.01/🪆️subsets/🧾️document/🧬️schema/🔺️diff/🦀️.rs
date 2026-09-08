@@ -42,7 +42,7 @@ impl JpgComponentDiff {
         Self { h_sampling: (a.h_sampling != b.h_sampling).then_some(b.h_sampling), v_sampling: (a.v_sampling != b.v_sampling).then_some(b.v_sampling), quant_table_id: (a.quant_table_id != b.quant_table_id).then_some(b.quant_table_id) }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: &Self) {
         if other.h_sampling.is_some() {
             self.h_sampling = other.h_sampling;
         }
@@ -136,7 +136,7 @@ impl JpgQuantTableDiff {
         Self { precision: (a.precision != b.precision).then_some(b.precision), values: (a.values != b.values).then_some(b.values) }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: &Self) {
         if other.precision.is_some() {
             self.precision = other.precision;
         }
@@ -347,7 +347,7 @@ fn simulate_slots(len: usize, removed: &[usize], added_indices: &[usize]) -> Vec
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize>, added_indices: impl Iterator<Item = usize>) -> usize {
-    removed.iter().copied().chain(modified_indices).chain(added_indices).max().map(|m| m + 1).unwrap_or(0)
+    removed.iter().copied().chain(modified_indices).chain(added_indices).max().map_or(0, |m| m + 1)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -359,7 +359,7 @@ fn absorb_other_segments(d1: JpgOtherSegmentsDiff, d2: JpgOtherSegmentsDiff) -> 
         r.dedup();
         r.len()
     };
-    let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map(|m| m + 1).unwrap_or(0);
+    let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map_or(0, |m| m + 1);
     let base_len = base_len_hint(&d1.removed, d1.modified.iter().map(|m| m.index), d1_added_indices.iter().copied()).max((needed_mid_len + removed_count).saturating_sub(d1.added.len()));
     let mid_slots = simulate_slots(base_len, &d1.removed, &d1_added_indices);
 
@@ -410,7 +410,7 @@ fn absorb_other_segments(d1: JpgOtherSegmentsDiff, d2: JpgOtherSegmentsDiff) -> 
         })
         .collect();
     let d2_added_indices: Vec<usize> = d2.added.iter().map(|a| a.index).collect();
-    let mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map(|m| m + 1).unwrap_or(0);
+    let mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map_or(0, |m| m + 1);
     let after_slots = simulate_slots(mid_len, &d2.removed, &d2_added_indices);
     let mut mid_to_after: HashMap<usize, usize> = HashMap::new();
     for (pos, slot) in after_slots.iter().enumerate() {
@@ -530,7 +530,7 @@ fn absorb_quant_tables(mut d1: JpgQuantTablesDiff, d2: JpgQuantTablesDiff) -> Jp
         } else if d1.removed.contains(&dm.id) {
             continue;
         } else if let Some(existing) = merged_modified.iter_mut().find(|m| m.id == dm.id) {
-            existing.diff.absorb(dm.diff.clone());
+            existing.diff.absorb(&dm.diff);
         } else {
             merged_modified.push(JpgQuantTableModified { id: dm.id, diff: dm.diff.clone() });
         }
@@ -608,7 +608,7 @@ fn absorb_components(mut d1: JpgComponentsDiff, d2: JpgComponentsDiff) -> JpgCom
         } else if d1.removed.contains(&dm.id) {
             continue;
         } else if let Some(existing) = merged_modified.iter_mut().find(|m| m.id == dm.id) {
-            existing.diff.absorb(dm.diff.clone());
+            existing.diff.absorb(&dm.diff);
         } else {
             merged_modified.push(JpgComponentModified { id: dm.id, diff: dm.diff.clone() });
         }
@@ -1252,7 +1252,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -2054,7 +2054,7 @@ fn enc_frame_change_bin(fc: &JpgFrameChange, out: &mut Vec<u8>) {
         }
         JpgFrameChange::Replace { frame } => {
             out.push(1);
-            write_opt(out, frame, |f, out| enc_frame_header_bin(f, out));
+            write_opt(out, frame, enc_frame_header_bin);
         }
     }
 }
@@ -2284,7 +2284,7 @@ impl protocol::DiffCodec for JpgDiff {
             store::pack_rt::write_varint_u64(&mut out, v as u64);
         }
         if let Some(v) = &self.jfif_thumbnail {
-            write_opt(&mut out, v, |t, out| enc_thumbnail_bin(t, out));
+            write_opt(&mut out, v, enc_thumbnail_bin);
         }
         if let Some(v) = &self.frame {
             enc_frame_change_bin(v, &mut out);

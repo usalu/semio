@@ -176,7 +176,7 @@ impl store::ArtifactDsl for LasSnapshot {
             Err(_) => text,
         };
         let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
-        if hex.len() % 2 != 0 {
+        if !hex.len().is_multiple_of(2) {
             return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
         }
         let mut bytes = Vec::with_capacity(hex.len() / 2);
@@ -199,7 +199,7 @@ impl store::ArtifactDsl for LasSnapshot {
 impl store::ArtifactPack for LasSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::las::engine::encode_las(self).map_err(|e| store::PackError::Schema(e))?;
+        let raw = crate::artifacts::las::engine::encode_las(self).map_err(store::PackError::Schema)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -209,7 +209,7 @@ impl store::ArtifactPack for LasSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        crate::artifacts::las::engine::decode_las(&inner).map_err(|e| store::PackError::Schema(e))
+        crate::artifacts::las::engine::decode_las(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

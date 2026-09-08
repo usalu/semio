@@ -65,6 +65,7 @@ pub fn inverse_sourcing_mutation_steps(mutation: &SourcingMutation, base: &Curat
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
+    use crate::artifacts::curation::mutations::{ChangeCuratedItemCount, CreateCuratedItem, DeleteCuratedItem};
     use super::*;
 
     use crate::artifacts::curation::CuratedItem;

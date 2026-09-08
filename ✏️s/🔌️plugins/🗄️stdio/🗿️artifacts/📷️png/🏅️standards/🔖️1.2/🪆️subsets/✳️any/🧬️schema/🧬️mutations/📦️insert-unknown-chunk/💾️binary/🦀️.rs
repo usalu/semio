@@ -15,14 +15,14 @@ pub fn encode_payload(payload: &InsertUnknownChunkMutation) -> Result<Vec<u8>, p
     write_bin_chunk(&mut w, chunk);
     Ok(w.into_bytes())
 }
-fn op_pack_err(error: dsl::PackError) -> protocol::ProtocolError {
+fn op_pack_err(error: &dsl::PackError) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "insert-unknown-chunk", offset: 0, detail: error.to_string() }
 }
 pub fn decode(bytes: &[u8]) -> Result<PngMutation, protocol::ProtocolError> {
     let mut r = dsl::ByteReader::new(bytes);
     let result: Result<PngMutation, protocol::ProtocolError> = Ok({
-        let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
-        let chunk = read_bin_chunk(&mut r).map_err(op_pack_err)?;
+        let index = r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize;
+        let chunk = read_bin_chunk(&mut r).map_err(|error| op_pack_err(&error))?;
         PngMutation::InsertUnknownChunk(InsertUnknownChunkMutation { index, chunk })
     });
     let position = r.position();

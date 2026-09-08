@@ -175,7 +175,7 @@ fn infer_gltf_leaf_cold(id: &'static str, request: &ArtifactInferenceExecutionRe
         value,
     };
     let canonical_payload = crate::artifacts::gltf::io::inferences::binary::encode_gltf_inference_leaf_binary(&envelope).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.leaf-binary-encode", error.to_string()))?;
-    Ok(ArtifactInferenceExecution { canonical_payload, diagnostics: Vec::new(), validity, quality: envelope.quality.clone(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() })
+    Ok(ArtifactInferenceExecution { canonical_payload, diagnostics: Vec::new(), validity, quality: envelope.quality, complete: true, actual_cache_mode: request.requested_cache_mode.clone() })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -625,7 +625,7 @@ pub mod io_registry {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        let _ = register_composer_entries(v2_0::entries());
+        register_composer_entries(v2_0::entries()).expect("static Stdio registration must be available and conflict-free");
     }
 }
 //#endregion 🚪️DerivedIoRegistry

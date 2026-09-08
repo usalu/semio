@@ -351,6 +351,7 @@ class BrowserFrameTransport {
   status = "booting";
   fault;
   worker;
+  shardWorkers = new Map;
   now;
   clearTimer;
   setTimer;
@@ -563,7 +564,35 @@ class BrowserFrameTransport {
   accepting() {
     return this.status === "booting" || this.status === "ready";
   }
+  spawnShardWorker(shardIndex, url) {
+    this.terminateShardWorker(shardIndex);
+    const worker = new Worker(url, { type: "module" });
+    const channel = new MessageChannel;
+    worker.onmessage = (event) => channel.port1.postMessage(event.data);
+    worker.onerror = (event) => channel.port1.postMessage({ kind: "shard-worker-error", message: event.message ?? "", filename: event.filename ?? "", lineno: event.lineno ?? 0 });
+    channel.port1.onmessage = (event) => worker.postMessage(event.data);
+    channel.port1.start();
+    this.shardWorkers.set(shardIndex, worker);
+    this.worker.postMessage({ kind: "shard-port", shardIndex, port: channel.port2 }, [channel.port2]);
+  }
+  terminateShardWorker(shardIndex) {
+    const existing = this.shardWorkers.get(shardIndex);
+    if (!existing)
+      return;
+    this.shardWorkers.delete(shardIndex);
+    existing.onmessage = null;
+    existing.onerror = null;
+    existing.terminate();
+  }
   receive(message) {
+    if (message.kind === "shard-spawn") {
+      this.spawnShardWorker(message.shardIndex, message.url);
+      return;
+    }
+    if (message.kind === "shard-terminate") {
+      this.terminateShardWorker(message.shardIndex);
+      return;
+    }
     if (message.lifecycle !== this.lifecycle)
       return;
     if (message.kind === "job-input-pull" || message.kind === "job-output-page" || message.kind === "job-terminal") {
@@ -809,6 +838,18 @@ function notifyOneInteractiveJobObserver() {
   setTimeout(notifyOneInteractiveJobObserver, 0);
 }
 
+/* ../../../../../../🧑‍💻dev/🤖️generated/🟦️session.ts */
+var PLAYGROUND_SESSION = {
+  variant: "puzzle3d",
+  registryPluginId: "puzzle",
+  defaultAppId: "s.puzzle.puzzle3d@1/*#editor",
+  hostMode: false,
+  host: undefined,
+  plugins: [
+    { pluginId: "puzzle", moduleUrl: "/🔌️plugin-modules/🧩️puzzle/🌉️bridge.js", contributes: [], consumes: [], dependencies: [] }
+  ]
+};
+
 /* ../../🚀️browser-boot/🟦️.ts */
 var RENDERER_MODULE_URL = new URL("./semio-framework-os-renderer-wgpu.js", import.meta.url).href;
 var RENDERER_WASM_URL = new URL("./semio-framework-os-renderer-wgpu_bg.wasm", import.meta.url).href;
@@ -835,7 +876,7 @@ function bootDescriptor() {
   const params = new URLSearchParams(window.location.search);
   const hubUrl = params.get("hub");
   return {
-    pluginVariant: bounded(params.get("plugin") ?? "s", "plugin"),
+    pluginVariant: bounded(params.get("plugin") ?? PLAYGROUND_SESSION.variant, "plugin"),
     appRole: params.get("role") === "viewer" ? "viewer" : "editor",
     ...hubUrl ? { hub: { hubUrl: bounded(hubUrl, "hub"), user: bounded(params.get("user") ?? "", "user"), dataDir: bounded(params.get("dataDir") ?? "", "dataDir") } } : {}
   };

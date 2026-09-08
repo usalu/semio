@@ -25,13 +25,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioAnimationSnapshot {
-    serde_json::from_str(BEFORE).expect("before animation snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("before animation snapshot decodes")
 }
 fn expected_after() -> SemioAnimationSnapshot {
-    serde_json::from_str(AFTER).expect("after animation snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("after animation snapshot decodes")
 }
 fn mutation() -> SemioAnimationMutation {
-    serde_json::from_str(MUTATION).expect("set-snapshot mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("set-snapshot mutation decodes")
 }
 
 /// ▶️ `set-snapshot` carries the animation to exactly the committed `after`: a stepped rotation
@@ -70,12 +70,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioAnimationSnapshot = serde_json::from_str(text).expect("animation snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("animation snapshot encodes");
+        let decoded: SemioAnimationSnapshot = dsl::json::from_json_str(text).expect("animation snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("animation snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("animation snapshot reparses");
         assert_eq!(reencoded, original, "semio-animation/set-snapshot: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("set-snapshot mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("set-snapshot mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("set-snapshot mutation reparses");
     assert_eq!(reencoded, original, "semio-animation/set-snapshot: committed mutation JSON is not canonical");
 }
@@ -100,7 +100,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioAnimationMutation as protocol::Mutation<SemioAnimationSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced animation diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced animation diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed animation diff decodes");
     assert_eq!(produced, committed, "semio-animation/set-snapshot: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -109,7 +109,7 @@ async fn produces_committed_diff() {
 /// the keyframe level, whose `index` refers to the FINAL position.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: SemioAnimationDiff = serde_json::from_str(DIFF).expect("committed animation diff decodes");
+    let decoded: SemioAnimationDiff = dsl::json::from_json_str(DIFF).expect("committed animation diff decodes");
     let timelines = decoded.timelines.as_ref().expect("the committed diff carries a timelines triple");
     assert!(timelines.removed.is_empty() && timelines.added.is_empty() && timelines.modified.len() == 1, "semio-animation/set-snapshot: the single timeline must be patched in place");
     assert!(timelines.modified[0].diff.name.is_none(), "semio-animation/set-snapshot: the tri-state timeline name must stay absent, not a round-trip-lossy null");
@@ -118,7 +118,7 @@ async fn committed_diff_is_canonical() {
     let keyframes = channels.modified[0].diff.keyframes.as_ref().expect("the patched channel carries a keyframes triple");
     assert!(keyframes.removed.is_empty() && keyframes.modified.is_empty() && keyframes.added.len() == 1 && keyframes.added[0].index == 2, "semio-animation/set-snapshot: appending a keyframe must neither remove nor patch an existing one");
     assert!(channels.modified[0].diff.target.is_none(), "semio-animation/set-snapshot: the channel's animated target did not move and must stay absent");
-    let reencoded = serde_json::to_value(&decoded).expect("animation diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("animation diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed animation diff reparses");
     assert_eq!(reencoded, original, "semio-animation/set-snapshot: committed diff JSON is not canonical");
 }
@@ -127,7 +127,7 @@ async fn committed_diff_is_canonical() {
 /// interpolation switch plus the appended keyframe is a complete description of the change.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioAnimationDiff = serde_json::from_str(DIFF).expect("committed animation diff decodes");
+    let decoded: SemioAnimationDiff = dsl::json::from_json_str(DIFF).expect("committed animation diff decodes");
     let produced = <SemioAnimationDiff as protocol::MutationDiff<SemioAnimationSnapshot>>::apply(&decoded, &before()).expect("committed animation diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "semio-animation/set-snapshot: committed diff did not carry before to after");
 }

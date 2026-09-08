@@ -9,8 +9,6 @@
 //! `DepHash` caching over `AssemblySolve`/`AssemblyContradiction`/`AssemblyEntropy` is sound.
 
 use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
-#[cfg(test)]
-use semio_framework_job::InteractiveJob as _;
 use std::collections::{BTreeMap, BTreeSet};
 
 //#region 🔖️Compile
@@ -802,10 +800,10 @@ mod tests {
     use semio_framework::ToolJobFactory as _;
     use semio_framework_job::{allocate_operation_id, root_cancel_token, CommitValidation, Generation, InteractiveJob, Operation, RevisionId, StepBudget, StepContext, StepOutcome};
     use semio_framework_plugin::app::{WireArtifactInferenceBudget, WireArtifactInferenceCacheMode, WireArtifactInferenceRequest, WireArtifactInferenceResult, ARTIFACT_INFERENCE_WIRE_VERSION};
-    use semio_framework_plugin::reactor::jobs::{cancel_job, checkpoint_jobs, restore_job, start_job, step_job, JobBudget, JobStep, JOB_KIND_INFER};
+    use semio_framework_plugin::reactor::jobs::{cancel_job, checkpoint_jobs, restore_job, start_job, step_job as step_reactor_job, JobBudget, JobStep, JOB_KIND_INFER};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
-    use store::InferredField;
+    
 
     fn kit_child(id: &str) -> store::ArtifactChild<SemioKitSnapshot> {
         store::ArtifactChild::new(id.to_string(), store::os_io::ArtifactRef { artifact_id: id.to_string(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "kit".into() } })
@@ -830,8 +828,21 @@ mod tests {
     struct MountedCompetingJob;
 
     impl InteractiveJob for MountedCompetingJob {
-        fn step(&mut self, _context: &mut StepContext<'_>) -> StepOutcome {
-            StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output: b"replacement".to_vec() })
+        fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+            StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                output: context.payload_from_bytes(semio_framework_job::JobPayloadStream::CommitOutput, b"replacement").expect("competing fixture output credit"),
+            })
+        }
+
+        fn begin_close(&mut self) {}
+
+        fn close_step(&mut self, _: usize, _: usize) -> semio_framework_job::InteractiveJobCloseStep {
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            true
         }
     }
 
@@ -885,17 +896,17 @@ mod tests {
             cancellation_id: cancellation_id.into(),
             previous_state: None,
             requested_cache_mode: WireArtifactInferenceCacheMode::Cold,
-            canonical_payload: serde_json::to_vec(&AssemblyInferenceRequest { snapshot, checkpoint: None }).expect("assembly cold payload"),
+            canonical_payload: dsl::json::to_json_string(&AssemblyInferenceRequest { snapshot, checkpoint: None }).into_bytes(),
             dependencies: Vec::new(),
         };
-        serde_json::to_vec(&request).expect("cold route request")
+        dsl::json::to_json_string(&request).into_bytes()
     }
 
-    fn drive_cold_route(job: u64) -> WireArtifactInferenceResult {
+    async fn drive_cold_route(job: u64) -> WireArtifactInferenceResult {
         for _ in 0..200_000 {
-            match step_job(job, JobBudget { fuel: 1, deadline_ms: 2 }).await {
+            match step_reactor_job(job, JobBudget { fuel: 1, deadline_ms: 2 }).await {
                 JobStep::Running(_) => {}
-                JobStep::Done(bytes) => return serde_json::from_slice(&bytes).expect("cold route result"),
+                JobStep::Done(bytes) => return dsl::json::from_json_str(std::str::from_utf8(&bytes).expect("cold route UTF-8")).expect("cold route result"),
                 JobStep::Failed(bytes) => {
                     let fault = dsl::decode_fault_bytes(&bytes);
                     panic!("cold route fault: {} {}", fault.code.0, fault.message);
@@ -905,35 +916,52 @@ mod tests {
         panic!("cold route did not terminate");
     }
 
+    use crate::wfc_engine::job::tests::{close_job, payload_bytes, retire_outcome};
+
     fn step_job(job: &mut AssemblyInferenceJob, token: semio_framework_job::CancelToken, sequence: &mut u64) -> StepOutcome {
         let operation = job.operation();
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || Some(0), sequence);
         job.step(&mut context)
     }
 
-    fn drive_job(job: &mut AssemblyInferenceJob) -> semio_framework_job::CommitCandidate {
+    fn drive_job(job: &mut AssemblyInferenceJob) -> Vec<u8> {
         let mut sequence = 0;
         for _ in 0..4_000_000 {
-            match step_job(job, root_cancel_token(), &mut sequence) {
-                StepOutcome::Complete(candidate) => return candidate,
-                StepOutcome::Fault(fault) => panic!("assembly inference fault: {}", String::from_utf8_lossy(&fault.detail)),
-                StepOutcome::Cancelled => panic!("assembly inference unexpectedly cancelled"),
-                _ => {}
+            let mut outcome = step_job(job, root_cancel_token(), &mut sequence);
+            let result = match &outcome {
+                StepOutcome::Complete(candidate) => Some(Ok(payload_bytes(&candidate.output))),
+                StepOutcome::Fault(fault) => Some(Err(String::from_utf8_lossy(&payload_bytes(&fault.detail)).into_owned())),
+                StepOutcome::Cancelled => Some(Err("assembly inference unexpectedly cancelled".into())),
+                _ => None,
+            };
+            retire_outcome(&mut outcome);
+            if let Some(result) = result {
+                close_job(job);
+                return result.expect("assembly inference completed");
             }
         }
+        close_job(job);
         panic!("assembly inference did not complete");
     }
 
     fn checkpoint_job(job: &mut AssemblyInferenceJob) -> Vec<u8> {
         let mut sequence = 0;
         for _ in 0..4_000_000 {
-            match step_job(job, root_cancel_token(), &mut sequence) {
-                StepOutcome::CheckpointReady(checkpoint) => return checkpoint.state,
-                StepOutcome::Fault(fault) => panic!("assembly inference fault before checkpoint: {}", String::from_utf8_lossy(&fault.detail)),
-                outcome if outcome.is_terminal() => panic!("assembly inference terminated before checkpoint"),
-                _ => {}
+            let mut outcome = step_job(job, root_cancel_token(), &mut sequence);
+            let checkpoint = match &outcome {
+                StepOutcome::CheckpointReady(checkpoint) => Some(payload_bytes(&checkpoint.state)),
+                _ => None,
+            };
+            retire_outcome(&mut outcome);
+            if let Some(bytes) = checkpoint {
+                return bytes;
+            }
+            if outcome.is_terminal() {
+                close_job(job);
+                panic!("assembly inference terminated before checkpoint");
             }
         }
+        close_job(job);
         panic!("assembly inference did not checkpoint");
     }
 
@@ -1039,15 +1067,21 @@ mod tests {
         let mut factory = AssemblyInferenceJobFactory::default();
         let mut job = factory.create_job(operation(113), AssemblyInferenceRequest { snapshot, checkpoint: None }).expect("maximum admitted request");
         assert_eq!(allocation, job.snapshot.weights.as_ptr());
-        assert!(job.weight_by_id.is_empty() && job.output.is_empty() && job.model_build.is_none());
+        assert!(job.weight_by_id.is_empty() && job.output.as_ref().is_some_and(|output| output.page_count() == 0) && job.model_build.is_none());
         let mut sequence = 0;
         let mut units_since_preview = 0;
         let mut previews = 0;
         for _ in 0..65 {
             units_since_preview += 1;
-            match step_job(&mut job, root_cancel_token(), &mut sequence) {
-                StepOutcome::PreviewReady(bytes) => {
-                    let preview: AssemblyInferencePreview = dsl::os_pack::from_json_str(std::str::from_utf8(&bytes).expect("UTF-8 preview")).expect("preview");
+            let mut outcome = step_job(&mut job, root_cancel_token(), &mut sequence);
+            let preview = match &outcome {
+                StepOutcome::PreviewReady(bytes) => Some(dsl::os_pack::from_json_str::<AssemblyInferencePreview>(std::str::from_utf8(&payload_bytes(bytes)).expect("UTF-8 preview"))),
+                _ => None,
+            };
+            retire_outcome(&mut outcome);
+            match outcome {
+                StepOutcome::PreviewReady(_) => {
+                    let preview = preview.expect("preview outcome").expect("preview");
                     assert_eq!(preview.stage, AssemblyInferenceStage::Weights);
                     assert!(units_since_preview <= PARENT_PREVIEW_UNIT_INTERVAL as usize);
                     if previews == 0 {
@@ -1060,23 +1094,18 @@ mod tests {
                 outcome => panic!("unexpected maximum-admission outcome: {outcome:?}"),
             }
         }
+        close_job(&mut job);
         assert!(previews >= 5);
     }
 
     #[test]
     fn registered_public_factory_routes_exact_key_and_preserves_commit_freshness() {
-        struct CompetingJob;
-        impl InteractiveJob for CompetingJob {
-            fn step(&mut self, _context: &mut StepContext<'_>) -> StepOutcome {
-                StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output: b"replacement".to_vec() })
-            }
-        }
         struct CompetingFactory {
             keys: [semio_framework::ToolFactoryKey; 1],
         }
         impl semio_framework::ToolJobFactory for CompetingFactory {
             type Payload = AssemblyInferenceRequest;
-            type Job = CompetingJob;
+            type Job = MountedCompetingJob;
 
             fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
                 &self.keys
@@ -1095,7 +1124,7 @@ mod tests {
             }
 
             fn create_job(&mut self, _operation: Operation, _payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
-                Ok(CompetingJob)
+                Ok(MountedCompetingJob)
             }
         }
 
@@ -1113,15 +1142,25 @@ mod tests {
         assert_eq!(dispatch.spec.operation.base_revision, RevisionId(11));
         assert_eq!(dispatch.spec.operation.generation, Generation(7));
         let mut sequence = 0;
-        let candidate = loop {
+        let output = loop {
             let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
-            match dispatch.job.step(&mut context) {
-                StepOutcome::Complete(candidate) => break candidate,
-                StepOutcome::Fault(fault) => panic!("registered inference fault: {}", String::from_utf8_lossy(&fault.detail)),
-                _ => {}
+            let mut outcome = dispatch.job.step(&mut context);
+            let result = match &outcome {
+                StepOutcome::Complete(candidate) => Some(Ok(payload_bytes(&candidate.output))),
+                StepOutcome::Fault(fault) => Some(Err(String::from_utf8_lossy(&payload_bytes(&fault.detail)).into_owned())),
+                StepOutcome::Cancelled => Some(Err("registered inference cancelled".into())),
+                _ => None,
+            };
+            retire_outcome(&mut outcome);
+            if let Some(result) = result {
+                dispatch.job.begin_close();
+                while !dispatch.job.terminal_is_empty() {
+                    dispatch.job.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                }
+                break result.expect("registered inference completed");
             }
         };
-        assert_eq!(serde_json::from_slice::<AssemblyInferenceCommit>(&candidate.output).expect("commit"), AssemblyInferenceCommit::default());
+        assert_eq!(dsl::json::from_json_str::<AssemblyInferenceCommit>(std::str::from_utf8(&output).expect("commit UTF-8")).expect("commit"), AssemblyInferenceCommit::default());
         assert_eq!(semio_framework_job::validate_commit(&operation, RevisionId(11), Generation(7)), CommitValidation::Accepted);
         assert!(matches!(semio_framework_job::validate_commit(&operation, RevisionId(12), Generation(7)), CommitValidation::Stale { .. }));
         assert!(matches!(semio_framework_job::validate_commit(&operation, RevisionId(11), Generation(8)), CommitValidation::Stale { .. }));
@@ -1137,7 +1176,13 @@ mod tests {
         let mut dispatch = bus.dispatch(spec).expect("registered inference lookup");
         let mut sequence = 0;
         let mut context = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), StepBudget::new(1, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
-        assert!(matches!(dispatch.job.step(&mut context), StepOutcome::Fault(_)));
+        let mut outcome = dispatch.job.step(&mut context);
+        retire_outcome(&mut outcome);
+        dispatch.job.begin_close();
+        while !dispatch.job.terminal_is_empty() {
+            dispatch.job.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        }
+        assert!(matches!(outcome, StepOutcome::Fault(_)));
     }
 
     #[test]
@@ -1147,13 +1192,14 @@ mod tests {
         let operation = operation(snapshot.seed);
         let mut original = AssemblyInferenceJob::new(operation, AssemblyInferenceRequest { snapshot: snapshot.clone(), checkpoint: None }).expect("original job");
         let checkpoint = checkpoint_job(&mut original);
+        close_job(&mut original);
         drop(original);
         let mut restarted = AssemblyInferenceJob::new(operation, AssemblyInferenceRequest { snapshot: snapshot.clone(), checkpoint: Some(checkpoint) }).expect("restarted job");
         assert!(restarted.weight_by_id.is_empty() && restarted.pattern_of.is_empty() && restarted.node_of.is_empty() && restarted.module_ids.is_empty());
         let resumed = drive_job(&mut restarted);
         let mut fresh = AssemblyInferenceJob::new(operation, AssemblyInferenceRequest { snapshot, checkpoint: None }).expect("fresh job");
         let expected = drive_job(&mut fresh);
-        assert_eq!(resumed.output, expected.output);
+        assert_eq!(resumed, expected);
     }
 
     #[test]
@@ -1176,13 +1222,13 @@ mod tests {
             if restored.stage == AssemblyInferenceStage::Restore {
                 let token = root_cancel_token();
                 token.cancel_now();
-                let before = (restored.stage, restored.cursor, restored.assignments.len(), restored.output.len());
+                let before = (restored.stage, restored.cursor, restored.assignments.len(), restored.output.as_ref().map_or(0, |writer| writer.page_count()));
                 assert_eq!(step_job(&mut restored, token, &mut sequence), StepOutcome::Cancelled);
-                assert_eq!(before, (restored.stage, restored.cursor, restored.assignments.len(), restored.output.len()));
+                assert_eq!(before, (restored.stage, restored.cursor, restored.assignments.len(), restored.output.as_ref().map_or(0, |writer| writer.page_count())));
                 cancelled_restore = true;
                 break;
             }
-            let _ = step_job(&mut restored, root_cancel_token(), &mut sequence);
+            retire_outcome(&mut step_job(&mut restored, root_cancel_token(), &mut sequence));
         }
         assert!(cancelled_restore);
         for target in [AssemblyInferenceStage::MapCommit, AssemblyInferenceStage::EncodeCommit] {
@@ -1191,21 +1237,21 @@ mod tests {
                 if restored.stage == target {
                     let token = root_cancel_token();
                     token.cancel_now();
-                    let before = (restored.cursor, restored.assignments.len(), restored.output.len());
+                    let before = (restored.cursor, restored.assignments.len(), restored.output.as_ref().map_or(0, |writer| writer.page_count()));
                     assert_eq!(step_job(&mut restored, token, &mut sequence), StepOutcome::Cancelled);
-                    assert_eq!(before, (restored.cursor, restored.assignments.len(), restored.output.len()));
+                    assert_eq!(before, (restored.cursor, restored.assignments.len(), restored.output.as_ref().map_or(0, |writer| writer.page_count())));
                     cancelled_target = true;
                     break;
                 }
-                match step_job(&mut restored, root_cancel_token(), &mut sequence) {
-                    StepOutcome::Fault(fault) => panic!("restore fault: {}", String::from_utf8_lossy(&fault.detail)),
-                    outcome if outcome.is_terminal() => panic!("restored inference completed before {target:?}"),
-                    _ => {}
-                }
+                let mut outcome = step_job(&mut restored, root_cancel_token(), &mut sequence);
+                retire_outcome(&mut outcome);
+                assert!(!outcome.is_terminal(), "restored inference terminated before {target:?}");
             }
             assert!(cancelled_target, "did not reach {target:?}");
         }
-        assert!(matches!(drive_job(&mut restored).output.as_slice(), [b'{', ..]));
+        assert!(matches!(drive_job(&mut restored).as_slice(), [b'{', ..]));
+        close_job(&mut compile);
+        close_job(&mut source);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1215,7 +1261,7 @@ mod tests {
         start_job(8_101, JOB_KIND_INFER, &request).await;
 
         let checkpoint = loop {
-            match step_job(8_101, JobBudget { fuel: 1, deadline_ms: 2 }).await {
+            match step_reactor_job(8_101, JobBudget { fuel: 1, deadline_ms: 2 }).await {
                 JobStep::Running(_) => {
                     let entries = checkpoint_jobs().await;
                     if let Some(checkpoint) = entries.iter().find(|entry| entry.job == 8_101).and_then(|entry| entry.checkpoint.clone()) {
@@ -1236,7 +1282,7 @@ mod tests {
         assert_eq!(result.revision, 41);
         assert_eq!(result.generation, 9);
         assert!(result.complete);
-        let commit: AssemblyInferenceCommit = serde_json::from_slice(&result.canonical_payload).expect("assembly commit");
+        let commit: AssemblyInferenceCommit = dsl::json::from_json_str(std::str::from_utf8(&result.canonical_payload).expect("assembly commit UTF-8")).expect("assembly commit");
         assert_eq!(commit.assignments.len(), 2);
     }
 
@@ -1255,36 +1301,68 @@ mod tests {
         register_assembly_inference_factory(&semio_framework::ActionBus::production()).expect("production assembly registration");
         let request = cold_route_request(two_slot_two_module_snapshot(), "assembly-mounted-cancel", 42, 10);
         start_job(8_102, JOB_KIND_INFER, &request).await;
-        let _ = step_job(8_102, JobBudget { fuel: 1, deadline_ms: 2 }).await;
+        let _ = step_reactor_job(8_102, JobBudget { fuel: 1, deadline_ms: 2 }).await;
         cancel_job(8_102).await;
         assert!(checkpoint_jobs().await.iter().all(|entry| entry.job != 8_102));
-        assert!(matches!(step_job(8_102, JobBudget { fuel: 1, deadline_ms: 2 }).await, JobStep::Failed(_)));
+        assert!(matches!(step_reactor_job(8_102, JobBudget { fuel: 1, deadline_ms: 2 }).await, JobStep::Failed(_)));
     }
 
-    fn run_exact_factory_on_pool(workers: usize) -> Vec<u8> {
+    async fn run_exact_factory_on_pool(workers: usize) -> Vec<u8> {
         let bus = semio_framework::ActionBus::new();
         register_assembly_inference_factory(&bus).expect("assembly registration");
         let operation = operation(177);
-        let payload = serde_json::to_vec(&AssemblyInferenceRequest { snapshot: two_slot_two_module_snapshot(), checkpoint: None }).expect("wire payload");
+        let payload = dsl::json::to_json_string(&AssemblyInferenceRequest { snapshot: two_slot_two_module_snapshot(), checkpoint: None }).into_bytes();
         let dispatch = bus.dispatch_wire(ASSEMBLY_INFERENCE_JOB_KIND, ASSEMBLY_INFERENCE_TOOL_ID, ASSEMBLY_INFERENCE_PAYLOAD_SCHEMA, &payload, None, operation).expect("wire dispatch");
         let pool = semio_framework_job::WorkerPool::new(semio_framework_job::WorkerPoolConfig::new(semio_framework_job::ProcessKind::HeadlessBatch, workers));
-        let session = semio_framework_job::WorkerJobSession::new(
-            dispatch.job,
-            semio_framework_job::BatchJobParams {
-                operation: operation.operation,
-                generation: operation.generation,
-                cancel: root_cancel_token(),
-                config: semio_framework_job::BatchDriveConfig { site: "assembly.wfc.worker-count", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 2000 },
-                now_us: semio_framework_job::default_now_us,
-            },
-        );
-        for _ in 0..200_000 {
-            match session.step(&pool, semio_framework_job::Lane::UserVisible).await.expect("worker outcome") {
-                StepOutcome::Complete(candidate) => return candidate.output,
-                StepOutcome::Fault(fault) => panic!("worker-count route fault: {}", String::from_utf8_lossy(&fault.detail)),
-                StepOutcome::Cancelled => panic!("worker-count route cancelled"),
-                _ => {}
+        let params = semio_framework_job::BatchJobParams {
+            operation: operation.operation,
+            generation: operation.generation,
+            cancel: root_cancel_token(),
+            config: semio_framework_job::BatchDriveConfig { site: "assembly.wfc.worker-count", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 2000 },
+            now_us: semio_framework_job::default_now_us,
+        };
+        let mut session = match semio_framework_job::MountedWorkerJobSession::try_new(dispatch.job, params) {
+            Ok(session) => session,
+            Err(mut rejected) => {
+                rejected.begin_close();
+                while !rejected.terminal_is_empty() {
+                    rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                }
+                panic!("worker fixture admission rejected");
             }
+        };
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(120);
+        for _ in 0..200_000 {
+            while session.checked_out_outcome().is_none() {
+                assert!(std::time::Instant::now() < deadline, "worker-count route exceeded its deadline");
+                session.pump_one(&pool, semio_framework_job::Lane::UserVisible).unwrap_or_else(|_| panic!("worker pump"));
+                std::thread::yield_now();
+            }
+            let mut outcome = session.take_checked_out_outcome().expect("worker outcome");
+            let result = match &outcome {
+                StepOutcome::Complete(candidate) => Some(Ok(payload_bytes(&candidate.output))),
+                StepOutcome::Fault(fault) => Some(Err(String::from_utf8_lossy(&payload_bytes(&fault.detail)).into_owned())),
+                StepOutcome::Cancelled => Some(Err("worker-count route cancelled".to_string())),
+                _ => None,
+            };
+            while !outcome.terminal_is_empty() {
+                outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            }
+            if let Some(result) = result {
+                session.begin_close();
+                while !session.terminal_is_empty() {
+                    assert!(std::time::Instant::now() < deadline, "worker-count close exceeded its deadline");
+                    session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                    std::thread::yield_now();
+                }
+                return result.expect("worker-count route completed");
+            }
+            session.resume().expect("worker outcome resumes");
+        }
+        session.begin_close();
+        while !session.terminal_is_empty() {
+            session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            std::thread::yield_now();
         }
         panic!("worker-count route did not terminate");
     }

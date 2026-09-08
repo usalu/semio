@@ -568,14 +568,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            operation_context,
-            request.completion,
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
             PresentationCommand::command_id,
             ANIMATE_PRESENTATION_RETAINED_RAW_BYTES,
             ANIMATE_PRESENTATION_RETAINED_WORK_ITEMS,
@@ -701,14 +694,14 @@ pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinitio
             .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
             // 🎛️ Declared arg schemas for palette-parametric actions (materialized before dispatch).
             .action_args("seedGrid", vec![
-                ActionArgDef::number("rows", LocalizedLabel::native("Rows", "Zeilen")).required().default_value(2),
-                ActionArgDef::number("columns", LocalizedLabel::native("Columns", "Spalten")).required().default_value(2),
+                ActionArgDef::number("rows", LocalizedLabel::native("Rows", "Zeilen")).required().default_value(&2),
+                ActionArgDef::number("columns", LocalizedLabel::native("Columns", "Spalten")).required().default_value(&2),
             ])
             .action_args("setSource", vec![ActionArgDef::text("src", LocalizedLabel::native("Source", "Quelle")).required()])
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new("demo", LocalizedLabel::native("Demo", "Demo"))])
                     .required()
-                    .default_value("demo"),
+                    .default_value(&"demo"),
             ])
             // 🎛️ App-scope command — see `🎮️commands/🌱️seed-grid::reset_grid`'s doc comment for why this
             // isn't `seedGrid`/`clearTiles`.

@@ -1,0 +1,8 @@
+{
+  "failures": [
+    { "name": "whole archive response", "status": 200, "range": "matching", "bytes": "matching", "error": "range rejected" },
+    { "name": "wrong range response", "status": 206, "range": "different", "bytes": "matching", "error": "range rejected" },
+    { "name": "oversized response", "status": 206, "range": "matching", "bytes": "oversized", "error": "length exceeded" },
+    { "name": "corrupt response", "status": 206, "range": "matching", "bytes": "matching", "error": "checksum mismatch" }
+  ]
+}

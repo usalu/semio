@@ -35,6 +35,11 @@ export async function proveGisNativeCodecReceipts(repoRoot: string): Promise<voi
   const Ajv2020 = (await import("ajv/dist/2020.js")).default;
   const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
   if (!validate(fixture)) throw new Error(`invalid GIS receipt corpus: ${JSON.stringify(validate.errors)}`);
+  const documentIdRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️fixtures/🌱️artifact-document-id-v1");
+  const documentIds = JSON.parse(readFileSync(join(documentIdRoot, "🔣️.json"), "utf8"));
+  const validateDocumentIds = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(documentIdRoot, "🧬️.schema.json"), "utf8")));
+  if (!validateDocumentIds(documentIds)) throw new Error(`invalid artifact document-id corpus: ${JSON.stringify(validateDocumentIds.errors)}`);
+  for (const row of documentIds.cases) if (/^artifact-(?!0{32}$)[0-9a-f]{32}$/u.test(row.documentId) !== row.accepted) throw new Error(`artifact document-id oracle mismatch ${row.id}`);
   const manifest = Bun.TOML.parse(readFileSync(join(owner, "📦️packages/🦀️rust/Cargo.toml"), "utf8")) as any;
   if (manifest.package.metadata.component.package !== fixture.packageId) throw new Error("GIS Cargo package identity differs from receipt owner");
   const workspace = Bun.TOML.parse(readFileSync(join(repoRoot, "Cargo.toml"), "utf8")) as any;
@@ -47,6 +52,10 @@ export async function proveGisNativeCodecReceipts(repoRoot: string): Promise<voi
     if (bytes.length !== row.protocolBytes || nodeHash !== row.protocolSha256 || webHash !== nodeHash || /^0{64}$/u.test(nodeHash)) throw new Error(`GIS protocol receipt mismatch ${row.factoryId}`);
     const schema = row.extension === "gismap" ? "gis.map" : "gis.terrain";
     if (row.kind !== `s.gis.${row.extension}` || row.capability !== `${row.kind}.codec.document` || row.factoryId !== `gis.${row.extension}.v1` || row.schema !== schema) throw new Error("GIS receipt canonical owner mismatch");
+    const fields = row.extension === "gismap"
+      ? [[1, "positions", false], [2, "routes", false], [3, "regions", false], [4, "drawing", false], [5, "image", true], [6, "value", false]]
+      : [[1, "exaggeration", false], [2, "importedFeaturesJson", false], [3, "mesh", true]];
+    if (row.packRecord.keyword !== row.extension || JSON.stringify(row.packRecord.fields.map((field: any) => [field.id, field.key, field.optional])) !== JSON.stringify(fields)) throw new Error("GIS structural pack record mismatch");
   }
   const expected = new Map(fixture.receipts.map((row: any) => [row.factoryId, JSON.stringify(row)]));
   const admitted = (candidate: any): boolean => candidate.pluginId === "gis" && candidate.packageId === "semio:gis" && candidate.packageVersion === version && candidate.receipts.length === 2

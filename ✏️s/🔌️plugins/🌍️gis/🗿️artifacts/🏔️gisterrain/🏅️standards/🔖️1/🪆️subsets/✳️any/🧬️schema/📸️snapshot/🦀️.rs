@@ -9,18 +9,14 @@
 //! slot table for the top-level facets.
 
 use crate::artifacts::gisterrain::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key};
+use dsl::{FromValue, ToValue};
 use schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
-use dsl::{FromValue, ToValue};
 
 //#region 🔹Snapshot
 /// 📸️ Persisted GIS terrain document snapshot (persistent fields of the artifact).
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.gis.gisterrain")]
 pub struct GisTerrainSnapshot {
@@ -40,7 +36,6 @@ pub struct GisTerrainSnapshot {
     /// `crate::artifacts::gisterrain::🦀️.rs`'s removal comment).
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.mesh")]
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
 }
@@ -205,6 +200,15 @@ fn decode_gis_terrain_snapshot_binary(bytes: &[u8]) -> Result<GisTerrainSnapshot
 //#endregion 🔖️BinaryPrimitives
 
 //#region 🔹HandcraftedArtifactCodecs
+/// 🧬 Describes the three fields owned by the handcrafted GIS terrain pack body.
+fn gis_terrain_pack_record_spec() -> dsl::RecordSpec {
+    dsl::RecordSpec::new(
+        Some("gisterrain"),
+        dsl::RecordLayout::Inline,
+        vec![dsl::FieldSpec::new(1, "exaggeration", dsl::Shape::Float), dsl::FieldSpec::new(2, "importedFeaturesJson", dsl::Shape::Text), dsl::FieldSpec::new(3, "mesh", <store::ArtifactChild<SemioMeshSnapshot> as dsl::DslField>::shape()).optional()],
+    )
+}
+
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits — see this file's
 /// module doc comment).
 impl store::ArtifactDsl for GisTerrainSnapshot {
@@ -240,6 +244,9 @@ impl store::ArtifactPack for GisTerrainSnapshot {
         }
         let _ = options;
         decode_gis_terrain_snapshot_binary(&inner).map_err(store::PackError::Schema)
+    }
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(gis_terrain_pack_record_spec())
     }
 }
 //#endregion 🔹HandcraftedArtifactCodecs

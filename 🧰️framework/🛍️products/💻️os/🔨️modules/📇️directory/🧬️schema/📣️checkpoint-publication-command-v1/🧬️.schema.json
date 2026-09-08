@@ -47,8 +47,8 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["state"],
-          "properties": { "state": { "const": "none" } }
+          "required": ["state", "checkpointId"],
+          "properties": { "state": { "const": "genesis" }, "checkpointId": { "$ref": "#/$defs/hash" } }
         },
         {
           "type": "object",

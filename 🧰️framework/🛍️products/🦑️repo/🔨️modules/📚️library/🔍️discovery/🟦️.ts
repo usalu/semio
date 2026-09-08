@@ -623,6 +623,7 @@ export interface GeneratorContract {
   readonly previewLimits?: { readonly maxOutputBytes: number; readonly timeoutMs: number };
   readonly compilerInputManifest?: { readonly kind: "compiler-input-manifest-v1"; readonly manifestOutputPath: string; readonly manifestSchemaPath: string; readonly staticAuthorityPath: string; readonly maxFiles: number };
   readonly checkTarget?: string;
+  readonly nativeConsumers?: readonly string[];
   readonly inputPatterns: readonly string[];
   readonly inputDiscovery?: RegistryCatalogInputDiscovery;
   readonly packageGeneration?: SemanticPackageGeneration;
@@ -3774,12 +3775,16 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     const targets = new Map<string, string>();
     for (const [id, contract] of Object.entries(taxonomy.generatorContracts)) {
       if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(id)) problems.push(`generatorContracts id ${JSON.stringify(id)} must be kebab-case.`);
-      const allowedKeys = new Set(["ownership", "ownerPath", "target", "previewTarget", "previewArguments", "previewLimits", "checkTarget", "inputPatterns", "inputDiscovery", "compilerInputManifest", "packageGeneration", "currentPackageDestination", "projectionActivation", "outputRoots", "reason"]);
+      const allowedKeys = new Set(["ownership", "ownerPath", "target", "previewTarget", "previewArguments", "previewLimits", "checkTarget", "nativeConsumers", "inputPatterns", "inputDiscovery", "compilerInputManifest", "packageGeneration", "currentPackageDestination", "projectionActivation", "outputRoots", "reason"]);
       for (const key of Object.keys(contract)) if (!allowedKeys.has(key)) problems.push(`generatorContracts[${JSON.stringify(id)}].${key} is forbidden.`);
       const ownership = contract.ownership as string;
       if (!["owned", "external"].includes(ownership)) problems.push(`generatorContracts[${JSON.stringify(id)}].ownership must be owned or external.`);
       if (!contract.reason) problems.push(`generatorContracts[${JSON.stringify(id)}].reason must be non-empty.`);
       const runnable = ownership === "owned";
+      if (contract.nativeConsumers !== undefined) {
+        if (!runnable || !Array.isArray(contract.nativeConsumers) || contract.nativeConsumers.length === 0 || new Set(contract.nativeConsumers).size !== contract.nativeConsumers.length) problems.push(`generatorContracts[${JSON.stringify(id)}].nativeConsumers requires distinct Cargo project roots on an owned generator.`);
+        else for (const consumer of contract.nativeConsumers) if (workspacePath(consumer, `generatorContracts[${JSON.stringify(id)}].nativeConsumers`) && exactTouchesOpaque(consumer)) problems.push(`generatorContracts[${JSON.stringify(id)}].nativeConsumers crosses an opaque boundary.`);
+      }
       const targetKnown = runnable;
       if (targetKnown) {
         if (workspacePath(contract.ownerPath, `generatorContracts[${JSON.stringify(id)}].ownerPath`) && exactTouchesOpaque(contract.ownerPath)) problems.push(`generatorContracts[${JSON.stringify(id)}].ownerPath crosses an opaque boundary.`);
@@ -4963,6 +4968,7 @@ export function validateGeneratorContractsAgainstWorkspace(repoRoot: string, tax
   const root = resolve(repoRoot);
   const catalog = semanticExactOwnedFileCatalog(root, taxonomy);
   for (const [id, contract] of Object.entries(taxonomy.generatorContracts ?? {})) {
+    for (const consumer of contract.nativeConsumers ?? []) if (!existsSync(join(root, consumer, "Cargo.toml"))) problems.push(`generatorContracts[${JSON.stringify(id)}].nativeConsumers has no Cargo project at ${JSON.stringify(consumer)}.`);
     if (contract.target) {
       if (!contract.ownerPath) {
         problems.push(`generatorContracts[${JSON.stringify(id)}] has a target without an ownerPath.`);
@@ -8918,6 +8924,9 @@ export function registryCatalogInputPaths(repoRoot: string, taxonomy: Taxonomy =
   const inputs = new Set<string>();
   const packages = scanRepo(repoRoot, taxonomy, { view, inputs }).packages;
   for (const pkg of packages) if (pkg.lang === "🦀️rust" && (pkg.role === "plugin" || pkg.role === "extension")) {
+    const project = `${pkg.packageRel}/📋️project.json`, projectKind = view.kind(project);
+    if (projectKind === "symlink") throw new Error(`Registry Nx project is a symlink: ${project}`);
+    if (projectKind) inputs.add(project);
     const descriptor = relative(repoRoot, resolve(repoRoot, pkg.packageRel, authority.descriptorRelativePath)).replaceAll("\\", "/");
     const kind = view.kind(descriptor);
     if (kind === "symlink") throw new Error(`Registry descriptor is a symlink: ${descriptor}`);

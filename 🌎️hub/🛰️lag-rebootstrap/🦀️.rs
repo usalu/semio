@@ -425,15 +425,11 @@ fn append_frame(output: &mut Vec<u8>, payload: &[u8]) -> Result<(), RebootstrapE
     append_length_prefixed(output, payload)
 }
 
-fn canonical_pair_header_payload(selection: &CanonicalCheckpointPairSelection) -> Result<Vec<u8>, RebootstrapError> {
-    if selection.scope.space_id.is_empty()
-        || selection.scope.document_id.is_empty()
-        || selection.scope.space_id.len() > REBOOTSTRAP_SCOPE_MAX_BYTES
-        || selection.scope.document_id.len() > REBOOTSTRAP_SCOPE_MAX_BYTES
-        || selection.baseline_frontier.document_id != selection.scope.document_id
-    {
-        return Err(RebootstrapError::Integrity);
-    }
+fn canonical_pair_frontier_is_exact(scope: &DocumentScope, frontier: &ArtifactFrontier) -> bool {
+    frontier.is_genesis_for(scope) || frontier.is_edited_for(scope)
+}
+
+fn canonical_pair_header_payload_unchecked(selection: &CanonicalCheckpointPairSelection) -> Result<Vec<u8>, RebootstrapError> {
     preflight_pair(selection.pack.byte_length, selection.spr.byte_length)?;
     let mut output = Vec::with_capacity(512);
     output.push(PAIR_HEADER);
@@ -456,6 +452,18 @@ fn canonical_pair_header_payload(selection: &CanonicalCheckpointPairSelection) -
         return Err(RebootstrapError::ResourceLimit);
     }
     Ok(output)
+}
+
+fn canonical_pair_header_payload(selection: &CanonicalCheckpointPairSelection) -> Result<Vec<u8>, RebootstrapError> {
+    if selection.scope.space_id.is_empty()
+        || selection.scope.document_id.is_empty()
+        || selection.scope.space_id.len() > REBOOTSTRAP_SCOPE_MAX_BYTES
+        || selection.scope.document_id.len() > REBOOTSTRAP_SCOPE_MAX_BYTES
+        || !canonical_pair_frontier_is_exact(&selection.scope, &selection.baseline_frontier)
+    {
+        return Err(RebootstrapError::Integrity);
+    }
+    canonical_pair_header_payload_unchecked(selection)
 }
 
 pub fn append_canonical_pair_header(output: &mut Vec<u8>, selection: &CanonicalCheckpointPairSelection) -> Result<(), RebootstrapError> {
@@ -545,6 +553,14 @@ impl<'a> PairCursor<'a> {
         std::str::from_utf8(self.take(length)?).map(str::to_owned).map_err(|_| RebootstrapError::Integrity)
     }
 
+    fn baseline_head(&mut self, maximum: usize) -> Result<String, RebootstrapError> {
+        let length = usize::try_from(self.u32()?).map_err(|_| RebootstrapError::ResourceLimit)?;
+        if length > maximum {
+            return Err(RebootstrapError::ResourceLimit);
+        }
+        std::str::from_utf8(self.take(length)?).map(str::to_owned).map_err(|_| RebootstrapError::Integrity)
+    }
+
     fn hash(&mut self) -> Result<ArtifactHash, RebootstrapError> {
         let hash = ArtifactHash(self.take(32)?.try_into().map_err(|_| RebootstrapError::Integrity)?);
         if hash.0 == [0; 32] {
@@ -552,6 +568,10 @@ impl<'a> PairCursor<'a> {
         } else {
             Ok(hash)
         }
+    }
+
+    fn baseline_chain_hash(&mut self) -> Result<ArtifactHash, RebootstrapError> {
+        Ok(ArtifactHash(self.take(32)?.try_into().map_err(|_| RebootstrapError::Integrity)?))
     }
 }
 
@@ -584,15 +604,20 @@ pub fn decode_canonical_checkpoint_pair(input: &[u8]) -> Result<VerifiedActiveCh
     let active_checkpoint_id = cursor.hash()?;
     let frontier_document_id = cursor.text(REBOOTSTRAP_SCOPE_MAX_BYTES)?;
     let head_edit_ordinal = cursor.u64()?;
-    let head_edit_id = cursor.text(REBOOTSTRAP_SCOPE_MAX_BYTES)?;
+    let head_edit_id = cursor.baseline_head(REBOOTSTRAP_SCOPE_MAX_BYTES)?;
     let last_commit_seq = cursor.u64()?;
-    let chain_hash = cursor.hash()?;
+    let chain_hash = cursor.baseline_chain_hash()?;
     let pack_hash = cursor.hash()?;
     let pack_length = cursor.u64()?;
     let spr_hash = cursor.hash()?;
     let spr_length = cursor.u64()?;
     let aggregate_sha256 = cursor.hash()?;
-    if cursor.offset != header.len() || frontier_document_id != document_id {
+    if cursor.offset != header.len() {
+        return Err(RebootstrapError::Integrity);
+    }
+    let scope = DocumentScope::new(space_id, document_id);
+    let baseline_frontier = ArtifactFrontier { document_id: frontier_document_id, head_edit_ordinal, head_edit_id, last_commit_seq, chain_hash };
+    if !canonical_pair_frontier_is_exact(&scope, &baseline_frontier) {
         return Err(RebootstrapError::Integrity);
     }
     let total = preflight_pair(pack_length, spr_length)?;
@@ -642,10 +667,10 @@ pub fn decode_canonical_checkpoint_pair(input: &[u8]) -> Result<VerifiedActiveCh
         return Err(RebootstrapError::Integrity);
     }
     let selection = CanonicalCheckpointPairSelection {
-        scope: DocumentScope::new(space_id, document_id),
+        scope,
         descriptor_digest_v1,
         active_checkpoint_id,
-        baseline_frontier: ArtifactFrontier { document_id: frontier_document_id, head_edit_ordinal, head_edit_id, last_commit_seq, chain_hash },
+        baseline_frontier,
         pack: PublishedArtifactBlob { sha256: pack_hash, byte_length: pack_length },
         spr: PublishedArtifactBlob { sha256: spr_hash, byte_length: spr_length },
         aggregate_sha256,
@@ -705,6 +730,33 @@ mod tests {
         }
     }
 
+    fn frontier_from_fixture(value: &serde_json::Value) -> ArtifactFrontier {
+        let encoded = value["chainHash"].as_str().expect("chain hash").as_bytes();
+        let mut chain_hash = [0u8; 32];
+        for (index, slot) in chain_hash.iter_mut().enumerate() {
+            let nibble = |byte: u8| if byte <= b'9' { byte - b'0' } else { byte - b'a' + 10 };
+            *slot = nibble(encoded[index * 2]) << 4 | nibble(encoded[index * 2 + 1]);
+        }
+        ArtifactFrontier {
+            document_id: value["documentId"].as_str().expect("document id").to_owned(),
+            head_edit_ordinal: value["headEditOrdinal"].as_u64().expect("head ordinal"),
+            head_edit_id: value["headEditId"].as_str().expect("head id").to_owned(),
+            last_commit_seq: value["lastCommitSeq"].as_u64().expect("commit sequence"),
+            chain_hash: ArtifactHash(chain_hash),
+        }
+    }
+
+    fn encode_unchecked_frontier(pair: &VerifiedActiveCheckpointPair, context: &RebootstrapContext<'_>) -> Vec<u8> {
+        let mut output = Vec::new();
+        append_frame(&mut output, &canonical_pair_header_payload_unchecked(&pair.selection).expect("unchecked header")).expect("header frame");
+        for ordinal in 0..pair.data_record_count() {
+            let record = pair.data_record(ordinal, context).expect("data record").expect("record present");
+            append_canonical_pair_data(&mut output, &record).expect("data frame");
+        }
+        append_canonical_pair_terminal(&mut output, CanonicalPairTerminal::Complete).expect("terminal frame");
+        output
+    }
+
     #[test]
     fn canonical_pair_preflight_is_before_allocation_and_record_bounded() {
         assert_eq!(preflight_pair(4_096, AUTHORITY_MAX_PAIR_BYTES - 4_096), Ok(AUTHORITY_MAX_PAIR_BYTES));
@@ -740,6 +792,26 @@ mod tests {
         let mut trailing = encoded;
         trailing.push(0);
         assert!(matches!(decode_canonical_checkpoint_pair(&trailing), Err(RebootstrapError::Integrity)));
+    }
+
+    #[test]
+    fn canonical_pair_baseline_admits_exact_genesis_or_edited_before_pair_allocation() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🪢️canonical-pair/🔣️.json")).expect("canonical pair fixture");
+        let control = test_control();
+        let context = RebootstrapContext::new(100, &control);
+        for row in fixture["frontierCases"].as_array().expect("frontier cases") {
+            let mut pair = canonical_pair_fixture();
+            pair.selection.baseline_frontier = frontier_from_fixture(row);
+            let accepted = row["accepted"].as_bool().expect("accepted");
+            assert_eq!(canonical_pair_frontier_is_exact(&pair.selection.scope, &pair.selection.baseline_frontier), accepted, "{}", row["id"]);
+            if accepted {
+                let wire = encode_verified_canonical_pair(&pair, &context).expect("accepted pair");
+                assert_eq!(decode_canonical_checkpoint_pair(&wire).expect("accepted decode").selection.baseline_frontier, pair.selection.baseline_frontier, "{}", row["id"]);
+            } else {
+                assert_eq!(encode_verified_canonical_pair(&pair, &context), Err(RebootstrapError::Integrity), "{}", row["id"]);
+                assert!(matches!(decode_canonical_checkpoint_pair(&encode_unchecked_frontier(&pair, &context)), Err(RebootstrapError::Integrity)), "{}", row["id"]);
+            }
+        }
     }
 
     #[test]

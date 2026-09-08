@@ -5,13 +5,16 @@
 //! verbatim from `🧬️schema/📜️artifact-definition.json`'s `representations[0]`
 //! (`mimes: ["application/octet-stream"], extensions: [".bin"]`) — not invented.
 
+#[cfg(feature = "component-app-assembly")]
 use crate::artifacts::binary::standards::v_raw::subsets;
+#[cfg(feature = "component-app-assembly")]
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
+#[cfg(feature = "component-app-assembly")]
 use semio_framework_plugin::StandardId;
 
 /// 🌳️ `standard "raw"`'s complete declaration — one subset, `any`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-#[cfg(feature = "full-artifact-catalog")]
+#[cfg(feature = "component-app-assembly")]
 pub fn standard() -> StandardDeclaration<crate::plugin::StdioApps> {
     StandardDeclaration { id: StandardId("raw"), media: MediaDeclaration { mimes: &["application/octet-stream"], extensions: &["bin"] }, subsets: vec![subsets::any::subset()] }
 }

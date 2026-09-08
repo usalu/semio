@@ -252,10 +252,10 @@ pub(crate) fn fixture() -> SemioBrepSnapshot {
     use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex};
     let mut s = SemioBrepSnapshot::default();
-    s.vertices = vec![BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } }, BrepVertex { id: "v2".into(), point: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } }];
-    s.edges = vec![BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v2".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } }];
+    s.vertices = vec![BrepVertex { tol: 1e-7, id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } }, BrepVertex { tol: 1e-7, id: "v2".into(), point: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } }];
+    s.edges = vec![BrepEdge { tol: 1e-7, id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v2".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } }];
     s.loops = vec![BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: true }] }];
-    s.faces = vec![BrepFace { id: "f1".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Plane { origin: SemioPoint3::default(), normal: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 } }, orientation: true }];
+    s.faces = vec![BrepFace { tol: 1e-7, id: "f1".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Plane { origin: SemioPoint3::default(), normal: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 } }, orientation: true }];
     s.shells = vec![BrepShell { id: "s1".into(), faces: vec![BrepShellFace { face: "f1".into(), orientation: true }] }];
     s.solids = vec![BrepSolid { id: "so1".into(), shells: vec![BrepSolidShell { shell: "s1".into(), is_void: false }] }];
     s
@@ -495,31 +495,31 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "🖇️create-edge/🧪️tests/📐️adds-a-diagonal-edge-across-the-square/🦀️.rs"]
+    #[path = "🖇️create-edge/🧪️tests/📐️adds-a-diagonal-cef7fd/🦀️.rs"]
     mod tests_create_edge_adds_a_diagonal_edge_across_the_square;
-    #[path = "🔷create-face/🧪️tests/🔷️adds-an-opposing-face-over-the-same-loop/🦀️.rs"]
+    #[path = "🔷create-face/🧪️tests/🔷️adds-an-opposing-c97919/🦀️.rs"]
     mod tests_create_face_adds_an_opposing_face_over_the_same_loop;
-    #[path = "🐚create-shell/🧪️tests/🐚️adds-a-second-shell-that-reuses-the-face-with-flipped-sense/🦀️.rs"]
+    #[path = "🐚create-shell/🧪️tests/🐚️adds-a-second-7bc1b9/🦀️.rs"]
     mod tests_create_shell_adds_a_second_shell_that_reuses_the_face_with_flipped_sense;
-    #[path = "🧊create-solid/🧪️tests/🧊️adds-a-second-solid-that-treats-the-shell-as-a-void/🦀️.rs"]
+    #[path = "🧊create-solid/🧪️tests/🧊️adds-a-second-558401/🦀️.rs"]
     mod tests_create_solid_adds_a_second_solid_that_treats_the_shell_as_a_void;
-    #[path = "🏗️create-vertex/🧪️tests/🏔️adds-an-apex-vertex-above-the-square/🦀️.rs"]
+    #[path = "🏗️create-vertex/🧪️tests/🏔️adds-an-apex-b37312/🦀️.rs"]
     mod tests_create_vertex_adds_an_apex_vertex_above_the_square;
-    #[path = "✂️delete-edge/🧪️tests/🚫️removes-the-closing-edge-and-keeps-its-two-vertices/🦀️.rs"]
+    #[path = "✂️delete-edge/🧪️tests/🚫️removes-the-closing-8f9723/🦀️.rs"]
     mod tests_delete_edge_removes_the_closing_edge_and_keeps_its_two_vertices;
-    #[path = "🚮delete-face/🧪️tests/🚫️removes-the-only-face-and-leaves-its-loop-behind/🦀️.rs"]
+    #[path = "🚮delete-face/🧪️tests/🚫️removes-the-only-3f9fd0/🦀️.rs"]
     mod tests_delete_face_removes_the_only_face_and_leaves_its_loop_behind;
-    #[path = "💥delete-shell/🧪️tests/🚫️removes-the-only-shell-and-leaves-its-faces-behind/🦀️.rs"]
+    #[path = "💥delete-shell/🧪️tests/🚫️removes-the-only-438615/🦀️.rs"]
     mod tests_delete_shell_removes_the_only_shell_and_leaves_its_faces_behind;
-    #[path = "🕳️delete-solid/🧪️tests/🚫️removes-the-only-solid-and-leaves-its-shell-behind/🦀️.rs"]
+    #[path = "🕳️delete-solid/🧪️tests/🚫️removes-the-only-84c2a9/🦀️.rs"]
     mod tests_delete_solid_removes_the_only_solid_and_leaves_its_shell_behind;
-    #[path = "🗑️delete-vertex/🧪️tests/🚫️removes-a-corner-vertex-and-cascades-into-its-two-incident-edges/🦀️.rs"]
+    #[path = "🗑️delete-vertex/🧪️tests/t081/🦀️.rs"]
     mod tests_delete_vertex_removes_a_corner_vertex_and_cascades_into_its_two_incident_edges;
-    #[path = "📍move-vertex/🧪️tests/📍️lifts-the-third-corner-off-the-base-plane/🦀️.rs"]
+    #[path = "📍move-vertex/🧪️tests/📍️lifts-the-third-7fa625/🦀️.rs"]
     mod tests_move_vertex_lifts_the_third_corner_off_the_base_plane;
-    #[path = "➰replace-curve/🧪️tests/➰️swaps-the-first-edges-line-for-a-circular-arc/🦀️.rs"]
+    #[path = "➰replace-curve/🧪️tests/➰️swaps-the-first-583ab8/🦀️.rs"]
     mod tests_replace_curve_swaps_the_first_edges_line_for_a_circular_arc;
-    #[path = "🗺️replace-surface/🧪️tests/🛢️swaps-the-faces-plane-for-a-cylinder/🦀️.rs"]
+    #[path = "🗺️replace-surface/🧪️tests/🛢️swaps-the-faces-262c36/🦀️.rs"]
     mod tests_replace_surface_swaps_the_faces_plane_for_a_cylinder;
 }
 //#endregion 🧪️FixtureTests

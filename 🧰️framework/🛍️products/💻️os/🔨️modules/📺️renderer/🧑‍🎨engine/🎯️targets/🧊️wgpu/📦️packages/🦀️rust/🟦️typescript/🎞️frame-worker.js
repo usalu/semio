@@ -17478,6 +17478,7 @@ class OsTransient {
   }
 }
 var defaultOsTransient = new OsTransient;
+var PLUGIN_DESCRIPTOR_CODE_UNIT_CAPACITY = 16 * 1024 * 1024;
 async function fetchDescriptorManifest(pluginId, moduleUrl, signal) {
   signal?.throwIfAborted();
   const path = moduleUrl.split(/[?#]/u)[0];
@@ -17496,9 +17497,13 @@ async function fetchDescriptorManifest(pluginId, moduleUrl, signal) {
     throw fault("plugin.descriptor-unavailable", `${descriptorUrl} (HTTP ${response.status})`);
   if (response.headers?.get?.("content-type")?.toLowerCase().includes("text/html"))
     throw fault("plugin.descriptor-invalid", `${descriptorUrl} returned HTML`);
+  const descriptorText = await response.text();
+  signal?.throwIfAborted();
+  if (descriptorText.length > PLUGIN_DESCRIPTOR_CODE_UNIT_CAPACITY)
+    throw fault("plugin.descriptor-oversized", `${descriptorUrl} is ${descriptorText.length} code units against a ${PLUGIN_DESCRIPTOR_CODE_UNIT_CAPACITY} ceiling`);
   let descriptor;
   try {
-    descriptor = await response.json();
+    descriptor = JSON.parse(descriptorText);
   } catch {
     signal?.throwIfAborted();
     throw fault("plugin.descriptor-invalid", `${descriptorUrl} is not JSON`);
@@ -19041,7 +19046,7 @@ var PLUGIN_BUILD_TARGETS = [
   { pluginId: "playbook", packageId: "semio:playbook", cratePath: "✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_playbook.wasm", role: "plugin", capabilities: [], contributes: [], consumes: ["playbook.blockKind"], dependsOn: [], activationEvents: [], extensionPoints: [] },
   { pluginId: "procedural", packageId: "semio:procedural", cratePath: "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_procedural.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: ["forms.questionKind", "flow.extension"], dependsOn: [], activationEvents: ["on-artifact-kind:2d.generation", "on-artifact-kind:3d.generation"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "31d43b41ca249fa0ca25c9f57facf7d9a34f5ee44056d93b69fa00383d4d8380", coreWasmSha256: "95794f5683c727d4cd92c93e671c64f3f7d4e1d2e191f75fc8016a0e16525867", descriptorSha256: "d553e5b2e0eec776ead9cd26d4ec67d4f563df0bb57e4d9c07bff137ab5c7340" } },
   { pluginId: "process", packageId: "semio:process", cratePath: "✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_process.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: ["process.machines"], dependsOn: [], activationEvents: ["on-artifact-kind:3d.process"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "62570c3b700cb6930423670f0446bced2b3daf1a5dd1944ccb96412056939d17", coreWasmSha256: "5185c035e07360b13b3b31fc41b544196b636efd3e0478c4deb6fccbc094bda6", descriptorSha256: "81d51e3e8633cac0a1fc726da5c29a1e3eba88462e79c66536e101578b047bc3" } },
-  { pluginId: "puzzle", packageId: "semio:puzzle", cratePath: "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_puzzle.wasm", role: "plugin", capabilities: ["documents.write", "ui.dialog", "shell.clipboard"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:2d.puzzle", "on-artifact-kind:3d.puzzle", "on-artifact-kind:5d.puzzle"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "4442387f6d4ceb1719dfeabf743479fb631753c80e1ca28de230da847005b357", coreWasmSha256: "17b22fd4de43d9220148652bac1c79d8caa04a5e933673746a3d2b3b1d5ea9b7", descriptorSha256: "fe577e5d6e5a71f1f6df65a93da8242596955ac6c9e474d615d46d1b4c900fc0" } },
+  { pluginId: "puzzle", packageId: "semio:puzzle", cratePath: "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_puzzle.wasm", role: "plugin", capabilities: ["documents.write", "ui.dialog", "shell.clipboard"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:2d.puzzle", "on-artifact-kind:3d.puzzle", "on-artifact-kind:5d.puzzle"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "c3ba4da1c54ed9687ac583afd30bd273ef88e31a038c5896fb7013087c92c66e", coreWasmSha256: "8da6f6bd97876500fa57b4d879f880d92f98c146b856246c39d500b03905f02d", descriptorSha256: "9e8e6ebf2a1b41a05c930accefa73333c07200ae01d2f06eb67bb6c964da4dc6" } },
   { pluginId: "raster", packageId: "semio:raster", cratePath: "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_raster.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:2d.raster"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "9040c81c6daee99c3d31b9eac685c68ea24d551ac7f33f31cad68fe75487e4e6", coreWasmSha256: "9040c81c6daee99c3d31b9eac685c68ea24d551ac7f33f31cad68fe75487e4e6", descriptorSha256: "26760a5a3c146b1612a8e8036c877f91a17c13cef425b94a174127df3e33bd94" } },
   { pluginId: "reasoning", packageId: "semio:reasoning", cratePath: "✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_reasoning_mindmap.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:graph.wires"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "7686a3193c6aeffe74e8e73d76b842112e892e57f9f3aa9ed04d39bc8bc1c2b8", coreWasmSha256: "7686a3193c6aeffe74e8e73d76b842112e892e57f9f3aa9ed04d39bc8bc1c2b8", descriptorSha256: "eb21b2587a19242762803823f748628b1eb1553c783f6281dfee25ac72706f93" } },
   { pluginId: "remodel", packageId: "semio:remodel", cratePath: "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_remodel.wasm", role: "plugin", capabilities: ["documents.write", "ui.dialog"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:3d.remodel"], extensionPoints: [], executionMode: "isolated", hashes: { wasmSha256: "77ef3c98d134f1164cdd388911333b0618bcec94fead7c11ad6fdd24abb125b5", coreWasmSha256: "77ef3c98d134f1164cdd388911333b0618bcec94fead7c11ad6fdd24abb125b5", descriptorSha256: "1e1dded5a4979ce72c0ff11f4e12e8336df93784c89c0f53b0ee573b694fbe62" } },
@@ -19119,7 +19124,7 @@ var PLAYGROUND_BUILD_TARGETS = [
   { variant: "energy", pluginId: "energy", cratePath: "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust", app: "s.energy.model@1/*#editor", aliases: [], ports: { react: 6106, wgpu: 6206 }, examples: ["🎬️demo", "🏛️bestest-600", "🏛️bestest-610", "🏛️bestest-620", "🏛️bestest-630", "🏛️bestest-640", "🏛️bestest-650", "🏛️bestest-900", "🏛️bestest-910", "🏛️bestest-920", "🏛️bestest-930", "🏛️bestest-940", "🏛️bestest-950"], engines: [], assets: [] },
   { variant: "fem2d", pluginId: "fem", cratePath: "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust", app: "s.fem.fem2d@1/*#editor", aliases: ["fem 2d"], ports: { react: 6086, wgpu: 6186 }, examples: ["🎬️demo"], engines: [], assets: [] },
   { variant: "fem3d", pluginId: "fem", cratePath: "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust", app: "s.fem.fem3d@1/*#editor", aliases: ["fem 3d"], ports: { react: 6087, wgpu: 6187 }, examples: ["🎬️demo"], engines: [], assets: [] },
-  { variant: "flow", pluginId: "flow", cratePath: "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust", aliases: [], ports: { react: 6016, wgpu: 6116 }, examples: ["🎬️demo", "🎬️demo-session"], engines: ["./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings"], assets: [] },
+  { variant: "flow", pluginId: "flow", cratePath: "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust", aliases: [], ports: { react: 6016, wgpu: 6116 }, examples: ["🎬️demo", "🎬️demo-session"], engines: ["./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust"], assets: [] },
   { variant: "forms", pluginId: "forms", cratePath: "✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust", aliases: [], ports: { react: 6058, wgpu: 6158 }, examples: ["🎬️demo"], engines: [], assets: [] },
   { variant: "generation2d", pluginId: "procedural", cratePath: "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust", app: "s.procedural.generation2d@1/*#editor", aliases: ["procedural 2d"], ports: { react: 6021, wgpu: 6121 }, examples: ["🎬️demo"], engines: [], assets: [] },
   { variant: "generation3d", pluginId: "procedural", cratePath: "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust", app: "s.procedural.generation3d@1/*#editor", aliases: ["procedural 3d"], ports: { react: 6018, wgpu: 6118 }, examples: ["🍄️hexagonal-mushroom-column", "🍩️sphere-cut-with-torus", "🐚️box-shell-preview", "📐️box-fillet-preview", "📦️rectangle-extrude-volume", "🧲️sphere-box-fuse", "🧹️face-sweep-extrude", "🪢️rectangle-wire-preview"], engines: [], assets: [] },
@@ -23220,9 +23225,68 @@ function wireEffectToFriendly(effect, decodePackValue2) {
 }
 
 /* 🟦️typescript/🐚️plugin-bridge.ts */
+class MainThreadShardWorker {
+  shardIndex;
+  onmessage = null;
+  onerror = null;
+  port = null;
+  queued = [];
+  terminated = false;
+  constructor(shardIndex) {
+    this.shardIndex = shardIndex;
+    shardPortWaiters.set(shardIndex, (port) => this.attach(port));
+    self.postMessage({ kind: "shard-spawn", shardIndex, url: SHARD_WORKER_URL });
+  }
+  attach(port) {
+    if (this.terminated) {
+      port.close();
+      return;
+    }
+    this.port = port;
+    port.onmessage = (event) => {
+      const data2 = event.data;
+      if (data2 && typeof data2 === "object" && data2.kind === "shard-worker-error") {
+        this.onerror?.(data2);
+        return;
+      }
+      this.onmessage?.({ data: event.data });
+    };
+    port.start();
+    for (const entry of this.queued.splice(0))
+      port.postMessage(entry.message, entry.transfer ?? []);
+  }
+  postMessage(message, transfer) {
+    if (this.terminated)
+      return;
+    if (!this.port) {
+      this.queued.push({ message, transfer });
+      return;
+    }
+    this.port.postMessage(message, transfer ?? []);
+  }
+  terminate() {
+    if (this.terminated)
+      return;
+    this.terminated = true;
+    shardPortWaiters.delete(this.shardIndex);
+    this.port?.close();
+    this.port = null;
+    this.queued.length = 0;
+    self.postMessage({ kind: "shard-terminate", shardIndex: this.shardIndex });
+  }
+}
+var shardPortWaiters = new Map;
+self.addEventListener("message", (event) => {
+  const data2 = event.data;
+  if (!data2 || typeof data2 !== "object" || data2.kind !== "shard-port" || typeof data2.shardIndex !== "number")
+    return;
+  shardPortWaiters.get(data2.shardIndex)?.(data2.port);
+  shardPortWaiters.delete(data2.shardIndex);
+});
 var pooledRuntime = null;
 function getShardClient() {
   pooledRuntime ??= createPooledActorRuntime({
+    createWorker: (shardIndex) => new MainThreadShardWorker(shardIndex),
     residentLedger: rendererResidentLedger(),
     onActorTrap: (actorId, message) => console.error(`[DEBUG] wgpu plugin-bridge: actor ${actorId} trapped: ${message}`),
     onShardLost: (shardIndex, actorIds) => {
@@ -23247,6 +23311,21 @@ function submitTurn(actorId, events, commandPage) {
   actorTurnChains.set(actorId, next);
   return next.then(coerceTurnResult);
 }
+async function settleInstanceLifecycle(lifecycle) {
+  for (let opportunity = 0;opportunity < RETAINED_DOCUMENT_OPPORTUNITIES; opportunity += 1) {
+    const receipt = lifecycle.pendingReceipt;
+    if (receipt !== null) {
+      await lifecycle.acknowledge(receipt, DEFAULT_SHARD_BUDGET);
+      continue;
+    }
+    const phase = lifecycle.progress().kind;
+    if (phase !== "opening" && phase !== "captured")
+      return;
+    await lifecycle.poll(DEFAULT_SHARD_BUDGET);
+  }
+  console.warn(`[DEBUG] plugin-bridge: instance lifecycle never reached open within ${RETAINED_DOCUMENT_OPPORTUNITIES} opportunities`);
+}
+var lifecycleByInstance = new Map;
 var retainedWindowByActor = new Map;
 function reconcileRetainedWindowPatch(previous, patch) {
   const ops = decodeWirePatchOps(patch.ops ?? [], decodePackWire);
@@ -23269,6 +23348,60 @@ async function performRender(actorId, instanceId, bodyKey) {
   if (result3.uiPatches.length > 0)
     applyRetainedWindowPatches(actorId, result3.uiPatches);
   return retainedWindowByActor.get(actorId)?.node ?? null;
+}
+var RETAINED_DOCUMENT_OPPORTUNITIES = 256;
+async function publishRetainedDocument(actorId, instanceId, bodyKey) {
+  const collected = [];
+  const seenSurfaces = [];
+  const seenTags = [];
+  let anyPatches = 0;
+  let anyEffects = 0;
+  const seenEffects = [];
+  let turns = 1;
+  let result3 = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: bodyKey } } }]);
+  for (let opportunity = 0;opportunity < RETAINED_DOCUMENT_OPPORTUNITIES; opportunity += 1) {
+    anyPatches += result3.uiPatches.length;
+    anyEffects += result3.effects.length;
+    for (const effect of result3.effects)
+      if (typeof effect.tag === "string" && !seenEffects.includes(effect.tag))
+        seenEffects.push(effect.tag);
+    for (const patch of result3.uiPatches) {
+      const name = patch.surface?.surface ?? "(none)";
+      if (!seenSurfaces.includes(name))
+        seenSurfaces.push(name);
+      for (const op of patch.ops ?? [])
+        if (typeof op.tag === "string" && !seenTags.includes(op.tag))
+          seenTags.push(op.tag);
+    }
+    if (result3.uiPatches.length > 0) {
+      applyRetainedWindowPatches(actorId, result3.uiPatches);
+      collected.push(...result3.uiPatches.filter((patch) => (patch.surface?.surface ?? bodyKey) === bodyKey));
+    }
+    if (collected.length > 0)
+      break;
+    result3 = await submitTurn(actorId, []);
+    turns += 1;
+  }
+  console.log(`[DEBUG] publishRetainedDocument ${bodyKey}: turns=${turns} collected=${collected.length} anyPatches=${anyPatches} surfaces=${JSON.stringify(seenSurfaces)} tags=${JSON.stringify(seenTags.slice(0, 12))} effects=${anyEffects} effectTags=${JSON.stringify(seenEffects.slice(0, 12))}`);
+  const nodes = [];
+  let revision = 0;
+  let root = null;
+  for (const patch of collected) {
+    if (typeof patch.revision === "number")
+      revision = patch.revision;
+    for (const op of patch.ops ?? []) {
+      const value = op.val ?? {};
+      if (op.tag === "upsert") {
+        nodes.push(packValueToExactJson(decodePackValue(coerceWireBytes(value.node))));
+        continue;
+      }
+      if (op.tag === "set-root")
+        root = Number(typeof op.val === "object" && op.val !== null ? value.id ?? 0 : op.val);
+    }
+  }
+  if (root === null && nodes.length > 0)
+    root = Number(nodes[0].id ?? 0);
+  return JSON.stringify({ surface: bodyKey, revision, root, nodes, layoutEpoch: 0 });
 }
 var pendingTurnEffects = new Map;
 var nextGlobalInstanceId = 1;
@@ -23397,7 +23530,10 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
       actorIdByInstance.set(instanceId, actorId);
       await registry.activate(pluginId, actorId, "manual");
       eventSeq += 1;
-      await submitTurn(actorId, [{ kind: "instance-open", payload: { instance: instanceId, appId, actor: "local", config: [], assets: [], capabilities: [], quotas: Array.from(encodePackValue({})) } }]);
+      const lifecycle = getShardClient().captureInstanceLifecycle(actorId, instanceId);
+      await lifecycle.open({ appId, actor: "local", config: [], assets: [], capabilities: [], quotas: Array.from(encodePackValue({})) }, DEFAULT_SHARD_BUDGET);
+      await settleInstanceLifecycle(lifecycle);
+      lifecycleByInstance.set(instanceId, lifecycle);
       channelByInstance.set(instanceId, new AppChannelClient(channelHandle, channelRequests, instanceId, appId, "local"));
       return instanceId;
     },
@@ -23415,6 +23551,7 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
     handleAction: (instanceId, actionJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(actionJson), viewState),
     handleCommand: (instanceId, commandJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(commandJson), viewState),
     render: (instanceId, bodyKey) => performRender(requireActorId(instanceId), instanceId, bodyKey),
+    renderDocument: (instanceId, bodyKey) => publishRetainedDocument(requireActorId(instanceId), instanceId, bodyKey),
     contextMenu: (instanceId, request) => requireChannel(instanceId).contextMenu(request),
     dispose: () => {
       for (const instanceId of channelByInstance.keys())
@@ -23445,6 +23582,7 @@ function pluginHandleForBridge(handle) {
     handleAction: (instanceId, actionJson, contextJson) => handle.handleAction(instanceId, actionJson, viewStateFromContextJson(contextJson)).then((result3) => JSON.stringify(result3)),
     handleCommand: (instanceId, commandJson, contextJson) => handle.handleCommand(instanceId, commandJson, viewStateFromContextJson(contextJson)).then((result3) => JSON.stringify(result3)),
     render: (instanceId, bodyKey, viewStateJson) => handle.render(instanceId, bodyKey, JSON.parse(viewStateJson)).then((node) => JSON.stringify(node)),
+    renderDocument: (instanceId, bodyKey) => handle.renderDocument(instanceId, bodyKey),
     contextMenu: (instanceId, requestJson) => handle.contextMenu(instanceId, JSON.parse(requestJson)).then((items) => JSON.stringify(items))
   };
 }
@@ -23669,8 +23807,9 @@ function meshAssetTransportUrl(url, catalog = MESH_DELIVERY_CATALOG) {
 /* ../../🎞️frame-worker/🟦️.ts */
 var WORKER_STEP_BUDGET_MS = 8;
 var BOOT_HEARTBEAT_MS = 2;
+var BOOT_LIVENESS_INTERVAL_MS = 1000;
+var lastProgressValue = 0;
 var PLUGIN_BOOT_CAPACITY = PLUGIN_CATALOG.plugins.length + PLUGIN_CATALOG.extensions.length;
-var PLUGIN_MANIFEST_CODE_UNIT_CAPACITY = 64 * 1024;
 var ASSET_RESPONSE_BYTE_CAPACITY = 16 * 1024 * 1024;
 var ASSET_RESPONSE_PAGE_BYTES = 16 * 1024;
 var INTROSPECTION_STEP_BUDGET_MS = 64;
@@ -23685,11 +23824,16 @@ function ownedStep(stage, callback, budgetMs = WORKER_STEP_BUDGET_MS) {
 }
 async function monitoredSuspension(stage, operation, blockBudgetMs = WORKER_STEP_BUDGET_MS) {
   let lastBeat = performance.now();
+  let lastLivenessAt = performance.now();
   let maximumBlockMs = 0;
   const heartbeat = setInterval(() => {
     const now = performance.now();
     maximumBlockMs = Math.max(maximumBlockMs, now - lastBeat - BOOT_HEARTBEAT_MS);
     lastBeat = now;
+    if (now - lastLivenessAt >= BOOT_LIVENESS_INTERVAL_MS) {
+      lastLivenessAt = now;
+      progress(stage, lastProgressValue);
+    }
   }, BOOT_HEARTBEAT_MS);
   try {
     const result3 = await ownedStep(`${stage}:start`, operation, blockBudgetMs);
@@ -23864,11 +24008,6 @@ async function mountPluginHandles(targets) {
     await macrotask();
     try {
       const module = await monitoredSuspension(`plugin:${target.pluginId}`, () => loadPluginModule(target.pluginId, target.moduleUrl), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
-      ownedStep(`plugin-manifest:${target.pluginId}`, () => {
-        const manifest = JSON.stringify(module.manifest);
-        if (manifest.length > PLUGIN_MANIFEST_CODE_UNIT_CAPACITY)
-          throw new Error(`plugin-manifest-credits: ${target.pluginId} exceeds ${PLUGIN_MANIFEST_CODE_UNIT_CAPACITY} code units`);
-      });
       mounted.push(ownedStep(`plugin-handle:${target.pluginId}`, () => ({ pluginId: target.pluginId, handle: pluginHandleForBridge(module) })));
     } catch (error) {
       if (closed || closing)
@@ -23898,7 +24037,7 @@ async function boot(message) {
       loaded.semioWgpuSetAppRole?.(message.appRole);
       if (message.hub)
         loaded.semioWgpuSetHubEnv?.(message.hub.hubUrl, message.hub.user, message.hub.dataDir);
-    });
+    }, BROWSER_OWNED_SUSPENSION_BUDGET_MS);
     progress("plugin-graph", 0.25);
     const bootPlan = ownedStep("plugin-graph", () => resolvePlaygroundBoot(PLUGIN_CATALOG, message.pluginVariant));
     if (bootPlan.plugins.length > PLUGIN_BOOT_CAPACITY)
@@ -23917,14 +24056,14 @@ async function boot(message) {
       console.log(`[DEBUG] renderer-bootstrap stage=${step13.stage} took ${(performance.now() - bootstrapStartedAt).toFixed(1)}ms`);
       progress(step13.stage, 0.65 + step13.progress * 0.3);
       if (step13.shellBoot) {
-        bootstrap = await monitoredSuspension("shell-boot", () => bootstrap.bootShell());
+        bootstrap = await monitoredSuspension("shell-boot", () => bootstrap.bootShell(), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
         continue;
       }
       if (step13.complete)
         break;
     }
-    runtime = ownedStep("renderer-finish", () => bootstrap.finish());
-    interactiveJobs = ownedStep("interactive-job-registry", () => new InteractiveWorkerScheduler(lifecycle, INTERACTIVE_WORKER_DESCRIPTORS, post, (callback) => setTimeout(callback, 0), () => performance.now(), (detail) => fault("interactive-job-fault", detail)));
+    runtime = ownedStep("renderer-finish", () => bootstrap.finish(), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
+    interactiveJobs = ownedStep("interactive-job-registry", () => new InteractiveWorkerScheduler(lifecycle, INTERACTIVE_WORKER_DESCRIPTORS, post, (callback) => setTimeout(callback, 0), () => performance.now(), (detail) => fault("interactive-job-fault", detail)), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
     progress("ready", 1);
     post({ kind: "booted", lifecycle });
     scheduleAssetPump();
@@ -23992,6 +24131,7 @@ async function pumpAsset() {
   }
 }
 function progress(stage, value) {
+  lastProgressValue = value;
   if (!closed && !closing && !failed)
     post({ kind: "boot-progress", lifecycle, stage, progress: value });
 }

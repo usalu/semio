@@ -1,0 +1,10 @@
+import assert from "node:assert/strict";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
+const require = createRequire(import.meta.url), ticket = dirname(dirname(fileURLToPath(import.meta.url))), root = mkdtempSync(join(ticket,"🗑️generated/daemon-tail-"));
+const cases = JSON.parse(readFileSync("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/nx-contract/🔣️.json", "utf8")).daemonLog;
+const source = 'const fs=require("node:fs"),assert=require("node:assert/strict");const client=require('+JSON.stringify(require.resolve("nx/src/daemon/client/client.js"))+');const path=require('+JSON.stringify(require.resolve("nx/src/daemon/tmp-dir.js"))+').DAEMON_OUTPUT_LOG_FILE;const vector='+JSON.stringify(cases)+';fs.mkdirSync(require("node:path").dirname(path),{recursive:true});fs.writeFileSync(path,"x".repeat(vector.size)+"\\n"+vector.marker);const originalReadFile=fs.readFileSync,originalRead=fs.readSync;let wholeReads=0,maxRead=0;fs.readFileSync=(file,...args)=>{if(file===path)wholeReads++;return originalReadFile(file,...args);};fs.readSync=(fd,buffer,offset,length,position)=>{maxRead=Math.max(maxRead,length);return originalRead(fd,buffer,offset,length,position);};const error=client.daemonProcessException("fixture failure");assert.equal(error.internalDaemonError,true);assert.ok(error.message.includes(vector.marker));assert.equal(wholeReads,0,"diagnostic must never read the whole log");assert.ok(maxRead<=vector.limit);console.log("[DEBUG] Nx daemon error preserves the log tail with bounded reads PASS");';
+const child=Bun.spawnSync(["node","--eval",source],{cwd:process.cwd(),env:{...process.env,NX_WORKSPACE_DATA_DIRECTORY:join(root,"workspace-data")},stdout:"pipe",stderr:"pipe"});
+writeFileSync(join(root,"verification.log"),child.stdout.toString()+child.stderr.toString());process.stdout.write(child.stdout);process.stderr.write(child.stderr);assert.equal(child.exitCode,0);

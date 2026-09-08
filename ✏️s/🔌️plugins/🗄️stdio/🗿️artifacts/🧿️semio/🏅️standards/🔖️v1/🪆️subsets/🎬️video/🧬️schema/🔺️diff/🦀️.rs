@@ -187,19 +187,19 @@ fn simulate_mid_origins<T>(base_len: usize, removed: &[usize], added: &[IndexAdd
 /// when `d2` modifies an item `d1` just added).
 #[allow(clippy::too_many_arguments)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_indexed<T, D>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T>
+fn absorb_indexed<T, D>(d1: IndexedTripleDiff<D, T>, d2: &IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T>
 where
     T: Clone,
     D: Clone,
 {
     let d1_ref_max = d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).max();
-    let mut base_len = d1_ref_max.map(|m| m + 1).unwrap_or(0);
+    let mut base_len = d1_ref_max.map_or(0, |m| m + 1);
     let mid_len_needed_by_d1 = d1.added.iter().map(|a| a.index + 1).max().unwrap_or(0);
     while base_len.saturating_sub(d1.removed.len()) + d1.added.len() < mid_len_needed_by_d1 {
         base_len += 1;
     }
     let d2_ref_max = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max();
-    let required_mid_len = d2_ref_max.map(|m| m + 1).unwrap_or(0);
+    let required_mid_len = d2_ref_max.map_or(0, |m| m + 1);
     while base_len.saturating_sub(d1.removed.len()) + d1.added.len() < required_mid_len {
         base_len += 1;
     }
@@ -395,7 +395,7 @@ fn absorb_stream_diff(mut a: SemioVideoStreamDiff, b: SemioVideoStreamDiff) -> S
     a.samples = match (a.samples.take(), b.samples) {
         (None, x) => x,
         (x, None) => x,
-        (Some(sa), Some(sb)) => Some(absorb_indexed(sa, sb, absorb_sample_diff, sample_with_diff_applied)),
+        (Some(sa), Some(sb)) => Some(absorb_indexed(sa, &sb, absorb_sample_diff, sample_with_diff_applied)),
     };
     a
 }
@@ -416,7 +416,7 @@ impl MutationDiff<SemioVideoSnapshot> for SemioVideoDiff {
         self.streams = match (self.streams.take(), other.streams) {
             (None, x) => x,
             (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_indexed(a, b, absorb_stream_diff, stream_with_diff_applied)),
+            (Some(a), Some(b)) => Some(absorb_indexed(a, &b, absorb_stream_diff, stream_with_diff_applied)),
         };
     }
 }
@@ -534,7 +534,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -585,7 +585,7 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
-    format!("[{}]", items.iter().map(|i| enc(i)).collect::<Vec<_>>().join(","))
+    format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
@@ -660,7 +660,7 @@ pub(crate) fn dec_stream(s: &str) -> Result<SemioVideoStream, String> {
 //#region 🔖️DiffValueCodecs
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_sample_diff(d: &SemioVideoSampleDiff) -> String {
-    format!("[{},{},{}]", encode_option(&d.pts, |v| v.to_string()), encode_option(&d.key, |v| enc_bool(v)), encode_option(&d.data, |v| hex_encode(v)))
+    format!("[{},{},{}]", encode_option(&d.pts, |v| v.to_string()), encode_option(&d.key, enc_bool), encode_option(&d.data, |v| hex_encode(v)))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_sample_diff(s: &str) -> Result<SemioVideoSampleDiff, String> {
@@ -683,12 +683,12 @@ pub(crate) fn dec_samples_diff(s: &str) -> Result<SemioVideoSamplesDiff, String>
 fn enc_stream_diff(d: &SemioVideoStreamDiff) -> String {
     format!(
         "[{},{},{},{},{},{}]",
-        encode_option(&d.kind, |v| enc_kind(v)),
+        encode_option(&d.kind, enc_kind),
         encode_option(&d.codec, |v| enc_str(v)),
         encode_option(&d.width, |v| v.to_string()),
         encode_option(&d.height, |v| v.to_string()),
-        encode_option(&d.rate, |v| enc_rational(v)),
-        encode_option(&d.samples, |v| enc_samples_diff(v)),
+        encode_option(&d.rate, enc_rational),
+        encode_option(&d.samples, enc_samples_diff),
     )
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

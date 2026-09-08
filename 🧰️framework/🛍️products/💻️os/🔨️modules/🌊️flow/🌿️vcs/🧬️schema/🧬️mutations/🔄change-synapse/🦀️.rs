@@ -1,13 +1,11 @@
 //! 🔄 Change Synapse direct payload and owned behavior.
 use super::super::{FlowFixture, FlowDiff, FlowDelta, FlowCollectionDelta, FlowMutation, SynapseSpec};
 use crate::os_spr::{MutationKind, MutationOutcome, SemanticDescriptor, Identified};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧬️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, crate::os_dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, crate::os_dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "change-synapse")]
 pub struct ChangeSynapse { pub id: String, #[dsl(block)] pub synapse: SynapseSpec }

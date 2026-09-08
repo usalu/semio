@@ -74,13 +74,13 @@ mod tests {
     use protocol::Inference;
 
     #[semio_framework_async_macros::async_test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = Din16798Snapshot::default();
         assert_eq!(Din16798Inference::infer(&snapshot), Din16798Inference::infer(&snapshot));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(Din16798Inference::infer(&Din16798Snapshot::default()), Din16798Inference::default());
     }
 }
@@ -219,14 +219,14 @@ mod compliance_report_tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    fn residential_environment_e2e_with_acoustic() {
+    async fn residential_environment_e2e_with_acoustic() {
         let report = check_residential_environment(85.0, 3, 40.0, 21.0, 24.0);
         assert!(report.all_pass());
         assert_eq!(report.checks.len(), 3);
     }
 
     #[semio_framework_async_macros::async_test]
-    fn full_environment_evaluate_covers_all_nine_parts() {
+    async fn full_environment_evaluate_covers_all_nine_parts() {
         let document = Din16798Snapshot::default();
         let report = evaluate(&document);
         assert_eq!(report.checks.len(), 25, "checks: {:?}", report.checks);

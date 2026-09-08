@@ -281,7 +281,7 @@ mod group_history_visibility_tests {
             assert_eq!(observed(&second), fixture["members"][1]["before"]);
             assert_eq!((first.len(), first.first(), first.last(), first.get(1)), (1, Some(&0), Some(&0), None));
             assert_eq!(first.iter().rev().copied().collect::<Vec<_>>(), vec![0]);
-            assert!(first.reserve_one().is_err());
+            assert_eq!(first.reserve_one().unwrap_err(), ArtifactHistoryReservationFault::GroupUnavailable);
             assert_eq!(first.last_mut(), None);
         }
         assert!(owner.commit());
@@ -363,6 +363,20 @@ pub struct ArtifactHistoryLedger<T> {
     len: usize,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ArtifactHistoryReservationFault {
+    Busy,
+    Capacity,
+    GenerationExhausted,
+    GroupUnavailable,
+}
+
+impl<T> Default for ArtifactHistoryLedger<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T> ArtifactHistoryLedger<T> {
     pub fn new() -> Self {
         Self { slots: std::mem::ManuallyDrop::new(Vec::with_capacity(ARTIFACT_HISTORY_LEDGER_CAPACITY)), head: None, tail: None, free_head: None, reservation: None, group: None, len: 0 }
@@ -380,23 +394,23 @@ impl<T> ArtifactHistoryLedger<T> {
         self.slots.as_ptr() as usize
     }
 
-    pub fn reserve_one(&mut self) -> Result<ArtifactHistoryReservation, ()> {
+    pub fn reserve_one(&mut self) -> Result<ArtifactHistoryReservation, ArtifactHistoryReservationFault> {
         if self.group.is_some() {
-            return Err(());
+            return Err(ArtifactHistoryReservationFault::GroupUnavailable);
         }
         self.reserve_slot()
     }
 
-    fn reserve_slot(&mut self) -> Result<ArtifactHistoryReservation, ()> {
+    fn reserve_slot(&mut self) -> Result<ArtifactHistoryReservation, ArtifactHistoryReservationFault> {
         if self.reservation.is_some() {
-            return Err(());
+            return Err(ArtifactHistoryReservationFault::Busy);
         }
         let (index, generation) = if let Some(index) = self.free_head {
-            let generation = self.slot(index).generation.checked_add(1).ok_or(())?;
+            let generation = self.slot(index).generation.checked_add(1).ok_or(ArtifactHistoryReservationFault::GenerationExhausted)?;
             (index, generation)
         } else {
             if self.slots.len() == ARTIFACT_HISTORY_LEDGER_CAPACITY {
-                return Err(());
+                return Err(ArtifactHistoryReservationFault::Capacity);
             }
             (self.slots.len() as u16, 1)
         };
@@ -453,9 +467,9 @@ impl<T> ArtifactHistoryLedger<T> {
         Ok(ArtifactHistoryKey { index, generation })
     }
 
-    pub(crate) fn reserve_group_one(&mut self, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<ArtifactHistoryReservation, ()> {
+    pub(crate) fn reserve_group_one(&mut self, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<ArtifactHistoryReservation, ArtifactHistoryReservationFault> {
         if !visibility.pending() || self.group.as_ref().is_some_and(|group| !std::sync::Arc::ptr_eq(&group.visibility, visibility)) {
-            return Err(());
+            return Err(ArtifactHistoryReservationFault::GroupUnavailable);
         }
         let reservation = self.reserve_slot()?;
         if self.group.is_none() {
@@ -543,7 +557,7 @@ impl<T> ArtifactHistoryLedger<T> {
     pub fn try_push(&mut self, value: T) -> Result<ArtifactHistoryKey, T> {
         let reservation = match self.reserve_one() {
             Ok(reservation) => reservation,
-            Err(()) => return Err(value),
+            Err(_) => return Err(value),
         };
         self.insert_reserved(reservation, value).map_err(|(_, value)| value)
     }
@@ -1464,6 +1478,7 @@ mod tests {
         let mut first = ArtifactHistoryLedger::new();
         let mut second = ArtifactHistoryLedger::new();
         let reservation = first.reserve_one().expect("empty fixed ledger reserves one exact slot");
+        assert_eq!(first.reserve_one().unwrap_err(), ArtifactHistoryReservationFault::Busy);
         let rejected = first.try_push("parallel-owner".to_string()).expect_err("an outstanding reservation excludes parallel adoption");
         assert_eq!(rejected, "parallel-owner");
         let (reservation, rejected) = second.insert_reserved(reservation, "wrong-ledger-owner".to_string()).expect_err("a reservation cannot cross ledger authority");

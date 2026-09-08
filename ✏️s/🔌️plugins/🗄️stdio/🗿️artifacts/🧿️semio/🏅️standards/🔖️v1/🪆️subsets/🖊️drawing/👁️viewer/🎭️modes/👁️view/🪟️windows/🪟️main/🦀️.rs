@@ -33,7 +33,7 @@ pub fn definition() -> WindowKindDefinition {
 /// to field names a live peer ticket may still be refactoring.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn entity_count(document: &SemioDrawingSnapshot) -> usize {
-    dsl::ToValue::to_value(document).as_object().map(|object| object.iter().filter_map(|(_, field)| field.as_array().map(|array| array.len())).max().unwrap_or(0)).unwrap_or(0).clamp(1, 6)
+    dsl::ToValue::to_value(document).as_object().map_or(0, |object| object.iter().filter_map(|(_, field)| field.as_array().map(|array| array.len())).max().unwrap_or(0)).clamp(1, 6)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

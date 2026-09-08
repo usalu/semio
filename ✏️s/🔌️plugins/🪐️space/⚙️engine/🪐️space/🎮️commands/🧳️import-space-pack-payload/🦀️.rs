@@ -21,7 +21,7 @@ pub fn handle(payload: &ImportSpacePackPayload, _doc: &ArtifactView<'_, Workflow
         // its bare initial projection.
         let empty_spr = crate::engine::space::engine::resolve_future(store::empty_document_spr("", OS_SPACE_SCHEMA));
         let port = crate::engine::space::engine::resolve_future(crate::catalog_port());
-        let _ = import_os_space_from_pack(&bytes, &empty_spr, port);
+        let _ = import_os_space_from_pack(&bytes, &empty_spr, &port);
     }
     Ok(Emit::default())
 }

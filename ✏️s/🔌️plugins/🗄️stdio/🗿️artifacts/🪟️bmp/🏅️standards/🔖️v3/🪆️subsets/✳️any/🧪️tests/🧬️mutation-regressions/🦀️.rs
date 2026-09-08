@@ -1,9 +1,8 @@
 //! 🧪️ Preserved raster sparse-diff and codec regression laws.
-use crate::artifacts::bmp::schema::diff::{diff_set_snapshot, BmpDiff, BmpPaletteAdded, BmpPaletteDiff, BmpPaletteModified};
+use crate::artifacts::bmp::schema::diff::BmpDiff;
 use crate::artifacts::bmp::schema::snapshot::{BmpPaletteEntry, BmpRowOrder};
 use crate::artifacts::bmp::BmpSnapshot;
 use protocol::{Mutation, MutationDiff};
-use serde::{Deserialize, Serialize};
 
 use crate::artifacts::bmp::schema::mutations::*;
 //#region 🔖️DemoFixtures
@@ -103,7 +102,7 @@ fn sweep_b() -> BmpSnapshot {
 pub(crate) fn regression_mutation_cases() -> Vec<BmpMutation> {
     let base = base_snapshot();
     vec![
-        BmpMutation::ChangeHeaderFields(crate::artifacts::bmp::schema::mutations::ChangeHeaderFieldsMutation {
+        BmpMutation::ChangeHeaderFields(ChangeHeaderFieldsMutation {
             header_size: Some(56),
             width: Some(9),
             height: None,
@@ -117,13 +116,13 @@ pub(crate) fn regression_mutation_cases() -> Vec<BmpMutation> {
             colors_used: None,
             colors_important: None,
         }),
-        BmpMutation::InsertPaletteEntry(crate::artifacts::bmp::schema::mutations::InsertPaletteEntryMutation { index: 1, entry: entry(9, 9, 9, 0) }),
-        BmpMutation::RemovePaletteEntry(crate::artifacts::bmp::schema::mutations::RemovePaletteEntryMutation { index: 0 }),
-        BmpMutation::ReplacePaletteEntry(crate::artifacts::bmp::schema::mutations::ReplacePaletteEntryMutation { index: 2, entry: entry(1, 1, 1, 1) }),
-        BmpMutation::ReplacePixelData(crate::artifacts::bmp::schema::mutations::ReplacePixelDataMutation { pixels: vec![7u8; base.pixels.len()] }),
+        BmpMutation::InsertPaletteEntry(InsertPaletteEntryMutation { index: 1, entry: entry(9, 9, 9, 0) }),
+        BmpMutation::RemovePaletteEntry(RemovePaletteEntryMutation { index: 0 }),
+        BmpMutation::ReplacePaletteEntry(ReplacePaletteEntryMutation { index: 2, entry: entry(1, 1, 1, 1) }),
+        BmpMutation::ReplacePixelData(ReplacePixelDataMutation { pixels: vec![7u8; base.pixels.len()] }),
         // Out-of-range targets: graceful no-ops, still law-compliant.
-        BmpMutation::RemovePaletteEntry(crate::artifacts::bmp::schema::mutations::RemovePaletteEntryMutation { index: 99 }),
-        BmpMutation::ReplacePaletteEntry(crate::artifacts::bmp::schema::mutations::ReplacePaletteEntryMutation { index: 99, entry: entry(0, 0, 0, 0) }),
+        BmpMutation::RemovePaletteEntry(RemovePaletteEntryMutation { index: 99 }),
+        BmpMutation::ReplacePaletteEntry(ReplacePaletteEntryMutation { index: 99, entry: entry(0, 0, 0, 0) }),
     ]
 }
 //#endregion 🔖️DemoFixtures
@@ -179,18 +178,18 @@ mod tests {
         let base = base_snapshot();
 
         // 🧩 Insert(2) + Remove(0): the two-op sequence base → mid → after.
-        let d1 = BmpMutation::InsertPaletteEntry(crate::artifacts::bmp::schema::mutations::InsertPaletteEntryMutation { index: 2, entry: entry(1, 2, 3, 0) }).diff(&base);
+        let d1 = BmpMutation::InsertPaletteEntry(InsertPaletteEntryMutation { index: 2, entry: entry(1, 2, 3, 0) }).diff(&base);
         let mid = d1.diff().apply(&base).unwrap();
-        let d2 = BmpMutation::RemovePaletteEntry(crate::artifacts::bmp::schema::mutations::RemovePaletteEntryMutation { index: 0 }).diff(&mid);
+        let d2 = BmpMutation::RemovePaletteEntry(RemovePaletteEntryMutation { index: 0 }).diff(&mid);
         let after = d2.diff().apply(&mid).unwrap();
         let mut composed = d1.diff().clone();
         composed.absorb(d2.diff().clone());
         assert_eq!(composed.apply(&base).unwrap(), after, "Insert+Remove-before absorb mismatch");
 
         // 🧩 Insert(2,f) + Insert(2,g): both must survive (fixes the old op-slot LWW bug).
-        let d1 = BmpMutation::InsertPaletteEntry(crate::artifacts::bmp::schema::mutations::InsertPaletteEntryMutation { index: 2, entry: entry(9, 0, 0, 0) }).diff(&base);
+        let d1 = BmpMutation::InsertPaletteEntry(InsertPaletteEntryMutation { index: 2, entry: entry(9, 0, 0, 0) }).diff(&base);
         let mid = d1.diff().apply(&base).unwrap();
-        let d2 = BmpMutation::InsertPaletteEntry(crate::artifacts::bmp::schema::mutations::InsertPaletteEntryMutation { index: 2, entry: entry(0, 9, 0, 0) }).diff(&mid);
+        let d2 = BmpMutation::InsertPaletteEntry(InsertPaletteEntryMutation { index: 2, entry: entry(0, 9, 0, 0) }).diff(&mid);
         let after = d2.diff().apply(&mid).unwrap();
         let mut composed = d1.diff().clone();
         composed.absorb(d2.diff().clone());
@@ -198,9 +197,9 @@ mod tests {
         assert_eq!(after.palette.len(), base.palette.len() + 2, "both inserts must survive");
 
         // 🧩 Add + SetField (patch into the added payload).
-        let d1 = BmpMutation::InsertPaletteEntry(crate::artifacts::bmp::schema::mutations::InsertPaletteEntryMutation { index: 1, entry: entry(1, 1, 1, 1) }).diff(&base);
+        let d1 = BmpMutation::InsertPaletteEntry(InsertPaletteEntryMutation { index: 1, entry: entry(1, 1, 1, 1) }).diff(&base);
         let mid = d1.diff().apply(&base).unwrap();
-        let d2 = BmpMutation::ReplacePaletteEntry(crate::artifacts::bmp::schema::mutations::ReplacePaletteEntryMutation { index: 1, entry: entry(2, 2, 2, 2) }).diff(&mid);
+        let d2 = BmpMutation::ReplacePaletteEntry(ReplacePaletteEntryMutation { index: 1, entry: entry(2, 2, 2, 2) }).diff(&mid);
         let after = d2.diff().apply(&mid).unwrap();
         let mut composed = d1.diff().clone();
         composed.absorb(d2.diff().clone());
@@ -208,9 +207,9 @@ mod tests {
         assert_eq!(after.palette[1], entry(2, 2, 2, 2));
 
         // 🧩 Modify + Remove: modifying then removing the same entry collapses to a removal.
-        let d1 = BmpMutation::ReplacePaletteEntry(crate::artifacts::bmp::schema::mutations::ReplacePaletteEntryMutation { index: 1, entry: entry(5, 5, 5, 5) }).diff(&base);
+        let d1 = BmpMutation::ReplacePaletteEntry(ReplacePaletteEntryMutation { index: 1, entry: entry(5, 5, 5, 5) }).diff(&base);
         let mid = d1.diff().apply(&base).unwrap();
-        let d2 = BmpMutation::RemovePaletteEntry(crate::artifacts::bmp::schema::mutations::RemovePaletteEntryMutation { index: 1 }).diff(&mid);
+        let d2 = BmpMutation::RemovePaletteEntry(RemovePaletteEntryMutation { index: 1 }).diff(&mid);
         let after = d2.diff().apply(&mid).unwrap();
         let mut composed = d1.diff().clone();
         composed.absorb(d2.diff().clone());
@@ -218,11 +217,11 @@ mod tests {
 
         // 🧩 Associativity over a triple.
         let base = base_snapshot();
-        let d1 = BmpMutation::InsertPaletteEntry(crate::artifacts::bmp::schema::mutations::InsertPaletteEntryMutation { index: 0, entry: entry(1, 0, 0, 0) }).diff(&base);
+        let d1 = BmpMutation::InsertPaletteEntry(InsertPaletteEntryMutation { index: 0, entry: entry(1, 0, 0, 0) }).diff(&base);
         let s1 = d1.diff().apply(&base).unwrap();
-        let d2 = BmpMutation::ReplacePaletteEntry(crate::artifacts::bmp::schema::mutations::ReplacePaletteEntryMutation { index: 0, entry: entry(2, 0, 0, 0) }).diff(&s1);
+        let d2 = BmpMutation::ReplacePaletteEntry(ReplacePaletteEntryMutation { index: 0, entry: entry(2, 0, 0, 0) }).diff(&s1);
         let s2 = d2.diff().apply(&s1).unwrap();
-        let d3 = BmpMutation::RemovePaletteEntry(crate::artifacts::bmp::schema::mutations::RemovePaletteEntryMutation { index: 2 }).diff(&s2);
+        let d3 = BmpMutation::RemovePaletteEntry(RemovePaletteEntryMutation { index: 2 }).diff(&s2);
         let s3 = d3.diff().apply(&s2).unwrap();
 
         let mut left = d1.diff().clone();

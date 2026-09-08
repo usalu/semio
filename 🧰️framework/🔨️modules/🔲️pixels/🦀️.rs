@@ -244,18 +244,10 @@ mod deflate {
 
     fn fixed_lit_lengths() -> Vec<u8> {
         let mut l = vec![0u8; 288];
-        for i in 0..=143 {
-            l[i] = 8;
-        }
-        for i in 144..=255 {
-            l[i] = 9;
-        }
-        for i in 256..=279 {
-            l[i] = 7;
-        }
-        for i in 280..=287 {
-            l[i] = 8;
-        }
+        l[..144].fill(8);
+        l[144..256].fill(9);
+        l[256..280].fill(7);
+        l[280..].fill(8);
         l
     }
 
@@ -489,15 +481,15 @@ mod deflate {
                 16 => {
                     let rep = br.read_bits(2)? as usize + 3;
                     let prev = *lens.last().ok_or("bad repeat")?;
-                    lens.extend(std::iter::repeat(prev).take(rep));
+                    lens.extend(std::iter::repeat_n(prev, rep));
                 }
                 17 => {
                     let rep = br.read_bits(3)? as usize + 3;
-                    lens.extend(std::iter::repeat(0u8).take(rep));
+                    lens.extend(std::iter::repeat_n(0u8, rep));
                 }
                 18 => {
                     let rep = br.read_bits(7)? as usize + 11;
-                    lens.extend(std::iter::repeat(0u8).take(rep));
+                    lens.extend(std::iter::repeat_n(0u8, rep));
                 }
                 _ => return Err("bad code-length symbol".into()),
             }
@@ -561,7 +553,7 @@ mod deflate {
         if (cmf & 0x0F) != 8 {
             return Err("unsupported zlib compression method".into());
         }
-        if ((cmf as u16) * 256 + flg as u16) % 31 != 0 {
+        if !((cmf as u16) * 256 + flg as u16).is_multiple_of(31) {
             return Err("zlib CMF/FLG check failed".into());
         }
         if flg & 0x20 != 0 {
@@ -594,9 +586,11 @@ fn write_chunk(out: &mut Vec<u8>, ty: &[u8; 4], data: &[u8]) {
     out.extend_from_slice(&crc32(&crc_in).to_be_bytes());
 }
 
+type PngChunk<'a> = ([u8; 4], &'a [u8]);
+
 /// 📖️ Splits a PNG byte stream into `(type, data)` chunks, rejecting CRC mismatches and
 /// truncation up front so downstream decode logic never has to re-check framing.
-fn read_chunks(data: &[u8]) -> Result<Vec<([u8; 4], &[u8])>, String> {
+fn read_chunks(data: &[u8]) -> Result<Vec<PngChunk<'_>>, String> {
     if data.len() < 8 || data[0..8] != PNG_SIGNATURE {
         return Err("png: bad signature".into());
     }
@@ -692,12 +686,12 @@ fn samples_per_pixel(color_type: u8) -> usize {
 }
 
 fn bpp_bytes(ihdr: &Ihdr) -> usize {
-    ((samples_per_pixel(ihdr.color_type) * ihdr.bit_depth as usize + 7) / 8).max(1)
+    (samples_per_pixel(ihdr.color_type) * ihdr.bit_depth as usize).div_ceil(8).max(1)
 }
 
 fn packed_row_bytes(width: u32, color_type: u8, bit_depth: u8) -> usize {
     let bits = width as usize * samples_per_pixel(color_type) * bit_depth as usize;
-    (bits + 7) / 8
+    bits.div_ceil(8)
 }
 //#endregion PngIhdr
 
@@ -721,8 +715,8 @@ fn filter_row(filter_type: u8, cur: &[u8], prev: Option<&[u8]>, bpp: usize) -> V
     let mut out = vec![0u8; cur.len()];
     for x in 0..cur.len() {
         let a = if x >= bpp { cur[x - bpp] } else { 0 };
-        let b = prev.map(|p| p[x]).unwrap_or(0);
-        let c = if x >= bpp { prev.map(|p| p[x - bpp]).unwrap_or(0) } else { 0 };
+        let b = prev.map_or(0, |p| p[x]);
+        let c = if x >= bpp { prev.map_or(0, |p| p[x - bpp]) } else { 0 };
         out[x] = match filter_type {
             0 => cur[x],
             1 => cur[x].wrapping_sub(a),
@@ -742,8 +736,8 @@ fn defilter_row(filter_type: u8, filt: &[u8], prev: Option<&[u8]>, bpp: usize) -
     let mut out = vec![0u8; filt.len()];
     for x in 0..filt.len() {
         let a = if x >= bpp { out[x - bpp] } else { 0 };
-        let b = prev.map(|p| p[x]).unwrap_or(0);
-        let c = if x >= bpp { prev.map(|p| p[x - bpp]).unwrap_or(0) } else { 0 };
+        let b = prev.map_or(0, |p| p[x]);
+        let c = if x >= bpp { prev.map_or(0, |p| p[x - bpp]) } else { 0 };
         out[x] = match filter_type {
             0 => filt[x],
             1 => filt[x].wrapping_add(a),
@@ -802,8 +796,8 @@ const ADAM7: [(u32, u32, u32, u32); 7] = [(0, 0, 8, 8), (4, 0, 8, 8), (0, 4, 4, 
 
 fn adam7_pass_dims(width: u32, height: u32, pass: usize) -> (u32, u32) {
     let (sx, sy, stx, sty) = ADAM7[pass];
-    let w = if width > sx { (width - sx + stx - 1) / stx } else { 0 };
-    let h = if height > sy { (height - sy + sty - 1) / sty } else { 0 };
+    let w = if width > sx { (width - sx).div_ceil(stx) } else { 0 };
+    let h = if height > sy { (height - sy).div_ceil(sty) } else { 0 };
     (w, h)
 }
 //#endregion PngAdam7
@@ -817,9 +811,7 @@ fn unpack_samples(row: &[u8], width: usize, spp: usize, bit_depth: u8) -> Vec<u3
             out.push(((row[i * 2] as u32) << 8) | row[i * 2 + 1] as u32);
         }
     } else if bit_depth == 8 {
-        for i in 0..count {
-            out.push(row[i] as u32);
-        }
+        out.extend(row[..count].iter().map(|&sample| u32::from(sample)));
     } else {
         let mut bitpos = 0usize;
         for _ in 0..count {
@@ -955,7 +947,7 @@ pub fn decode_png(data: &[u8]) -> Result<RasterImage, RasterError> {
             if chunk.len() % 3 != 0 {
                 return Err(RasterError::Codec("png PLTE: length not a multiple of 3".into()));
             }
-            palette = chunk.chunks_exact(3).map(|c| [c[0], c[1], c[2]]).collect();
+            palette = chunk.as_chunks::<3>().0.to_vec();
         } else if ty == *b"tRNS" {
             let color_type = ihdr.as_ref().ok_or_else(|| RasterError::Codec("png: tRNS before IHDR".into()))?.color_type;
             match color_type {
@@ -1021,7 +1013,7 @@ pub fn decode_png(data: &[u8]) -> Result<RasterImage, RasterError> {
         }
     } else {
         let mut pos = 0usize;
-        for pass in 0..7 {
+        for (pass, &(sx, sy, stx, sty)) in ADAM7.iter().enumerate() {
             let (pw, ph) = adam7_pass_dims(ihdr.width, ihdr.height, pass);
             if pw == 0 || ph == 0 {
                 continue;
@@ -1029,7 +1021,6 @@ pub fn decode_png(data: &[u8]) -> Result<RasterImage, RasterError> {
             let row_bytes = packed_row_bytes(pw, ihdr.color_type, ihdr.bit_depth);
             let (rows, new_pos) = defilter_pass(&raw, pos, ph, row_bytes, bpp).map_err(RasterError::Codec)?;
             pos = new_pos;
-            let (sx, sy, stx, sty) = ADAM7[pass];
             for (j, row) in rows.iter().enumerate() {
                 let samples = unpack_samples(row, pw as usize, spp, ihdr.bit_depth);
                 put_row(&samples, pw as usize, sx, sy + j as u32 * sty, stx).map_err(RasterError::Codec)?;
@@ -1077,7 +1068,7 @@ impl PngScanlineDecoder {
             if ty == *b"IHDR" {
                 ihdr = Some(parse_ihdr(chunk).map_err(RasterError::Codec)?);
             } else if ty == *b"PLTE" {
-                palette = chunk.chunks_exact(3).map(|c| [c[0], c[1], c[2]]).collect();
+                palette = chunk.as_chunks::<3>().0.to_vec();
             } else if ty == *b"tRNS" {
                 let color_type = ihdr.as_ref().ok_or_else(|| RasterError::Codec("png: tRNS before IHDR".into()))?.color_type;
                 match color_type {
@@ -1115,7 +1106,7 @@ impl PngScanlineDecoder {
             let bpp = bpp_bytes(&ihdr);
             let mut rgba_rows: Vec<Vec<u8>> = (0..height).map(|_| vec![0u8; width as usize * 4]).collect();
             let mut pos = 0usize;
-            for pass in 0..7 {
+            for (pass, &(sx, sy, stx, sty)) in ADAM7.iter().enumerate() {
                 let (pw, ph) = adam7_pass_dims(width, height, pass);
                 if pw == 0 || ph == 0 {
                     continue;
@@ -1123,7 +1114,6 @@ impl PngScanlineDecoder {
                 let row_bytes = packed_row_bytes(pw, ihdr.color_type, ihdr.bit_depth);
                 let (rows, new_pos) = defilter_pass(&raw, pos, ph, row_bytes, bpp).map_err(RasterError::Codec)?;
                 pos = new_pos;
-                let (sx, sy, stx, sty) = ADAM7[pass];
                 for (j, row) in rows.iter().enumerate() {
                     let samples = unpack_samples(row, pw as usize, spp, ihdr.bit_depth);
                     let y = sy + j as u32 * sty;
@@ -1170,7 +1160,7 @@ impl PngScanlineDecoder {
                 let samples = unpack_samples(&recon, self.width as usize, spp, ihdr.bit_depth);
                 let mut row = vec![0u8; self.width as usize * 4];
                 for i in 0..self.width as usize {
-                    let px = pixel_to_rgba(&samples[i * spp..i * spp + spp], &**ihdr, &palette[..], &palette_alpha[..], *gray_trans, *rgb_trans).map_err(RasterError::Codec)?;
+                    let px = pixel_to_rgba(&samples[i * spp..i * spp + spp], ihdr, &palette[..], &palette_alpha[..], *gray_trans, *rgb_trans).map_err(RasterError::Codec)?;
                     row[i * 4..i * 4 + 4].copy_from_slice(&px);
                 }
                 *prev = Some(recon);

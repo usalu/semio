@@ -366,16 +366,16 @@ pub fn surface_derivatives_rational(u_knots: &KnotVector, v_knots: &KnotVector, 
                 continue;
             }
             let mut acc = vec![0.0; dim + 1];
-            for i in 0..=up {
-                for j in 0..=vp {
-                    let b = nu[k][i] * nv[l][j];
+            for (i, &u_basis) in nu[k][..=up].iter().enumerate() {
+                for (j, &v_basis) in nv[l][..=vp].iter().enumerate() {
+                    let b = u_basis * v_basis;
                     if b == 0.0 {
                         continue;
                     }
                     let ci = u_span - up + i;
                     let cj = v_span - vp + j;
-                    for c in 0..=dim {
-                        acc[c] += b * controls_h[ci][cj][c];
+                    for (c, value) in acc.iter_mut().enumerate() {
+                        *value += b * controls_h[ci][cj][c];
                     }
                 }
             }
@@ -558,10 +558,8 @@ pub fn remove_knot(knots: &KnotVector, controls: &[Vec<f64>], u: f64, tol: f64) 
     let n = controls.len();
     let fout = ((2 * r) as isize - s as isize - p as isize) / 2;
     let fout = fout.max(0) as usize;
-    let mut write = fout;
-    for k in (fout + 1)..n {
+    for (write, k) in (fout..).zip((fout + 1)..n) {
         new_controls[write] = new_controls[k].clone();
-        write += 1;
     }
     new_controls.truncate(n - 1);
     let mut new_knots = knots.knots.clone();

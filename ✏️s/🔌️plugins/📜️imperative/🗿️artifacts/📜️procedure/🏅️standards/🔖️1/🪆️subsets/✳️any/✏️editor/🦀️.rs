@@ -350,14 +350,7 @@ impl ArtifactEditor for ImperativePlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            operation_context,
-            request.completion,
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
             ImperativeCommand::command_id,
             IMPERATIVE_RETAINED_RAW_BYTES,
             IMPERATIVE_RETAINED_WORK_ITEMS,
@@ -495,7 +488,7 @@ pub fn create_imperative_app() -> semio_framework_plugin::AppDefinition {
                     ActionArgOption::new("control.if", LocalizedLabel::native("If", "Wenn")),
                     ActionArgOption::new("control.while", LocalizedLabel::native("While", "Solange")),
                     ActionArgOption::new("math.add", LocalizedLabel::native("Add", "Addieren")),
-                ]).default_value("log.print"),
+                ]).default_value(&"log.print"),
             ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")

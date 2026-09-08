@@ -272,6 +272,7 @@ mod tests {
     use super::*;
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::default_document;
     use crate::artifacts::cad::CadPaneId;
+    use semio_framework_plugin::ui_inspector_groups_to_tree;
     use crate::editor::cad::config::CadConfig;
     use crate::editor::cad::terminology::cad_labels;
     use crate::editor::cad::testkit::*;
@@ -279,7 +280,7 @@ mod tests {
     fn selected_box_panel(config: &CadConfig) -> String {
         let runtime = CadPlayRuntime::default();
         let panel = build_properties_panel(&view(default_document(), runtime), cad_labels(config), None).expect("CAD properties panel assembly");
-        serde_json::to_string(&panel).unwrap()
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: panel }).expect("CAD panel projection")
     }
 
     #[semio_framework_async_macros::async_test]

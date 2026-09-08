@@ -222,7 +222,7 @@ impl DiffAlgebra<ZipSnapshot> for ZipDiff {
     }
 
     fn is_empty(&self) -> bool {
-        self.comment.is_none() && self.entries.as_ref().map_or(true, ZipEntriesDiff::is_empty)
+        self.comment.is_none() && self.entries.as_ref().is_none_or(ZipEntriesDiff::is_empty)
     }
 }
 //#endregion 🔖️Algebra

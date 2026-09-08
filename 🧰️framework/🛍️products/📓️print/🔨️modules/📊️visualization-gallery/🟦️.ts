@@ -1,9 +1,10 @@
+import { printDocuments } from "../🖨️tectonic-template-compilation/📇️catalog/🟦️.ts";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { inflateRawSync, inflateSync } from "node:zlib";
-import { getWorkspaceRoot } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot } from "../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 
 const productRoot = join(getWorkspaceRoot(), "🧰️framework/🛍️products/📓️print");
 const VIZ_GALLERY_DIR = join(productRoot, "🧾️template/📊️viz-gallery");
@@ -11,8 +12,7 @@ const VIZ_TAXONOMY_PATH = join(productRoot, "🖼️assets/📊️viz-taxonomy.m
 
 /** 📊️ Enumerates canonical visualization gallery documents. */
 export function visualizationTemplates(): readonly { readonly id: string; readonly texPath: string }[] {
-  return readdirSync(VIZ_GALLERY_DIR).filter((name) => name.endsWith(".tex") && !name.includes("-dark"))
-    .sort().map((name) => ({ id: basename(name, ".tex").replace(/^[^a-z]+/i, ""), texPath: `🧾️template/📊️viz-gallery/${name}` }));
+  return printDocuments().filter(document => document.collection === "visualizations");
 }
 
 /** 🍃️ Reads terminal visualization identifiers from the taxonomy source. */

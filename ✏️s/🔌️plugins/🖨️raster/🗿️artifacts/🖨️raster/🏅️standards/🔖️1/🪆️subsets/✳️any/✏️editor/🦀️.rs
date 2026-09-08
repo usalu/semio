@@ -721,14 +721,7 @@ impl ArtifactEditor for RasterPlayApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = ArtifactRetainedCommandPayload::try_new(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            operation_context,
-            request.completion,
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
             RasterCommand::command_id,
             RASTER_RETAINED_RAW_BYTES,
             RASTER_RETAINED_WORK_ITEMS,
@@ -952,8 +945,8 @@ pub fn create_raster_app() -> AppDefinition {
                 schema: "2d.image".into(),
                 export_formats: vec![],
                 import_formats: vec![],
-                    export_stdio_kinds: vec!["stdio.png"],
-        import_stdio_kinds: vec!["stdio.png"],
+                    export_stdio_kinds: vec!["stdio.png".into()],
+        import_stdio_kinds: vec!["stdio.png".into()],
     })
             .icon_id("raster")
             .mode_def(edit::definition())
@@ -1013,7 +1006,7 @@ pub fn create_raster_app() -> AppDefinition {
                     ActionArgOption::new("pixel", LocalizedLabel::native("Pixel", "Pixel")),
                     ActionArgOption::new("group", LocalizedLabel::native("Group", "Gruppe")),
                     ActionArgOption::new("adjustment", LocalizedLabel::native("Adjustment", "Anpassung")),
-                ]).required().default_value("pixel"),
+                ]).required().default_value(&"pixel"),
             ])
             // 🧵️ Phase-8 dispositions. Every id declared above is `Migrated`: each one is backed by the
             // exact-owner `RasterRetainedCommandJobFactory` proof in `🧵️RetainedCommands`, so UI dispatch

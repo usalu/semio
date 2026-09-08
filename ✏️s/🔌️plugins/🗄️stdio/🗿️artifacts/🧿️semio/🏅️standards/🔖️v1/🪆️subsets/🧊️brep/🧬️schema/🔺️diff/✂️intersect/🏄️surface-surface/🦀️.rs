@@ -19,6 +19,12 @@
 //!
 //! See ticket `26/07/26/NATIVE-BREP-KERNEL-AND-VCS-BREP-DOCUMENT`, majority-rewritten in
 //! `26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME` wave 2 (W2-A) — see `📓️w2a-intersections.md`.
+/// 🗺️ Parameter bounds and spatial bounds for a surface patch.
+pub type SurfacePatchBounds = (f64, f64, f64, f64, (Pnt3, Pnt3));
+
+/// 📍 Intersection point with parameters on both surfaces.
+pub type SurfaceIntersectionSample = (Pnt3, f64, f64, f64, f64);
+
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::engine::contract::ParamDomain;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::{Curve2, Curve3};
@@ -68,9 +74,9 @@ pub fn intersect_surface_surface(a: &Surface, b: &Surface, tol: f64) -> Result<V
         (Surface::Sphere { frame: fa, radius: ra }, Surface::Sphere { frame: fb, radius: rb }) => sphere_sphere(fa, *ra, fb, *rb, tol),
         (Surface::Cylinder { .. }, Surface::Cylinder { .. }) => cylinder_cylinder(a, b, tol),
         (Surface::Cylinder { .. } | Surface::Cone { .. } | Surface::Sphere { .. } | Surface::Torus { .. }, Surface::Cylinder { .. } | Surface::Cone { .. } | Surface::Sphere { .. } | Surface::Torus { .. }) => {
-            coaxial_case(a, b, tol).unwrap_or_else(|| general_marching(a, b, tol))
+            coaxial_case(a, b, tol).unwrap_or_else(|| Ok(general_marching(a, b, tol)))
         }
-        _ => general_marching(a, b, tol),
+        _ => Ok(general_marching(a, b, tol)),
     }
 }
 
@@ -305,7 +311,7 @@ fn plane_cylinder(plane: &Frame3, cyl: &Frame3, radius: f64, tol: f64) -> Result
     let plane_surf = Surface::Plane { frame: *plane };
     let cyl_surf = Surface::Cylinder { frame: *cyl, radius };
     if cos_theta <= tol {
-        return plane_cylinder_parallel(plane, cyl, radius, n, axis, tol, &plane_surf, &cyl_surf);
+        return Ok(plane_cylinder_parallel(plane, cyl, radius, n, axis, tol, (&plane_surf, &cyl_surf)));
     }
     let n_dot_axis = n.dot(axis);
     let t = n.dot(plane.origin - cyl.origin) / n_dot_axis;
@@ -326,26 +332,26 @@ fn plane_cylinder(plane: &Frame3, cyl: &Frame3, radius: f64, tol: f64) -> Result
 /// 🏄 Plane parallel to the cylinder's axis: zero, one (tangent — reported as a real one-line
 /// result, not an error, per the exact-case list this DO item asks for), or two rulings.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn plane_cylinder_parallel(plane: &Frame3, cyl: &Frame3, radius: f64, n: Vec3, axis: Vec3, tol: f64, plane_surf: &Surface, cyl_surf: &Surface) -> Result<Vec<IntCurve>, IntersectError> {
+fn plane_cylinder_parallel(plane: &Frame3, cyl: &Frame3, radius: f64, n: Vec3, axis: Vec3, tol: f64, (plane_surf, cyl_surf): (&Surface, &Surface)) -> Vec<IntCurve> {
     let signed = n.dot(cyl.origin - plane.origin);
     let dist = signed.abs();
     if dist > radius + tol {
-        return Ok(vec![]);
+        return vec![];
     }
     let h_sq = radius * radius - dist * dist;
     if h_sq < -(tol * tol) {
-        return Ok(vec![]);
+        return vec![];
     }
     let h = h_sq.max(0.0).sqrt();
     let foot = cyl.origin - n * signed;
     let perp = n.cross(axis).normalized().unwrap_or_else(|| axis.any_orthogonal());
     if h <= tol {
         let curve3 = Curve3::Line { origin: foot, dir: axis };
-        return Ok(vec![finish_intcurve(curve3, plane_surf, cyl_surf, tol)]);
+        return vec![finish_intcurve(curve3, plane_surf, cyl_surf, tol)];
     }
     let l1 = Curve3::Line { origin: foot + perp * (-h), dir: axis };
     let l2 = Curve3::Line { origin: foot + perp * h, dir: axis };
-    Ok(vec![finish_intcurve(l1, plane_surf, cyl_surf, tol), finish_intcurve(l2, plane_surf, cyl_surf, tol)])
+    vec![finish_intcurve(l1, plane_surf, cyl_surf, tol), finish_intcurve(l2, plane_surf, cyl_surf, tol)]
 }
 
 /// 🏄 Plane/cone: perpendicular-to-axis (circle, via [`plane_level_case`]), tangent-to-a-ruling
@@ -362,12 +368,12 @@ fn plane_cone(plane: &Frame3, cone: &Frame3, half_angle: f64, tol: f64) -> Resul
     let cos_theta = n.dot(axis).abs();
     let cone_surf = Surface::Cone { frame: *cone, half_angle };
     if (1.0 - cos_theta) <= tol {
-        return plane_level_case(plane, &cone_surf, cone.origin, axis, tol);
+        return Ok(plane_level_case(plane, &cone_surf, cone.origin, axis, tol));
     }
     let angle_n_axis = cos_theta.clamp(-1.0, 1.0).acos();
     let gamma = std::f64::consts::FRAC_PI_2 - angle_n_axis;
     if gamma <= half_angle + tol {
-        return general_marching(&Surface::Plane { frame: *plane }, &cone_surf, tol);
+        return Ok(general_marching(&Surface::Plane { frame: *plane }, &cone_surf, tol));
     }
     plane_cone_ellipse(plane, cone, half_angle, axis, n, tol)
 }
@@ -379,7 +385,7 @@ fn plane_cone(plane: &Frame3, cone: &Frame3, half_angle: f64, tol: f64) -> Resul
 fn plane_cone_ellipse(plane: &Frame3, cone: &Frame3, half_angle: f64, axis: Vec3, n: Vec3, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
     let cone_surf = Surface::Cone { frame: *cone, half_angle };
     let plane_surf = Surface::Plane { frame: *plane };
-    let fallback = || general_marching(&plane_surf, &cone_surf, tol);
+    let fallback = || Ok(general_marching(&plane_surf, &cone_surf, tol));
     let Some(e1) = (axis - n * axis.dot(n)).normalized() else { return fallback() };
     let e2 = n.cross(e1);
     let origin_loc = cone.to_local(plane.origin);
@@ -455,14 +461,14 @@ fn plane_torus(plane: &Frame3, torus: &Frame3, major_radius: f64, minor_radius: 
     let torus_surf = Surface::Torus { frame: *torus, major_radius, minor_radius };
     let plane_surf = Surface::Plane { frame: *plane };
     if (1.0 - cos_theta) <= tol {
-        return plane_level_case(plane, &torus_surf, torus.origin, axis, tol);
+        return Ok(plane_level_case(plane, &torus_surf, torus.origin, axis, tol));
     }
     if cos_theta <= tol {
         let offset = n.dot(torus.origin - plane.origin);
         if offset.abs() > tol {
-            return general_marching(&plane_surf, &torus_surf, tol);
+            return Ok(general_marching(&plane_surf, &torus_surf, tol));
         }
-        let Some(radial) = axis.cross(n).normalized() else { return general_marching(&plane_surf, &torus_surf, tol) };
+        let Some(radial) = axis.cross(n).normalized() else { return Ok(general_marching(&plane_surf, &torus_surf, tol)) };
         let mut out = Vec::new();
         for sign in [1.0, -1.0] {
             let center = torus.origin + radial * (major_radius * sign);
@@ -472,14 +478,14 @@ fn plane_torus(plane: &Frame3, torus: &Frame3, major_radius: f64, minor_radius: 
         }
         return Ok(out);
     }
-    general_marching(&plane_surf, &torus_surf, tol)
+    Ok(general_marching(&plane_surf, &torus_surf, tol))
 }
 
 /// 🏄 Solves a plane ⊥ an axisymmetric surface's axis against that surface's meridian profile —
 /// shared by the perpendicular sub-case of `plane_cone`/`plane_torus` (`plane_cylinder`'s own
 /// perpendicular case stays a direct formula, unchanged, to avoid regressing its tests).
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn plane_level_case(plane: &Frame3, surface: &Surface, axis_pt: Pnt3, axis_dir: Vec3, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
+fn plane_level_case(plane: &Frame3, surface: &Surface, axis_pt: Pnt3, axis_dir: Vec3, tol: f64) -> Vec<IntCurve> {
     let g = axis_dir.dot(plane.origin - axis_pt);
     let radii = meridian_radii_at_level(surface, g, tol);
     let plane_surf = Surface::Plane { frame: *plane };
@@ -494,7 +500,7 @@ fn plane_level_case(plane: &Frame3, surface: &Surface, axis_pt: Pnt3, axis_dir: 
         let curve3 = Curve3::Circle { frame, radius: rho };
         out.push(finish_intcurve(curve3, &plane_surf, surface, tol));
     }
-    Ok(out)
+    out
 }
 
 /// 🏄 `surface`'s meridian radius (or radii, for a torus) at global axial level `g`, using the
@@ -715,14 +721,14 @@ fn cylinder_cylinder(a: &Surface, b: &Surface, tol: f64) -> Result<Vec<IntCurve>
         if perp.norm() <= tol {
             return coaxial_case(a, b, tol).unwrap_or_else(|| Ok(vec![]));
         }
-        return cylinder_cylinder_parallel(fa, *ra, fb, *rb, axis_a, perp, tol);
+        return Ok(cylinder_cylinder_parallel(fa, *ra, fb, *rb, axis_a, perp, tol));
     }
     let (_, _, dist) = closest_points_on_lines(fa.origin, axis_a, fb.origin, axis_b);
     if dist <= tol && (ra - rb).abs() <= tol {
         let meet = fa.origin + axis_a * closest_points_on_lines(fa.origin, axis_a, fb.origin, axis_b).0;
-        return steinmetz(fa, *ra, axis_a, fb, *rb, axis_b, meet, tol);
+        return steinmetz((fa, *ra, axis_a), (fb, *rb, axis_b), meet, tol);
     }
-    general_marching(a, b, tol)
+    Ok(general_marching(a, b, tol))
 }
 
 /// 🏄 Closest points between two infinite lines `(p1+t·d1)`/`(p2+s·d2)` (both `d` unit) as
@@ -750,7 +756,7 @@ fn closest_points_on_lines(p1: Pnt3, d1: Vec3, p2: Pnt3, d2: Vec3) -> (f64, f64,
 /// 🏄 Parallel, non-coaxial cylinders: the cross-section circle/circle intersection extruded
 /// along the shared axis direction — zero, one (tangent) or two rulings.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn cylinder_cylinder_parallel(fa: &Frame3, ra: f64, fb: &Frame3, rb: f64, axis: Vec3, perp: Vec3, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
+fn cylinder_cylinder_parallel(fa: &Frame3, ra: f64, fb: &Frame3, rb: f64, axis: Vec3, perp: Vec3, tol: f64) -> Vec<IntCurve> {
     let d = perp.norm();
     let e1 = if d > tol { perp * (1.0 / d) } else { axis.any_orthogonal() };
     let e2 = axis.cross(e1);
@@ -763,7 +769,7 @@ fn cylinder_cylinder_parallel(fa: &Frame3, ra: f64, fb: &Frame3, rb: f64, axis: 
         let curve3 = Curve3::Line { origin, dir: axis };
         out.push(finish_intcurve(curve3, &cyl_a, &cyl_b, tol));
     }
-    Ok(out)
+    out
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -791,7 +797,7 @@ fn circle_circle_2d(cx1: f64, cy1: f64, r1: f64, cx2: f64, cy2: f64, r2: f64, to
 /// two bisector planes `p·(a−b)=0`/`p·(a+b)=0` through the axes' meeting point — each plane's
 /// section of cylinder A (via [`plane_cylinder`]) is one of the two Steinmetz ellipses.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn steinmetz(fa: &Frame3, ra: f64, axis_a: Vec3, fb: &Frame3, rb: f64, axis_b: Vec3, meet: Pnt3, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
+fn steinmetz((fa, ra, axis_a): (&Frame3, f64, Vec3), (fb, rb, axis_b): (&Frame3, f64, Vec3), meet: Pnt3, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
     let cyl_a = Surface::Cylinder { frame: *fa, radius: ra };
     let cyl_b = Surface::Cylinder { frame: *fb, radius: rb };
     let mut out = Vec::new();
@@ -841,7 +847,7 @@ fn aabb_overlap(a: (Pnt3, Pnt3), b: (Pnt3, Pnt3), tol: f64) -> bool {
 /// (underdetermined by one DOF along the curve — the damping just picks the nearby minimum-norm
 /// root, which is exactly what a marching seed needs).
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn gauss_newton_seed(a: &Surface, mut ua: f64, mut va: f64, b: &Surface, mut ub: f64, mut vb: f64, tol: f64) -> Option<(Pnt3, f64, f64, f64, f64)> {
+fn gauss_newton_seed(a: &Surface, mut ua: f64, mut va: f64, b: &Surface, mut ub: f64, mut vb: f64, tol: f64) -> Option<SurfaceIntersectionSample> {
     for _ in 0..30 {
         let da = a.derivatives(ua, va);
         let db = b.derivatives(ub, vb);
@@ -878,9 +884,9 @@ fn gauss_newton_seed(a: &Surface, mut ua: f64, mut va: f64, b: &Surface, mut ub:
 /// keeps cell pairs whose sampled AABBs overlap, and Gauss-Newton-converges each surviving pair's
 /// cell centers to a start point.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn find_seeds(a: &Surface, dom_a: ((f64, f64), (f64, f64)), b: &Surface, dom_b: ((f64, f64), (f64, f64)), tol: f64) -> Vec<(Pnt3, f64, f64, f64, f64)> {
+fn find_seeds(a: &Surface, dom_a: ((f64, f64), (f64, f64)), b: &Surface, dom_b: ((f64, f64), (f64, f64)), tol: f64) -> Vec<SurfaceIntersectionSample> {
     const N: usize = 10;
-    let cells = |surface: &Surface, dom: ((f64, f64), (f64, f64))| -> Vec<(f64, f64, f64, f64, (Pnt3, Pnt3))> {
+    let cells = |surface: &Surface, dom: ((f64, f64), (f64, f64))| -> Vec<SurfacePatchBounds> {
         let mut out = Vec::new();
         for i in 0..N {
             for j in 0..N {
@@ -947,7 +953,7 @@ fn out_of_domain(x: f64, lo: f64, hi: f64, periodic: bool, tol: f64) -> bool {
 /// closure back near `start`.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 #[allow(clippy::too_many_arguments)]
-fn march_direction(a: &Surface, dom_a: ((f64, f64), (f64, f64)), b: &Surface, dom_b: ((f64, f64), (f64, f64)), start: (Pnt3, f64, f64, f64, f64), tol: f64, sign: f64, max_steps: usize) -> Vec<(Pnt3, f64, f64, f64, f64)> {
+fn march_direction(a: &Surface, dom_a: ((f64, f64), (f64, f64)), b: &Surface, dom_b: ((f64, f64), (f64, f64)), start: SurfaceIntersectionSample, tol: f64, sign: f64, max_steps: usize) -> Vec<SurfaceIntersectionSample> {
     let mut out = Vec::new();
     let (_, mut ua, mut va, mut ub, mut vb) = start;
     let step = march_step(a, dom_a, tol);
@@ -1012,7 +1018,7 @@ fn march_direction(a: &Surface, dom_a: ((f64, f64), (f64, f64)), b: &Surface, do
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn trace_from_seed(a: &Surface, dom_a: ((f64, f64), (f64, f64)), b: &Surface, dom_b: ((f64, f64), (f64, f64)), seed: (Pnt3, f64, f64, f64, f64), tol: f64) -> Option<Vec<(Pnt3, f64, f64, f64, f64)>> {
+fn trace_from_seed(a: &Surface, dom_a: ((f64, f64), (f64, f64)), b: &Surface, dom_b: ((f64, f64), (f64, f64)), seed: SurfaceIntersectionSample, tol: f64) -> Option<Vec<SurfaceIntersectionSample>> {
     const MAX_STEPS: usize = 400;
     let fwd = march_direction(a, dom_a, b, dom_b, seed, tol, 1.0, MAX_STEPS);
     if fwd.len() >= 3 && fwd.last().unwrap().0.distance(seed.0) <= tol * 20.0 {
@@ -1034,11 +1040,11 @@ fn trace_from_seed(a: &Surface, dom_a: ((f64, f64), (f64, f64)), b: &Surface, do
 /// branch becomes one `Fitted` [`IntCurve`] with an honestly measured `max_error` (the actual
 /// deviation of the fitted curve/p-curves from the original traced samples).
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn general_marching(a: &Surface, b: &Surface, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
+fn general_marching(a: &Surface, b: &Surface, tol: f64) -> Vec<IntCurve> {
     let dom_a = finite_domain(a);
     let dom_b = finite_domain(b);
     let seeds = find_seeds(a, dom_a, b, dom_b, tol);
-    let mut traces: Vec<Vec<(Pnt3, f64, f64, f64, f64)>> = Vec::new();
+    let mut traces: Vec<Vec<SurfaceIntersectionSample>> = Vec::new();
     let mut used: Vec<Pnt3> = Vec::new();
     for seed in seeds {
         if used.iter().any(|p: &Pnt3| p.distance(seed.0) <= tol * 20.0) {
@@ -1077,7 +1083,7 @@ fn general_marching(a: &Surface, b: &Surface, tol: f64) -> Result<Vec<IntCurve>,
         let (d0, d1) = curve3.domain();
         out.push(IntCurve { curve3, pcurve_a, pcurve_b, domain: ParamDomain { min: d0, max: d1 }, kind: IntCurveKind::Fitted { max_error: max_err } });
     }
-    Ok(out)
+    out
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

@@ -224,7 +224,7 @@ pub(crate) fn agg_inverse(this: &SemioFlowMutation, base: &SemioFlowSnapshot) ->
 /// codec.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_semio_flow_snapshot(s: &SemioFlowSnapshot) -> String {
-    format!("[{},{},{}]", enc_str(&s.schema), format!("[{}]", s.nodes.iter().map(enc_node).collect::<Vec<_>>().join(",")), format!("[{}]", s.edges.iter().map(enc_edge).collect::<Vec<_>>().join(",")))
+    format!("[{},{},{}]", enc_str(&s.schema), format_args!("[{}]", s.nodes.iter().map(enc_node).collect::<Vec<_>>().join(",")), format_args!("[{}]", s.edges.iter().map(enc_edge).collect::<Vec<_>>().join(",")))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_semio_flow_snapshot(s: &str) -> Result<SemioFlowSnapshot, String> {
@@ -528,6 +528,6 @@ mod tests {
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🔤️relabels-and-repositions-the-transform-node/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/🔤️relabels-and-79ebb1/🦀️.rs"]
 mod set_snapshot_relabels_and_repositions_the_transform_node;
 //#endregion 🧪️FixtureCases

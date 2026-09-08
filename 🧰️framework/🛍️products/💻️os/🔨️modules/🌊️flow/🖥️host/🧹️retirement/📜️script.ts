@@ -15,13 +15,29 @@ assert(fixture.text.reservedCapacity > Buffer.byteLength(text));
 const dagText = fixture.dag.text.repeat(fixture.dag.repeat);
 assert.equal(Buffer.byteLength(dagText), fixture.dag.minimumUtf8Bytes);
 assert.equal(stableStringify({ label: text }), JSON.stringify({ label: text }));
+assert.equal(fixture.scene.retainedVelloRects, 256);
+const canvasSource = await Bun.file(new URL("../../../♾️infinite/🖼️canvas/🦀️.rs", import.meta.url)).text();
+assert(canvasSource.includes("fn retire_vello_fragment"));
+assert(canvasSource.includes("Self::vector_backing_bytes(&encoding.resources.glyph_runs)"));
+assert(canvasSource.indexOf("slot.command_backing_bytes = command.retirement_backing_bytes()") < canvasSource.indexOf("slot.command = Some(ManuallyDrop::new(command))"));
+const sceneConsumers = [
+  ["iconPaintCache", await Bun.file(new URL("../../../♾️infinite/🎲️board/🔌️ports/➡️directed/🦀️.rs", import.meta.url)).text(), "retirement_scene: Cell<Option<infinite::canvas::OpaqueSceneRetirementToken>>"],
+  ["boardWorldCache", await Bun.file(new URL("../../../♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🦀️.rs", import.meta.url)).text(), "opaque_scene_retirement: Cell<Option<OpaqueSceneRetirementToken>>"],
+  ["engineCanvasPacket", await Bun.file(new URL("../../../📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs", import.meta.url)).text(), "scene_retirement: Option<canvas::OpaqueSceneRetirementToken>"],
+] as const;
+assert.deepEqual(sceneConsumers.map(([name]) => name), fixture.scene.retainedConsumers);
+for (const [, source, retainedOwner] of sceneConsumers) {
+  assert(source.includes(retainedOwner));
+  assert(source.includes("advance_opaque_scene_retirement"));
+}
+assert(sceneConsumers[1][1].includes("assert!(turns > 1_600)"));
 for (const grant of fixture.grants) {
   let total = 0;
   for (const owner of owners) { let left = Buffer.byteLength(owner); while (left) { const released = Math.min(grant, left); total += released; left -= released; } }
   assert.equal(total, fixture.expected.releasedBytes);
 }
 for (const mutant of [{ ...fixture, extra: true }, { ...fixture, grants: [16384] }, { ...fixture, dag: { ...fixture.dag, minimumUtf8Bytes: 1600 } }, { ...fixture, scene: { retirementCapacity: 1025 } }, { ...fixture, expected: { ...fixture.expected, zeroGrant: "progress" } }]) assert(!validate(mutant));
-console.log("[DEBUG] Flow session-retirement source fixtures=1 hostileRejections=5 bytes=42405 dagBytes=4800 sceneCapacity=1024 sceneCommands=128 grants=1,64,4096 oracle=fast-json-stable-stringify runtimeClaims=0");
+console.log("[DEBUG] Flow session-retirement source fixtures=1 hostileRejections=5 bytes=42405 dagBytes=4800 sceneCapacity=1024 sceneCommands=128 scenePathElements=1600 sceneVelloRects=256 sceneConsumers=3 grants=1,64,4096 oracle=fast-json-stable-stringify runtimeClaims=0");
 //#endregion 🔣️SessionOwnership
 
 //#region 🧹️BridgeSessionClose

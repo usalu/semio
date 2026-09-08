@@ -101,7 +101,7 @@ where
 /// annihilates the add; a `d2`-modify of a `d1`-added key patches into the carried payload;
 /// everything else composes directly on the shared key space.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
+fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -374,7 +374,7 @@ fn inverse_solid(base: &BrepSolid, d: &BrepSolidDiff) -> BrepSolidDiff {
 
 //#region 🔖️PerEntityAbsorb
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_vertex_diff(mut a: BrepVertexDiff, b: BrepVertexDiff) -> BrepVertexDiff {
+fn absorb_vertex_diff(mut a: BrepVertexDiff, b: &BrepVertexDiff) -> BrepVertexDiff {
     if b.point.is_some() {
         a.point = b.point;
     }
@@ -467,32 +467,32 @@ impl MutationDiff<SemioBrepSnapshot> for SemioBrepDiff {
         self.vertices = match (self.vertices.take(), other.vertices) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |v: &BrepVertex| v.id.clone(), absorb_vertex_diff, apply_vertex)),
+            (Some(a), Some(b)) => Some(absorb_named(a, &b, |v: &BrepVertex| v.id.clone(), |a, b| absorb_vertex_diff(a, &b), apply_vertex)),
         };
         self.edges = match (self.edges.take(), other.edges) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |e: &BrepEdge| e.id.clone(), absorb_edge_diff, apply_edge)),
+            (Some(a), Some(b)) => Some(absorb_named(a, &b, |e: &BrepEdge| e.id.clone(), absorb_edge_diff, apply_edge)),
         };
         self.loops = match (self.loops.take(), other.loops) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |l: &BrepLoop| l.id.clone(), absorb_loop_diff, apply_loop)),
+            (Some(a), Some(b)) => Some(absorb_named(a, &b, |l: &BrepLoop| l.id.clone(), absorb_loop_diff, apply_loop)),
         };
         self.faces = match (self.faces.take(), other.faces) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |f: &BrepFace| f.id.clone(), absorb_face_diff, apply_face)),
+            (Some(a), Some(b)) => Some(absorb_named(a, &b, |f: &BrepFace| f.id.clone(), absorb_face_diff, apply_face)),
         };
         self.shells = match (self.shells.take(), other.shells) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |s: &BrepShell| s.id.clone(), absorb_shell_diff, apply_shell)),
+            (Some(a), Some(b)) => Some(absorb_named(a, &b, |s: &BrepShell| s.id.clone(), absorb_shell_diff, apply_shell)),
         };
         self.solids = match (self.solids.take(), other.solids) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |s: &BrepSolid| s.id.clone(), absorb_solid_diff, apply_solid)),
+            (Some(a), Some(b)) => Some(absorb_named(a, &b, |s: &BrepSolid| s.id.clone(), absorb_solid_diff, apply_solid)),
         };
     }
 }
@@ -536,7 +536,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -591,11 +591,11 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
-    format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
+    format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 //#endregion 🔖️Primitives
 
@@ -1078,23 +1078,23 @@ pub fn decode_semio_brep_diff_json(text: &str) -> Result<SemioBrepDiff, String> 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioBrepDiff> {
     let mut a = SemioBrepSnapshot::default();
-    a.vertices = vec![BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } }, BrepVertex { id: "v-removed".into(), point: SemioPoint3::default() }];
-    a.edges = vec![BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v1".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } }];
+    a.vertices = vec![BrepVertex { tol: 1e-7, id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } }, BrepVertex { tol: 1e-7, id: "v-removed".into(), point: SemioPoint3::default() }];
+    a.edges = vec![BrepEdge { tol: 1e-7, id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v1".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } }];
     a.loops = vec![BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: true }] }];
-    a.faces = vec![BrepFace { id: "f1".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Plane { origin: SemioPoint3::default(), normal: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 } }, orientation: true }];
+    a.faces = vec![BrepFace { tol: 1e-7, id: "f1".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Plane { origin: SemioPoint3::default(), normal: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 } }, orientation: true }];
     a.shells = vec![BrepShell { id: "s1".into(), faces: vec![BrepShellFace { face: "f1".into(), orientation: true }] }];
     a.solids = vec![BrepSolid { id: "so1".into(), shells: vec![BrepSolidShell { shell: "s1".into(), is_void: false }] }];
 
     let mut b = SemioBrepSnapshot::default();
-    b.vertices = vec![BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 } }, BrepVertex { id: "v-added".into(), point: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }];
-    b.edges = vec![BrepEdge {
+    b.vertices = vec![BrepVertex { tol: 1e-7, id: "v1".into(), point: SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 } }, BrepVertex { tol: 1e-7, id: "v-added".into(), point: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }];
+    b.edges = vec![BrepEdge { tol: 1e-7,
         id: "e1".into(),
         start_vertex: "v1".into(),
         end_vertex: "v-added".into(),
         curve: BrepCurve::Nurbs { control_points: vec![SemioPoint3::default(), SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 }], weights: vec![1.0, 1.0], degree: 1, knots: vec![0.0, 0.0, 1.0, 1.0] },
     }];
     b.loops = vec![BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: false }] }];
-    b.faces = vec![BrepFace { id: "f1".into(), outer_loop: "l1".into(), inner_loops: vec!["l1".into()], surface: BrepSurface::Sphere { center: SemioPoint3::default(), radius: 2.0 }, orientation: false }];
+    b.faces = vec![BrepFace { tol: 1e-7, id: "f1".into(), outer_loop: "l1".into(), inner_loops: vec!["l1".into()], surface: BrepSurface::Sphere { center: SemioPoint3::default(), radius: 2.0 }, orientation: false }];
     b.shells = vec![BrepShell { id: "s1".into(), faces: vec![BrepShellFace { face: "f1".into(), orientation: false }] }];
     b.solids = vec![BrepSolid { id: "so1".into(), shells: vec![BrepSolidShell { shell: "s1".into(), is_void: true }] }, BrepSolid { id: "so-added".into(), shells: vec![] }];
 
@@ -1113,15 +1113,15 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sweep_a() -> SemioBrepSnapshot {
         let mut s = SemioBrepSnapshot::default();
-        s.vertices = vec![BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } }, BrepVertex { id: "v-removed".into(), point: SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 } }];
+        s.vertices = vec![BrepVertex { tol: 1e-7, id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } }, BrepVertex { tol: 1e-7, id: "v-removed".into(), point: SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 } }];
         s.edges = vec![
-            BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v1".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } },
-            BrepEdge { id: "e-removed".into(), start_vertex: "v-removed".into(), end_vertex: "v-removed".into(), curve: BrepCurve::Circle { center: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 1.0 } },
+            BrepEdge { tol: 1e-7, id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v1".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } },
+            BrepEdge { tol: 1e-7, id: "e-removed".into(), start_vertex: "v-removed".into(), end_vertex: "v-removed".into(), curve: BrepCurve::Circle { center: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 1.0 } },
         ];
         s.loops = vec![BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: true }] }, BrepLoop { id: "l-removed".into(), edges: vec![] }];
         s.faces = vec![
-            BrepFace { id: "f1".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Plane { origin: SemioPoint3::default(), normal: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 } }, orientation: true },
-            BrepFace { id: "f-removed".into(), outer_loop: "l-removed".into(), inner_loops: vec![], surface: BrepSurface::Sphere { center: SemioPoint3::default(), radius: 1.0 }, orientation: true },
+            BrepFace { tol: 1e-7, id: "f1".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Plane { origin: SemioPoint3::default(), normal: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 } }, orientation: true },
+            BrepFace { tol: 1e-7, id: "f-removed".into(), outer_loop: "l-removed".into(), inner_loops: vec![], surface: BrepSurface::Sphere { center: SemioPoint3::default(), radius: 1.0 }, orientation: true },
         ];
         s.shells = vec![BrepShell { id: "s1".into(), faces: vec![BrepShellFace { face: "f1".into(), orientation: true }] }, BrepShell { id: "s-removed".into(), faces: vec![] }];
         s.solids = vec![BrepSolid { id: "so1".into(), shells: vec![BrepSolidShell { shell: "s1".into(), is_void: false }] }, BrepSolid { id: "so-removed".into(), shells: vec![] }];
@@ -1131,21 +1131,21 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sweep_b() -> SemioBrepSnapshot {
         let mut s = SemioBrepSnapshot::default();
-        s.vertices = vec![BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }, BrepVertex { id: "v-added".into(), point: SemioPoint3 { x: 2.0, y: 2.0, z: 2.0 } }];
+        s.vertices = vec![BrepVertex { tol: 1e-7, id: "v1".into(), point: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }, BrepVertex { tol: 1e-7, id: "v-added".into(), point: SemioPoint3 { x: 2.0, y: 2.0, z: 2.0 } }];
         s.edges = vec![
-            BrepEdge { id: "e1".into(), start_vertex: "v-added".into(), end_vertex: "v-added".into(), curve: BrepCurve::Circle { center: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 }, axis: SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 }, radius: 2.0 } },
-            BrepEdge { id: "e-added".into(), start_vertex: "v-added".into(), end_vertex: "v-added".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 } } },
+            BrepEdge { tol: 1e-7, id: "e1".into(), start_vertex: "v-added".into(), end_vertex: "v-added".into(), curve: BrepCurve::Circle { center: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 }, axis: SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 }, radius: 2.0 } },
+            BrepEdge { tol: 1e-7, id: "e-added".into(), start_vertex: "v-added".into(), end_vertex: "v-added".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 } } },
         ];
         s.loops = vec![BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: false }] }, BrepLoop { id: "l-added".into(), edges: vec![] }];
         s.faces = vec![
-            BrepFace {
+            BrepFace { tol: 1e-7,
                 id: "f1".into(),
                 outer_loop: "l1-alt".into(),
                 inner_loops: vec!["l-added".into()],
                 surface: BrepSurface::Cylinder { origin: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 5.0 },
                 orientation: false,
             },
-            BrepFace {
+            BrepFace { tol: 1e-7,
                 id: "f-added".into(),
                 outer_loop: "l1".into(),
                 inner_loops: vec![],
@@ -1226,7 +1226,7 @@ mod tests {
     async fn absorb_law_add_then_remove_of_same_added_key_cancels() {
         let base = SemioBrepSnapshot::default();
         let mut d1 = SemioBrepDiff::default();
-        d1.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![], added: vec![BrepVertex { id: "v-new".into(), point: SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 } }] });
+        d1.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![], added: vec![BrepVertex { tol: 1e-7, id: "v-new".into(), point: SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 } }] });
         let mut d2 = SemioBrepDiff::default();
         d2.vertices = Some(BrepVerticesDiff { removed: vec!["v-new".into()], modified: vec![], added: vec![] });
         let sequential = d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
@@ -1239,7 +1239,7 @@ mod tests {
     async fn absorb_law_add_then_setfield_patches_added_payload() {
         let base = SemioBrepSnapshot::default();
         let mut d1 = SemioBrepDiff::default();
-        d1.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![], added: vec![BrepVertex { id: "v-new".into(), point: SemioPoint3::default() }] });
+        d1.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![], added: vec![BrepVertex { tol: 1e-7, id: "v-new".into(), point: SemioPoint3::default() }] });
         let mut d2 = SemioBrepDiff::default();
         d2.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![NamedModified { key: "v-new".into(), diff: BrepVertexDiff { point: Some(SemioPoint3 { x: 5.0, y: 5.0, z: 5.0 }) } }], added: vec![] });
         let sequential = d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
@@ -1252,7 +1252,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn absorb_law_modify_then_remove_drops_pending_patch() {
         let mut base = SemioBrepSnapshot::default();
-        base.vertices.push(BrepVertex { id: "v1".into(), point: SemioPoint3::default() });
+        base.vertices.push(BrepVertex { tol: 1e-7, id: "v1".into(), point: SemioPoint3::default() });
         let mut d1 = SemioBrepDiff::default();
         d1.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![NamedModified { key: "v1".into(), diff: BrepVertexDiff { point: Some(SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 }) } }], added: vec![] });
         let mut d2 = SemioBrepDiff::default();
@@ -1269,7 +1269,7 @@ mod tests {
         let base = sweep_a();
         let mid = sweep_b();
         let mut after = sweep_b();
-        after.vertices.push(BrepVertex { id: "v-extra".into(), point: SemioPoint3 { x: 7.0, y: 8.0, z: 9.0 } });
+        after.vertices.push(BrepVertex { tol: 1e-7, id: "v-extra".into(), point: SemioPoint3 { x: 7.0, y: 8.0, z: 9.0 } });
         let d1 = SemioBrepDiff::between(&base, &mid);
         let d2 = SemioBrepDiff::between(&mid, &after);
         let mut absorbed = d1.clone();

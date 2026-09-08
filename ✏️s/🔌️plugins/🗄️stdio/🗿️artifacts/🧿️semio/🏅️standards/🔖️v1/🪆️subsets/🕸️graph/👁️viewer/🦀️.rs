@@ -68,7 +68,7 @@ impl ArtifactViewer for SemioGraphViewer {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -100,7 +100,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn viewer_never_mutates_the_document_or_draft_store() {
-        semio_framework_plugin::testkit::assert_viewer_never_mutates::<SemioGraphViewer>();
+        semio_framework_plugin::testkit::assert_viewer_never_mutates::<SemioGraphViewer>().await;
     }
 }
 //#endregion 🧪️Tests

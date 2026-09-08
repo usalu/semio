@@ -140,7 +140,7 @@ impl FixedKeyQueue {
 
     fn push_back(&mut self, key: KeyAction) -> Result<(), KeyAction> {
         let bytes = Self::key_bytes(&key);
-        if self.len == PENDING_KEY_CAPACITY || bytes > PENDING_KEY_BYTE_CAPACITY || self.bytes.checked_add(bytes).map_or(true, |next| next > PENDING_KEY_BYTE_CAPACITY) {
+        if self.len == PENDING_KEY_CAPACITY || bytes > PENDING_KEY_BYTE_CAPACITY || self.bytes.checked_add(bytes).is_none_or(|next| next > PENDING_KEY_BYTE_CAPACITY) {
             return Err(key);
         }
         let index = (self.head + self.len) % PENDING_KEY_CAPACITY;
@@ -152,7 +152,7 @@ impl FixedKeyQueue {
 
     fn push_front(&mut self, key: KeyAction) -> Result<(), KeyAction> {
         let bytes = Self::key_bytes(&key);
-        if self.len == PENDING_KEY_CAPACITY || bytes > PENDING_KEY_BYTE_CAPACITY || self.bytes.checked_add(bytes).map_or(true, |next| next > PENDING_KEY_BYTE_CAPACITY) {
+        if self.len == PENDING_KEY_CAPACITY || bytes > PENDING_KEY_BYTE_CAPACITY || self.bytes.checked_add(bytes).is_none_or(|next| next > PENDING_KEY_BYTE_CAPACITY) {
             return Err(key);
         }
         self.head = (self.head + PENDING_KEY_CAPACITY - 1) % PENDING_KEY_CAPACITY;

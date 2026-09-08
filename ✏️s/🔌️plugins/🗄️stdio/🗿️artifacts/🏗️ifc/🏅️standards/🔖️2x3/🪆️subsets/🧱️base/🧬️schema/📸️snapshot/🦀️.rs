@@ -75,7 +75,7 @@ pub fn validate_ifc2x3_snapshot(snapshot: &Ifc2x3Snapshot) -> Result<(), String>
     if snapshot.schema != STDIO_IFC2X3_DOCUMENT_SCHEMA {
         return Err(format!("ifc2x3: unsupported snapshot schema {:?}", snapshot.schema));
     }
-    let declares_ifc2x3 = snapshot.document.header.file_schema.iter().any(|value| value.as_list().map(|items| items.iter().any(|item| item.as_str() == Some("IFC2X3"))).unwrap_or(false));
+    let declares_ifc2x3 = snapshot.document.header.file_schema.iter().any(|value| value.as_list().is_some_and(|items| items.iter().any(|item| item.as_str() == Some("IFC2X3"))));
     if !declares_ifc2x3 {
         return Err("ifc2x3: FILE_SCHEMA does not declare IFC2X3".into());
     }

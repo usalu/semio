@@ -1,12 +1,12 @@
 //! 🏗️ Typestate `PluginBuilder` — missing label/version is a compile error.
 
 use crate::app::{
-    App, ArtifactApp, ArtifactContribution, ArtifactDeclaration, ArtifactDefinitionRegistry, ArtifactInferenceServiceMetadata, FlowExtensionDeclaration, HostMediaHandlerDeclaration, Plugin, PluginApp, PluginAssemblyError, PluginCommandHandler,
-    resolve_ready,
+    resolve_ready, App, ArtifactApp, ArtifactContribution, ArtifactDeclaration, ArtifactDefinitionRegistry, ArtifactInferenceServiceMetadata, FlowExtensionDeclaration, HostMediaHandlerDeclaration, Plugin, PluginApp, PluginAssemblyError,
+    PluginCommandHandler,
 };
 use semio_framework::{
-    AssetDeclaration, CommandDefinition, ExecutionMode, ExtensionPointDeclaration,
     kernel::{ActivationEvent, CapabilityRequest, CapabilityRequirement, QuotaSchema},
+    AssetDeclaration, CommandDefinition, ExecutionMode, ExtensionPointDeclaration,
 };
 use std::collections::{BTreeMap, BTreeSet};
 use std::marker::PhantomData;
@@ -78,10 +78,11 @@ pub struct PluginBuilder<State, PA: PluginApp = crate::app::NoPluginApp> {
     /// 🗂️ Contributions onto artifact kinds owned by a dependency — resolved against `plugin_id` in
     /// `try_build`, once it is known to be final.
     contributions: Vec<ArtifactContribution>,
+    topic_contributions: Vec<semio_framework::TopicContribution>,
     /// 📖️ One non-capturing `(document_schema, kinds)` provider per `.document_app_mutation_roster::
     /// <A>()`/`.viewer_mutation_roster::<V>()`/`.editor_mutation_roster::<E>()` call — committed into
     /// the process-wide owner mutation roster by `try_build`.
-    owner_mutation_rosters: Vec<fn() -> (&'static str, &'static [protocol::SemanticDescriptor])>,
+    owner_mutation_rosters: Vec<crate::app::OwnerMutationRoster>,
     app_defs: Vec<(App, crate::app::declarations::AppFactory<PA>)>,
     app_schema_descriptors: Vec<fn() -> Option<::semio_framework_schema::AppSchemaDescriptor>>,
     document_app_ids: Vec<&'static str>,
@@ -123,6 +124,7 @@ impl<PA: PluginApp> PluginBuilder<NeedsLabel, PA> {
             foreign_document_codecs: Vec::new(),
             dependencies: Vec::new(),
             contributions: Vec::new(),
+            topic_contributions: Vec::new(),
             owner_mutation_rosters: Vec::new(),
             app_defs: Vec::new(),
             app_schema_descriptors: Vec::new(),
@@ -157,6 +159,7 @@ impl<PA: PluginApp> PluginBuilder<NeedsLabel, PA> {
             foreign_document_codecs: self.foreign_document_codecs,
             dependencies: self.dependencies,
             contributions: self.contributions,
+            topic_contributions: self.topic_contributions,
             owner_mutation_rosters: self.owner_mutation_rosters,
             app_defs: self.app_defs,
             app_schema_descriptors: self.app_schema_descriptors,
@@ -193,6 +196,7 @@ impl<PA: PluginApp> PluginBuilder<NeedsVersion, PA> {
             foreign_document_codecs: self.foreign_document_codecs,
             dependencies: self.dependencies,
             contributions: self.contributions,
+            topic_contributions: self.topic_contributions,
             owner_mutation_rosters: self.owner_mutation_rosters,
             app_defs: self.app_defs,
             app_schema_descriptors: self.app_schema_descriptors,
@@ -318,6 +322,12 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// `try_build()`, once every declared dependency is final.
     pub fn contributes(mut self, contribution: ArtifactContribution) -> Self {
         self.contributions.push(contribution);
+        self
+    }
+
+    /// 📇️ Retains domain-owned metadata in the final manifest before assembly completes.
+    pub fn contributes_topic(mut self, contribution: semio_framework::TopicContribution) -> Self {
+        self.topic_contributions.push(contribution);
         self
     }
 
@@ -624,6 +634,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             foreign_document_codecs,
             dependencies,
             contributions,
+            topic_contributions,
             owner_mutation_rosters,
             mut app_defs,
             mut app_schema_descriptors,
@@ -692,7 +703,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
                 app_schemas.push(descriptor);
             }
         }
-        let plan = crate::app::ArtifactRegistrationPlan::from_declarations(&artifacts, app_schemas, foreign_document_codecs, &plugin_id, host_media_handlers, flow_extensions, routed_inferences);
+        let plan = crate::app::ArtifactRegistrationPlan::from_declarations(&artifacts, app_schemas, &foreign_document_codecs, &plugin_id, host_media_handlers, flow_extensions, routed_inferences);
         let (mut runtime, registry_plan) = plan.into_runtime(definitions)?;
 
         // 🗂️ Resolve every declared contribution against this plugin's own (now-final) id — pure,
@@ -710,11 +721,12 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         crate::app::register_contributions(&plugin_id, &dependencies, &contribution_descriptors).map_err(|error| PluginAssemblyError::new("plugin-assembly.contribution-gate", error.to_string()))?;
         runtime.extend_contributions(contributed_inference_services, &owner_mutation_rosters, contributed_mutation_runtime)?;
 
-        crate::app::declarations::commit_artifact_declarations(&plugin_id, declared_artifacts)?;
+        crate::app::declarations::commit_artifact_declarations(&plugin_id, &declared_artifacts)?;
 
         let mut plugin = Plugin::new(plugin_id.clone(), label, version).with_runtime_registry(runtime);
         plugin.manifest.dependencies = dependencies;
         plugin.manifest.contributions = contribution_descriptors;
+        plugin.manifest.topic_contributions = topic_contributions;
         for declaration in artifacts {
             plugin = declaration.apply_to(plugin);
         }
@@ -742,12 +754,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         }
         let assembly = store::begin_artifact_assembly().map_err(|error| PluginAssemblyError::new("plugin-assembly.unavailable", error.to_string()))?;
         crate::app::commit_artifact_registration_plan(&assembly, registry_plan)?;
-        // 🛂️ E2-builder-descriptor (`📓️design-abi.md` §3): installs the SAME builder fields that
-        // just built `plugin` above, as a second output of this one assembly call — see
-        // `plugin_runtime::PluginDescriptorExtras`'s own doc for why this is not an
-        // independently-maintained side registry that could drift from the manifest.
-        crate::plugin_runtime::install_plugin_descriptor_extras(crate::plugin_runtime::PluginDescriptorExtras { package_id, activation_events, capability_requests, extension_points, execution, quotas, assets });
-        Ok(plugin)
+        Ok(plugin.with_descriptor_extras(crate::plugin_runtime::PluginDescriptorExtras { package_id, activation_events, capability_requests, extension_points, execution, quotas, assets }))
     }
 }
 
@@ -859,7 +866,7 @@ mod plugin_builder_dependency_tests {
             .expect("identical frozen host-media declarations are idempotent");
         assert_eq!(MESH_IMPORT_EXECUTIONS.load(Ordering::SeqCst), 0, "assembly must never execute a media converter");
         assert_eq!(plugin.host_media_handlers().len(), 1);
-        let result = plugin.import_mesh(crate::MeshImportRequest { artifact_kind: kind.id.clone(), document_schema: kind.schema.clone(), mesh: semio_framework::MeshData::default() }).expect("runtime bridge execution");
+        let result = plugin.import_mesh(&crate::MeshImportRequest { artifact_kind: kind.id.clone(), document_schema: kind.schema.clone(), mesh: semio_framework::MeshData::default() }).expect("runtime bridge execution");
         assert_eq!(result.document, dsl::json!({ "bridge": "counting" }));
         assert_eq!(MESH_IMPORT_EXECUTIONS.load(Ordering::SeqCst), 1);
     }
@@ -930,7 +937,7 @@ mod schema_stamping_tests {
     };
     use semio_framework::{AppRole, Dialect, Fault, IconName, StandardId, SubsetId};
     use store::EngineHandles;
-    use ui_wgpu::wgpu::{LocalizedLabel, SurfaceKind};
+    use ui_wgpu::wgpu::LocalizedLabel;
 
     const EDITOR_STAMP_DIALECT: Dialect = Dialect { artifact_kind: "builder-test.schema-stamp-editor", standard: StandardId("1"), subset: SubsetId::ANY };
     const VIEWER_STAMP_DIALECT: Dialect = Dialect { artifact_kind: "builder-test.schema-stamp-viewer", standard: StandardId("1"), subset: SubsetId::ANY };
@@ -1002,15 +1009,10 @@ mod schema_stamping_tests {
         }
     }
 
-    /// 🗃️ sdk-dedyn (O1/§1.5) — this test module's own closed app enum: `.editor::<SchemaStampEditorFixture>`/
-    /// `.viewer::<SchemaStampViewerFixture>` each need a concrete `PA: PluginApp` satisfying
-    /// `From<VcsArtifactApp<..>>`, and `NoPluginApp` (uninhabited) cannot provide one. Cross-module
-    /// closing site (`PluginApp` is declared in `crate::app`), hence the explicit `use` — finding 1 /
-    /// recipe §5 of 📓️terra-dyn-enum-macro-report.md.
-    use crate::__semio_dispatch_PluginApp;
     use crate::plugin_app_close_prelude::*;
     semio_framework_dispatch_macros::dyn_enum_close! {
-        pub enum SchemaStampApps: PluginApp {
+        /// 🗃️ Closed app set for the private schema stamping fixtures.
+        enum SchemaStampApps: PluginApp {
             Editor(VcsArtifactApp<EditorApp<SchemaStampEditorFixture>>),
             Viewer(VcsArtifactApp<ViewerApp<SchemaStampViewerFixture>>),
         }
@@ -1020,10 +1022,10 @@ mod schema_stamping_tests {
         let label = LocalizedLabel::data("Surface");
         match role {
             AppRole::Editor => {
-                Editor::builder(dialect).document(["semio", "schema-stamp-editor"]).mode("edit", label.clone(), "pencil").window_kind("main", label, "main", semio_framework_ui_contract::SurfaceKind::Canvas2d, IconName::AppWindow).build_definition()
+                Editor::builder(dialect).document(["semio", "schema-stamp-editor"]).mode("edit", label.clone(), "pencil").window_kind("main", label, "main", SurfaceKind::Canvas2d, IconName::AppWindow).build_definition()
             }
             AppRole::Viewer => {
-                Viewer::builder(dialect).document(["semio", "schema-stamp-viewer"]).mode("edit", label.clone(), "pencil").window_kind("main", label, "main", semio_framework_ui_contract::SurfaceKind::Canvas2d, IconName::AppWindow).build_definition()
+                Viewer::builder(dialect).document(["semio", "schema-stamp-viewer"]).mode("edit", label.clone(), "pencil").window_kind("main", label, "main", SurfaceKind::Canvas2d, IconName::AppWindow).build_definition()
             }
         }
     }
@@ -1076,8 +1078,8 @@ mod schema_stamping_tests {
             algorithm_version: 1,
             policy_version: 1,
         };
-        let plugin = Plugin::<NoPluginApp>::builder(metadata.owner).label("Builder Test Routed Inference").version("0.1.0").routed_inference(metadata).try_build().expect("metadata-only routed inference must assemble");
-        let bytes = plugin.wire_list_artifact_inference_services().expect("frozen roster encodes");
+        let plugin = Plugin::<NoPluginApp>::builder(metadata.owner).label("Builder Test Routed Inference").version("0.1.0").package_id("semio:builder-test-routed-inference").routed_inference(metadata).try_build().expect("metadata-only routed inference must assemble");
+        let bytes = plugin.wire_list_artifact_inference_services();
         let roster: Vec<WireArtifactInferenceMetadata> = protocol::json::from_json_str(std::str::from_utf8(&bytes).expect("roster UTF-8")).expect("frozen roster decodes");
         assert_eq!(roster, vec![metadata.into()]);
         assert!(artifact_inference_service(metadata.artifact_kind, metadata.inference_schema).expect("global service lookup").is_none(), "route must not manufacture a synchronous service facade");

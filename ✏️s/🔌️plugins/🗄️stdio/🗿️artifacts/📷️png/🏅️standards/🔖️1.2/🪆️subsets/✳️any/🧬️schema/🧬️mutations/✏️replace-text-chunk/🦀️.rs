@@ -25,7 +25,7 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ReplaceTextChunkMutati
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "text-chunk", kind: "replace-text-chunk", record: "ReplaceTextChunk" };
     fn diff(&self, base: &PngSnapshot) -> protocol::MutationOutcome<PngDiff> {
         let Self { index, chunk } = self;
-        protocol::MutationOutcome::new(contribute(base, *index, chunk.clone()))
+        protocol::MutationOutcome::new(contribute(base, *index, chunk))
     }
     fn inverse(&self, base: &PngSnapshot) -> Vec<PngMutation> {
         let Self { index, .. } = self;
@@ -45,12 +45,12 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ReplaceTextChunkMutati
         vec!["replace-text-chunk".into()]
     }
 }
-pub fn contribute(base: &PngSnapshot, index: usize, chunk: PngTextChunk) -> PngDiff {
+pub fn contribute(base: &PngSnapshot, index: usize, chunk: &PngTextChunk) -> PngDiff {
     let existing = match base.text_chunks.get(index) {
         Some(c) => c,
         None => return PngDiff::default(),
     };
-    let d = PngTextChunkDiff::between(existing, &chunk);
+    let d = PngTextChunkDiff::between(existing, chunk);
     if d.is_empty() {
         return PngDiff::default();
     }
@@ -60,7 +60,7 @@ pub fn contribute(base: &PngSnapshot, index: usize, chunk: PngTextChunk) -> PngD
 
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
-    serde_json::from_str(include_str!("🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed replace-text-chunk payload")
+    dsl::json::from_json_str(include_str!("🧪️tests/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed replace-text-chunk payload")
 }
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]

@@ -17,13 +17,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioKitSnapshot {
-    serde_json::from_str(BEFORE).expect("add-design before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("add-design before snapshot decodes")
 }
 fn expected_after() -> SemioKitSnapshot {
-    serde_json::from_str(AFTER).expect("add-design after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("add-design after snapshot decodes")
 }
 fn mutation() -> SemioKitMutation {
-    serde_json::from_str(MUTATION).expect("add-design mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("add-design mutation decodes")
 }
 
 /// ▶️ A second, empty design appears; the existing one keeps its pieces.
@@ -57,12 +57,12 @@ async fn the_undo_remove_design_takes_the_roof_design_back_out() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioKitSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: SemioKitSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "add-design/adds-an-empty-roof-design: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("add-design mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("add-design mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("add-design mutation reparses");
     assert_eq!(reencoded, original, "add-design/adds-an-empty-roof-design: committed mutation JSON is not canonical");
 }
@@ -81,7 +81,7 @@ async fn declared_outcome_holds_as_committed() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "add-design/adds-an-empty-roof-design: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -90,10 +90,10 @@ async fn produces_committed_diff() {
 /// allowed to touch appears in it at all.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
-    let decoded: SemioKitDiff = serde_json::from_str(DIFF).expect("committed add-design diff decodes");
+    let decoded: SemioKitDiff = dsl::json::from_json_str(DIFF).expect("committed add-design diff decodes");
     assert_eq!(decoded.designs.as_ref().map(|list| list.values.len()), Some(2), "the diff carries the whole rebuilt design list");
     assert!(decoded.types.is_none() && decoded.objects.is_none() && decoded.models.is_none() && decoded.properties.is_none() && decoded.representations.is_none(), "no other kit slot may appear in the diff");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "add-design/adds-an-empty-roof-design: committed diff JSON is not canonical");
 }
@@ -101,7 +101,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioKitDiff = serde_json::from_str(DIFF).expect("committed add-design diff decodes");
+    let decoded: SemioKitDiff = dsl::json::from_json_str(DIFF).expect("committed add-design diff decodes");
     let produced = decoded.apply(&before()).expect("committed add-design diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "add-design/adds-an-empty-roof-design: committed diff did not carry before to after");
 }

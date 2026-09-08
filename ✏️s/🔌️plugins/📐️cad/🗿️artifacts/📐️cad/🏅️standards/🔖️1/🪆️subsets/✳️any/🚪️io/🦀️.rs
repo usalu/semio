@@ -412,7 +412,7 @@ fn repair_step_trailing_comma_before_close_paren(text: &str) -> String {
 fn semio_brep_snapshot_from_step_text(text: &str) -> Option<SemioBrepSnapshot> {
     let repaired = repair_step_trailing_comma_before_close_paren(text);
     let document = parse_part21(&repaired).ok()?;
-    let step_snapshot = StepSnapshot::from_part21_document(document);
+    let step_snapshot = StepSnapshot::from_part21_document(&document);
     semio_framework_plugin::resolve_ready(SemioBrepFromStep::deserialize(&step_snapshot)).ok()
 }
 

@@ -99,6 +99,9 @@
   ],
   "remoteUser": "vscode",
   "containerEnv": {
+    "NX_VERBOSE_LOGGING": "false",
+    "NX_PERF_LOGGING": "false",
+    "NX_NATIVE_LOGGING": "nx=warn",
     "DEVCONTAINER": "true",
     "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
     "PLAYWRIGHT_BROWSERS_PATH": "/workspaces/semio/node_modules/.cache/ms-playwright",

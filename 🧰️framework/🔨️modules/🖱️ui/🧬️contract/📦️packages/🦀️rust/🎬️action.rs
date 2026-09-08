@@ -465,11 +465,12 @@ impl<V: Clone> Clone for UiFixedMap<V> {
 }
 
 impl<V> UiFixedMap<V> {
+    #[expect(clippy::result_large_err, reason = "Sorted fixed-map admission returns both original inputs when order or capacity rejects them.")]
     pub fn try_push(&mut self, key: UiText, value: V) -> Result<(), (UiText, V)> {
         if self.entries.len().checked_sub(1).and_then(|index| self.entries.get(index)).is_some_and(|(last, _)| last >= &key) {
             return Err((key, value));
         }
-        self.entries.try_push((key, value)).map_err(|(key, value)| (key, value))
+        self.entries.try_push((key, value))
     }
 
     pub fn pop(&mut self) -> Option<(UiText, V)> {
@@ -685,6 +686,7 @@ struct UiCollectionHandle {
 }
 
 #[derive(Debug)]
+#[expect(clippy::large_enum_variant, reason = "Arena page slots include the bounded map key inline so moving a page needs no separate key allocation.")]
 enum UiPageValue {
     List(UiValue),
     Map(UiText, UiValue),
@@ -832,6 +834,7 @@ impl UiValueArena {
         (slot.occupied && slot.epoch == handle.epoch && slot.kind == handle.kind).then_some(slot)
     }
 
+    #[expect(clippy::result_large_err, reason = "Rejected arena admission returns the exact page and its retained value credits without allocating.")]
     fn try_push_page(&mut self, handle: UiCollectionHandle, value: UiPageValue) -> Result<(), UiPageValue> {
         let bytes = size_of::<UiPageSlot>();
         let Some(free_page_count) = self.free_page_count.checked_sub(1) else { return Err(value) };
@@ -929,16 +932,10 @@ mod retirement;
 pub use retirement::{close_ui_value_page_with_grant, BuiltTreeRetirement, UiValueRetirement, UiValueRetirementStep};
 pub(crate) use retirement::{UiArenaHandback, UiArenaHandbacks, UiTypedRetire, UiTypedRetirementCursor};
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct UiList {
     handle: Option<UiCollectionHandle>,
     len: usize,
-}
-
-impl Default for UiList {
-    fn default() -> Self {
-        Self { handle: None, len: 0 }
-    }
 }
 
 impl UiList {
@@ -1045,6 +1042,7 @@ impl UiListBuilder {
         Some(Self { handle: Some(handle), len: 0 })
     }
 
+    #[expect(clippy::result_large_err, reason = "A full or stale list builder hands back the original bounded value without allocating on refusal.")]
     pub fn push(&mut self, value: UiValue) -> Result<(), UiValue> {
         let Some(handle) = self.handle else { return Err(value) };
         let Some(next_len) = self.len.checked_add(1).filter(|len| *len <= UI_VALUE_MAX_ITEMS) else { return Err(value) };
@@ -1114,16 +1112,10 @@ impl<'de> Deserialize<'de> for UiList {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct UiMap {
     handle: Option<UiCollectionHandle>,
     len: usize,
-}
-
-impl Default for UiMap {
-    fn default() -> Self {
-        Self { handle: None, len: 0 }
-    }
 }
 
 impl UiMap {
@@ -1249,6 +1241,7 @@ impl UiMapBuilder {
         Some(Self { handle: Some(handle), len: 0, last_key: None })
     }
 
+    #[expect(clippy::result_large_err, reason = "Map admission preserves the original key allocation and value owner for retry when ordering or credits reject them.")]
     pub fn push(&mut self, key: String, value: UiValue) -> Result<(), (String, UiValue)> {
         let Some(handle) = self.handle else { return Err((key, value)) };
         let Some(fixed_key) = UiText::try_from_str(&key) else { return Err((key, value)) };
@@ -1486,6 +1479,7 @@ pub struct UiIntent {
 // also has no `#[value(...)]` equivalent regardless (would need a hand-written impl).
 #[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
+#[expect(clippy::large_enum_variant, reason = "Text stays in its fixed inline byte ceiling; collection payloads use separately credited arena handles.")]
 pub enum UiValue {
     #[default]
     Null,

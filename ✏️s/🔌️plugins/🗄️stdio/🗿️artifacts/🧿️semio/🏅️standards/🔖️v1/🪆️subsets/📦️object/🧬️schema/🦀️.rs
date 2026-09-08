@@ -7,12 +7,8 @@ use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::Sem
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
 use schema::ArtifactSchema;
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, ArtifactSchema)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.stdio.semio.object")]
 pub struct SemioObjectArtifact {
     #[state(artifact)]
@@ -21,15 +17,12 @@ pub struct SemioObjectArtifact {
     pub transform: SemioTransform,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.brep")]
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub brep: Option<store::ArtifactChild<SemioBrepSnapshot>>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.mesh")]
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.value")]
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub properties: Option<store::ArtifactChild<SemioValueSnapshot>>,
 }
 
@@ -40,14 +33,7 @@ impl Default for SemioObjectArtifact {
 }
 
 //#region 🔖️ValueCodec
-/// 🔀️ Hand-written, not derived: `brep`/`mesh`/`properties` are `store::ArtifactChild<S>`
-/// composed-artifact handles, which speak `serde` (framework-internal — `ArtifactChild<S>` derives
-/// with `#[serde(bound = "")]`, so it implements `Serialize`/`Deserialize` for ANY `S`, including
-/// an `S` that itself no longer does) rather than `ToValue`/`FromValue` directly — bridged
-/// per-field through the pre-existing `to_dsl_value`/`from_dsl_value` seam (`🌱️value/🔀️serde`)
-/// instead of widening the derive macro to understand child-slot handles. See the fan-out
-/// playbook's "composed artifact fields" trap and `📖️playbook`'s own `PlaybookArtifact` for the
-/// worked reference this mirrors.
+/// 🔀️ Encodes composite child and link fields through their first-party value contracts.
 impl dsl::ToValue for SemioObjectArtifact {
     fn to_value(&self) -> dsl::DslValue {
         dsl::DslValue::object([
@@ -78,7 +64,7 @@ impl dsl::FromValue for SemioObjectArtifact {
 impl SemioObjectArtifact {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> SemioObjectSnapshot {
-        SemioObjectSnapshot { schema: self.schema.clone(), transform: self.transform.clone(), brep: self.brep.clone(), mesh: self.mesh.clone(), properties: self.properties.clone() }
+        SemioObjectSnapshot { schema: self.schema.clone(), transform: self.transform, brep: self.brep.clone(), mesh: self.mesh.clone(), properties: self.properties.clone() }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: SemioObjectSnapshot) -> Self {

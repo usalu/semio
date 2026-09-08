@@ -45,6 +45,41 @@
             },
             "bootstrapSnapshotHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
           }
+        ],
+        "indexedDocuments": [
+          {
+            "descriptor": {
+              "spaceId": "space-α",
+              "documentId": "document-雪",
+              "artifactKind": "s.gis.map",
+              "artifactSchema": "semio.s.gis.map.v1",
+              "owner": {
+                "pluginId": "s.gis",
+                "packageId": "semio:gis",
+                "version": "1.0.0",
+                "packageHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              "packSchemaHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "bootstrapVersion": 1,
+              "bootstrapFrontier": {
+                "headSeq": 3,
+                "commitSeq": 3,
+                "epoch": 1
+              },
+              "bootstrapSnapshotHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+            },
+            "descriptorDigestV1": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            "entry": {
+              "name": "Gemeinsame Karte 雪",
+              "dialect": {
+                "artifactKind": "s.gis.map",
+                "standard": "1",
+                "subset": "any"
+              }
+            },
+            "createdAtMs": 30,
+            "createdBy": "user-owner"
+          }
         ]
       }
     },
@@ -59,6 +94,7 @@
     }
   },
   "expectedDocumentIds": ["document-雪"],
+  "expectedIndexedDocumentIds": ["document-雪"],
   "malformed": [
     "not json",
     "{}",

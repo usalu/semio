@@ -17,13 +17,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> Puzzle2dSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> Puzzle2dSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> Puzzle2dMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// ⏸️ A no-op `connect-handles` still applies cleanly and leaves the board byte-identical.
@@ -66,12 +66,12 @@ fn inverse_is_payload_derived_and_does_not_restore() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: Puzzle2dSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: Puzzle2dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "connect-handles/keeps-an-edge-the-tower-already-holds: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "connect-handles/keeps-an-edge-the-tower-already-holds: committed mutation JSON is not canonical");
 }
@@ -81,7 +81,7 @@ fn committed_json_is_canonical() {
 fn produces_committed_diff() {
     let base = before();
     let outcome = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "connect-handles/keeps-an-edge-the-tower-already-holds: produced diff differs from the committed 🔺️diff/🔣️.json");
     for member in ["nodes", "edges", "meta", "camera", "schema"] {
@@ -92,7 +92,7 @@ fn produces_committed_diff() {
 /// 🩹 Applying the committed no-op diff to `before` yields `before` again.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::puzzle2d::diff::Puzzle2dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::artifacts::puzzle2d::diff::Puzzle2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::puzzle2d::diff::Puzzle2dDiff as protocol::MutationDiff<Puzzle2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "connect-handles/keeps-an-edge-the-tower-already-holds: committed diff did not carry before to after");
 }

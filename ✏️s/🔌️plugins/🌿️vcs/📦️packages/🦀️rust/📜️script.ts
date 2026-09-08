@@ -29,6 +29,11 @@ export async function proveVcsNativeCodecReceipts(repoRoot: string): Promise<voi
   const Ajv2020 = (await import("ajv/dist/2020.js")).default;
   const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
   if (!validate(fixture)) throw new Error(`invalid VCS receipt corpus: ${JSON.stringify(validate.errors)}`);
+  const documentIdRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️fixtures/🌱️artifact-document-id-v1");
+  const documentIds = JSON.parse(readFileSync(join(documentIdRoot, "🔣️.json"), "utf8"));
+  const validateDocumentIds = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(documentIdRoot, "🧬️.schema.json"), "utf8")));
+  if (!validateDocumentIds(documentIds)) throw new Error(`invalid artifact document-id corpus: ${JSON.stringify(validateDocumentIds.errors)}`);
+  for (const row of documentIds.cases) if (/^artifact-(?!0{32}$)[0-9a-f]{32}$/u.test(row.documentId) !== row.accepted) throw new Error(`artifact document-id oracle mismatch ${row.id}`);
   const manifest = Bun.TOML.parse(readFileSync(join(owner, "📦️packages/🦀️rust/Cargo.toml"), "utf8")) as any;
   if (manifest.package.metadata.component.package !== fixture.packageId) throw new Error("VCS Cargo package identity differs from receipt owner");
   const workspace = Bun.TOML.parse(readFileSync(join(repoRoot, "Cargo.toml"), "utf8")) as any;

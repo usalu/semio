@@ -2,7 +2,7 @@
 name = "semio-framework-mesh-engine"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Pure mesh data, primitive construction, and Obj/Glb/Stl codecs — consumed only from artifact facet code (the mesh artifact's own mutation/inference internals) and from engine-to-engine callers such as brep tessellation. No authoritative state; no persistence; no public compute reachable outside a facet or another engine."
 
 [package.metadata.semio]

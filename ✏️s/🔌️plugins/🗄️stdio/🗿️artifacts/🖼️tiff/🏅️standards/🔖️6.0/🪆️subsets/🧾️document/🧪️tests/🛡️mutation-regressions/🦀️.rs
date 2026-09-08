@@ -1,39 +1,13 @@
 //! 🧪️ Preserved raster sparse-diff and codec regression laws.
-use crate::artifacts::tiff::schema::diff::{
-    self, dec_byte_order, dec_field_type, dec_ifd, dec_ifd_bin, dec_list, dec_str, dec_values, dec_values_bin, enc_byte_order, enc_field_type, enc_ifd, enc_ifd_bin, enc_list, enc_str, enc_values, enc_values_bin, hex_decode, hex_encode, parse_num,
-    read_bytes_lp, read_str_lp, split_top_level, strip_brackets, write_bytes_lp, write_str_lp, TiffDiff,
-};
+use crate::artifacts::tiff::schema::diff::TiffDiff;
 #[cfg(test)]
 use crate::artifacts::tiff::schema::snapshot::TiffTag;
 use crate::artifacts::tiff::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffValues};
 use crate::artifacts::tiff::TiffSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
-use serde::{Deserialize, Serialize};
 
 use crate::artifacts::tiff::schema::mutations::*;
-//#region 🔖️DemoCases
-/// 🧪️ P2-FG2: representative `TiffMutation` values (every variant, incl. every `TiffValues`
-/// field-type family the recursive `SetTag` payload can carry) — the single source of truth
-/// reused by `ops_grammar_conformance_law`/`protocol_walk_law` below (`⚙️engine/🦀️.rs`).
-#[cfg(test)]
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn regression_mutation_cases() -> Vec<TiffMutation> {
-    vec![
-        TiffMutation::ChangeByteOrder(crate::artifacts::tiff::schema::mutations::ChangeByteOrderMutation { byte_order: TiffByteOrder::BigEndian }),
-        TiffMutation::InsertIfd(crate::artifacts::tiff::schema::mutations::InsertIfdMutation { index: 1, ifd: TiffIfd { pixels: Vec::new(), entries: vec![TiffTag { tag: 270, kind: TiffFieldType::Short, values: TiffValues::Short(vec![1]) }] } }),
-        TiffMutation::RemoveIfd(crate::artifacts::tiff::schema::mutations::RemoveIfdMutation { index: 0 }),
-        TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("An Author".into()) }),
-        TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 282, kind: TiffFieldType::Rational, values: TiffValues::Rational(vec![(72, 1)]) }),
-        TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 700, kind: TiffFieldType::Undefined, values: TiffValues::Undefined(vec![0xde, 0xad]) }),
-        TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 33421, kind: TiffFieldType::SRational, values: TiffValues::SRational(vec![(-3, 10)]) }),
-        TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 65001, kind: TiffFieldType::Float, values: TiffValues::Float(vec![1.5, -2.25]) }),
-        TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 65002, kind: TiffFieldType::Double, values: TiffValues::Double(vec![3.14159265358979]) }),
-        TiffMutation::RemoveTag(crate::artifacts::tiff::schema::mutations::RemoveTagMutation { ifd_index: 0, tag: 296 }),
-        TiffMutation::ReplacePixels(crate::artifacts::tiff::schema::mutations::ReplacePixelsMutation { pixels: vec![9u8; 16] }),
-    ]
-}
-//#endregion 🔖️DemoCases
 
 //#region Tests
 #[cfg(test)]
@@ -111,18 +85,18 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn all_variants(base: &TiffSnapshot) -> Vec<TiffMutation> {
         vec![
-            TiffMutation::ChangeByteOrder(crate::artifacts::tiff::schema::mutations::ChangeByteOrderMutation { byte_order: TiffByteOrder::BigEndian }),
-            TiffMutation::InsertIfd(crate::artifacts::tiff::schema::mutations::InsertIfdMutation { index: 1, ifd: TiffIfd { pixels: Vec::new(), entries: vec![short_tag(270, 1)] } }),
-            TiffMutation::RemoveIfd(crate::artifacts::tiff::schema::mutations::RemoveIfdMutation { index: 0 }),
-            TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 296, kind: TiffFieldType::Short, values: TiffValues::Short(vec![3]) }), // modify existing
-            TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("An Author".into()) }), // create new
-            TiffMutation::RemoveTag(crate::artifacts::tiff::schema::mutations::RemoveTagMutation { ifd_index: 0, tag: 296 }),
-            TiffMutation::ReplacePixels(crate::artifacts::tiff::schema::mutations::ReplacePixelsMutation { pixels: vec![9u8; base.pixels.len()] }),
+            TiffMutation::ChangeByteOrder(ChangeByteOrderMutation { byte_order: TiffByteOrder::BigEndian }),
+            TiffMutation::InsertIfd(InsertIfdMutation { index: 1, ifd: TiffIfd { pixels: Vec::new(), entries: vec![short_tag(270, 1)] } }),
+            TiffMutation::RemoveIfd(RemoveIfdMutation { index: 0 }),
+            TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 296, kind: TiffFieldType::Short, values: TiffValues::Short(vec![3]) }), // modify existing
+            TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("An Author".into()) }), // create new
+            TiffMutation::RemoveTag(RemoveTagMutation { ifd_index: 0, tag: 296 }),
+            TiffMutation::ReplacePixels(ReplacePixelsMutation { pixels: vec![9u8; base.pixels.len()] }),
             // Out-of-range targets: graceful no-ops, still law-compliant.
-            TiffMutation::RemoveIfd(crate::artifacts::tiff::schema::mutations::RemoveIfdMutation { index: 99 }),
-            TiffMutation::RemoveTag(crate::artifacts::tiff::schema::mutations::RemoveTagMutation { ifd_index: 99, tag: 1 }),
-            TiffMutation::RemoveTag(crate::artifacts::tiff::schema::mutations::RemoveTagMutation { ifd_index: 0, tag: 9999 }),
-            TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 99, tag: 1, kind: TiffFieldType::Byte, values: TiffValues::Byte(vec![1]) }),
+            TiffMutation::RemoveIfd(RemoveIfdMutation { index: 99 }),
+            TiffMutation::RemoveTag(RemoveTagMutation { ifd_index: 99, tag: 1 }),
+            TiffMutation::RemoveTag(RemoveTagMutation { ifd_index: 0, tag: 9999 }),
+            TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 99, tag: 1, kind: TiffFieldType::Byte, values: TiffValues::Byte(vec![1]) }),
         ]
     }
 
@@ -179,55 +153,55 @@ mod tests {
         // shift case).
         assert_absorb_law(
             &base,
-            TiffMutation::InsertIfd(crate::artifacts::tiff::schema::mutations::InsertIfdMutation { index: 1, ifd: TiffIfd { pixels: Vec::new(), entries: vec![short_tag(1, 1)] } }),
-            TiffMutation::RemoveIfd(crate::artifacts::tiff::schema::mutations::RemoveIfdMutation { index: 0 }),
+            TiffMutation::InsertIfd(InsertIfdMutation { index: 1, ifd: TiffIfd { pixels: Vec::new(), entries: vec![short_tag(1, 1)] } }),
+            TiffMutation::RemoveIfd(RemoveIfdMutation { index: 0 }),
         );
 
         // IFD-level, Insert+Insert-same-index: both survive.
         assert_absorb_law(
             &base,
-            TiffMutation::InsertIfd(crate::artifacts::tiff::schema::mutations::InsertIfdMutation { index: 1, ifd: TiffIfd { pixels: Vec::new(), entries: vec![short_tag(2, 2)] } }),
-            TiffMutation::InsertIfd(crate::artifacts::tiff::schema::mutations::InsertIfdMutation { index: 1, ifd: TiffIfd { pixels: Vec::new(), entries: vec![short_tag(3, 3)] } }),
+            TiffMutation::InsertIfd(InsertIfdMutation { index: 1, ifd: TiffIfd { pixels: Vec::new(), entries: vec![short_tag(2, 2)] } }),
+            TiffMutation::InsertIfd(InsertIfdMutation { index: 1, ifd: TiffIfd { pixels: Vec::new(), entries: vec![short_tag(3, 3)] } }),
         );
 
         // Tag-level (id-keyed), Add+SetField: the second mutation patches directly into the
         // still-pending added tag.
         assert_absorb_law(
             &base,
-            TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("orig".into()) }),
-            TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("patched".into()) }),
+            TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("orig".into()) }),
+            TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("patched".into()) }),
         );
 
         // Tag-level, Modify+Remove: a pending field patch on a since-removed base tag vanishes.
         assert_absorb_law(
             &base,
-            TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 296, kind: TiffFieldType::Short, values: TiffValues::Short(vec![7]) }),
-            TiffMutation::RemoveTag(crate::artifacts::tiff::schema::mutations::RemoveTagMutation { ifd_index: 0, tag: 296 }),
+            TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 296, kind: TiffFieldType::Short, values: TiffValues::Short(vec![7]) }),
+            TiffMutation::RemoveTag(RemoveTagMutation { ifd_index: 0, tag: 296 }),
         );
 
         // Tag-level, Add then annihilate the very same add.
         assert_absorb_law(
             &base,
-            TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 317, kind: TiffFieldType::Byte, values: TiffValues::Byte(vec![1]) }),
-            TiffMutation::RemoveTag(crate::artifacts::tiff::schema::mutations::RemoveTagMutation { ifd_index: 0, tag: 317 }),
+            TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 317, kind: TiffFieldType::Byte, values: TiffValues::Byte(vec![1]) }),
+            TiffMutation::RemoveTag(RemoveTagMutation { ifd_index: 0, tag: 317 }),
         );
 
         // Two unrelated scalar sets absorb via LWW.
         assert_absorb_law(
             &base,
-            TiffMutation::ChangeByteOrder(crate::artifacts::tiff::schema::mutations::ChangeByteOrderMutation { byte_order: TiffByteOrder::BigEndian }),
-            TiffMutation::ChangeByteOrder(crate::artifacts::tiff::schema::mutations::ChangeByteOrderMutation { byte_order: TiffByteOrder::LittleEndian }),
+            TiffMutation::ChangeByteOrder(ChangeByteOrderMutation { byte_order: TiffByteOrder::BigEndian }),
+            TiffMutation::ChangeByteOrder(ChangeByteOrderMutation { byte_order: TiffByteOrder::LittleEndian }),
         );
     }
 
     #[semio_framework_async_macros::async_test]
     async fn absorb_law_associativity() {
         let base = base_snapshot();
-        let d1 = TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("a".into()) }).diff(&base);
+        let d1 = TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("a".into()) }).diff(&base);
         let s1 = d1.diff().apply(&base).unwrap();
-        let d2 = TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("a2".into()) }).diff(&s1);
+        let d2 = TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("a2".into()) }).diff(&s1);
         let s2 = d2.diff().apply(&s1).unwrap();
-        let d3 = TiffMutation::RemoveTag(crate::artifacts::tiff::schema::mutations::RemoveTagMutation { ifd_index: 0, tag: 296 }).diff(&s2);
+        let d3 = TiffMutation::RemoveTag(RemoveTagMutation { ifd_index: 0, tag: 296 }).diff(&s2);
         let s3 = d3.diff().apply(&s2).unwrap();
 
         // (d1∘d2)∘d3
@@ -334,13 +308,13 @@ mod tests {
     async fn out_of_range_mutation_is_noop_not_panic() {
         let base = base_snapshot();
         let mut snap = base.clone();
-        apply_tiff_mutation(&mut snap, &TiffMutation::RemoveIfd(crate::artifacts::tiff::schema::mutations::RemoveIfdMutation { index: 42 }));
+        apply_tiff_mutation(&mut snap, &TiffMutation::RemoveIfd(RemoveIfdMutation { index: 42 }));
         assert_eq!(snap, base);
-        apply_tiff_mutation(&mut snap, &TiffMutation::RemoveTag(crate::artifacts::tiff::schema::mutations::RemoveTagMutation { ifd_index: 42, tag: 1 }));
+        apply_tiff_mutation(&mut snap, &TiffMutation::RemoveTag(RemoveTagMutation { ifd_index: 42, tag: 1 }));
         assert_eq!(snap, base);
-        apply_tiff_mutation(&mut snap, &TiffMutation::RemoveTag(crate::artifacts::tiff::schema::mutations::RemoveTagMutation { ifd_index: 0, tag: 9999 }));
+        apply_tiff_mutation(&mut snap, &TiffMutation::RemoveTag(RemoveTagMutation { ifd_index: 0, tag: 9999 }));
         assert_eq!(snap, base);
-        apply_tiff_mutation(&mut snap, &TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 42, tag: 1, kind: TiffFieldType::Byte, values: TiffValues::Byte(vec![1]) }));
+        apply_tiff_mutation(&mut snap, &TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 42, tag: 1, kind: TiffFieldType::Byte, values: TiffValues::Byte(vec![1]) }));
         assert_eq!(snap, base);
     }
 
@@ -353,26 +327,26 @@ mod tests {
     async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         let mutations = vec![
-            TiffMutation::ChangeByteOrder(crate::artifacts::tiff::schema::mutations::ChangeByteOrderMutation { byte_order: TiffByteOrder::BigEndian }),
-            TiffMutation::InsertIfd(crate::artifacts::tiff::schema::mutations::InsertIfdMutation { index: 1, ifd: TiffIfd { pixels: Vec::new(), entries: vec![short_tag(270, 1)] } }),
-            TiffMutation::RemoveIfd(crate::artifacts::tiff::schema::mutations::RemoveIfdMutation { index: 0 }),
-            TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 256, kind: TiffFieldType::Long, values: TiffValues::Long(vec![4]) }),
-            TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 258, kind: TiffFieldType::Short, values: TiffValues::Short(vec![8, 8, 8]) }),
-            TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("An Author".into()) }),
-            TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 282, kind: TiffFieldType::Rational, values: TiffValues::Rational(vec![(72, 1), (0, 1)]) }),
-            TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 700, kind: TiffFieldType::Undefined, values: TiffValues::Undefined(vec![0xde, 0xad, 0xbe, 0xef]) }),
-            TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 1, kind: TiffFieldType::Byte, values: TiffValues::Byte(vec![1, 2, 3]) }),
-            TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 2, kind: TiffFieldType::SByte, values: TiffValues::SByte(vec![-1, -2, 3]) }),
-            TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 3, kind: TiffFieldType::SShort, values: TiffValues::SShort(vec![-100, 200]) }),
-            TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 4, kind: TiffFieldType::SLong, values: TiffValues::SLong(vec![-100000]) }),
-            TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 5, kind: TiffFieldType::SRational, values: TiffValues::SRational(vec![(-3, 10)]) }),
-            TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 6, kind: TiffFieldType::Float, values: TiffValues::Float(vec![1.5, -2.25]) }),
-            TiffMutation::ReplaceTag(crate::artifacts::tiff::schema::mutations::ReplaceTagMutation { ifd_index: 0, tag: 7, kind: TiffFieldType::Double, values: TiffValues::Double(vec![3.14159265358979]) }),
-            TiffMutation::RemoveTag(crate::artifacts::tiff::schema::mutations::RemoveTagMutation { ifd_index: 0, tag: 296 }),
-            TiffMutation::ReplacePixels(crate::artifacts::tiff::schema::mutations::ReplacePixelsMutation { pixels: vec![9u8; base.pixels.len()] }),
+            TiffMutation::ChangeByteOrder(ChangeByteOrderMutation { byte_order: TiffByteOrder::BigEndian }),
+            TiffMutation::InsertIfd(InsertIfdMutation { index: 1, ifd: TiffIfd { pixels: Vec::new(), entries: vec![short_tag(270, 1)] } }),
+            TiffMutation::RemoveIfd(RemoveIfdMutation { index: 0 }),
+            TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 256, kind: TiffFieldType::Long, values: TiffValues::Long(vec![4]) }),
+            TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 258, kind: TiffFieldType::Short, values: TiffValues::Short(vec![8, 8, 8]) }),
+            TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("An Author".into()) }),
+            TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 282, kind: TiffFieldType::Rational, values: TiffValues::Rational(vec![(72, 1), (0, 1)]) }),
+            TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 700, kind: TiffFieldType::Undefined, values: TiffValues::Undefined(vec![0xde, 0xad, 0xbe, 0xef]) }),
+            TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 1, kind: TiffFieldType::Byte, values: TiffValues::Byte(vec![1, 2, 3]) }),
+            TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 2, kind: TiffFieldType::SByte, values: TiffValues::SByte(vec![-1, -2, 3]) }),
+            TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 3, kind: TiffFieldType::SShort, values: TiffValues::SShort(vec![-100, 200]) }),
+            TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 4, kind: TiffFieldType::SLong, values: TiffValues::SLong(vec![-100000]) }),
+            TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 5, kind: TiffFieldType::SRational, values: TiffValues::SRational(vec![(-3, 10)]) }),
+            TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 6, kind: TiffFieldType::Float, values: TiffValues::Float(vec![1.5, -2.25]) }),
+            TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index: 0, tag: 7, kind: TiffFieldType::Double, values: TiffValues::Double(vec![3.14159265358979]) }),
+            TiffMutation::RemoveTag(RemoveTagMutation { ifd_index: 0, tag: 296 }),
+            TiffMutation::ReplacePixels(ReplacePixelsMutation { pixels: vec![9u8; base.pixels.len()] }),
             // Out-of-range targets: still valid grammar, no special-casing needed.
-            TiffMutation::RemoveIfd(crate::artifacts::tiff::schema::mutations::RemoveIfdMutation { index: 99 }),
-            TiffMutation::RemoveTag(crate::artifacts::tiff::schema::mutations::RemoveTagMutation { ifd_index: 99, tag: 1 }),
+            TiffMutation::RemoveIfd(RemoveIfdMutation { index: 99 }),
+            TiffMutation::RemoveTag(RemoveTagMutation { ifd_index: 99, tag: 1 }),
         ];
         for mutation in mutations {
             let printed = mutation.print_op();

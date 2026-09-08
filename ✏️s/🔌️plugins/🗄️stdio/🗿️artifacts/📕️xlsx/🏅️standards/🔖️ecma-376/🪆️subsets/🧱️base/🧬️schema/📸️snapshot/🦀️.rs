@@ -22,6 +22,7 @@ use schema::ArtifactSchema;
 /// `<v>` at all).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
+#[derive(Default)]
 pub enum XlsxCellValue {
     Number(f64),
     SharedString(usize),
@@ -32,14 +33,10 @@ pub enum XlsxCellValue {
         #[value(default, skip_serializing_if = "Option::is_none")]
         cached: Option<Box<XlsxCellValue>>,
     },
+    #[default]
     Empty,
 }
 
-impl Default for XlsxCellValue {
-    fn default() -> Self {
-        Self::Empty
-    }
-}
 
 /// 🧮 One worksheet cell, addressed by `(row, col)` rather than an A1-style string — `row` is
 /// 1-based (the literal SpreadsheetML `<row r="N">` index), `col` is 0-based (matches
@@ -122,7 +119,7 @@ impl store::ArtifactDsl for XlsxSnapshot {
             Err(_) => text,
         };
         let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
-        if hex.len() % 2 != 0 {
+        if !hex.len().is_multiple_of(2) {
             return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
         }
         let mut bytes = Vec::with_capacity(hex.len() / 2);

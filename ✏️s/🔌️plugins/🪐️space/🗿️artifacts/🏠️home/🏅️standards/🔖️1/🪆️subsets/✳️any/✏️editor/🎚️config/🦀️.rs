@@ -56,6 +56,7 @@ struct DirectorySpaceWire {
     view: store::os_directory::SpaceView,
     members: Vec<store::os_directory::MemberView>,
     documents: Vec<store::os_directory::DocumentDescriptor>,
+    indexed_documents: Vec<store::os_directory::DirectoryIndexedDocumentViewV1>,
 }
 
 #[derive(value_derive::ToValue, value_derive::FromValue)]
@@ -72,7 +73,7 @@ fn directory_to_json(model: &store::os_directory::DirectoryReadModel) -> String 
         spaces: model
             .spaces
             .iter()
-            .map(|(id, space)| (id.clone(), DirectorySpaceWire { view: space.view.clone(), members: space.members.clone(), documents: space.documents.clone() }))
+            .map(|(id, space)| (id.clone(), DirectorySpaceWire { view: space.view.clone(), members: space.members.clone(), documents: space.documents.clone(), indexed_documents: space.indexed_documents.clone() }))
             .collect(),
         cursor: model.cursor,
         users: model.users.clone(),
@@ -87,7 +88,7 @@ fn directory_from_json(json: &str) -> Result<store::os_directory::DirectoryReadM
         spaces: wire
             .spaces
             .into_iter()
-            .map(|(id, space)| (id, store::os_directory::DirectorySpace { view: space.view, members: space.members, documents: space.documents }))
+            .map(|(id, space)| (id, store::os_directory::DirectorySpace { view: space.view, members: space.members, documents: space.documents, indexed_documents: space.indexed_documents }))
             .collect(),
         cursor: wire.cursor,
         users: wire.users,

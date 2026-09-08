@@ -1,0 +1,14 @@
+{
+  "schema": "semio.framework.plugin.artifact-document-id/v1",
+  "cases": [
+    { "id": "exact", "documentId": "artifact-11223344556677889900aabbccddeeff", "accepted": true },
+    { "id": "empty", "documentId": "", "accepted": false },
+    { "id": "unprefixed", "documentId": "11223344556677889900aabbccddeeff", "accepted": false },
+    { "id": "zero", "documentId": "artifact-00000000000000000000000000000000", "accepted": false },
+    { "id": "uppercase", "documentId": "artifact-11223344556677889900AABBCCDDEEFF", "accepted": false },
+    { "id": "short", "documentId": "artifact-11223344556677889900aabbccddee", "accepted": false },
+    { "id": "long", "documentId": "artifact-11223344556677889900aabbccddeeff00", "accepted": false },
+    { "id": "non-hex", "documentId": "artifact-11223344556677889900aabbccddeefg", "accepted": false },
+    { "id": "foreign-prefix", "documentId": "document-11223344556677889900aabbccddeeff", "accepted": false }
+  ]
+}

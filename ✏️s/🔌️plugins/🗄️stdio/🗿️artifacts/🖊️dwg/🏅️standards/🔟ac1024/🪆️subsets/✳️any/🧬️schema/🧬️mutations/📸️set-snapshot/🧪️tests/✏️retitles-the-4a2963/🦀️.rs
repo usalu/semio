@@ -20,13 +20,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> DwgSnapshot {
-    serde_json::from_str(BEFORE).expect("before AC1024 snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("before AC1024 snapshot decodes")
 }
 fn expected_after() -> DwgSnapshot {
-    serde_json::from_str(AFTER).expect("after AC1024 snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("after AC1024 snapshot decodes")
 }
 fn mutation() -> DwgMutation {
-    serde_json::from_str(MUTATION).expect("set-snapshot mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("set-snapshot mutation decodes")
 }
 
 /// ▶️ `set-snapshot` carries the drawing to exactly the committed `after`: the summary block now
@@ -63,12 +63,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: DwgSnapshot = serde_json::from_str(text).expect("AC1024 snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("AC1024 snapshot encodes");
+        let decoded: DwgSnapshot = dsl::json::from_json_str(text).expect("AC1024 snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("AC1024 snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("AC1024 snapshot reparses");
         assert_eq!(reencoded, original, "dwg-ac1024/set-snapshot: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("set-snapshot mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("set-snapshot mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("set-snapshot mutation reparses");
     assert_eq!(reencoded, original, "dwg-ac1024/set-snapshot: committed mutation JSON is not canonical");
 }
@@ -93,7 +93,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <DwgMutation as protocol::Mutation<DwgSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced DWG diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced DWG diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed DWG diff decodes");
     assert_eq!(produced, committed, "dwg-ac1024/set-snapshot: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -102,11 +102,11 @@ async fn produces_committed_diff() {
 /// alone.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: DwgDiff = serde_json::from_str(DIFF).expect("committed DWG diff decodes");
+    let decoded: DwgDiff = dsl::json::from_json_str(DIFF).expect("committed DWG diff decodes");
     assert!(decoded.version.is_none() && decoded.maintenance_version.is_none() && decoded.codepage.is_none(), "dwg-ac1024/set-snapshot: the version preamble must stay out of the delta");
     assert!(decoded.drawing.is_none() && decoded.header.is_none() && decoded.auxiliary_header.is_none() && decoded.application.is_none(), "dwg-ac1024/set-snapshot: no block other than summary may be re-emitted");
     assert_eq!(decoded.summary.as_ref().map(|summary| summary.revision_number.as_str()), Some("2"), "dwg-ac1024/set-snapshot: the whole-value summary must carry the bumped revision number");
-    let reencoded = serde_json::to_value(&decoded).expect("DWG diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("DWG diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed DWG diff reparses");
     assert_eq!(reencoded, original, "dwg-ac1024/set-snapshot: committed diff JSON is not canonical");
 }
@@ -115,7 +115,7 @@ async fn committed_diff_is_canonical() {
 /// whole-value summary slot is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: DwgDiff = serde_json::from_str(DIFF).expect("committed DWG diff decodes");
+    let decoded: DwgDiff = dsl::json::from_json_str(DIFF).expect("committed DWG diff decodes");
     let produced = <DwgDiff as protocol::MutationDiff<DwgSnapshot>>::apply(&decoded, &before()).expect("committed DWG diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "dwg-ac1024/set-snapshot: committed diff did not carry before to after");
 }

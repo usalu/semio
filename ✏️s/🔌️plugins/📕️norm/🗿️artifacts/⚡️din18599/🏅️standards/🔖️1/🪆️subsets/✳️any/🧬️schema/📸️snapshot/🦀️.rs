@@ -29,6 +29,7 @@ pub struct Din18599Snapshot {
     pub h_v: f64,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.table")]
+    #[cfg_attr(test, serde(with = "crate::document::child_identity_oracle"))]
     pub climate: Din18599ClimateChild,
     #[state(artifact)]
     pub internal_gains_w_m2: f64,

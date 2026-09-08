@@ -6,15 +6,15 @@
 //#region 🔌️Adapters
 import { ephemeralBox } from "@semio-tech/framework";
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { type Dirent, chmodSync, closeSync, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readSync, realpathSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
+import { type Dirent, chmodSync, closeSync, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readSync, realpathSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
 import { availableParallelism, devNull, homedir, tmpdir } from "node:os";
-import { basename, dirname, isAbsolute, join, normalize, relative, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, normalize, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import { fixedContractFilename, loadTaxonomy, taxonomyRelativePathIsExcluded } from "../../🔍️discovery/🟦️.ts";
 //#endregion 🔌️Adapters
 
-import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts";
+import type { PlaygroundSelection as PlaygroundVariant } from "../../🎮️playground/🟦️.ts";
 
 import { PLAYGROUND_LOCKED_EXAMPLE_ENV, loadFrameworkOsPlaygroundCatalog } from "../../🎮️playground/🟦️.ts";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
@@ -1014,74 +1014,8 @@ export async function dispatchPolicyArgv(segments: string[], scriptUrl: string):
 
 //#region 🔖️bundle-script
 //#region 🔖️Script
-/** 🧭️Bundle command; `run` receives argv segments after the subcommand (e.g. `dev mcp` → `["mcp"]`). */
-export abstract class Script {
-  protected readonly root: string;
-  protected readonly repoRoot: string;
-
-  constructor(root: string, repoRoot: string) {
-    this.root = root;
-    this.repoRoot = repoRoot;
-  }
-  abstract run(segments: string[]): void | Promise<void>;
-}
-
-/** 📦️Bundle-scoped command with `root` at the package directory. */
-export abstract class BundleScript extends Script {
-  constructor(bundleRoot: string, repoRoot?: string) {
-    super(bundleRoot, repoRoot ?? findRepoRoot(bundleRoot));
-  }
-}
-//#endregion 🔖️Script
-
-//#region 🔖️Router
-export type ScriptCommand = new (root: string, repoRoot: string) => Script;
-
-/** 🧭️Declarative subcommand registry for a single `script.ts`. */
-export class ScriptRouter {
-  private readonly commands = new Map<string, ScriptCommand>();
-  readonly bundleRoot: string;
-  readonly repoRoot: string;
-
-  constructor(bundleRoot: string, repoRoot: string = findRepoRoot(bundleRoot)) {
-    this.bundleRoot = bundleRoot;
-    this.repoRoot = repoRoot;
-  }
-
-  /** 📌️Registers a subcommand implemented by a `Script` subclass. */
-  register(name: string, Command: ScriptCommand): this {
-    this.commands.set(name, Command);
-    return this;
-  }
-
-  /** 📋️Human-readable usage line for this router. */
-  usage(): string {
-    const names = [...this.commands.keys()];
-    if (names.length === 0) return "bun ./📜️script.ts policy";
-    return `bun ./📜️script.ts <${names.join("|")}> [args…]`;
-  }
-
-  /** 📊️Whether any subcommands are registered (policy-only bundles may have none). */
-  hasCommands(): boolean {
-    return this.commands.size > 0;
-  }
-
-  /** ▶️Dispatches `segments[0]` to a registered command class. */
-  async run(segments: string[]): Promise<void> {
-    const name = segments[0];
-    if (!name) {
-      console.error(`usage: ${this.usage()}`);
-      process.exit(1);
-    }
-    const Command = this.commands.get(name);
-    if (!Command) {
-      console.error(`unknown command ${JSON.stringify(name)}`);
-      console.error(`usage: ${this.usage()}`);
-      process.exit(1);
-    }
-    await Promise.resolve(new Command(this.bundleRoot, this.repoRoot).run(segments.slice(1)));
-  }
-}
+import { Script, BundleScript, ScriptRouter, findRepoRoot, type ScriptCommand } from "../../🏃️process/🧭️routing/🟦️.ts";
+export { Script, BundleScript, ScriptRouter, findRepoRoot, type ScriptCommand };
 
 export type RunBundleScriptMainOptions = {
   defaultCommand?: string;
@@ -1131,17 +1065,6 @@ export function dispatchSubcommand(segments: string[], handlers: Record<string, 
   return handler(segments.slice(1));
 }
 
-/** 📁️Walks parents until the monorepo root (`nx.json` + workspace `package.json`). */
-export function findRepoRoot(start: string): string {
-  let dir = start?.trim() ? start : getWorkspaceRoot();
-  for (let i = 0; i < 32; i++) {
-    if (existsSync(join(dir, "nx.json")) && existsSync(join(dir, "package.json"))) return dir;
-    const parent = dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-  return getWorkspaceRoot();
-}
 //#endregion 🔖️Router
 
 //#region ⏱️Budget
@@ -1895,17 +1818,6 @@ export const EXACT_CARGO_ACTIVE_LEASE_DIRECTORY_PREFIX = ".exact-cargo-laws-acti
 export const EXACT_CARGO_ACTIVE_LEASE_MANIFEST = "lease.json";
 export const EXACT_CARGO_ACTIVE_LEASE_MAX_AGE_MS = 120_000;
 
-/** 🧭️ Finds the nearest ticket-generated ancestor required by an exact Cargo evidence path. */
-function exactCargoGeneratedRoot(path: string): string {
-  let cursor = resolve(path);
-  while (basename(cursor) !== "🗑️generated") {
-    const parent = dirname(cursor);
-    if (parent === cursor) throw new Error("Exact Cargo evidence path has no ticket-generated ancestor");
-    cursor = parent;
-  }
-  return cursor;
-}
-
 /** 🛡️ Recognizes only a fresh lease owned by a live exact-Cargo runner process. */
 export function exactCargoGeneratedOutputHasLiveLease(root: string): boolean {
   const stack = [{ path: root, depth: 0 }];
@@ -2059,9 +1971,10 @@ export async function runExactCargoLaws(options: ExactCargoLawOptions, port: Exa
   const configuredEnv = options.env ?? process.env;
   const artifactRoot = options.artifactDir ?? configuredEnv.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifactRoot || !isAbsolute(artifactRoot) || !artifactRoot.split(/[\\/]/u).includes("🗑️generated")) throw new Error("Exact Cargo laws require an absolute ticket-generated artifactDir or SEMIO_TEST_ARTIFACT_DIR");
-  const cargoTargetDir = configuredEnv.CARGO_TARGET_DIR ?? join(artifactRoot, "cargo-target");
-  if (!isAbsolute(cargoTargetDir) || !cargoTargetDir.split(/[\\/]/u).includes("🗑️generated")) throw new Error("Exact Cargo laws require an absolute ticket-generated Cargo target");
-  if (exactCargoGeneratedRoot(artifactRoot) !== exactCargoGeneratedRoot(cargoTargetDir)) throw new Error("Exact Cargo evidence and target must share one ticket-generated root");
+  const cargoTargetDir = configuredEnv.CARGO_TARGET_DIR ? resolve(options.cwd, configuredEnv.CARGO_TARGET_DIR) : join(getWorkspaceRoot(), "target");
+  const targetBoundary = process.platform === "win32" ? cargoTargetDir.toLowerCase() : cargoTargetDir;
+  const sourceBoundary = process.platform === "win32" ? resolve(options.cwd).toLowerCase() : resolve(options.cwd);
+  if (sourceBoundary === targetBoundary || sourceBoundary.startsWith(targetBoundary + sep)) throw new Error("Cargo target must not contain the source workspace");
   const env = { ...configuredEnv, CARGO_TARGET_DIR: cargoTargetDir };
   const nativeEnv = { ...env, ...options.nativeEnv, CARGO_TARGET_DIR: cargoTargetDir };
   if (!isAbsolute(options.cwd) || !options.groups.length || options.groups.length > 64) throw new Error("Exact Cargo laws require a bounded nonempty target list and absolute cwd");
@@ -2477,8 +2390,10 @@ export function devToolingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv 
   env.NX_NATIVE_COMMAND_RUNNER ??= "false";
   env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT ??= "false";
   env.NX_TUI ??= "false";
-  // 🧩️ Nx plugin-worker IPC corrupts non-BMP emoji path segments (🔨️→U+FFFD); keep plugins in-process.
   env.NX_ISOLATE_PLUGINS = "false";
+  env.NX_VERBOSE_LOGGING ??= "false";
+  env.NX_PERF_LOGGING ??= "false";
+  env.NX_NATIVE_LOGGING ??= "nx=warn";
   env.RUSTC_WRAPPER ??= "";
   return env;
 }
@@ -2929,7 +2844,12 @@ export function wasmBindgenVersion(lock: string): string {
 export function resolveWasmBindgenBin(repoRoot = getWorkspaceRoot(), env: NodeJS.ProcessEnv = process.env): string {
   const version = wasmBindgenVersion(readFileSync(join(repoRoot, "Cargo.lock"), "utf8"));
   if (env.WASM_BINDGEN_VERSION && env.WASM_BINDGEN_VERSION !== version) throw new Error("WASM_BINDGEN_VERSION disagrees with Cargo.lock");
-  const command = env.SEMIO_WASM_BINDGEN_BIN ? resolve(repoRoot, env.SEMIO_WASM_BINDGEN_BIN) : Bun.which("wasm-bindgen", { PATH: env.PATH });
+  const runtime = (globalThis as { readonly Bun?: unknown }).Bun;
+  const which = typeof runtime === "object" && runtime !== null ? (runtime as { readonly which?: unknown }).which : undefined;
+  if (!env.SEMIO_WASM_BINDGEN_BIN && typeof which !== "function") throw new Error("wasm-bindgen resolution requires Bun.which.");
+  const command = env.SEMIO_WASM_BINDGEN_BIN
+    ? resolve(repoRoot, env.SEMIO_WASM_BINDGEN_BIN)
+    : (which as (name: string, options: { readonly PATH?: string }) => string | null)("wasm-bindgen", { PATH: env.PATH });
   if (!command) throw new Error("Run bun nx run workspace:deps-wasm to provision wasm-bindgen");
   const probe = runProbe(command, ["--version"], { env });
   if (probe.status !== 0 || probe.stdout.trim() !== `wasm-bindgen ${version}`) throw new Error(`wasm-bindgen ${version} is required; run bun nx run workspace:deps-wasm`);
@@ -2961,6 +2881,17 @@ export function wasmBuildEnvironment(repoRoot: string, env: NodeJS.ProcessEnv = 
   return { ...env, CARGO_TARGET_DIR: resolve(repoRoot, env.CARGO_TARGET_DIR ?? ".🧬semio/🦑️repo/⚡️cache/cargo/browser") };
 }
 
+/** 📂️ Validates one portable compiler output owner without executing a compiler. */
+export function wasmOutputDirectory(rsDir: string, outputDirectory: string): string {
+  if (!outputDirectory || /[/\\:*?"<>|\u0000]|[. ]$/u.test(outputDirectory)) throw new Error("WASM outputDirectory must be one portable literal directory name");
+  return join(rsDir, outputDirectory);
+}
+
+/** 🎚️ Keeps wasm-pack profile flags separate from Cargo's explicit profile selection. */
+export function wasmBuildArguments(profile: string): { pack: string[]; cargo: string[] } {
+  return { pack: profile === "release" ? ["--release"] : profile === "dev" ? ["--dev"] : ["--profile", profile], cargo: ["--profile", profile] };
+}
+
 /** 📦️`wasm-pack build` for `--target web`, restores `pkg/package.json`, verifies wasm output. */
 export function runWasmPackWebBuild(opts: {
   rsDir: string;
@@ -2979,12 +2910,10 @@ export function runWasmPackWebBuild(opts: {
   shipProfile?: string;
 }): void {
   const { rsDir, logPrefix, pkg, wasmBaseName, outputDirectory = "pkg", threads = false, cargoFeatures = [], noDefaultFeatures = false, shipProfile = "release" } = opts;
-  if (!outputDirectory || /[/\\:*?"<>|\u0000]|[. ]$/u.test(outputDirectory)) throw new Error("WASM outputDirectory must be one portable literal directory name");
+  const pkgDir = wasmOutputDirectory(rsDir, outputDirectory);
   const profile = semioBuildMode() === "ship" ? shipProfile : "dev";
-  const pkgDir = join(rsDir, outputDirectory);
   const wasmPath = join(pkgDir, `${wasmBaseName}_bg.wasm`);
-  const packProfileArgs = profile === "release" ? (["--release"] as const) : profile === "dev" ? (["--dev"] as const) : (["--profile", profile] as const);
-  const cargoProfileArgs = profile === "release" ? (["--release"] as const) : profile === "dev" ? (["--dev"] as const) : (["--profile", profile] as const);
+  const { pack: packProfileArgs, cargo: cargoProfileArgs } = wasmBuildArguments(profile);
   const profileOutDir = cargoProfileDir(profile);
   const buildEnv = wasmBuildEnvironment(getWorkspaceRoot());
   const bindgen = resolveWasmBindgenBin(getWorkspaceRoot(), buildEnv);
@@ -6380,78 +6309,79 @@ export function runCommit(root: string, segments: string[]): void {
 //#endregion 🔖️commit
 
 //#region 📻️SVG Export
-/** 📻️Exports an animated SVG to MP4 using Playwright and FFmpeg */
-export async function exportAnimatedSvgToMp4(inputSvgPath: string, outputMp4Path: string, options?: { fps?: number; durationSeconds?: number; width?: number; height?: number }): Promise<void> {
-  const fps = options?.fps ?? 60;
-  let durationSeconds = options?.durationSeconds;
-  const { readFileSync } = await import("node:fs");
-  const { resolve } = await import("node:path");
-
-  if (!durationSeconds) {
-    const content = readFileSync(inputSvgPath, "utf-8");
-    const durMatch = content.match(/dur="([^"]+)s"/);
-    if (durMatch) {
-      durationSeconds = parseFloat(durMatch[1]);
-    } else {
-      durationSeconds = 10;
-    }
-  }
-
+/** 📻️ Encodes an SVG with bounded frame writes and publishes only a completed MP4. */
+export async function exportAnimatedSvgToMp4(inputSvgPath: string, outputMp4Path: string, options: { fps?: number; durationSeconds?: number; width?: number; height?: number; signal?: AbortSignal; progress?: (event: { completed: number; total: number }) => void } = {}): Promise<void> {
+  const fps = options.fps ?? 60;
+  const duration = options.durationSeconds ?? Number(readFileSync(inputSvgPath, "utf8").match(/dur="([\d.]+)s"/)?.[1] ?? 10);
+  if (![fps, duration, options.width ?? 1, options.height ?? 1].every((value) => Number.isFinite(value) && value > 0)) throw new Error("SVG export dimensions, frame rate and duration must be positive finite numbers");
+  const total = Math.ceil(fps * duration), controller = new AbortController();
+  const output = resolve(outputMp4Path);
   const { chromium } = await import(PLAYWRIGHT_MODULE_SPECIFIER);
-  const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage();
-
-  const svgUrl = `file://${resolve(inputSvgPath)}`;
-  await page.goto(svgUrl);
-  await page.waitForSelector("svg");
-
-  const bbox = await page.evaluate(() => {
-    const svg = document.querySelector("svg");
-    if (!svg) return { width: 1920, height: 1080 };
-    return {
-      width: svg.viewBox.baseVal?.width || svg.width.baseVal?.value || 1920,
-      height: svg.viewBox.baseVal?.height || svg.height.baseVal?.value || 1080,
-    };
-  });
-
-  const width = options?.width ?? Math.round(bbox.width);
-  const height = options?.height ?? Math.round(bbox.height);
-
-  const w = width % 2 === 0 ? width : width + 1;
-  const h = height % 2 === 0 ? height : height + 1;
-
-  await page.setViewportSize({ width: w, height: h });
-
-  await page.evaluate(() => {
-    const svg = document.querySelector("svg") as any;
-    if (svg && svg.pauseAnimations) svg.pauseAnimations();
-  });
-
-  const totalFrames = fps * durationSeconds;
-
-  const { spawn } = await import("node:child_process");
-  const ffmpeg = spawn("ffmpeg", ["-y", "-f", "image2pipe", "-vcodec", "png", "-r", fps.toString(), "-i", "-", "-c:v", "libx264", "-pix_fmt", "yuv420p", outputMp4Path]);
-
-  for (let i = 0; i <= totalFrames; i++) {
-    const time = i / fps;
-    await page.evaluate((t: number) => {
-      const svg = document.querySelector("svg") as any;
-      if (svg && svg.setCurrentTime) svg.setCurrentTime(t);
-    }, time);
-    const buffer = await page.screenshot({ omitBackground: true });
-    ffmpeg.stdin.write(buffer);
-  }
-  ffmpeg.stdin.end();
-
-  await new Promise<void>((resolve, reject) => {
-    ffmpeg.on("close", (code) => {
-      if (code === 0) resolve();
-      else reject(new Error(`ffmpeg exited with code ${code}`));
+  let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
+  let encoder: ReturnType<typeof spawn> | undefined;
+  let encoded: Promise<Error | undefined> | undefined;
+  let staging: string | undefined;
+  let force: ReturnType<typeof setTimeout> | undefined;
+  const terminate = (): void => {
+    if (!encoder || encoder.exitCode !== null || encoder.signalCode !== null) return;
+    encoder.kill("SIGTERM");
+    force ??= setTimeout(() => encoder?.kill("SIGKILL"), 5000);
+    force.unref();
+  };
+  const cancel = (): void => controller.abort(options.signal?.reason ?? new Error("SVG export cancelled"));
+  const abort = (): void => { terminate(); void browser?.close().catch(() => {}); };
+  controller.signal.addEventListener("abort", abort, { once: true });
+  options.signal?.addEventListener("abort", cancel, { once: true });
+  process.once("SIGINT", cancel);
+  process.once("SIGTERM", cancel);
+  try {
+    if (options.signal?.aborted) cancel();
+    controller.signal.throwIfAborted();
+    browser = await chromium.launch({ headless: true });
+    controller.signal.throwIfAborted();
+    const page = await browser.newPage();
+    await page.goto(pathToFileURL(resolve(inputSvgPath)).href);
+    await page.waitForSelector("svg");
+    const size = await page.evaluate(() => {
+      const svg = document.querySelector("svg")!;
+      return { width: svg.viewBox.baseVal.width || svg.width.baseVal.value || 1920, height: svg.viewBox.baseVal.height || svg.height.baseVal.value || 1080 };
     });
-    ffmpeg.on("error", reject);
-  });
-
-  await browser.close();
+    const width = Math.ceil((options.width ?? size.width) / 2) * 2, height = Math.ceil((options.height ?? size.height) / 2) * 2;
+    await page.setViewportSize({ width, height });
+    await page.evaluate(() => document.querySelector("svg")!.pauseAnimations());
+    mkdirSync(dirname(output), { recursive: true });
+    staging = mkdtempSync(join(dirname(output), `.${basename(output)}-stage-`));
+    const artifact = join(staging, "animation.mp4");
+    encoder = spawn("ffmpeg", ["-nostdin", "-loglevel", "error", "-y", "-f", "image2pipe", "-vcodec", "png", "-r", String(fps), "-i", "-", "-c:v", "libx264", "-pix_fmt", "yuv420p", artifact], { stdio: ["pipe", "ignore", "inherit"] });
+    encoded = new Promise((accept) => { encoder!.once("error", accept); encoder!.once("close", (code) => accept(code === 0 ? undefined : new Error(`ffmpeg exited with code ${code}`))); });
+    encoder.stdin!.on("error", () => {});
+    options.progress?.({ completed: 0, total });
+    for (let frame = 0; frame < total; frame++) {
+      controller.signal.throwIfAborted();
+      await page.evaluate((time: number) => document.querySelector("svg")!.setCurrentTime(time), frame / fps);
+      const buffer = await page.screenshot({ omitBackground: true });
+      await new Promise<void>((accept, reject) => encoder!.stdin!.write(buffer, (error) => error ? reject(error) : accept()));
+      options.progress?.({ completed: frame + 1, total });
+    }
+    encoder.stdin!.end();
+    const error = await encoded;
+    controller.signal.throwIfAborted();
+    if (error) throw error;
+    renameSync(artifact, output);
+  } catch (error) {
+    controller.signal.throwIfAborted();
+    throw error;
+  } finally {
+    terminate();
+    if (encoded) await encoded;
+    if (force) clearTimeout(force);
+    await browser?.close();
+    if (staging) rmSync(staging, { recursive: true, force: true });
+    options.signal?.removeEventListener("abort", cancel);
+    controller.signal.removeEventListener("abort", abort);
+    process.removeListener("SIGINT", cancel);
+    process.removeListener("SIGTERM", cancel);
+  }
 }
 //#endregion 📻️SVG Export
 

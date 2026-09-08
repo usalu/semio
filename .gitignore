@@ -624,3 +624,6 @@ nul
 # fixtures tree explicitly, the same way the taxonomy dirs above are rescued.
 !**/🧫️fixtures/
 !**/🧫️fixtures/**
+
+# Nx-staged package deliverables remain generated inside fixture packages.
+**/📦️packages/*/dist/

@@ -74,13 +74,13 @@ mod tests {
     use protocol::Inference;
 
     #[semio_framework_async_macros::async_test]
-    fn inference_determinism_law() {
+    async fn inference_determinism_law() {
         let snapshot = En1998Snapshot::default();
         assert_eq!(En1998Inference::infer(&snapshot), En1998Inference::infer(&snapshot));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn inference_default_law() {
+    async fn inference_default_law() {
         assert_eq!(En1998Inference::infer(&En1998Snapshot::default()), En1998Inference::default());
     }
 }
@@ -263,13 +263,13 @@ mod compliance_report_tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    fn full_seismic_e2e() {
+    async fn full_seismic_e2e() {
         let report = check_full_seismic(&En1998Snapshot::default());
         assert_eq!(report.checks.len(), 12);
     }
 
     #[semio_framework_async_macros::async_test]
-    fn full_seismic_en_annex_e2e() {
+    async fn full_seismic_en_annex_e2e() {
         let document = En1998Snapshot { annex: "en".into(), ..En1998Snapshot::default() };
         let report = check_full_seismic(&document);
         assert_eq!(report.checks.len(), 12);

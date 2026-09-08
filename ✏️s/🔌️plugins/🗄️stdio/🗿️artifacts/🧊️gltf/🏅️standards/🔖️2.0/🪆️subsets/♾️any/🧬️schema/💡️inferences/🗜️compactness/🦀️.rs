@@ -1,7 +1,7 @@
 //! ⚪️ GLTF compactness indicators.
 
 #[path = "🗜️compactness/🦀️.rs"]
-pub mod compactness;
+pub mod measure;
 #[path = "🔢️compactness-index/🦀️.rs"]
 pub mod compactness_index;
 #[path = "🫙️hull-fill-ratio/🦀️.rs"]
@@ -50,7 +50,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfCompactnessInference {
     fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         let raw = raw(context);
         Self::Output {
-            compactness: compactness::from_raw(context, &raw),
+            compactness: measure::from_raw(context, &raw),
             surface_to_volume_ratio: surface_to_volume_ratio::from_raw(context, &raw),
             sphericity: sphericity::from_raw(context, &raw),
             compactness_index: compactness_index::from_raw(context, &raw),
@@ -60,7 +60,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfCompactnessInference {
 
     fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
-            compactness: compactness::unavailable_measure(diagnostic_ids),
+            compactness: measure::unavailable_measure(diagnostic_ids),
             surface_to_volume_ratio: surface_to_volume_ratio::unavailable_measure(diagnostic_ids),
             sphericity: sphericity::unavailable_measure(diagnostic_ids),
             compactness_index: compactness_index::unavailable_measure(diagnostic_ids),

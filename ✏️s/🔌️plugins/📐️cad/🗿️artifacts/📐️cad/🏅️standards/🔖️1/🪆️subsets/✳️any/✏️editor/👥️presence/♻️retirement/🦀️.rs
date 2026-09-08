@@ -210,7 +210,7 @@ mod tests {
             let commit = publication.take_commit().unwrap();
             assert!(publication.terminal_is_empty());
             let mut initial_roster = owner.publish_peer_commit(commit).ok().unwrap().unwrap();
-            for _ in 0..16 { if initial_roster.close_step(1, 4096).unwrap() == store::SnapshotRetirementStep::Complete { break; } }
+            for _ in 0..16 { if initial_roster.close_step(1, 4096).unwrap() == SnapshotRetirementStep::Complete { break; } }
             assert!(initial_roster.terminal_is_empty());
             let shared = case["sharedRoot"].as_bool().unwrap();
             let mut reader = shared.then(|| owner.peers_root());
@@ -227,6 +227,7 @@ mod tests {
                         assert_eq!(actual, expected);
                         observed_blocked = true;
                     }
+                    PluginCloseStep::AwaitingInput { reason } => panic!("store-only CAD fixture unexpectedly awaits external input: {reason}"),
                     PluginCloseStep::Complete => break,
                 }
                 assert!(turn < 511);

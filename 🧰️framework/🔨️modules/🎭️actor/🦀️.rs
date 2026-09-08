@@ -19,8 +19,6 @@ use std::mem::{ManuallyDrop, MaybeUninit};
 use std::sync::Arc;
 
 use semio_framework_value_derive::{FromValue, ToValue};
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
 
 pub use semio_framework_job as job;
 
@@ -1217,6 +1215,14 @@ impl Drop for JobReplayRejected {
 }
 
 /// 📜️ Fixed generation-qualified capture authority for the mounted shard/P2d stream.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct JobReplaySchedule {
+    pub worker_count: u16,
+    pub worker_slot: u16,
+    pub granted_fuel: u64,
+    pub deadline_class_ms: u32,
+}
+
 pub struct JobReplayLog {
     route: JobReplayRoute,
     generation: u64,
@@ -1283,7 +1289,8 @@ impl JobReplayLog {
         self.last_checkpoint_index.and_then(|index| self.record_header(index))
     }
 
-    pub fn begin_capture(&mut self, cx: &mut job::StepContext<'_>, actor: ActorId, worker_count: u16, worker_slot: u16, granted_fuel: u64, deadline_class_ms: u32, publication: JobPublication) -> Result<(), JobReplayRejected> {
+    pub fn begin_capture(&mut self, cx: &mut job::StepContext<'_>, actor: ActorId, schedule: JobReplaySchedule, publication: JobPublication) -> Result<(), JobReplayRejected> {
+        let JobReplaySchedule { worker_count, worker_slot, granted_fuel, deadline_class_ms } = schedule;
         if self.closing || cx.is_cancelled() {
             return Err(replay_rejected(JobReplayFault::Cancelled, publication));
         }
@@ -2355,6 +2362,7 @@ impl JobProgressOverlayStore {
         Ok(JobProgressAdmission { token, active_index, active_epoch, identity, live, retirement_indices, abort_retirement: staged_preview.then_some(retirement_indices[adoption_retirements]), owner_items, owner_bytes })
     }
 
+    #[expect(clippy::needless_pass_by_value, reason = "Cancellation consumes the single-use reservation authority even though its accounting fields are copied.")]
     pub fn cancel_admission(&mut self, admission: JobProgressAdmission) -> Result<(), JobProgressFault> {
         let slot = self.active.get(admission.active_index).ok_or(JobProgressFault::Token)?;
         if slot.epoch != admission.active_epoch || slot.reservation != Some(admission.token) {
@@ -2454,6 +2462,7 @@ impl JobProgressOverlayStore {
         Ok(JobProgressReceipt { identity, kind, applied_progress, owner_bytes: admission.owner_bytes, active_index: admission.active_index, active_epoch: next_epoch, prior, displaced_retirement, abort_retirement })
     }
 
+    #[expect(clippy::result_large_err, reason = "Refusal returns the exact retained progress receipt without allocating or losing its prior owner.")]
     pub fn acknowledge(&mut self, receipt: JobProgressReceipt) -> Result<(), (JobProgressFault, JobProgressReceipt)> {
         let Some(slot) = self.active.get_mut(receipt.active_index) else {
             return Err((JobProgressFault::Token, receipt));
@@ -2481,6 +2490,7 @@ impl JobProgressOverlayStore {
         Ok(())
     }
 
+    #[expect(clippy::result_large_err, reason = "Refusal returns the exact retained progress receipt without allocating or losing its prior owner.")]
     pub fn abort(&mut self, receipt: JobProgressReceipt) -> Result<(), (JobProgressFault, JobProgressReceipt)> {
         let Some(slot) = self.active.get_mut(receipt.active_index) else {
             return Err((JobProgressFault::Token, receipt));
@@ -5288,7 +5298,7 @@ mod tests {
                 match outcome {
                     JobStepOutcome::Yield => job::StepOutcome::Yield,
                     JobStepOutcome::PreviewReady { preview } => {
-                        cx.next_preview_sequence();
+                        cx.next_preview_sequence().expect("fixture preview sequence has capacity");
                         let preview = cx.payload_from_bytes(job::JobPayloadStream::Preview, &preview).expect("scripted preview payload");
                         job::StepOutcome::PreviewReady(preview)
                     }
@@ -5546,7 +5556,7 @@ mod tests {
                     };
                     let mut preview_sequence = publication.turn.operation.preview_sequence;
                     let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut preview_sequence);
-                    log.begin_capture(&mut context, ActorId(9), worker_count, worker_slot, 1, 4, publication).expect("capture admission");
+                    log.begin_capture(&mut context, ActorId(9), JobReplaySchedule { worker_count, worker_slot, granted_fuel: 1, deadline_class_ms: 4 }, publication).expect("capture admission");
                     loop {
                         let mut preview_sequence = turn.operation.preview_sequence;
                         let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut preview_sequence);
@@ -5611,7 +5621,7 @@ mod tests {
                     replay_turn = JobTurn { step_sequence: publication.turn.step_sequence + 1, ..publication.turn };
                     let mut preview_sequence = publication.turn.operation.preview_sequence;
                     let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut preview_sequence);
-                    log.begin_capture(&mut context, ActorId(9), worker_count, worker_slot, 1, 4, publication).expect("replay capture admission");
+                    log.begin_capture(&mut context, ActorId(9), JobReplaySchedule { worker_count, worker_slot, granted_fuel: 1, deadline_class_ms: 4 }, publication).expect("replay capture admission");
                     loop {
                         let mut preview_sequence = replay_turn.operation.preview_sequence;
                         let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut preview_sequence);
@@ -5659,7 +5669,7 @@ mod tests {
                 let publication = JobPublication { turn, outcome: JobStepOutcome::Cancelled };
                 let mut sequence = 0;
                 let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut sequence);
-                log.begin_capture(&mut context, ActorId(9), 1, 0, 1, 4, publication).expect("cancel capture admission");
+                log.begin_capture(&mut context, ActorId(9), JobReplaySchedule { worker_count: 1, worker_slot: 0, granted_fuel: 1, deadline_class_ms: 4 }, publication).expect("cancel capture admission");
                 loop {
                     let mut sequence = 0;
                     let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut sequence);
@@ -5701,7 +5711,7 @@ mod tests {
             cancel.cancel_now();
             let mut sequence = 0;
             let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), cancel, bridge_now_us, &mut sequence);
-            let cancelled = log.begin_capture(&mut context, ActorId(9), 1, 0, 1, 4, cancelled).expect_err("cancelled capture refuses before transfer").into_publication();
+            let cancelled = log.begin_capture(&mut context, ActorId(9), JobReplaySchedule { worker_count: 1, worker_slot: 0, granted_fuel: 1, deadline_class_ms: 4 }, cancelled).expect_err("cancelled capture refuses before transfer").into_publication();
             assert!(matches!(&cancelled.outcome, JobStepOutcome::PreviewReady { preview } if preview.as_ptr() == cancelled_identity));
 
             let expired = publication(operation.generation.0);
@@ -5711,7 +5721,7 @@ mod tests {
             };
             let mut sequence = 0;
             let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 10), job::root_cancel_token(), bridge_now_us, &mut sequence);
-            let expired = log.begin_capture(&mut context, ActorId(9), 1, 0, 1, 4, expired).expect_err("expired capture refuses before transfer").into_publication();
+            let expired = log.begin_capture(&mut context, ActorId(9), JobReplaySchedule { worker_count: 1, worker_slot: 0, granted_fuel: 1, deadline_class_ms: 4 }, expired).expect_err("expired capture refuses before transfer").into_publication();
             assert!(matches!(&expired.outcome, JobStepOutcome::PreviewReady { preview } if preview.as_ptr() == expired_identity));
 
             let stale = publication(operation.generation.0 + 1);
@@ -5721,7 +5731,7 @@ mod tests {
             };
             let mut sequence = 0;
             let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut sequence);
-            let stale = log.begin_capture(&mut context, ActorId(9), 1, 0, 1, 4, stale).expect_err("stale capture refuses before transfer").into_publication();
+            let stale = log.begin_capture(&mut context, ActorId(9), JobReplaySchedule { worker_count: 1, worker_slot: 0, granted_fuel: 1, deadline_class_ms: 4 }, stale).expect_err("stale capture refuses before transfer").into_publication();
             assert!(matches!(&stale.outcome, JobStepOutcome::PreviewReady { preview } if preview.as_ptr() == stale_identity));
             assert_eq!(log.sealed_records(), 0);
             assert!(!log.has_pending_work());
@@ -5743,7 +5753,7 @@ mod tests {
                 };
                 let mut sequence = 0;
                 let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut sequence);
-                log.begin_capture(&mut context, ActorId(9), 1, 0, 1, 4, publication).expect("fault capture admission");
+                log.begin_capture(&mut context, ActorId(9), JobReplaySchedule { worker_count: 1, worker_slot: 0, granted_fuel: 1, deadline_class_ms: 4 }, publication).expect("fault capture admission");
                 loop {
                     let mut sequence = 0;
                     let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_us, &mut sequence);
@@ -5814,7 +5824,16 @@ mod tests {
         round_trip!(pack_round_trip_envelope, Envelope, env(ActorId::new(1, 0, 1, 0).await, Lane::Interactive, 7).await);
         round_trip!(pack_round_trip_turn_status, TurnStatus, TurnStatus::Faulted { detail: vec![1, 2] });
         round_trip!(pack_round_trip_usage, Usage, Usage { fuel: 1, wall_us: 2, memory_bytes: 3 });
-        round_trip!(pack_round_trip_turn_result, TurnResult, ok_turn().await);
+        #[semio_framework_async_macros::async_test]
+        async fn pack_round_trip_turn_result() {
+            let value = ok_turn().await;
+            let mut bytes = Vec::new();
+            value.pack_encode(&mut bytes).await.expect("turn result encoding succeeds");
+            let mut pos = 0;
+            let decoded = TurnResult::pack_decode(&bytes, &mut pos).await.expect("turn result decoding succeeds");
+            assert_eq!(pos, bytes.len());
+            assert_eq!(decoded, value);
+        }
         round_trip!(pack_round_trip_backpressure, Backpressure, Backpressure::Dropped { lane: Lane::Background });
         round_trip!(pack_round_trip_capability_grant, CapabilityGrant, CapabilityGrant { capability: "fs.read".into(), scope: Some(vec![1]) });
         round_trip!(pack_round_trip_failure_signal, FailureSignal, FailureSignal::HeartbeatMissed { count: 2 });

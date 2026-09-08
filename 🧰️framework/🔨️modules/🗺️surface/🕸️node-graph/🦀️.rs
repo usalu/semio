@@ -173,7 +173,7 @@ impl From<dag::DagError> for NodeGraphError {
 fn port_label(port: &GraphPortRecord) -> String {
     port.label.clone().unwrap_or_else(|| {
         let segments: Vec<_> = port.id.split('@').collect();
-        segments.last().map(|s| (*s).to_string()).unwrap_or_else(|| port.id.clone())
+        segments.last().map_or_else(|| port.id.clone(), |s| (*s).to_string())
     })
 }
 
@@ -208,7 +208,7 @@ fn node_record_to_spec(record: &GraphNodeRecord) -> DagNodeSpec {
     if let Some(instance_id) = &record.instance_id {
         let mut node = DagNodeSpec {
             id: record.id.clone(),
-            name: name.clone(),
+            name,
             abbreviation,
             icon: icon.clone(),
             x,
@@ -221,7 +221,7 @@ fn node_record_to_spec(record: &GraphNodeRecord) -> DagNodeSpec {
         fit_node_size(&mut node);
         return node;
     }
-    let mut node = DagNodeSpec::computation(record.id.clone(), name, abbreviation, icon, inputs, outputs, false, false, x, y, width, height);
+    let mut node = DagNodeSpec::computation(record.id.clone(), &name, &abbreviation, icon, inputs, outputs, false, false, x, y, width, height);
     fit_node_size(&mut node);
     node
 }
@@ -557,7 +557,7 @@ impl GraphHost {
         true
     }
 
-    pub fn pointer_projection_snapshot(&self, plan: &dag::DagPointerPlan) -> Result<(Vec<String>, Option<String>, [f64; 3]), dag::DagInteractionPlanFault> {
+    pub fn pointer_projection_snapshot(&self, plan: &dag::DagPointerPlan) -> Result<dag::DagPointerSnapshot, dag::DagInteractionPlanFault> {
         let projection = plan.projection();
         let mut bytes = 0usize;
         for id in self.dag.projection_selected_id_refs(projection).chain(self.dag.projection_hovered_id_ref(projection)) {
@@ -566,10 +566,11 @@ impl GraphHost {
                 return Err(dag::DagInteractionPlanFault::StringCredits);
             }
         }
-        Ok((self.dag.projection_selected_id_refs(projection).map(str::to_owned).collect(), self.dag.projection_hovered_id_ref(projection).map(str::to_owned), projection.camera()))
+        Ok(dag::DagPointerSnapshot { node_ids: self.dag.projection_selected_id_refs(projection).map(str::to_owned).collect(), hovered_id: self.dag.projection_hovered_id_ref(projection).map(str::to_owned), camera: projection.camera() })
     }
 
-    pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool, pan: bool) {
+    pub fn pointer_down_screen(&mut self, position: [f64; 2], button: u8, shift: bool, ctrl_or_meta: bool, alt: bool, pan: bool) {
+        let [sx, sy] = position;
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
         self.dag.pointer_down_screen(sx, sy, button, shift, ctrl_or_meta, alt, pan);
     }
@@ -1031,7 +1032,7 @@ mod tests {
         let payload = payload_with_node("a");
         host.sync_from_payload(&payload).expect("sync");
         host.set_viewport(400, 400, 1.0);
-        host.pointer_down_screen(200.0, 200.0, 0, false, false, false, false);
+        host.pointer_down_screen([200.0, 200.0], 0, false, false, false, false);
         host.pointer_up_screen(200.0, 200.0, false, false, false);
         let gather = host.take_selection_gather().expect("gather");
         assert_eq!(gather.target_ids, vec!["a".to_string()]);
@@ -1300,7 +1301,7 @@ mod tests {
             "edges": [],
             "viewport": {"x": 0.0, "y": 0.0, "zoom": 1.0}
         });
-        let dsl = dsl::to_dsl_value(&scene).expect("dsl");
+        let dsl = dsl::DslValue::from(&scene);
         let bytes = store::pack_rt::encode_pack_value(&dsl);
         host.sync_from_scene_pack(&bytes).expect("sync");
         assert_eq!(host.dag.fixture.nodes.iter().map(|node| node.id.as_str()).collect::<Vec<_>>(), vec!["a"]);
@@ -1380,7 +1381,7 @@ mod tests {
         direct.set_viewport(400, 400, 1.0);
         planned.set_viewport(400, 400, 1.0);
 
-        direct.pointer_down_screen(200.0, 200.0, 0, false, false, false, false);
+        direct.pointer_down_screen([200.0, 200.0], 0, false, false, false, false);
         direct.pointer_up_screen(200.0, 200.0, false, false, false);
         let down = planned.plan_pointer(dag::DagPointerIntent { phase: dag::DagPointerPhase::Down, x: 200.0, y: 200.0, button: 0, shift: false, ctrl_or_meta: false, alt: false, pan: false }).expect("down plan");
         assert!(planned.commit_pointer(down));
@@ -1401,7 +1402,7 @@ mod tests {
         let payload = payload_with_node("a");
         host.sync_from_payload(&payload).expect("sync");
         host.set_viewport(400, 400, 1.0);
-        host.pointer_down_screen(200.0, 200.0, 0, false, false, false, false);
+        host.pointer_down_screen([200.0, 200.0], 0, false, false, false, false);
         host.pointer_up_screen(200.0, 200.0, false, false, false);
         assert_eq!(host.dag.selected_node_ids(), vec!["a".to_string()]);
     }

@@ -196,9 +196,9 @@ fn enc_semio_model_snapshot(s: &SemioModelSnapshot) -> String {
     format!(
         "[{},{},{},{}]",
         enc_str(&s.schema),
-        format!("[{}]", s.spatial.iter().map(enc_spatial_node).collect::<Vec<_>>().join(",")),
-        format!("[{}]", s.elements.iter().map(enc_element).collect::<Vec<_>>().join(",")),
-        format!("[{}]", s.relations.iter().map(enc_relation).collect::<Vec<_>>().join(",")),
+        format_args!("[{}]", s.spatial.iter().map(enc_spatial_node).collect::<Vec<_>>().join(",")),
+        format_args!("[{}]", s.elements.iter().map(enc_element).collect::<Vec<_>>().join(",")),
+        format_args!("[{}]", s.relations.iter().map(enc_relation).collect::<Vec<_>>().join(",")),
     )
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -494,6 +494,6 @@ mod tests {
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🔥️slides-the-wall-and-attaches-a-fire-rating-pset/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/🔥️slides-the-wall-687d98/🦀️.rs"]
 mod set_snapshot_slides_the_wall_and_attaches_a_fire_rating_pset;
 //#endregion 🧪️FixtureCases

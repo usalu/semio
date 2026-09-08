@@ -10,8 +10,6 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
 use semio_s_plugin_stdio::artifacts::svg::SvgSnapshot;
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{BTreeMap, HashSet};
 use dsl::{FromValue, ToValue};
@@ -19,8 +17,6 @@ use dsl::{FromValue, ToValue};
 //#region 🔹Artifact
 /// 🧬️ Full GIS map artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gismap")]
 pub struct GisMapArtifact {
@@ -37,7 +33,6 @@ pub struct GisMapArtifact {
     /// be a real, undocumented data loss the moment a future basemap-capture path populates it.
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.image")]
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub image: Option<GisMapImageChild>,
     #[state(presence)]
@@ -544,9 +539,9 @@ mod relocated_engine_tests {
     #[semio_framework_async_macros::async_test]
     async fn gis_map_snapshot_to_drawing_builds_markers_and_polylines() {
         let mut document = GisMapSnapshot::default();
-        document.positions.push(MapFeature { id: "p0".into(), data: value_to_dsl(&json!({ "id": "p0", "lon": 5.5818, "lat": 50.603 })) });
-        document.routes.push(MapFeature { id: "r0".into(), data: value_to_dsl(&json!({ "id": "r0", "points": [[5.5818, 50.603], [5.5825, 50.6035]] })) });
-        document.regions.push(MapFeature { id: "g0".into(), data: value_to_dsl(&json!({ "id": "g0", "points": [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0]] })) });
+        document.positions.push(MapFeature { id: "p0".into(), data: value_to_dsl(&serde_json::json!({ "id": "p0", "lon": 5.5818, "lat": 50.603 })) });
+        document.routes.push(MapFeature { id: "r0".into(), data: value_to_dsl(&serde_json::json!({ "id": "r0", "points": [[5.5818, 50.603], [5.5825, 50.6035]] })) });
+        document.regions.push(MapFeature { id: "g0".into(), data: value_to_dsl(&serde_json::json!({ "id": "g0", "points": [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0]] })) });
 
         let drawing = gis_map_snapshot_to_drawing(&document);
         assert!(drawing.canvas.width >= 256.0 && drawing.canvas.height >= 256.0);
@@ -570,7 +565,7 @@ mod relocated_engine_tests {
     async fn svg_export_renders_real_svg_text_through_the_stdio_drawing_bridge() {
         ensure_stdio_semio_registered_for_tests();
         let document = default_document();
-        let value = serde_json::to_value(&document).expect("document json");
+        let value = serde_json::from_str::<Value>(&dsl::json::to_json_string(&document)).expect("document json");
         let (svg, width, height) = gis2d_document_json_to_svg(&value).expect("svg export");
         assert!(svg.contains("<svg"), "real svg text: {svg}");
         assert!(svg.contains("<path"), "at least one path node rendered: {svg}");
@@ -580,7 +575,7 @@ mod relocated_engine_tests {
     #[semio_framework_async_macros::async_test]
     async fn svg_export_of_an_empty_document_still_renders_a_bare_canvas() {
         ensure_stdio_semio_registered_for_tests();
-        let value = serde_json::to_value(GisMapSnapshot::default()).expect("empty document json");
+        let value = serde_json::from_str::<Value>(&dsl::json::to_json_string(&GisMapSnapshot::default())).expect("empty document json");
         let (svg, width, height) = gis2d_document_json_to_svg(&value).expect("svg export");
         assert!(svg.contains("<svg"), "{svg}");
         assert_eq!(width, 256);
@@ -589,7 +584,7 @@ mod relocated_engine_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn feature_collection_diffing_emits_create_replace_and_delete() {
-        let feature = |id: &str, label: &str| MapFeature { id: id.into(), data: value_to_dsl(&json!({ "id": id, "label": label })) };
+        let feature = |id: &str, label: &str| MapFeature { id: id.into(), data: value_to_dsl(&serde_json::json!({ "id": id, "label": label })) };
         let before = vec![feature("keep", "a"), feature("gone", "b")];
         let after = vec![feature("keep", "changed"), feature("new", "c")];
         let operations = positions_operations(&before, &after);

@@ -535,7 +535,10 @@ mod tests {
             ],
             "fasteners": [],
         });
-        let canonical = |value: &Value| serde_json::to_value(serde_json::from_value::<Puzzle5dSnapshot>(value.clone()).expect("typed puzzle5d fixture")).expect("canonical puzzle5d JSON");
+        let canonical = |value: &Value| {
+            let snapshot: Puzzle5dSnapshot = dsl::json::from_json_str(&value.to_string()).expect("typed puzzle5d fixture");
+            serde_json::from_str::<Value>(&dsl::json::to_json_string(&snapshot)).expect("canonical puzzle5d JSON")
+        };
         let operations = puzzle5d_document_delta_operations(&before, &after);
         assert!(operations.iter().any(|operation| matches!(operation, Puzzle5dMutation::MovePart2d(_))));
         assert!(operations.iter().any(|operation| matches!(operation, Puzzle5dMutation::CreatePart(_))));
@@ -555,7 +558,7 @@ mod tests {
 
     //#region 🔖️MutationLaws
     use protocol::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
-    use protocol::SemanticMutation;
+    
 
     #[test]
     fn move_part_2d_diff_absorb_law() {

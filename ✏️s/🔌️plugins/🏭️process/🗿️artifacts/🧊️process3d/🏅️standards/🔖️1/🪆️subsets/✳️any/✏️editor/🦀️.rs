@@ -432,17 +432,8 @@ impl ArtifactCommandWork<EditorApp<Process3dPlayApp>> for Process3dResumableComm
         Some(self.extent)
     }
 
-    fn step(
-        &mut self,
-        command: &Process3dCommand,
-        snapshot: &Process3dSnapshot,
-        config: &Process3dConfig,
-        _history: &semio_framework_plugin::HistoryView,
-        interaction: &protocol::InteractionState,
-        _hover: &semio_framework_plugin::app::InteractionHoverState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Process3dPlayApp>>>,
-        _operation: &AppOperationContext,
-    ) -> Result<ArtifactCommandWorkStep<EditorApp<Process3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Process3dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Process3dPlayApp>>, Fault> {
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, history: _history, interaction, hover: _hover, context: _context, operation: _operation } = *input;
         if self.complete {
             return Err(Fault::from("process3d-retained-work-repeated"));
         }
@@ -1382,16 +1373,8 @@ impl ArtifactEditor for Process3dPlayApp {
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
         };
-        let payload = ArtifactRetainedCommandPayload::try_new_with_context(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            request.context,
-            operation_context,
-            request.completion,
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
             Process3dCommand::command_id,
             PROCESS3D_RETAINED_RAW_BYTES,
             PROCESS3D_RETAINED_WORK_ITEMS,
@@ -1695,8 +1678,8 @@ pub fn create_process3d_app() -> AppDefinition {
                 schema: "process.3d".into(),
                 export_formats: vec![],
                 import_formats: vec![],
-                export_stdio_kinds: vec!["stdio.step", "stdio.obj", "stdio.stl", "stdio.gltf"],
-                import_stdio_kinds: vec!["stdio.step", "stdio.obj", "stdio.stl"],
+                export_stdio_kinds: vec!["stdio.step".into(), "stdio.obj".into(), "stdio.stl".into(), "stdio.gltf".into()],
+                import_stdio_kinds: vec!["stdio.step".into(), "stdio.obj".into(), "stdio.stl".into()],
             })
             .icon_id("hammer")
             .mode_def(edit::definition())
@@ -1753,20 +1736,20 @@ pub fn create_process3d_app() -> AppDefinition {
                     ActionArgOption::new("cut", LocalizedLabel::native("Cut", "Schnitt")),
                     ActionArgOption::new("drill", LocalizedLabel::native("Drill", "Bohrung")),
                     ActionArgOption::new("attach", LocalizedLabel::native("Attach", "Anbau")),
-                ]).default_value("cut"),
+                ]).default_value(&"cut"),
             ])
             .action_args("setStock", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
                     ActionArgOption::new("box", LocalizedLabel::native("Box", "Quader")),
                     ActionArgOption::new("cylinder", LocalizedLabel::native("Cylinder", "Zylinder")),
                     ActionArgOption::new("sphere", LocalizedLabel::native("Sphere", "Kugel")),
-                ]).default_value("box"),
+                ]).default_value(&"box"),
             ])
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
                     ActionArgOption::new(PROCESS3D_EXAMPLE_TIMBER, LocalizedLabel::native("Timber Beam Joinery", "Holzbalkenverbindung")),
                     ActionArgOption::new(PROCESS3D_EXAMPLE_PLATE, LocalizedLabel::native("Drilled Plate", "Gebohrte Platte")),
-                ]).required().default_value(PROCESS3D_EXAMPLE_TIMBER),
+                ]).required().default_value(&PROCESS3D_EXAMPLE_TIMBER),
             ])
             .action_args("exportModel", vec![
                 ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), vec![
@@ -1774,7 +1757,7 @@ pub fn create_process3d_app() -> AppDefinition {
                     ActionArgOption::new("obj", LocalizedLabel::native("OBJ", "OBJ")),
                     ActionArgOption::new("stl", LocalizedLabel::native("STL", "STL")),
                     ActionArgOption::new("glb", LocalizedLabel::native("GLB", "GLB")),
-                ]).required().default_value("step"),
+                ]).required().default_value(&"step"),
             ])
             // 🧰️ Flat top-level exclusive utility bar scoped to the workpiece window (active utility is
             // host-owned). These four are the window's entire utility set — not a sub-collection — so
@@ -2059,7 +2042,7 @@ pub fn catalog_machine(contributions_json: &str, catalog_id: &str, machine_id: &
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
+    use semio_framework_plugin::testkit::{meta, new_app_with_registry};
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
     /// ✏️ `Process3dPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
@@ -2098,7 +2081,7 @@ pub(crate) mod testkit {
                 if self.0.close_terminal_is_empty() {
                     return;
                 }
-                match semio_framework_plugin::PluginApp::close_step(&mut self.0, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+                match PluginApp::close_step(&mut self.0, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
                     Ok(semio_framework_plugin::PluginCloseStep::Complete) => return,
                     Ok(_) => continue,
                     Err(fault) => {
@@ -2177,12 +2160,12 @@ pub(crate) mod testkit {
                 plugin_id: "process-wood".into(),
                 topic_contribution: Some(TopicContribution::new(
                     "process.machines",
-                    semio_framework::DslValue::object([
-                        ("appId".to_string(), semio_framework::DslValue::String("process3d-play".to_string())),
-                        ("moduleId".to_string(), semio_framework::DslValue::String("wood".to_string())),
-                        ("label".to_string(), semio_framework::DslValue::String("Wood".to_string())),
-                        ("iconId".to_string(), semio_framework::DslValue::String("beam".to_string())),
-                        ("machinesJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&wood_machines))),
+                    DslValue::object([
+                        ("appId".to_string(), DslValue::String("process3d-play".to_string())),
+                        ("moduleId".to_string(), DslValue::String("wood".to_string())),
+                        ("label".to_string(), DslValue::String("Wood".to_string())),
+                        ("iconId".to_string(), DslValue::String("beam".to_string())),
+                        ("machinesJson".to_string(), DslValue::String(semio_framework_os_kernel::json::to_json_string(&wood_machines))),
                     ]),
                 )),
             },
@@ -2190,18 +2173,18 @@ pub(crate) mod testkit {
                 plugin_id: "process-metal".into(),
                 topic_contribution: Some(TopicContribution::new(
                     "process.machines",
-                    semio_framework::DslValue::object([
-                        ("appId".to_string(), semio_framework::DslValue::String("process3d-play".to_string())),
-                        ("moduleId".to_string(), semio_framework::DslValue::String("metal".to_string())),
-                        ("label".to_string(), semio_framework::DslValue::String("Metal".to_string())),
-                        ("iconId".to_string(), semio_framework::DslValue::String("wrench".to_string())),
-                        ("machinesJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&metal_machines))),
+                    DslValue::object([
+                        ("appId".to_string(), DslValue::String("process3d-play".to_string())),
+                        ("moduleId".to_string(), DslValue::String("metal".to_string())),
+                        ("label".to_string(), DslValue::String("Metal".to_string())),
+                        ("iconId".to_string(), DslValue::String("wrench".to_string())),
+                        ("machinesJson".to_string(), DslValue::String(semio_framework_os_kernel::json::to_json_string(&metal_machines))),
                     ]),
                 )),
             },
         ];
-        let json = serde_json::to_string(&entries).unwrap();
-        let _ = app;
+        let json = dsl::json::to_json_string(&entries);
+        action(app, "setContributions", Some(&DslValue::object([("json".to_string(), DslValue::String(json))])));
     }
 
     /// 🧪️ Every testkit app is wired to the real manifest registry. The registry-less `new_app` path
@@ -2219,14 +2202,14 @@ pub(crate) mod testkit {
     /// bumps the generation and the decode comes back `Fault` instead of `Ready`.
     pub fn unseeded_app_with_registry() -> Process3dApp {
         let mut app = semio_framework_plugin::resolve_ready(new_app_with_registry::<EditorApp<Process3dPlayApp>>(process3d_app_manifest_for_testkit));
-        semio_framework_plugin::resolve_ready(semio_framework_plugin::PluginApp::bind_instance_id(&mut app, meta("local").instance_id));
+        semio_framework_plugin::resolve_ready(PluginApp::bind_instance_id(&mut app, meta("local").instance_id));
         Process3dApp(app)
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub fn app_with_registry() -> Process3dApp {
         let mut app = semio_framework_plugin::resolve_ready(new_app_with_registry::<EditorApp<Process3dPlayApp>>(process3d_app_manifest_for_testkit));
-        semio_framework_plugin::resolve_ready(semio_framework_plugin::PluginApp::bind_instance_id(&mut app, meta("local").instance_id));
+        semio_framework_plugin::resolve_ready(PluginApp::bind_instance_id(&mut app, meta("local").instance_id));
         seed_domain_catalog_contributions(&mut app);
         Process3dApp(app)
     }
@@ -2259,7 +2242,7 @@ mod tests {
     fn production_initial_snapshot(label: &str) -> Process3dSnapshot {
         let mut snapshot = crate::artifacts::process3d::empty_process3d_snapshot();
         snapshot.stock_label = label.into();
-        snapshot.workshop.machines.push(crate::artifacts::process3d::WorkshopMachine { id: "machine".into(), label: "Original Machine".into(), icon_id: "original-tool".into(), catalog_id: Some("original-catalog".into()), capabilities: Vec::new() });
+        snapshot.workshop.machines.push(WorkshopMachine { id: "machine".into(), label: "Original Machine".into(), icon_id: "original-tool".into(), catalog_id: Some("original-catalog".into()), capabilities: Vec::new() });
         snapshot
     }
 
@@ -2388,7 +2371,7 @@ mod tests {
         let machine = accepted_snapshot.workshop.machines.first().expect("deep production machine");
         assert_eq!((machine.id.as_str(), machine.label.as_str(), machine.icon_id.as_str()), ("machine", "Renamed Machine", "drill"));
         let capability = machine.capabilities.first().expect("deep production capability");
-        assert!(matches!(&capability.recipe, crate::artifacts::process3d::MeasureRecipe::BoxAttach { width, depth, height } if (width.as_str(), depth.as_str(), height.as_str()) == ("width", "depth", "height")));
+        assert!(matches!(&capability.recipe, MeasureRecipe::BoxAttach { width, depth, height } if (width.as_str(), depth.as_str(), height.as_str()) == ("width", "depth", "height")));
         assert_eq!((capability.parameters.len(), capability.rules.len(), accepted_snapshot.stock_label.as_str(), accepted_snapshot.resolved_up_to), (3, 2, "Beam", Some(7)));
         assert!(accepted.acknowledge_artifact_store_replacement(accepted_handle).expect("accepted Process3d terminal ACK"));
         assert!(crate::artifacts::process3d::spr::process3d_release_publication_authority(accepted_handle.operation, accepted_handle.generation));
@@ -2426,7 +2409,7 @@ mod tests {
         snapshot.workshop.machines.clear();
         snapshot.step_payloads.clear();
         snapshot.tool_solids.clear();
-        snapshot.workshop.machines.extend((0..machine_count).map(|index| crate::artifacts::process3d::WorkshopMachine { id: format!("retained-{index}"), label: String::new(), icon_id: String::new(), catalog_id: None, capabilities: Vec::new() }));
+        snapshot.workshop.machines.extend((0..machine_count).map(|index| WorkshopMachine { id: format!("retained-{index}"), label: String::new(), icon_id: String::new(), catalog_id: None, capabilities: Vec::new() }));
         snapshot
     }
 
@@ -2446,7 +2429,7 @@ mod tests {
         let operation = retained_operation();
         let mut progress = 0;
         loop {
-            match work.step(command, snapshot, config, history, interaction, &hover, None, &operation).expect("retained work step") {
+            match work.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, history, interaction, hover: &hover, context: None, operation: &operation }).expect("retained work step") {
                 ArtifactCommandWorkStep::Replay { .. } | ArtifactCommandWorkStep::Progress { .. } => progress += 1,
                 ArtifactCommandWorkStep::Complete(emit) => return (progress, emit),
                 ArtifactCommandWorkStep::CompleteWithEphemeral { emit, .. } => return (progress, emit),
@@ -2571,7 +2554,7 @@ mod tests {
         let extent = process3d_resumable_extent(&command, &snapshot, &config, &interaction).expect("extent");
         let mut uninterrupted = Process3dResumableCommandWork::new("setContributions", extent);
         for _ in 0..11 {
-            assert!(matches!(uninterrupted.step(&command, &snapshot, &config, &history, &interaction, &hover, None, &operation).expect("checkpoint prefix"), ArtifactCommandWorkStep::Progress { .. }));
+            assert!(matches!(uninterrupted.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }).expect("checkpoint prefix"), ArtifactCommandWorkStep::Progress { .. }));
         }
         let mut checkpoint = [0u8; 40];
         assert_eq!(uninterrupted.checkpoint(&mut checkpoint).expect("checkpoint"), checkpoint.len());
@@ -2634,7 +2617,7 @@ mod tests {
             let mut work = Process3dResumableCommandWork::new(command.command_id(), extent);
             loop {
                 let started = std::time::Instant::now();
-                let step = work.step(&command, &empty, &config, &history, &interaction, &hover, None, &operation).expect("maximum work step");
+                let step = work.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &empty, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }).expect("maximum work step");
                 assert!(started.elapsed().as_micros() < 8_000, "resumable {} exceeded the interactive step ceiling", command.command_id());
                 if matches!(step, ArtifactCommandWorkStep::Complete(_) | ArtifactCommandWorkStep::CompleteWithEphemeral { .. }) {
                     break;
@@ -2724,18 +2707,18 @@ mod tests {
             Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "wood".into(), machine_id: "circularSaw".into() }),
             Process3dCommand::RemoveWorkshopMachine(remove_workshop_machine::RemoveWorkshopMachine { id: "circularSaw".into() }),
             Process3dCommand::UpdateWorkshopMachine(update_workshop_machine::UpdateWorkshopMachine {
-                machine: crate::artifacts::process3d::WorkshopMachine { id: "circularSaw".into(), label: "Circular Saw".into(), icon_id: "scissors".into(), catalog_id: Some("wood".into()), capabilities: vec![] },
+                machine: WorkshopMachine { id: "circularSaw".into(), label: "Circular Saw".into(), icon_id: "scissors".into(), catalog_id: Some("wood".into()), capabilities: vec![] },
             }),
             Process3dCommand::RemoveStep(remove_step::RemoveStep { id: "cut-1".into() }),
             Process3dCommand::RemoveSelectedStep(remove_selected_step::RemoveSelectedStep {}),
             Process3dCommand::MoveStep(move_step::MoveStep { id: "cut-1".into(), index: 2 }),
             Process3dCommand::UpdateStep(update_step::UpdateStep {
-                step_json: semio_framework_os_kernel::json::to_json_string(&crate::artifacts::process3d::ProcessStep {
+                step_json: semio_framework_os_kernel::json::to_json_string(&ProcessStep {
                     id: "cut-1".into(),
                     label: "Cut".into(),
                     enabled: true,
                     origin: None,
-                    measure: crate::artifacts::process3d::ProcessMeasure::Cut { tool: crate::artifacts::process3d::WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: crate::artifacts::process3d::Pose::default() },
+                    measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: crate::artifacts::process3d::Pose::default() },
                 }),
             }),
             Process3dCommand::SetStepEnabled(set_step_enabled::SetStepEnabled { id: "cut-1".into(), enabled: false }),
@@ -2802,7 +2785,7 @@ mod tests {
         let Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("example action must load a document") else {
             panic!("expected a LoadDocument effect");
         };
-        let loaded = <Process3dSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode example document");
+        let loaded = <Process3dSnapshot as ArtifactPack>::decode_pack(pack).expect("decode example document");
         assert_eq!(loaded, crate::artifacts::process3d::schema::plate_document());
     }
 
@@ -2945,8 +2928,8 @@ mod tests {
         let Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("setStock must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
-        let document = <Process3dSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
-        let expected_solid = crate::artifacts::process3d::brep_child_handle("stock", &crate::artifacts::process3d::brep_snapshot_for_working_solid(&crate::artifacts::process3d::WorkingSolid::Cylinder { radius: 0.3, height: 1.0 }));
+        let document = <Process3dSnapshot as ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+        let expected_solid = crate::artifacts::process3d::brep_child_handle("stock", &crate::artifacts::process3d::brep_snapshot_for_working_solid(&WorkingSolid::Cylinder { radius: 0.3, height: 1.0 }));
         assert_eq!(document.stock_solid, expected_solid, "setStock kind=cylinder must swap the stock solid to the real cylinder-content handle");
         let cleared_steps = crate::artifacts::process3d::flow_child_handle(&crate::artifacts::process3d::flow_snapshot_for_steps(&[], &Default::default()));
         assert_eq!(document.steps, cleared_steps, "swapping stock resets the step timeline");
@@ -3054,7 +3037,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn window_body_accepts_the_framework_instance_suffix() {
         let mut app = app();
-        let body_key = format!("{}:{}", workpiece::PROCESS_3D_PLAY_BODY_MAIN, workpiece::PROCESS_3D_PLAY_WINDOW_MAIN);
+        let body_key = format!("{}:{}", PROCESS_3D_PLAY_BODY_MAIN, workpiece::PROCESS_3D_PLAY_WINDOW_MAIN);
         let rendered = render_body(&mut app, &body_key);
         assert!(rendered.contains("processed"), "window-instance body key must render the Process world: {rendered}");
     }
@@ -3072,7 +3055,6 @@ mod tests {
     //#region 🔖️MediaTests
     #[semio_framework_async_macros::async_test]
     async fn export_brep_out_returns_step_text_structured_payload() {
-        let app = Process3dPlayApp;
         semio_framework::register_format_descriptors(semio_s_plugin_stdio::manifest::stdio_format_descriptors().expect("stdio format descriptors")).await.expect("register stdio format descriptors");
         let document = crate::artifacts::process3d::schema::default_document();
         let history = HistoryView::empty();
@@ -3091,7 +3073,6 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn export_unknown_port_is_not_implemented() {
-        let app = Process3dPlayApp;
         let document = crate::artifacts::process3d::schema::default_document();
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
@@ -3100,7 +3081,6 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn import_geometry_in_rejects_unrecognized_schema() {
-        let app = Process3dPlayApp;
         let document = crate::artifacts::process3d::schema::default_document();
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
@@ -3126,21 +3106,21 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn process_machine_contributions_are_configuration_owned() {
         use semio_framework::{ProgramContributionEntry, TopicContribution};
-        let machine = crate::artifacts::process3d::WorkshopMachine { id: "hot-saw".into(), label: "Hot Saw".into(), icon_id: "scissors".into(), catalog_id: None, capabilities: vec![] };
+        let machine = WorkshopMachine { id: "hot-saw".into(), label: "Hot Saw".into(), icon_id: "scissors".into(), catalog_id: None, capabilities: vec![] };
         let entry = ProgramContributionEntry {
             plugin_id: "process-module-test".into(),
             topic_contribution: Some(TopicContribution::new(
                 "process.machines",
-                semio_framework::DslValue::object([
-                    ("appId".to_string(), semio_framework::DslValue::String("process3d-play".to_string())),
-                    ("moduleId".to_string(), semio_framework::DslValue::String("hot-catalog".to_string())),
-                    ("label".to_string(), semio_framework::DslValue::String("Hot Catalog".to_string())),
-                    ("iconId".to_string(), semio_framework::DslValue::String("wrench".to_string())),
-                    ("machinesJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&vec![machine]))),
+                DslValue::object([
+                    ("appId".to_string(), DslValue::String("process3d-play".to_string())),
+                    ("moduleId".to_string(), DslValue::String("hot-catalog".to_string())),
+                    ("label".to_string(), DslValue::String("Hot Catalog".to_string())),
+                    ("iconId".to_string(), DslValue::String("wrench".to_string())),
+                    ("machinesJson".to_string(), DslValue::String(semio_framework_os_kernel::json::to_json_string(&vec![machine]))),
                 ]),
             )),
         };
-        let json = serde_json::to_string(&vec![entry]).unwrap();
+        let json = dsl::json::to_json_string(&vec![entry]);
         assert!(installed_catalogs(&json).iter().any(|catalog| catalog.catalog_id() == "hot-catalog"));
         assert!(!installed_catalogs("[]").iter().any(|catalog| catalog.catalog_id() == "hot-catalog"));
     }

@@ -6,6 +6,9 @@
 //! precedent this whole `✂️intersect` directory already follows.
 //!
 //! See ticket `26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME` wave 2, worker W2-A.
+/// 📐 Knot vector and indexed basis coefficients for fitting.
+pub type SplineFitBasis = (KnotVector, Vec<(usize, Vec<f64>)>);
+
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bezier::RationalBezier3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::bspline::{basis_functions, insert_knot, KnotVector};
@@ -131,7 +134,7 @@ pub(super) fn interpolate_params_2d(points: &[Pnt2], params: &[f64]) -> Option<C
 /// invalid non-monotonic knot vector — `KnotVector::new` rejecting it and every caller here
 /// falling back to a degenerate constant curve — since the padding never matched the interior
 /// knots' actual scale).
-fn fit_basis(params: &[f64], n: usize) -> Option<(KnotVector, Vec<(usize, Vec<f64>)>)> {
+fn fit_basis(params: &[f64], n: usize) -> Option<SplineFitBasis> {
     let degree = (n - 1).min(3);
     let mut knots = vec![params[0]; degree + 1];
     for j in 1..n - degree {
@@ -280,12 +283,12 @@ pub(super) fn curve_to_bezier_segments(curve: &Curve3, domain: (f64, f64)) -> Re
     let mut hx: Vec<f64> = nurbs.controls.iter().zip(&nurbs.weights).map(|(p, w)| p.x * w).collect();
     let mut hy: Vec<f64> = nurbs.controls.iter().zip(&nurbs.weights).map(|(p, w)| p.y * w).collect();
     let mut hz: Vec<f64> = nurbs.controls.iter().zip(&nurbs.weights).map(|(p, w)| p.z * w).collect();
-    let mut hw = nurbs.weights.clone();
+    let mut hw = nurbs.weights;
     let p = knots.degree;
     let (d0, d1) = knots.domain();
     let mut unique: Vec<f64> = Vec::new();
     for &k in &knots.knots {
-        if k > d0 + 1e-15 && k < d1 - 1e-15 && unique.last().map(|&u| (u - k).abs() > 1e-15).unwrap_or(true) {
+        if k > d0 + 1e-15 && k < d1 - 1e-15 && unique.last().is_none_or(|&u| (u - k).abs() > 1e-15) {
             unique.push(k);
         }
     }
@@ -355,7 +358,7 @@ mod tests {
         let params = centripetal_params(&points);
         let nurbs = interpolate_params_3d(&points, &params).expect("interpolation");
         for (p, &t) in points.iter().zip(&params) {
-            let point = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3::Nurbs { knots: nurbs.knots.clone(), controls: nurbs.controls.clone(), weights: nurbs.weights.clone() }.eval(t);
+            let point = Curve3::Nurbs { knots: nurbs.knots.clone(), controls: nurbs.controls.clone(), weights: nurbs.weights.clone() }.eval(t);
             assert!(point.distance(*p) < 1e-8, "expected {p:?}, got {point:?}");
         }
     }

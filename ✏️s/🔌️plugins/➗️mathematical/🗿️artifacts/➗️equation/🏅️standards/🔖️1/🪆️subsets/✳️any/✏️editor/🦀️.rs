@@ -583,17 +583,8 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
         (extent == self.extent).then_some(extent)
     }
 
-    fn step(
-        &mut self,
-        command: &EquationCommand,
-        snapshot: &EquationSnapshot,
-        _config: &EquationConfig,
-        _history: &semio_framework_plugin::HistoryView,
-        _interaction: &protocol::InteractionState,
-        _hover: &semio_framework_plugin::app::InteractionHoverState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<EquationPlayApp>>>,
-        _operation: &AppOperationContext,
-    ) -> Result<ArtifactCommandWorkStep<EditorApp<EquationPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<EquationPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<EquationPlayApp>>, Fault> {
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
         if equation_command_extent(command, snapshot) != Some(self.extent) || self.cursor > self.extent {
             return Err(Fault::from("equation-command-extent-drift"));
         }
@@ -1230,14 +1221,7 @@ impl ArtifactEditor for EquationPlayApp {
         };
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(EquationRetainedCommandWork::new(tool_id, equation_operation_identity(tool_id, &operation_context), extent));
         let payload = ArtifactRetainedCommandPayload::try_new(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            operation_context,
-            request.completion,
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
             EquationCommand::command_id,
             EQUATION_RETAINED_RAW_BYTES,
             EQUATION_RETAINED_WORK_ITEMS,
@@ -1356,7 +1340,7 @@ pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
             ]).required(),
         ])
         .action_args("setDirected", vec![
-            ActionArgDef::toggle("directed", LocalizedLabel::native("Directed", "Gerichtet")).default_value(true),
+            ActionArgDef::toggle("directed", LocalizedLabel::native("Directed", "Gerichtet")).default_value(&true),
         ])
         // 🎯️ Typed channel surface (HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS /
         // WORKFLOWS-END-TO-END-TYPED-PORTS) — `equation_io()` (this file's own `🔖️Io` region) is
@@ -1434,7 +1418,7 @@ mod tests {
         let interaction = protocol::InteractionState::default();
         let hover = semio_framework_plugin::app::InteractionHoverState::default();
         loop {
-            match work.step(command, snapshot, &config, &history, &interaction, &hover, None, operation).expect("retained Equation turn") {
+            match work.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation }).expect("retained Equation turn") {
                 ArtifactCommandWorkStep::Replay { .. } | ArtifactCommandWorkStep::Progress { .. } => {}
                 // 🌱️ `ToValue`/`DslValue` in place of the old `serde_json::to_value` oracle: `DslValue`
                 // already implements `PartialEq`, so the two runs compare directly with no JSON text
@@ -1526,7 +1510,7 @@ mod tests {
         let interaction = protocol::InteractionState::default();
         let hover = semio_framework_plugin::app::InteractionHoverState::default();
         for _ in 0..9 {
-            assert!(matches!(uninterrupted.step(&command, &snapshot, &config, &history, &interaction, &hover, None, &operation).expect("checkpoint prefix"), ArtifactCommandWorkStep::Progress { .. }));
+            assert!(matches!(uninterrupted.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }).expect("checkpoint prefix"), ArtifactCommandWorkStep::Progress { .. }));
         }
         let mut checkpoint = [0_u8; 40];
         assert_eq!(uninterrupted.checkpoint(&mut checkpoint).expect("checkpoint"), 40);
@@ -1548,7 +1532,7 @@ mod tests {
         assert_eq!(cancelled_before.close_step(1, usize::MAX), InteractiveJobCloseStep::Complete);
         assert_eq!(cancelled_before.close_step(1, usize::MAX), InteractiveJobCloseStep::Complete);
         let mut cancelled_after = EquationRetainedCommandWork::new("nodeGraphEdit", identity, extent);
-        assert!(matches!(cancelled_after.step(&command, &snapshot, &config, &history, &interaction, &hover, None, &operation).expect("cancel after admission"), ArtifactCommandWorkStep::Progress { .. }));
+        assert!(matches!(cancelled_after.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }).expect("cancel after admission"), ArtifactCommandWorkStep::Progress { .. }));
         cancelled_after.begin_close();
         assert!(matches!(cancelled_after.close_step(0, 0), InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }));
         while !cancelled_after.terminal_is_empty() {
@@ -1577,7 +1561,7 @@ mod tests {
         let hover = semio_framework_plugin::app::InteractionHoverState::default();
         loop {
             let started = std::time::Instant::now();
-            let step = work.step(&command, &snapshot, &config, &history, &interaction, &hover, None, &operation).expect("maximum retained turn");
+            let step = work.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }).expect("maximum retained turn");
             assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum Equation microturn exceeded 8 ms");
             if matches!(step, ArtifactCommandWorkStep::Complete(_)) {
                 break;
@@ -1642,14 +1626,14 @@ mod tests {
     pub(super) fn every_command() -> Vec<EquationCommand> {
         vec![
             EquationCommand::SetArtifact(set_artifact::SetArtifact {
-                graph: crate::artifacts::equation::dsl::math_graph_to_dsl(&crate::artifacts::equation::EquationGraph::default()),
-                geometry: crate::artifacts::equation::EquationGeometry::default(),
+                graph: crate::artifacts::equation::dsl::math_graph_to_dsl(&EquationGraph::default()),
+                geometry: EquationGeometry::default(),
             }),
             EquationCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "bfs".into(), seed: Some("a".into()) }),
             EquationCommand::SetDirected(set_directed::SetDirected { directed: true }),
             EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: r#"[{"operation":"addNode","x":12.0,"y":34.0}]"#.into() }),
             EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: crate::artifacts::equation::EquationCamera { x: 5.0, y: 6.0, zoom: 2.0 } }),
-            EquationCommand::SetPoints(set_points::SetPoints { geometry: crate::artifacts::equation::EquationGeometry::default() }),
+            EquationCommand::SetPoints(set_points::SetPoints { geometry: EquationGeometry::default() }),
             EquationCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
         ]
     }

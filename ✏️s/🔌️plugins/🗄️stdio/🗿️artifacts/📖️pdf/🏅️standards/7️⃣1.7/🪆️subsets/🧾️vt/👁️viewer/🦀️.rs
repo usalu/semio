@@ -73,7 +73,7 @@ impl ArtifactViewer for Pdf17VtViewer {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(built_to_component_tree),
-            _ => return semio_framework_plugin::built_text_to_component_tree(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_framework_plugin::built_text_to_component_tree(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }

@@ -26,13 +26,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> SemioImageSnapshot {
-    serde_json::from_str(BEFORE).expect("set-icc before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("set-icc before snapshot decodes")
 }
 fn expected_after() -> SemioImageSnapshot {
-    serde_json::from_str(AFTER).expect("set-icc after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("set-icc after snapshot decodes")
 }
 fn mutation() -> SemioImageMutation {
-    serde_json::from_str(MUTATION).expect("set-icc mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("set-icc mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
     let SemioImageMutation::SetIcc(set_icc::SetIcc { icc }) = mutation() else { panic!("set-icc/attaches-an-icc-profile-where-there-was-none: the committed mutation must be the set-icc variant") };
@@ -72,12 +72,12 @@ async fn the_undo_set_icc_clears_the_profile_again() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioImageSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: SemioImageSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "set-icc/attaches-an-icc-profile-where-there-was-none: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("set-icc mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("set-icc mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("set-icc mutation reparses");
     assert_eq!(reencoded, original, "set-icc/attaches-an-icc-profile-where-there-was-none: committed mutation JSON is not canonical");
 }
@@ -94,7 +94,7 @@ async fn declared_outcome_holds_with_no_guard_branch_firing() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = leaf_outcome();
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-icc/attaches-an-icc-profile-where-there-was-none: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -102,7 +102,7 @@ async fn produces_committed_diff() {
 /// 🩹 Applying the committed diff to `before` yields `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: SemioImageDiff = serde_json::from_str(DIFF).expect("committed set-icc diff decodes");
+    let decoded: SemioImageDiff = dsl::json::from_json_str(DIFF).expect("committed set-icc diff decodes");
     let produced = decoded.apply(&before()).expect("committed set-icc diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-icc/attaches-an-icc-profile-where-there-was-none: committed diff did not carry before to after");
 }
@@ -111,10 +111,10 @@ async fn committed_diff_applies_to_after() {
 /// what keeps this case a decode→encode fixed point.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_uses_the_set_arm_of_the_tri_state() {
-    let decoded: SemioImageDiff = serde_json::from_str(DIFF).expect("committed set-icc diff decodes");
+    let decoded: SemioImageDiff = dsl::json::from_json_str(DIFF).expect("committed set-icc diff decodes");
     assert!(matches!(decoded.icc, Some(Some(_))), "the icc slot must decode as Some(Some(bytes)) — set, not cleared");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert!(committed.get("icc").expect("the committed diff names the icc slot").is_array(), "a SET profile is an array; a CLEARED one would be null and would not survive the Option<Option<..>> round trip");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     assert_eq!(reencoded, committed, "set-icc/attaches-an-icc-profile-where-there-was-none: committed diff JSON is not canonical");
 }

@@ -10,7 +10,7 @@
 use std::collections::HashMap;
 
 use crate::wgpu::component::layout::WindowLayout;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use crate::wgpu::component::ui::UiNode;
 use crate::wgpu::draw::{DrawList, IconAtlas};
 use crate::wgpu::events::{EventRouter, UiCommand, UiEvent};
@@ -525,7 +525,7 @@ impl Ui {
 
     /// 🔁️ Runs `UiTree::apply_tree` (`reconcile`) to diff `ui_node` into `window_id`'s retained tree,
     /// creating that window's tree/layout-engine/event-router on first use.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn apply_tree(&mut self, window_id: &str, ui_node: &UiNode) {
         let Some(window) = self.window_mut(window_id) else { return };
         let unchanged = window.tree.root.and_then(|root| window.tree.node(root)).is_some_and(|node| node.spec.0 == *ui_node);

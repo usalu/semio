@@ -10,7 +10,9 @@
 use semio_framework::kernel::Effect;
 use semio_framework::{PluginManifest, ViewModel};
 use std::collections::HashMap;
-use ui_contract::{SurfaceId, UiDocumentLease, UI_DOCUMENT_LEASE_SLOTS, UI_DOCUMENT_NODES, UI_DOCUMENT_PATCH_OPS};
+use ui_contract::UiDocumentLease;
+#[cfg(not(target_arch = "wasm32"))]
+use ui_contract::{SurfaceId, UI_DOCUMENT_LEASE_SLOTS, UI_DOCUMENT_NODES, UI_DOCUMENT_PATCH_OPS};
 use ui_wgpu::wgpu::{WindowEngagement, WindowMeasure};
 
 #[cfg(target_arch = "wasm32")]
@@ -498,7 +500,7 @@ impl ProgramBridgeEntry {
     pub async fn render_with_document(&self, instance_id: u32, body_key: &str, view_state: &ViewModel, document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
-            ProgramBridgeBackend::Js(handle) => render_with_document_js(handle, instance_id, body_key, view_state, document_dsl).await,
+            ProgramBridgeBackend::Js(handle) => render_with_document_js(handle, instance_id, body_key, view_state, document_dsl, refresh_effects).await,
             #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::render_with_document(client, instance_id, body_key, view_state, document_dsl, refresh_effects).await,
         }
@@ -584,11 +586,24 @@ impl ProgramBridgeEntry {
 }
 
 #[cfg(target_arch = "wasm32")]
+/// ❗️ Renders a rejected JS promise's reason as text. `map_err(|_| "...")` discarded it, so every
+/// `create_app` failure reached the shell as one opaque string with the actual guest fault erased.
+fn describe_js_rejection(error: &JsValue) -> String {
+    if let Some(text) = error.as_string() {
+        return text;
+    }
+    if let Some(text) = Reflect::get(error, &JsValue::from_str("message")).ok().and_then(|value| value.as_string()) {
+        return text;
+    }
+    format!("{error:?}")
+}
+
+#[cfg(target_arch = "wasm32")]
 async fn create_app_js(handle: &Rc<JsValue>, app_id: &str) -> Result<u32, String> {
     let create_app = get_fn(handle.as_ref(), "createApp")?;
     let result = create_app.call1(&JsValue::NULL, &JsValue::from_str(app_id)).map_err(|_| "create_app failed")?;
     if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
-        let resolved = JsFuture::from(promise.clone()).await.map_err(|_| "create_app promise failed")?;
+        let resolved = JsFuture::from(promise.clone()).await.map_err(|error| format!("create_app promise failed: {}", describe_js_rejection(&error)))?;
         resolved.as_f64().map(|v| v as u32).ok_or("create_app not number".into())
     } else {
         result.as_f64().map(|v| v as u32).ok_or("create_app not number".into())
@@ -656,8 +671,141 @@ async fn context_menu_js(handle: &Rc<JsValue>, instance_id: u32, request: &serde
 }
 
 #[cfg(target_arch = "wasm32")]
-async fn render_with_document_js(_handle: &Rc<JsValue>, _instance_id: u32, _body_key: &str, _view_state: &ViewModel, _document_dsl: Option<&str>) -> Result<UiDocumentLease, String> {
-    Err("browser plugin render must publish a generation-qualified retained document lease".into())
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct BrowserRetainedDocument {
+    revision: u64,
+    root: Option<u64>,
+    layout_epoch: u64,
+    nodes: Vec<ui_contract::UiNodeRecord>,
+}
+
+/// 🪟️ One assembly opportunity per iteration, bounded by the same document ceilings the native
+/// `render_with_document` budgets against, so a guest that never completes fails closed instead of spinning.
+#[cfg(target_arch = "wasm32")]
+const BROWSER_DOCUMENT_ASSEMBLY_OPPORTUNITIES: usize = ui_contract::UI_DOCUMENT_PATCH_OPS + ui_contract::UI_DOCUMENT_NODES * ui_contract::UI_DOCUMENT_NODES + ui_contract::UI_DOCUMENT_LEASE_SLOTS;
+#[cfg(target_arch = "wasm32")]
+/// 🎟️ Per-STEP byte grant handed to each assembly opportunity — not a total. The resident permit
+/// `open_into` reserves against `UI_RESIDENT_SURFACE_BYTES` refuses an oversized single grant and
+/// surfaces it as `ArenaFull`, which a 1 MiB step reliably tripped; 32 KiB is the value the assembly's
+/// own resident-root tests step with.
+const BROWSER_DOCUMENT_ASSEMBLY_BYTES: usize = 32 * 1024;
+
+/// 📃️ Assembles the browser guest's retained surface into a generation-qualified [`UiDocumentLease`].
+///
+/// The native backend takes its lease straight off the kernel's own arena; the JS backend had NO path here
+/// and returned an error unconditionally, so nothing the browser rendered ever reached the shell.
+/// `renderDocument` (`🐚️plugin-bridge.ts`) publishes the surface as `UiSnapshot`-shaped JSON read from the
+/// RAW `ui-patch` ops, and every step below is the stepped arena protocol the assembly's own tests use:
+/// `open_into` until the surface is consumed, `place_one` per record until the source is taken, then
+/// `finish_into` until the lease materialises.
+///
+/// 🚧️ `refresh_effects` stays unfilled: the native path drains `outcome.effects` from the same exchange,
+/// whereas `renderDocument` returns only the published document. Effects still reach the shell through the
+/// ordinary turn path, so nothing is dropped — but a caller relying on THIS sink for render-time effects
+/// gets an empty one.
+#[cfg(target_arch = "wasm32")]
+async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u32, body_key: &str, _view_state: &ViewModel, _document_dsl: Option<&str>, _refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String> {
+    let render = get_fn(handle.as_ref(), "renderDocument")?;
+    let result = render
+        .call2(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(body_key))
+        .map_err(|error| format!("renderDocument failed: {}", describe_js_rejection(&error)))?;
+    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
+        JsFuture::from(promise.clone()).await.map_err(|error| format!("renderDocument promise failed: {}", describe_js_rejection(&error)))?
+    } else {
+        result
+    };
+    let text = resolved.as_string().ok_or_else(|| "renderDocument result not string".to_string())?;
+    let published: BrowserRetainedDocument = serde_json::from_str(&text).map_err(|error| format!("renderDocument result parse failed: {error}"))?;
+    let root = published.root.ok_or_else(|| format!("plugin published no root node for surface '{body_key}'"))?;
+    if published.nodes.is_empty() {
+        return Err(format!("plugin published an empty retained document for surface '{body_key}'"));
+    }
+    let mut assembly = ui_contract::UiDocumentAssembly::default();
+    let outcome = assemble_browser_document(&mut assembly, body_key, instance_id, root, &published);
+    if outcome.is_err() {
+        retire_browser_assembly(&mut assembly);
+    }
+    outcome
+}
+
+/// 🎟️ Returns a failed assembly's resident reservation. `open_*` admits the fixed surface ceiling and
+/// `UI_RESIDENT_AGGREGATE_BYTES` is only FOUR of those, so an error path that simply drops the assembly
+/// burns a quarter of the process-wide budget per attempt — and the shell retries render, which turned
+/// one real failure into a permanent `ArenaFull`.
+#[cfg(target_arch = "wasm32")]
+fn retire_browser_assembly(assembly: &mut ui_contract::UiDocumentAssembly) {
+    for _ in 0..BROWSER_DOCUMENT_ASSEMBLY_OPPORTUNITIES {
+        match assembly.close_step(1, BROWSER_DOCUMENT_ASSEMBLY_BYTES) {
+            Ok(step) if step.complete => return,
+            Ok(_) => continue,
+            Err(_) => return,
+        }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+fn assemble_browser_document(assembly: &mut ui_contract::UiDocumentAssembly, body_key: &str, instance_id: u32, root: u64, published: &BrowserRetainedDocument) -> Result<UiDocumentLease, String> {
+    let identity = ui_contract::UiDocumentAssemblyIdentity {
+        generation: u64::from(instance_id),
+        revision: ui_contract::UiRevision(published.revision),
+        root: Some(ui_contract::UiNodeId(root)),
+        layout_epoch: published.layout_epoch,
+    };
+    let mut surface = Some(ui_contract::SurfaceId::try_from(body_key).map_err(|_| "program surface id exceeds the retained contract".to_string())?);
+    // 🎟️ Right-size the reservation instead of `open_into`'s cold convenience, which admits the FIXED
+    // surface ceiling — `UI_RESIDENT_AGGREGATE_BYTES` is only four of those, and the renderer's own
+    // retained surfaces already hold most of it, so a ceiling-sized request fails as `ArenaFull` on the
+    // very first document. `open_with_permit` is the path the API's own doc points retained callers at.
+    let items = published.nodes.len().saturating_add(2).min(ui_contract::UI_RESIDENT_SURFACE_ITEMS);
+    let bytes = published
+        .nodes
+        .len()
+        .saturating_add(2)
+        .saturating_mul(size_of::<ui_contract::UiNodeRecord>())
+        .saturating_add(ui_contract::UiDocumentAssembly::required_open_bytes())
+        .min(ui_contract::UI_RESIDENT_SURFACE_BYTES);
+    let mut permit = None;
+    ui_contract::UiResidentPermit::try_reserve(ui_contract::UiResidentLimits { items, bytes }, &mut permit, BROWSER_DOCUMENT_ASSEMBLY_BYTES)
+        .map_err(|error| format!("retained document permit failed: {error:?}"))?;
+    if permit.is_none() {
+        return Err(format!("retained document for surface '{body_key}' was refused a resident permit"));
+    }
+    let mut opened = false;
+    for _ in 0..BROWSER_DOCUMENT_ASSEMBLY_OPPORTUNITIES {
+        assembly.open_with_permit(&mut permit, &mut surface, identity, 1, BROWSER_DOCUMENT_ASSEMBLY_BYTES).map_err(|error| format!("retained document open failed: {error:?}"))?;
+        if surface.is_none() && permit.is_none() {
+            opened = true;
+            break;
+        }
+    }
+    if !opened {
+        return Err(format!("retained document for surface '{body_key}' never opened within its opportunity budget"));
+    }
+    for record in &published.nodes {
+        let mut source = Some(record.credited_clone().ok_or_else(|| format!("retained document node for surface '{body_key}' could not be credited"))?);
+        let mut placed = false;
+        for _ in 0..BROWSER_DOCUMENT_ASSEMBLY_OPPORTUNITIES {
+            assembly.place_one(&mut source, 1, BROWSER_DOCUMENT_ASSEMBLY_BYTES).map_err(|error| format!("retained document node placement failed: {error:?}"))?;
+            if source.is_none() {
+                placed = true;
+                break;
+            }
+        }
+        if !placed {
+            return Err(format!("retained document node for surface '{body_key}' exceeded its placement budget"));
+        }
+    }
+    let mut lease = None;
+    for _ in 0..BROWSER_DOCUMENT_ASSEMBLY_OPPORTUNITIES {
+        let progress = assembly
+            .finish_into(&mut lease, ui_contract::UiRevision(published.revision), 1, BROWSER_DOCUMENT_ASSEMBLY_BYTES)
+            .map_err(|error| format!("retained document finish failed: {error:?}"))?;
+        if progress.complete {
+            break;
+        }
+    }
+    lease.ok_or_else(|| format!("retained document for surface '{body_key}' never published a lease"))
 }
 
 #[cfg(target_arch = "wasm32")]

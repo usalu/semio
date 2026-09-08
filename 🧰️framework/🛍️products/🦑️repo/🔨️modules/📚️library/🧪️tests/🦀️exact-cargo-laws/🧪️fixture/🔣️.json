@@ -1,6 +1,14 @@
 {
   "schema": "semio.repo.exact-cargo-laws/v1",
-  "stageEnvironment": { "buildStack": "8388608", "nativeStack": "268435456", "sharedValue": "preserved" },
+  "compilerStorage": {
+    "defaultDirectory": "target",
+    "base": "workspace"
+  },
+  "stageEnvironment": {
+    "buildStack": "8388608",
+    "nativeStack": "268435456",
+    "sharedValue": "preserved"
+  },
   "package": "fixture-package",
   "target": {
     "kind": "test",
@@ -12,7 +20,11 @@
   ],
   "executableBytesHex": "616263",
   "executableSha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
-  "nativeArguments": ["--exact", "--test-threads=1", "--show-output"],
+  "nativeArguments": [
+    "--exact",
+    "--test-threads=1",
+    "--show-output"
+  ],
   "capturedOutput": "[DEBUG] retained native owner reached its terminal witness",
   "activeLease": {
     "directoryPrefix": ".exact-cargo-laws-active-",
@@ -148,8 +160,8 @@
       "assertions": 0
     },
     {
-      "id": "outside-cargo-target",
-      "mutation": "outside-cargo-target",
+      "id": "source-cargo-target",
+      "mutation": "source-cargo-target",
       "expected": "denied",
       "builds": 0,
       "assertions": 0

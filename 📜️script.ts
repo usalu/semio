@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { requireMcpBinary } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
 import { spawn as spawnNxProcess, spawnSync as stopNxProcessTree } from "node:child_process";
 import { microsecondsFromMilliseconds } from "./🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js";
 /**
@@ -44,7 +45,7 @@ import {
   goCoverageArgs,
   goLevelTestArgs,
   goProfileToLcov,
-  loadFrameworkOsPlaygroundCatalog,
+  loadFrameworkOsPlaygroundSelections,
   mergeLcov,
   orchestratorBudgetOpts,
   parseLcov,
@@ -133,7 +134,7 @@ import {
 } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync, linkSync, lstatSync, mkdirSync, chmodSync, chownSync, copyFileSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, symlinkSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { builtinModules, createRequire } from "node:module";
 import { dirname, extname, isAbsolute, join, posix, relative, resolve, sep } from "node:path";
 import { createServer } from "node:net";
@@ -149,7 +150,6 @@ const REPO_CLIENT_GO = join(REPO_CLIENT_DIR, "⌨️cli");
 const REPO_CLI_ENTRY_GO = join(REPO_CLIENT_GO, "cmd", "repo");
 const REPO_MCP_GO = join(REPO_CLIENT_DIR, "🔌️mcp");
 const REPO_MCP_PROFILE_ENV = "SEMIO_REPO_MCP_CLIENT";
-process.env.NX_ISOLATE_PLUGINS = "false";
 
 /** 🦑️Builds the repo MCP client from the current source before execution. */
 function buildRepoMcpClient(root: string): string {
@@ -165,14 +165,8 @@ function buildRepoMcpClient(root: string): string {
 export { Script };
 
 function ensureFrameworkOsPlaygroundCatalog() {
-  let catalog = loadFrameworkOsPlaygroundCatalog();
-  if (catalog.length > 0) return catalog;
-  runCmdStatus("bun", ["nx", "run", "@semio-tech/plugin-registry:generate"], { cwd: WORKSPACE_ROOT, ...orchestratorBudgetOpts() });
-  catalog = loadFrameworkOsPlaygroundCatalog();
-  if (catalog.length === 0) {
-    console.error("[dev] playground catalog is empty after registry generate — check @semio-tech/plugin-registry.");
-    process.exit(1);
-  }
+  const catalog = loadFrameworkOsPlaygroundSelections();
+  if (catalog.length === 0) throw new Error("No authored playground declarations were discovered");
   return catalog;
 }
 
@@ -626,11 +620,11 @@ export class DevScript extends Script {
    * catalog range and the 7300+ bench pool). Extra argv passes straight through to the binary
    * (`--folder`, `--hub`, `--principal`, `--scopes`, `--auto-approve`, …). */
   private runMcpOs(transport: "stdio" | "http", extra: string[]): void {
-    const args = ["run", "--quiet", "-p", "semio-framework-os-mcp", "--bin", "semio-os-mcp", "--", transport, ...extra];
+    const args = [transport, ...extra];
     if (transport === "http" && !extra.includes("--port")) {
       args.push("--port", process.env.S_OS_MCP_PORT ?? "6300");
     }
-    runCmd("cargo", args, { cwd: this.root, ...daemonBudgetOpts() });
+    runCmd(requireMcpBinary(this.root), args, { cwd: this.root, ...daemonBudgetOpts() });
   }
 
   private runMcpStdioRepo(slugs: string[]): void {
@@ -651,25 +645,58 @@ export class DevScript extends Script {
 
 //#region 🔖️NxScript
 export class NxScript extends Script {
+  static ownedDescendants(roots: readonly number[], rows: readonly { pid: number; parent: number; command: string }[], daemonScript: string): number[] {
+    const children = new Map<number, typeof rows[number][]>(), normalize = (path: string): string => path.replaceAll("\\", "/").toLowerCase();
+    for (const row of rows) { const siblings = children.get(row.parent) ?? []; siblings.push(row); children.set(row.parent, siblings); }
+    const seen = new Set(roots), pending = [...roots], owned: number[] = [], daemon = normalize(daemonScript);
+    while (pending.length) for (const row of children.get(pending.pop()!) ?? []) {
+      if (seen.has(row.pid) || normalize(row.command).includes(daemon)) continue;
+      seen.add(row.pid); owned.push(row.pid); pending.push(row.pid);
+    }
+    return owned.sort((a, b) => a - b);
+  }
   async run(segments: string[]): Promise<void> {
-    const invocation = resolveNxInvocation(segments);
-    const child = spawnNxProcess("node", [join(this.root, "node_modules", "nx", "bin", "nx.js"), ...invocation.args], {
-      cwd: this.root,
-      env: devToolingEnv({ ...invocation.env, npm_lifecycle_event: undefined, npm_lifecycle_script: undefined }),
-      stdio: "inherit",
-      detached: process.platform !== "win32",
-    });
-    let cancelled: NodeJS.Signals | undefined;
-    let force: ReturnType<typeof setTimeout> | undefined;
+    const nxCli = createRequire(join(this.root, "package.json")).resolve("nx/bin/nx.js");
+    const invocation = resolveNxInvocation(segments), children: ReturnType<typeof spawnNxProcess>[] = [];
+    const env = devToolingEnv({ ...invocation.env, NX_WORKSPACE_DATA_DIRECTORY: join(this.root, ".nx", "workspace-data"), NX_SOCKET_DIR: undefined, NX_DAEMON_SOCKET_DIR: undefined, npm_lifecycle_event: undefined, npm_lifecycle_script: undefined });
+    let cancelled: NodeJS.Signals | undefined, cancellationDeadline = 0, watchFailure = 0, finishing = false;
+    let force: ReturnType<typeof setTimeout> | undefined, watcher: ReturnType<typeof spawnNxProcess> | undefined;
+    const descendants = new Set<number>();
+    const captureDescendants = (): void => {
+      const windows = process.platform === "win32";
+      const snapshot = stopNxProcessTree(windows ? "powershell.exe" : "ps", windows ? ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", "Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,CommandLine | ConvertTo-Json -Compress"] : ["-axo", "pid=,ppid=,command="], { encoding: "utf8", windowsHide: true, timeout: 5000 });
+      if (snapshot.status !== 0) { console.error("Could not capture Nx descendants for cancellation"); return; }
+      const rows = windows ? [JSON.parse(snapshot.stdout)].flat().filter((row) => row && Number.isSafeInteger(row.ProcessId) && row.ProcessId > 0 && Number.isSafeInteger(row.ParentProcessId)).map((row) => ({ pid: row.ProcessId, parent: row.ParentProcessId, command: typeof row.CommandLine === "string" ? row.CommandLine : "" })) : snapshot.stdout.trim().split("\n").flatMap((row) => { const match = row.trim().match(/^(\d+)\s+(\d+)\s+(.*)$/); return match ? [{ pid: Number(match[1]), parent: Number(match[2]), command: match[3] }] : []; });
+      const daemon = createRequire(join(this.root, "package.json")).resolve("nx/src/daemon/server/start.js");
+      for (const pid of NxScript.ownedDescendants(children.flatMap((child) => child.pid ? [child.pid] : []), rows, daemon)) descendants.add(pid);
+    };
+    const kill = (child: ReturnType<typeof spawnNxProcess>, signal: NodeJS.Signals): void => {
+      if (!child.pid) return;
+      try { process.kill(-child.pid, signal); } catch {}
+    };
+    const killAll = (signal: NodeJS.Signals): void => {
+      if (process.platform === "win32") {
+        const pids = [...descendants, ...children.flatMap((child) => child.pid ? [child.pid] : [])];
+        if (pids.length) stopNxProcessTree("taskkill", [...pids.flatMap((pid) => ["/pid", String(pid)]), "/f"], { stdio: "ignore", windowsHide: true });
+        return;
+      }
+      for (const pid of descendants) try { process.kill(pid, signal); } catch {}
+      children.forEach((child) => kill(child, signal));
+    };
     const stop = (signal: NodeJS.Signals): void => {
-      if (cancelled || !child.pid) return;
+      if (cancelled) return;
       cancelled = signal;
-      if (process.platform === "win32") stopNxProcessTree("taskkill", ["/pid", String(child.pid), "/t", "/f"], { stdio: "ignore" });
-      else child.kill(signal);
-      force = setTimeout(() => {
-        if (process.platform !== "win32" && child.pid) try { process.kill(-child.pid, "SIGKILL"); } catch {}
-      }, 5000);
+      cancellationDeadline = Date.now() + 5000;
+      try { captureDescendants(); }
+      catch (error) { console.error(`Could not inspect Nx descendants; stopping owned launch processes: ${error instanceof Error ? error.message : String(error)}`); }
+      killAll(signal);
+      force = setTimeout(() => killAll("SIGKILL"), 5000);
       force.unref();
+    };
+    const launch = (args: string[], capture = false): ReturnType<typeof spawnNxProcess> => {
+      const child = spawnNxProcess("node", [nxCli, ...args], { cwd: this.root, env, stdio: capture ? ["inherit", "pipe", "inherit"] : "inherit", detached: process.platform !== "win32" });
+      children.push(child);
+      return child;
     };
     const interrupt = (): void => stop("SIGINT"), terminate = (): void => stop("SIGTERM");
     process.once("SIGINT", interrupt);
@@ -677,10 +704,41 @@ export class NxScript extends Script {
     const budget = orchestratorBudgetOpts().budgetMs ?? 0;
     const timeout = budget > 0 ? setTimeout(() => { console.error(`[budget] Nx exceeded ${budget}ms`); stop("SIGTERM"); }, budget) : undefined;
     try {
-      const status = await new Promise<number>((accept, reject) => { child.once("error", reject); child.once("close", (code) => accept(code ?? 1)); });
+      if (invocation.watch) {
+        watcher = launch(["watch", "--all", "--includeGlobalWorkspaceFiles", "--verbose", "--", "bun", "x", "--no-install", "nx", "run", invocation.watch, "--output-style=stream"], true);
+        await new Promise<void>((accept, reject) => {
+          let pending = "";
+          const ready = setTimeout(() => reject(new Error("Nx source watcher did not become ready within 120 seconds")), 120_000);
+          const exited = (): void => { clearTimeout(ready); reject(new Error("Nx source watcher exited before readiness")); };
+          watcher!.once("close", exited);
+          watcher!.once("error", (error) => { clearTimeout(ready); reject(error); });
+          watcher!.stdout!.on("data", (chunk) => {
+            process.stdout.write(chunk);
+            pending = (pending + chunk.toString()).slice(-8192);
+            if (pending.includes("watch process waiting...")) { clearTimeout(ready); watcher!.removeListener("close", exited); accept(); }
+          });
+        });
+        watcher.once("close", (code) => { if (!finishing && !cancelled) { watchFailure = code || 1; stop("SIGTERM"); } });
+      }
+      if (!cancelled) {
+        const child = launch(invocation.args);
+        const status = await new Promise<number>((accept, reject) => { child.once("error", reject); child.once("close", (code) => accept(code ?? 1)); });
+        process.exitCode = watchFailure || (cancelled ? cancelled === "SIGINT" ? 130 : 143 : status);
+      } else process.exitCode = cancelled === "SIGINT" ? 130 : 143;
+    } catch (error) {
       if (cancelled) process.exitCode = cancelled === "SIGINT" ? 130 : 143;
-      else if (status !== 0) process.exitCode = status;
+      else throw error;
     } finally {
+      finishing = true;
+      if (watcher && !cancelled) stop("SIGTERM");
+      if (cancelled && process.platform !== "win32") {
+        const alive = (child: ReturnType<typeof spawnNxProcess>): boolean => { try { if (child.pid) { process.kill(-child.pid, 0); return true; } } catch {} return false; };
+        const descendantAlive = (pid: number): boolean => { try { process.kill(pid, 0); return true; } catch { return false; } };
+        while ((children.some(alive) || [...descendants].some(descendantAlive)) && Date.now() < cancellationDeadline) await new Promise((accept) => setTimeout(accept, 25));
+        killAll("SIGKILL");
+        const settle = Date.now() + 1000;
+        while ([...descendants].some(descendantAlive) && Date.now() < settle) await new Promise((accept) => setTimeout(accept, 25));
+      }
       if (force) clearTimeout(force);
       if (timeout) clearTimeout(timeout);
       process.removeListener("SIGINT", interrupt);
@@ -690,15 +748,54 @@ export class NxScript extends Script {
 }
 
 /** 🧭️ Resolves public selections before Nx creates the single task graph. */
-export function resolveNxInvocation(segments: string[]): { args: string[]; env: NodeJS.ProcessEnv } {
+export function resolveNxInvocation(segments: string[]): { args: string[]; env: NodeJS.ProcessEnv; watch?: string } {
   if (segments[0] !== "run") return { args: segments, env: {} };
   const delimiter = segments.indexOf("--");
   const selected = delimiter < 0 ? [] : segments.slice(delimiter + 1);
   const options = segments.slice(2, delimiter < 0 ? undefined : delimiter);
   const target = segments[1];
+  const print = target?.match(/^@semio-tech\/print:(build|watch)(?:-(.*))?$/);
+  if (print) {
+    const catalog = JSON.parse(readFileSync(join(WORKSPACE_ROOT, "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🔣️.json"), "utf8")) as { documents: { id: string }[] };
+    const suffix = print[2], viz = suffix === "viz" || selected[0] === "viz";
+    const names = selected[0] === "viz" ? selected.slice(1) : selected;
+    const ids = suffix && suffix !== "viz" ? [suffix] : names.map(name => viz && !name.startsWith("viz-") ? `viz-${name}` : name);
+    if (suffix && suffix !== "viz" && selected.length) throw new Error("A Print document target accepts no compiler arguments");
+    for (const id of ids) if (!catalog.documents.some(document => document.id === id)) throw new Error(`Unknown Print document: ${id}`);
+    if (print[1] === "watch" && ids.length > 1) throw new Error("Select one Print document or a complete collection to watch");
+    const targets = ids.length ? [...new Set(ids)].map(id => `${print[1]}-${id}`) : [`${print[1]}${viz ? "-viz" : ""}`];
+    const args = targets.length === 1 ? ["run", `@semio-tech/print:${targets[0]}`, ...options] : ["run-many", "--projects=@semio-tech/print", `--targets=${targets.join(",")}`, ...options];
+    return { args, env: {}, ...(print[1] === "watch" && !options.some(argument => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: `@semio-tech/print:${targets[0]!.replace(/^watch/, "build")}` } : {}) };
+  }
+  const report = target?.match(/^@semio-tech\/mit-bestand-bericht:(build|watch)(?:-(.*))?$/);
+  if (report) {
+    const catalog = JSON.parse(readFileSync(join(WORKSPACE_ROOT, "♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/🔣️.json"), "utf8")) as { documents: { id: string }[] };
+    if (selected.length) throw new Error("Report targets accept no compiler arguments");
+    if (report[2] && !catalog.documents.some(document => document.id === report[2])) throw new Error(`Unknown report document: ${report[2]}`);
+    return { args: ["run", target, ...options], env: {}, ...(report[1] === "watch" && !options.some(argument => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: target.replace(":watch", ":build") } : {}) };
+  }
+  const preparation = target?.match(/^@semio-tech\/framework-os-dev:(prepare|activate|serve|dev)-(.+)-react-(dev|release)$/);
+  if (preparation) return { args: segments, env: { SEMIO_BUILD_MODE: preparation[3] === "release" ? "ship" : "dev", SEMIO_PLUGIN: preparation[2], SEMIO_RENDERER: "react" }, ...(preparation[1] === "dev" && !options.some((argument) => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: `@semio-tech/framework-os-dev:activate-${preparation[2]}-react-${preparation[3]}` } : {}) };
+  if (["@semio-tech/framework-renderer-wgpu:native", "@semio-tech/framework-renderer-wgpu:native-build"].includes(target) && selected.some((argument) => argument === "--release" || argument === "--dist")) {
+    const args = selected.filter((argument) => argument !== "--release" && argument !== "--dist");
+    return { args: ["run", `${target}-release`, ...options, ...(args.length ? ["--", ...args] : [])], env: {} };
+  }
   if (target === "workspace:setup" && selected.length) {
     const command = selected[0] === "deps" ? `deps-${selected[1]}` : selected[0] === "prepare" ? "prepare" : `setup-${selected[0]}`;
     return { args: ["run", `workspace:${command}`, ...options], env: {} };
+  }
+  if (target === "workspace:bench" || target === "@semio-tech/framework-os-dev:bench") {
+    if (selected[0] !== "plugins") throw new Error("Select bench plugins through Nx");
+    let renderer = "native";
+    const args: string[] = [];
+    for (let index = 1; index < selected.length; index++) {
+      const argument = selected[index];
+      if (argument === "--renderer") renderer = selected[++index];
+      else if (argument.startsWith("--renderer=")) renderer = argument.slice(11);
+      else args.push(argument);
+    }
+    if (!["native", "react", "wgpu"].includes(renderer)) throw new Error(`Unknown benchmark renderer: ${renderer}`);
+    return { args: ["run", `@semio-tech/framework-os-dev:bench-plugins-${renderer}`, ...options, ...(args.length ? ["--", ...args] : [])], env: {} };
   }
   if (target === "workspace:cpp" && selected.length) {
     const [command, ...args] = selected;
@@ -716,16 +813,25 @@ export function resolveNxInvocation(segments: string[]): { args: string[]; env: 
     if (((taxonomy.testPhases ?? []) as string[]).includes(rest[0])) return { args: ["run", `@semio-tech/repo-test-domain:test-${rest[0]}`, ...options, "--", ...(((taxonomy.testLevellessPhases ?? []) as string[]).includes(rest[0]) ? [] : [level]), ...rest.slice(1)], env: { SEMIO_TEST_LEVEL: level } };
   }
   if (target === "workspace:lint" && selected[0] === "repo") return { args: ["run", "workspace:lint-repo", ...options, ...(selected.length > 1 ? ["--", ...selected.slice(1)] : [])], env: {} };
-  if (target === "workspace:dev") {
+  if (target === "workspace:dev" || target === "@semio-tech/framework-os-dev:dev") {
+    if (selected[0] === "mcp" && ["stdio", "http"].includes(selected[1]) && selected[2] === "os") {
+      const args = selected.slice(3);
+      if (selected[1] === "http" && !args.includes("--port")) args.push("--port", process.env.S_OS_MCP_PORT ?? "6300");
+      return { args: ["run", "@semio-tech/framework-os-mcp-rs:dev", ...options, "--", selected[1], ...args], env: {} };
+    }
     if (selected[0] === "mcp" || selected[0] === "storybook-static") return { args: segments, env: {} };
     if (selected[0] === "storybook") return { args: ["run", "workspace:dev-storybook", ...options, "--", ...selected.slice(1)], env: {} };
-    if (selected[0] === "multi") return { args: ["run", "@semio-tech/framework-os-dev:dev", ...options, "--", ...selected], env: { S_OS_PORT: process.env.S_OS_PORT ?? "6071", SEMIO_RENDERER: process.env.SEMIO_RENDERER ?? "react" } };
-    const catalog = loadFrameworkOsPlaygroundCatalog();
-    if (catalog.length === 0) throw new Error("The playground catalog must be generated through @semio-tech/plugin-registry:generate before development");
+    if (selected[0] === "multi") return { args: ["run", "@semio-tech/framework-os-dev:dev-s-react-dev", ...options, ...(selected.length > 1 ? ["--", ...selected.slice(1)] : [])], env: { S_OS_PORT: process.env.S_OS_PORT ?? "6071", SEMIO_RENDERER: "react", SEMIO_PLUGIN: "s", SEMIO_BUILD_MODE: "dev" }, ...(!options.some((argument) => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: "@semio-tech/framework-os-dev:activate-s-react-dev" } : {}) };
+    const catalog = loadFrameworkOsPlaygroundSelections();
     const app = resolveFrameworkOsPlaygroundPlugin(catalog, selected.length ? selected : ["s"]);
     if (!app) throw new Error(`Unknown development selection: ${selected.join(" ")}`);
-    const served = app.rest.includes("served");
-    return { args: ["run", "@semio-tech/framework-os-dev:dev", ...options, "--", app.plugin, ...app.rest.filter((segment) => segment !== "served")], env: frameworkOsPlaygroundDevEnv(catalog, app.plugin, served ? { SEMIO_RENDERER: "react", SKIP_PLUGIN_BUILD: "1", SKIP_ENGINE_BUILD: "1" } : {}) };
+    const served = app.rest.includes("served"), env = frameworkOsPlaygroundDevEnv(catalog, app.plugin, served ? { SEMIO_RENDERER: "react" } : {});
+    if (env.SEMIO_RENDERER === "react") {
+      const profile = process.env.SEMIO_BUILD_MODE === "ship" ? "release" : "dev", command = served ? "serve" : "dev";
+      const remaining = app.rest.filter((segment) => segment !== "served");
+      return { args: ["run", `@semio-tech/framework-os-dev:${command}-${app.plugin}-react-${profile}`, ...options, ...(remaining.length ? ["--", ...remaining] : [])], env: { ...env, SEMIO_BUILD_MODE: profile === "release" ? "ship" : "dev" }, ...(!served && !options.some((argument) => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: `@semio-tech/framework-os-dev:activate-${app.plugin}-react-${profile}` } : {}) };
+    }
+    return { args: ["run", "@semio-tech/framework-os-dev:dev", ...options, "--", app.plugin, ...app.rest], env };
   }
   if (target === "workspace:build" && selected.length) {
     const targets: Record<string, string> = { assets: "@semio-tech/assets:build", storybook: "workspace:build-storybook", "repo-cli": "@semio-tech/repo-client:build", "repo-server": "@semio-tech/repo-coordinator:build", "repo-vscode": "@semio-tech/repo-vscode:build-vsix" };
@@ -19252,10 +19358,8 @@ export class TestScript extends Script {
  * @see 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts `#region 🔖️Bench`
  */
 export class BenchScript extends Script {
-  run(segments: string[]): void {
-    const sub = segments[0];
-    if (sub !== "plugins") throw new Error(`unknown bench subcommand: ${sub ?? "<none>"} (expected plugins)`);
-    runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:bench", "plugins", ...segments.slice(1)], { cwd: this.root, ...orchestratorBudgetOpts() });
+  run(): void {
+    throw new Error("Select the benchmark through bun nx run workspace:bench -- plugins");
   }
 }
 //#endregion 🔖️BenchScript

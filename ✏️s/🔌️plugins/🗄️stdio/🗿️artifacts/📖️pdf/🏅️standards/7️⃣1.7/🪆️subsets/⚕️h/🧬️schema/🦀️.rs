@@ -150,7 +150,7 @@ pub mod derived_analysis {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn resolve_ref<'a>(objects: &'a [PdfIndirectObject], r: ObjRef) -> Option<&'a PdfObject> {
+    fn resolve_ref(objects: &[PdfIndirectObject], r: ObjRef) -> Option<&PdfObject> {
         objects.iter().find(|o| o.id == r).map(|o| &o.value)
     }
 
@@ -164,17 +164,17 @@ pub mod derived_analysis {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn find_catalog(objects: &[PdfIndirectObject]) -> Option<&PdfObject> {
-        objects.iter().find(|o| o.value.as_dict().map(|d| dict_name(d, "Type") == Some("Catalog")).unwrap_or(false)).map(|o| &o.value)
+        objects.iter().find(|o| o.value.as_dict().is_some_and(|d| dict_name(d, "Type") == Some("Catalog"))).map(|o| &o.value)
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn scan_action_subtype(objects: &[PdfIndirectObject], subtype: &str) -> Vec<ObjRef> {
-        objects.iter().filter(|o| o.value.as_dict().map(|d| dict_name(d, "S") == Some(subtype)).unwrap_or(false)).map(|o| o.id).collect()
+        objects.iter().filter(|o| o.value.as_dict().is_some_and(|d| dict_name(d, "S") == Some(subtype))).map(|o| o.id).collect()
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn scan_js_key_only(objects: &[PdfIndirectObject], already: &[ObjRef]) -> Vec<ObjRef> {
-        objects.iter().filter(|o| !already.contains(&o.id) && o.value.as_dict().map(|d| d.iter().any(|e| e.key == "JS")).unwrap_or(false)).map(|o| o.id).collect()
+        objects.iter().filter(|o| !already.contains(&o.id) && o.value.as_dict().is_some_and(|d| d.iter().any(|e| e.key == "JS"))).map(|o| o.id).collect()
     }
 
     /// ✍️ Real check: `/Root/AcroForm/Fields` contains a resolved entry with `/FT /Sig`.
@@ -183,12 +183,12 @@ pub mod derived_analysis {
         let Some(catalog) = find_catalog(objects) else { return false };
         let Some(acroform) = catalog.dict_get("AcroForm").and_then(|v| resolve_item(objects, v)) else { return false };
         let Some(fields) = acroform.dict_get("Fields").and_then(|v| v.as_array()) else { return false };
-        fields.iter().any(|item| resolve_item(objects, item).and_then(|f| f.as_dict()).map(|d| dict_name(d, "FT") == Some("Sig")).unwrap_or(false))
+        fields.iter().any(|item| resolve_item(objects, item).and_then(|f| f.as_dict()).is_some_and(|d| dict_name(d, "FT") == Some("Sig")))
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn descriptor_has_embedded_file(objects: &[PdfIndirectObject], desc_ref: ObjRef) -> bool {
-        resolve_ref(objects, desc_ref).and_then(|o| o.as_dict()).map(|d| d.iter().any(|e| e.key == "FontFile" || e.key == "FontFile2" || e.key == "FontFile3")).unwrap_or(false)
+        resolve_ref(objects, desc_ref).and_then(|o| o.as_dict()).is_some_and(|d| d.iter().any(|e| e.key == "FontFile" || e.key == "FontFile2" || e.key == "FontFile3"))
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -199,17 +199,16 @@ pub mod derived_analysis {
             if dict_name(d, "Type") != Some("Font") {
                 continue;
             }
-            let direct = d.iter().find(|e| e.key == "FontDescriptor").and_then(|e| e.value.as_ref()).map(|r| descriptor_has_embedded_file(objects, r)).unwrap_or(false);
+            let direct = d.iter().find(|e| e.key == "FontDescriptor").and_then(|e| e.value.as_ref()).is_some_and(|r| descriptor_has_embedded_file(objects, r));
             let via_descendants = d
                 .iter()
                 .find(|e| e.key == "DescendantFonts")
                 .and_then(|e| e.value.as_array())
-                .map(|arr| {
+                .is_some_and(|arr| {
                     arr.iter().any(|item| {
-                        resolve_item(objects, item).and_then(|desc| desc.as_dict()).and_then(|dd| dd.iter().find(|e| e.key == "FontDescriptor").and_then(|e| e.value.as_ref())).map(|r| descriptor_has_embedded_file(objects, r)).unwrap_or(false)
+                        resolve_item(objects, item).and_then(|desc| desc.as_dict()).and_then(|dd| dd.iter().find(|e| e.key == "FontDescriptor").and_then(|e| e.value.as_ref())).is_some_and(|r| descriptor_has_embedded_file(objects, r))
                     })
-                })
-                .unwrap_or(false);
+                });
             if !direct && !via_descendants {
                 out.push(o.id);
             }
@@ -231,8 +230,8 @@ pub mod derived_analysis {
     pub fn check_h_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {
         let objects = &snapshot.objects;
         let mut out = Vec::new();
-        let title_ok = snapshot.info.title.as_deref().map(|s| !s.is_empty()).unwrap_or(false);
-        let author_ok = snapshot.info.author.as_deref().map(|s| !s.is_empty()).unwrap_or(false);
+        let title_ok = snapshot.info.title.as_deref().is_some_and(|s| !s.is_empty());
+        let author_ok = snapshot.info.author.as_deref().is_some_and(|s| !s.is_empty());
         if !title_ok || !author_ok {
             out.push(soft(CODE_INFO_TITLE_OR_AUTHOR, "document Info.title and/or Info.author is absent or empty -- the PDF Healthcare Best Practices Guide recommends both be populated".into()));
         }

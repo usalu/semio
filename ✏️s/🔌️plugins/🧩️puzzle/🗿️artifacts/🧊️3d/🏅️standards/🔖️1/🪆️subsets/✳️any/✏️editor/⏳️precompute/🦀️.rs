@@ -2041,9 +2041,10 @@ pub(crate) fn fill_job(context: semio_framework_plugin::reactor::jobs::JobCtx, i
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::editor::puzzle3d::precompute::fill::FillJobStage;
     use crate::artifacts::puzzle3d::schema::testkit::*;
     use crate::artifacts::puzzle3d::schema::{BrushHostRules, BrushKindWeights, CableKindCatalog, FixtureObject, KindCompatEntry, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexKindCatalog, VortexProps};
-    use semio_framework_job::StepOutcome;
+    
     use std::time::{Duration, Instant};
 
     fn fill_capable_engine() -> Puzzle3dCollision {
@@ -2950,6 +2951,7 @@ mod tests {
         }
         assert!(grants > 8, "a populated builder cannot be bulk-dropped by one close grant");
         assert!(terminal.terminal_is_empty());
+        assert!(fill_envelope_registry().lock().expect("registry").slots[usize::from(request.slot)].is_none());
     }
 
     #[test]

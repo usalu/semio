@@ -52,11 +52,11 @@ impl store::ArtifactDsl for ZipSnapshot {
             Err(_) => text,
         };
         let hex: Vec<char> = body.chars().filter(|character| !character.is_whitespace()).collect();
-        if hex.len() % 2 != 0 {
+        if !hex.len().is_multiple_of(2) {
             return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
         }
         let mut bytes = Vec::with_capacity(hex.len() / 2);
-        for pair in hex.chunks_exact(2) {
+        for pair in hex.as_chunks::<2>().0 {
             let high = pair[0].to_digit(16).ok_or_else(|| store::TextError::new("invalid hex digit", dsl::TextSpan::at(1, 1)))?;
             let low = pair[1].to_digit(16).ok_or_else(|| store::TextError::new("invalid hex digit", dsl::TextSpan::at(1, 1)))?;
             bytes.push(((high << 4) | low) as u8);

@@ -165,7 +165,7 @@ fn pages_diff_between(a: &[PdfPage], b: &[PdfPage]) -> PdfPagesDiff {
 /// the carried added payload) -- same algorithm shape as json's `absorb_array_diff`, specialized
 /// to flat `PdfPageDiff` (no recursion needed, pages are weak/flat entities).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_law_pages_diff(d1: PdfPagesDiff, d2: PdfPagesDiff) -> PdfPagesDiff {
+fn absorb_law_pages_diff(d1: PdfPagesDiff, d2: &PdfPagesDiff) -> PdfPagesDiff {
     enum Origin {
         Base(usize),
         D1Added(usize),
@@ -489,7 +489,7 @@ fn array_diff_between(a: &[PdfObject], b: &[PdfObject]) -> PdfArrayDiff {
 /// ➕️ Index-transported absorb via symbolic position simulation (same shape as json's
 /// `absorb_array_diff`, specialized to `PdfObject`/`PdfValueDiff`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_array_diff(d1: PdfArrayDiff, d2: PdfArrayDiff) -> PdfArrayDiff {
+fn absorb_array_diff(d1: PdfArrayDiff, d2: &PdfArrayDiff) -> PdfArrayDiff {
     enum Origin {
         Base(usize),
         D1Added(usize),
@@ -773,7 +773,7 @@ fn absorb_value_diff(d1: PdfValueDiff, d2: PdfValueDiff) -> PdfValueDiff {
         (PdfValueDiff::Str { .. }, PdfValueDiff::Str { value }) => PdfValueDiff::Str { value },
         (PdfValueDiff::Name { .. }, PdfValueDiff::Name { value }) => PdfValueDiff::Name { value },
         (PdfValueDiff::Ref { .. }, PdfValueDiff::Ref { value }) => PdfValueDiff::Ref { value },
-        (PdfValueDiff::Array { diff: a1 }, PdfValueDiff::Array { diff: a2 }) => PdfValueDiff::Array { diff: absorb_array_diff(a1, a2) },
+        (PdfValueDiff::Array { diff: a1 }, PdfValueDiff::Array { diff: a2 }) => PdfValueDiff::Array { diff: absorb_array_diff(a1, &a2) },
         (PdfValueDiff::Dict { diff: d1 }, PdfValueDiff::Dict { diff: d2 }) => PdfValueDiff::Dict { diff: absorb_dict_diff(d1, d2) },
         (PdfValueDiff::Stream { dict: d1, data: da1, filters: f1 }, PdfValueDiff::Stream { dict: d2, data: da2, filters: f2 }) => PdfValueDiff::Stream {
             dict: match (d1, d2) {
@@ -1199,7 +1199,7 @@ impl MutationDiff<PdfSnapshot> for PdfDiff {
             (None, b) => b,
             (a, None) => a,
             (Some(a), Some(b)) => {
-                let m = absorb_law_pages_diff(a, b);
+                let m = absorb_law_pages_diff(a, &b);
                 if m.is_empty() {
                     None
                 } else {
@@ -1430,7 +1430,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -2534,10 +2534,10 @@ impl protocol::DiffCodec for PdfDiff {
     /// 🧪️ P2-FG3: REAL binary frame (`format u8 | flags u8 | [declared_version][info][pages]
     /// [objects][trailer]`), matching `../💾️binary/📡️.protocol.semio`'s `header fixed 2`
     /// + `chain payload bytes` shape — upgraded from F6's `print_diff().into_bytes()`
-    /// text-as-binary shortcut (100% of stdio's `DiffCodec` impls were still on that shortcut per
-    /// the P2-W0 census). `flags` bits 0-5 mark `declared_version`/`info`/`pages`/`objects`/
-    /// `trailer` presence; each present field's own (genuinely recursive, LEB128-varint/
-    /// length-prefixed binary) payload follows in that fixed order.
+    ///   text-as-binary shortcut (100% of stdio's `DiffCodec` impls were still on that shortcut per
+    ///   the P2-W0 census). `flags` bits 0-5 mark `declared_version`/`info`/`pages`/`objects`/
+    ///   `trailer` presence; each present field's own (genuinely recursive, LEB128-varint/
+    ///   length-prefixed binary) payload follows in that fixed order.
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags: u8 = 0;
         if self.declared_version.is_some() {

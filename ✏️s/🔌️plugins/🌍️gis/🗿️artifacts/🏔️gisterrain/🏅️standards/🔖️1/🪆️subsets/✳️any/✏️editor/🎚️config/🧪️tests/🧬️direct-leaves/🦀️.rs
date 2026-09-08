@@ -2,7 +2,6 @@
 
 use super::{Gis3dConfig, Gis3dConfigDiff, Gis3dConfigMutation};
 use protocol::{Mutation, MutationDiff, MutationKind, MutationLeaf, OpBinary, OpText};
-use serde::{de::DeserializeOwned, Serialize};
 use serde_json::Value;
 use std::fmt::Debug;
 use store::{ArtifactDsl, ArtifactPack};
@@ -12,38 +11,38 @@ fn vectors() -> Value {
     serde_json::from_str(include_str!("🔣️.json")).expect("domain neutral vectors")
 }
 
-fn decode<T: DeserializeOwned>(value: &Value) -> T {
-    serde_json::from_value(value.clone()).expect("typed neutral value")
+fn decode<T: dsl::FromValue>(value: &Value) -> T {
+    dsl::json::from_json_str(&(value.clone()).to_string()).expect("typed neutral value")
 }
 
 fn assert_schema_cases<T>(cases: &Value)
 where
-    T: DeserializeOwned + Serialize + PartialEq + Debug,
+    T: dsl::FromValue + dsl::ToValue + PartialEq + Debug,
 {
     for value in cases["valid"].as_array().expect("valid cases") {
         let decoded: T = decode(value);
-        let encoded = serde_json::to_value(&decoded).expect("encode typed value");
+        let encoded = serde_json::from_str::<Value>(&dsl::json::to_json_string(&decoded)).expect("encode typed value");
         assert_eq!(decode::<T>(&encoded), decoded);
     }
     for value in cases["invalid"].as_array().expect("invalid cases") {
-        assert!(serde_json::from_value::<T>(value.clone()).is_err(), "{} accepted {value}", std::any::type_name::<T>());
+        assert!(dsl::json::from_json_str::<T>(&(value.clone()).to_string()).is_err(), "{} accepted {value}", std::any::type_name::<T>());
     }
 }
 //#endregion 🧫️NeutralFixture
 
 //#region 🔺️SnapshotAndDiff
 #[test]
-fn strict_snapshot_and_aggregate_serde_vectors() {
+fn strict_snapshot_and_aggregate_json_vectors() {
     let fixture = vectors();
     assert_schema_cases::<Gis3dConfig>(&fixture["config"]);
     assert_schema_cases::<Gis3dConfigMutation>(&fixture["mutations"]);
     for value in fixture["config"]["valid"].as_array().expect("valid snapshots") {
         let snapshot: Gis3dConfig = decode(value);
-        assert_eq!(serde_json::to_value(snapshot).expect("snapshot JSON"), *value);
+        assert_eq!(serde_json::from_str::<Value>(&dsl::json::to_json_string(&snapshot)).expect("snapshot JSON"), *value);
     }
     for value in fixture["mutations"]["valid"].as_array().expect("valid operations") {
         let operation: Gis3dConfigMutation = decode(value);
-        assert_eq!(serde_json::to_value(operation).expect("operation JSON"), *value);
+        assert_eq!(serde_json::from_str::<Value>(&dsl::json::to_json_string(&operation)).expect("operation JSON"), *value);
     }
 }
 
@@ -167,8 +166,8 @@ where
     assert_schema_cases::<T>(&fixture["payloads"][key]);
     for payload in fixture["payloads"][key]["valid"].as_array().expect("valid payloads") {
         let leaf: T = decode(payload);
-        assert_eq!(serde_json::to_value(&leaf).expect("payload JSON"), *payload);
-        assert_eq!(<T as dsl::DslField>::from_value(&leaf.to_value()).expect("intrinsic record roundtrip"), leaf);
+        assert_eq!(serde_json::from_str::<Value>(&dsl::json::to_json_string(&leaf)).expect("payload JSON"), *payload);
+        assert_eq!(<T as dsl::DslField>::from_value(&<T as dsl::DslField>::to_value(&leaf)).expect("intrinsic record roundtrip"), leaf);
     }
     for law in row["cases"].as_array().expect("leaf cases") {
         let before: Gis3dConfig = decode(&law["before"]);
@@ -185,7 +184,7 @@ where
         if let Some(code) = law["warning"].as_str() {
             assert_eq!(outcome.messages().len(), 1, "{}", law["id"]);
             assert_eq!(outcome.messages()[0].code.0, code);
-            assert_eq!(outcome.messages()[0].level, protocol::MutationMessage::warn(code, "").level);
+            assert_eq!(outcome.messages()[0].level, dsl::Severity::Warning);
             assert_eq!(outcome.diff(), &Gis3dConfigDiff::default());
         } else {
             assert!(outcome.messages().is_empty(), "{}", law["id"]);
@@ -194,12 +193,12 @@ where
         let stored = operation.inverse(&before);
         assert_eq!(stored, expected_inverse, "{}", law["id"]);
         assert_eq!(<T as MutationKind<Gis3dConfig, Gis3dConfigMutation>>::inverse(&leaf, &before), stored, "{}", law["id"]);
-        assert_eq!(serde_json::to_value(&stored).expect("stored inverse JSON"), law["inverse"]);
+        assert_eq!(serde_json::from_str::<Value>(&dsl::json::to_json_string(&stored)).expect("stored inverse JSON"), law["inverse"]);
         let restored = stored.iter().rev().try_fold(after, |state, inverse| inverse.diff(&state).diff().apply(&state)).expect("stored inverse application");
         assert_eq!(restored, before, "{}", law["id"]);
         let mut envelope = law["payload"].as_object().expect("payload object").clone();
         envelope.insert("operation".into(), law["inverse"][0]["operation"].clone());
-        assert_eq!(serde_json::to_value(&operation).expect("forward JSON"), Value::Object(envelope));
+        assert_eq!(serde_json::from_str::<Value>(&dsl::json::to_json_string(&operation)).expect("forward JSON"), Value::Object(envelope));
         assert_operation_codecs(&operation, T::DESCRIPTOR.text_opcode.expect("text opcode"), T::DESCRIPTOR.binary_tag.expect("binary ordinal"));
     }
 }

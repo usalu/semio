@@ -52,10 +52,11 @@ pub struct Puzzle5dArtifactVcs {
 
 #[wasm_bindgen]
 impl Puzzle5dArtifactVcs {
-    #[wasm_bindgen(constructor)]
-    pub async fn new() -> Result<Puzzle5dArtifactVcs, JsValue> {
-        let app = VcsArtifactApp::new(EditorApp::<Puzzle5dPlayApp>::default()).await;
-        Ok(Self { app: RefCell::new(app) })
+    pub fn create() -> js_sys::Promise {
+        semio_framework_async::future_to_promise(async {
+            let app = VcsArtifactApp::new(EditorApp::<Puzzle5dPlayApp>::default()).await;
+            Ok(Self { app: RefCell::new(app) }.into())
+        })
     }
 
     #[wasm_bindgen(js_name = beginEnvelopeLoad)]

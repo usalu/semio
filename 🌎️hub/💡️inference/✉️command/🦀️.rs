@@ -95,6 +95,16 @@ impl<'a> CanonicalInferenceCommandV1<'a> {
         self.timestamp
     }
 
+    /// ↩️ Returns the exact server-stamped inverse payload after the caller verifies identity.
+    pub(super) fn inverse_payload(&self) -> &'a [u8] {
+        self.inverse_payload
+    }
+
+    /// 📤️ Returns the exact original forward payload for reconstruction checks.
+    pub(super) fn diff_payload(&self) -> &'a [u8] {
+        self.diff_payload
+    }
+
     fn encode(&self, output: &mut Vec<u8>) {
         protocol::write_str(output, self.mutation_id);
         protocol::write_str(output, self.document_id);

@@ -3,13 +3,10 @@
   "cli": {
     "packageManager": "bun"
   },
-  "useDaemonProcess": false,
+  "useDaemonProcess": true,
   "defaultBase": "⛳wip",
   "namedInputs": {
-    "default": [
-      "{projectRoot}/**/*",
-      "sharedGlobals"
-    ],
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "sharedGlobals": [
       "{workspaceRoot}/📜️script.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
@@ -21,33 +18,11 @@
         "runtime": "bun --version"
       }
     ],
-    "production": [
-      "default",
-      "!{projectRoot}/**/?(*.)+(spec|test|e2e|integration|stories|story|mdx).[cmjtshx]?([sx])?(.snap)?",
-      "!{projectRoot}/.storybook/**"
-    ],
-    "cargo": [
-      "{projectRoot}/**/*.rs",
-      "{projectRoot}/Cargo.toml",
-      "{workspaceRoot}/Cargo.lock"
-    ],
-    "go": [
-      "{projectRoot}/**/*.go",
-      "{projectRoot}/go.mod",
-      "{projectRoot}/go.sum",
-      "{workspaceRoot}/go.work",
-      "{workspaceRoot}/go.work.sum"
-    ],
-    "uv": [
-      "{projectRoot}/**/*.py",
-      "{projectRoot}/pyproject.toml",
-      "{workspaceRoot}/uv.lock"
-    ],
-    "dotnet": [
-      "{projectRoot}/**/*.cs",
-      "{projectRoot}/**/*.csproj",
-      "{workspaceRoot}/Monorepo.sln"
-    ]
+    "production": ["default", "!{projectRoot}/**/?(*.)+(spec|test|e2e|integration|stories|story|mdx).[cmjtshx]?([sx])?(.snap)?", "!{projectRoot}/.storybook/**"],
+    "cargo": ["{projectRoot}/**/*.rs", "{projectRoot}/Cargo.toml", "{workspaceRoot}/Cargo.lock"],
+    "go": ["{projectRoot}/**/*.go", "{projectRoot}/go.mod", "{projectRoot}/go.sum", "{workspaceRoot}/go.work", "{workspaceRoot}/go.work.sum"],
+    "uv": ["{projectRoot}/**/*.py", "{projectRoot}/pyproject.toml", "{workspaceRoot}/uv.lock"],
+    "dotnet": ["{projectRoot}/**/*.cs", "{projectRoot}/**/*.csproj", "{workspaceRoot}/Monorepo.sln"]
   },
   "pluginsConfig": {
     "@nx/js": {
@@ -70,7 +45,8 @@
     },
     {
       "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
-      "options": {}
+      "include": ["**/📋️project.json", "**/Cargo.toml", "bun.lock", "**/*.patch"],
+      "options": { "analyzeLockfile": true }
     },
     {
       "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs",
@@ -79,5 +55,6 @@
   ],
   "parallel": 3,
   "cacheDirectory": ".nx/cache",
-  "maxCacheSize": "8GB"
+  "maxCacheSize": "8GB",
+  "analytics": false
 }

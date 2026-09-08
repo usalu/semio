@@ -42,8 +42,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn document_lists_map_layers() {
-        let mut app = app();
-        assert!(render_body(&mut app, GIS2D_PLAY_BODY_DOCUMENT).contains("gis2d-play-document.layer.raster"));
+        let mut app = app().await;
+        assert!(render_body(&mut app, GIS2D_PLAY_BODY_DOCUMENT).await.contains("gis2d-play-document.layer.raster"));
     }
 
     #[semio_framework_async_macros::async_test]

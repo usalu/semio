@@ -2,7 +2,7 @@
 
 use super::*;
 
-fn third_party_json<T: crate::os_dsl::ToValue + ?Sized>(value: &T) -> serde_json::Value {
+fn third_party_json<T: crate::os_dsl::ToValue>(value: &T) -> serde_json::Value {
     serde_json::from_str(&crate::os_pack::json::to_json_string(value)).expect("first-party JSON must remain valid RFC 8259")
 }
 

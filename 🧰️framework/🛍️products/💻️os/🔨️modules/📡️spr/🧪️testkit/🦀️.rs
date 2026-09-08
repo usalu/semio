@@ -658,25 +658,25 @@ pub async fn assert_wire_frame_round_trip(sample: &WireFrameSample) {
 /// @emoji 🧵️ Which side of the app-engine channel an `assert_channel_frame_round_trip` sample
 /// represents — `AppCommand`/`AppFrame` are distinct enums with distinct encode/decode fn pairs,
 /// same rationale as `WireFrameSample` above.
-pub enum ChannelFrameSample {
-    Command(crate::os_spr::AppCommand),
-    Frame(crate::os_spr::AppFrame),
+pub enum ChannelFrameSample<'a> {
+    Command(&'a crate::os_spr::AppCommand),
+    Frame(&'a crate::os_spr::AppFrame),
 }
 
 /// ✅️ LAW: `decode(encode(frame)) == frame`, for either channel direction.
-pub async fn assert_channel_frame_round_trip(sample: &ChannelFrameSample) {
+pub async fn assert_channel_frame_round_trip(sample: &ChannelFrameSample<'_>) {
     match sample {
         ChannelFrameSample::Command(command) => {
             let encoded = crate::os_spr::encode_app_command(command).await.expect("encode_app_command must succeed");
             assert_eq!(encoded.page_len(), 1, "testkit command is one page");
             let bytes = encoded.front_page().expect("testkit command has one page").as_slice();
             let decoded = crate::os_spr::channel::decode_app_command(bytes).await.expect("decode_app_command must succeed on its own encode_app_command output");
-            assert_eq!(&decoded, command, "decode_app_command(encode_app_command(command)) must equal command");
+            assert_eq!(&decoded, *command, "decode_app_command(encode_app_command(command)) must equal command");
         }
         ChannelFrameSample::Frame(frame) => {
             let bytes = crate::os_spr::encode_app_frame(frame).await;
             let decoded = crate::os_spr::decode_app_frame(&bytes).await.expect("decode_app_frame must succeed on its own encode_app_frame output");
-            assert_eq!(&decoded, frame, "decode_app_frame(encode_app_frame(frame)) must equal frame");
+            assert_eq!(&decoded, *frame, "decode_app_frame(encode_app_frame(frame)) must equal frame");
         }
     }
 }
@@ -1212,10 +1212,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn channel_frame_round_trip_holds_for_command_and_frame_samples() {
-        assert_channel_frame_round_trip(&ChannelFrameSample::Command(crate::os_spr::AppCommand::ReadConflicts { seq: 1 })).await;
-        assert_channel_frame_round_trip(&ChannelFrameSample::Command(crate::os_spr::AppCommand::ConfigCommand { seq: 1, command: vec![1, 2, 3] })).await;
-        assert_channel_frame_round_trip(&ChannelFrameSample::Frame(crate::os_spr::AppFrame::Done { in_reply_to: 1 })).await;
-        assert_channel_frame_round_trip(&ChannelFrameSample::Frame(crate::os_spr::AppFrame::Error { in_reply_to: None, fault: b"e:m".to_vec(), report: Vec::new() })).await;
+        assert_channel_frame_round_trip(&ChannelFrameSample::Command(&crate::os_spr::AppCommand::ReadConflicts { seq: 1 })).await;
+        assert_channel_frame_round_trip(&ChannelFrameSample::Command(&crate::os_spr::AppCommand::ConfigCommand { seq: 1, command: vec![1, 2, 3] })).await;
+        assert_channel_frame_round_trip(&ChannelFrameSample::Frame(&crate::os_spr::AppFrame::Done { in_reply_to: 1 })).await;
+        assert_channel_frame_round_trip(&ChannelFrameSample::Frame(&crate::os_spr::AppFrame::Error { in_reply_to: None, fault: b"e:m".to_vec(), report: Vec::new() })).await;
     }
     //#endregion 🔖️Laws (continued)
 

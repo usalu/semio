@@ -2,7 +2,7 @@
 name = "semio-framework-os-kernel-db"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Db facade — Shape V2 #[path] glue over owner-tree db components"
 
 [package.metadata.semio]

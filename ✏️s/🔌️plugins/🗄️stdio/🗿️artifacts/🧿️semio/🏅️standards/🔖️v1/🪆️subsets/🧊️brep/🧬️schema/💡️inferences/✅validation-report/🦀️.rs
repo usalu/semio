@@ -109,7 +109,7 @@ impl store::InferredField<SemioBrepSnapshot> for BrepValidationReport {
     }
 
     fn compute(snapshot: &SemioBrepSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
-        check_brep_referential_integrity(snapshot).into_iter().map(|d| BrepValidationDiagnostic { code: d.code.0.clone(), message: d.message.clone() }).collect()
+        check_brep_referential_integrity(snapshot).into_iter().map(|d| BrepValidationDiagnostic { code: d.code.0.clone(), message: d.message }).collect()
     }
 }
 //#endregion 🔖️DependencyHashChain

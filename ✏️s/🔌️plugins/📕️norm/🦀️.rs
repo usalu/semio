@@ -181,10 +181,10 @@ mod surface_tests {
 
     macro_rules! surface_law {
         ($name:ident, $editor:ty, $viewer:ty) => {
-            #[test]
-            fn $name() {
-                assert_viewer_never_mutates::<$viewer>();
-                assert_editor_and_viewer_share_dialect::<$editor, $viewer>();
+            #[semio_framework_async_macros::async_test]
+            async fn $name() {
+                assert_viewer_never_mutates::<$viewer>().await;
+                assert_editor_and_viewer_share_dialect::<$editor, $viewer>().await;
             }
         };
     }

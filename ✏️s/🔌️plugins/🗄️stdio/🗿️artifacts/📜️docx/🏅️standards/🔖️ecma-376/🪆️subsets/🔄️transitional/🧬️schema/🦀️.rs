@@ -177,7 +177,7 @@ pub mod derived_analysis {
     /// relationship-type SUFFIX (`/officeDocument`) so this resolves for either conformance class; see
     /// `📏️strict::analyzer::main_document_part`'s doc comment for the full rationale.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn main_document_part<'a>(opc: &'a OpcPackage) -> Option<(&'a OpcPart, String)> {
+    fn main_document_part(opc: &OpcPackage) -> Option<(&OpcPart, String)> {
         let rel = opc.relationships_for("").iter().find(|r| r.rel_type.ends_with("/officeDocument"))?;
         let path = resolve_relationship_target("", &rel.target);
         opc.part(&path).map(|p| (p, path))

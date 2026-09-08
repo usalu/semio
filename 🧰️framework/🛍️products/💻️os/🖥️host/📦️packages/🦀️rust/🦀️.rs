@@ -17,12 +17,8 @@ pub mod persistence;
 mod retirement;
 
 //#region 🔖️OsHostFull
-// 🧬️ `workflow_kernel` is the private path-mount of `🔨️modules/🔁️workflow` — kept distinct from the
-// public OS-layer `pub mod workflow` in host so that module can re-export the kernel vocabulary and
-// layer media/registry helpers on top. Public spelling beside `space` is `workflow` only.
 #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
-#[path = "../../../🔨️modules/🔁️workflow/🦀️.rs"]
-mod workflow_kernel;
+use semio_framework::workflow as workflow_kernel;
 
 #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 #[path = "../../../🔨️modules/🪐️space/🦀️.rs"]

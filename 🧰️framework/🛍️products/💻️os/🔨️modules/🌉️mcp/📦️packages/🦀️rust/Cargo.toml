@@ -2,7 +2,7 @@
 name = "semio-framework-os-mcp"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Semio OS MCP gateway — dual-era JSON-RPC/MCP protocol core over stdio + Streamable HTTP, handle table, audit lane, shell bridge codec (packet P1b-http-handles-bridge, extending P1a-protocol-core: zero dependency on the plugin host/channel/actor crates)"
 
 [package.metadata.semio]

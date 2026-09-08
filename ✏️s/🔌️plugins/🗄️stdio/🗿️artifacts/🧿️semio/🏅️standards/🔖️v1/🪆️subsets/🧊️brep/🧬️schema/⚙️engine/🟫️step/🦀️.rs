@@ -10,6 +10,9 @@
 //! `🧊️brep/🚪️io` (`SemioBrepToStep`/`SemioBrepFromStep` + `artifacts::step`'s generic Part-21
 //! tokenizer). Reconciling the two needs `⚙️engine`'s `BrepKernel` impl rewired — explicitly
 //! out of scope for this wave (see `📌️important.md`, "BrepKernel — do NOT attempt").
+/// 🪢 Degree, control-point identifiers, multiplicities, and knots.
+pub type BsplineCurveAttributes = (usize, Vec<u64>, Vec<u32>, Vec<f64>);
+
 
 use std::collections::HashMap;
 use std::fmt::Write as _;
@@ -576,7 +579,7 @@ fn find_composite_bspline_attrs<'a>(attrs: &'a str, base_name: &str) -> Option<&
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_bspline_curve_attrs(attrs: &str) -> Option<(usize, Vec<u64>, Vec<u32>, Vec<f64>)> {
+fn parse_bspline_curve_attrs(attrs: &str) -> Option<BsplineCurveAttributes> {
     let mut tokens = Vec::new();
     let mut depth = 0i32;
     let mut current = String::new();

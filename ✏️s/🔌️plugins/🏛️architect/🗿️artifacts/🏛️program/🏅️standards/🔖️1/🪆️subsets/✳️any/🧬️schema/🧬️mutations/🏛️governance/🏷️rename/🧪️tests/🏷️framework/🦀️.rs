@@ -19,11 +19,11 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> ProgramSnapshot {
-    serde_json::from_str(BEFORE).expect("rename-governance/renames-the-governance-framework: before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("rename-governance/renames-the-governance-framework: before snapshot decodes")
 }
 
 fn expected_after() -> ProgramSnapshot {
-    serde_json::from_str(AFTER).expect("rename-governance/renames-the-governance-framework: after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("rename-governance/renames-the-governance-framework: after snapshot decodes")
 }
 
 fn mutation() -> ProgramMutation {
@@ -58,8 +58,8 @@ async fn rename_governance_inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn rename_governance_committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: ProgramSnapshot = serde_json::from_str(text).expect("rename-governance/renames-the-governance-framework: snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("rename-governance/renames-the-governance-framework: snapshot re-encodes");
+        let decoded: ProgramSnapshot = dsl::json::from_json_str(text).expect("rename-governance/renames-the-governance-framework: snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("rename-governance/renames-the-governance-framework: snapshot re-encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("rename-governance/renames-the-governance-framework: snapshot reparses");
         assert_eq!(reencoded, original, "rename-governance/renames-the-governance-framework: committed {side} snapshot JSON is not canonical");
     }
@@ -83,7 +83,7 @@ async fn rename_governance_declared_outcome_holds() {
 /// and which fields the mutation is allowed to touch, not merely that the end state matches.
 #[semio_framework_async_macros::async_test]
 async fn rename_governance_produces_committed_diff() {
-    let produced = serde_json::to_value(mutation().diff(&before()).diff()).expect("rename-governance/renames-the-governance-framework: produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(mutation().diff(&before()).diff())).expect("rename-governance/renames-the-governance-framework: produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("rename-governance/renames-the-governance-framework: committed diff decodes");
     assert_eq!(produced, committed, "rename-governance/renames-the-governance-framework: the diff rename-governance builds differs from the committed 🔺️diff/🔣️.json");
 }
@@ -91,8 +91,8 @@ async fn rename_governance_produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to ProgramDiff.
 #[semio_framework_async_macros::async_test]
 async fn rename_governance_committed_diff_is_canonical() {
-    let decoded: ProgramDiff = serde_json::from_str(DIFF).expect("rename-governance/renames-the-governance-framework: committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("rename-governance/renames-the-governance-framework: committed diff re-encodes");
+    let decoded: ProgramDiff = dsl::json::from_json_str(DIFF).expect("rename-governance/renames-the-governance-framework: committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("rename-governance/renames-the-governance-framework: committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("rename-governance/renames-the-governance-framework: committed diff reparses");
     assert_eq!(reencoded, original, "rename-governance/renames-the-governance-framework: committed diff JSON is not canonical");
 }
@@ -101,7 +101,7 @@ async fn rename_governance_committed_diff_is_canonical() {
 /// after-snapshot — the diff is a complete description of what rename-governance does, not a summary.
 #[semio_framework_async_macros::async_test]
 async fn rename_governance_committed_diff_applies_to_after() {
-    let decoded: ProgramDiff = serde_json::from_str(DIFF).expect("rename-governance/renames-the-governance-framework: committed diff decodes");
+    let decoded: ProgramDiff = dsl::json::from_json_str(DIFF).expect("rename-governance/renames-the-governance-framework: committed diff decodes");
     let produced = decoded.apply(&before()).expect("rename-governance/renames-the-governance-framework: committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rename-governance/renames-the-governance-framework: the committed diff did not carry before to after");
 }

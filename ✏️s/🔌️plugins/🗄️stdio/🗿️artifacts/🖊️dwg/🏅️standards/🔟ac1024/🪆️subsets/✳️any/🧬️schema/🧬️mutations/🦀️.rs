@@ -99,7 +99,7 @@ pub(crate) fn agg_diff(this: &DwgMutation, base: &DwgSnapshot) -> protocol::Muta
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_inverse(this: &DwgMutation, base: &DwgSnapshot) -> Vec<DwgMutation> {
     match this {
-        DwgMutation::SetSnapshot(_) => vec![DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        DwgMutation::SetSnapshot(_) => vec![DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(base.clone()) })],
         DwgMutation::SetVersionInfo(_) => vec![DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version: base.version.clone(), maintenance_version: base.maintenance_version, codepage: base.codepage })],
     }
 }
@@ -109,7 +109,7 @@ pub(crate) fn agg_inverse(this: &DwgMutation, base: &DwgSnapshot) -> Vec<DwgMuta
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<DwgMutation> {
     let base = crate::artifacts::dwg::standards::v_ac1024::engine::demo_dwg_snapshot();
-    vec![DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base }), DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version: "AC1024".into(), maintenance_version: 9, codepage: 65001 })]
+    vec![DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(base) }), DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version: "AC1024".into(), maintenance_version: 9, codepage: 65001 })]
 }
 
 #[cfg(test)]
@@ -166,6 +166,6 @@ mod tests {
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/✏️retitles-the-summary-and-records-the-last-editor/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/✏️retitles-the-4a2963/🦀️.rs"]
 mod set_snapshot_retitles_the_summary_and_records_the_last_editor;
 //#endregion 🧪️FixtureCases

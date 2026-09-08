@@ -1288,7 +1288,7 @@ impl HalfedgeMesh {
                 }
                 if let Ok((v0, v1)) = self.edge_endpoints(EdgeId(he_id as u32)) {
                     let len = self.vertex_position(v0)?.sub(self.vertex_position(v1)?).length();
-                    if shortest.map(|(_, l)| len < l).unwrap_or(true) {
+                    if shortest.is_none_or(|(_, l)| len < l) {
                         shortest = Some((EdgeId(he_id as u32), len));
                     }
                 }
@@ -1364,7 +1364,7 @@ impl HalfedgeMesh {
             for v in verts {
                 let vert = &mut self.vertices[v.0 as usize];
                 if smooth {
-                    let n = vert.normal.map(Vec3).unwrap_or(Vec3::ZERO).add(face_normal);
+                    let n = vert.normal.map_or(Vec3::ZERO, Vec3).add(face_normal);
                     vert.normal = Some(n.normalize().0);
                 } else {
                     vert.normal = Some(face_normal.0);
@@ -1768,7 +1768,7 @@ fn find_closest_bridge(outer: &[u32], holes: &[Vec<u32>], positions: &[[f32; 3]]
             for (hpi, &hv) in hole.iter().enumerate() {
                 let hp = Vec3(positions[hv as usize]);
                 let d = operation.sub(hp).length();
-                if best.map(|(bd, _, _, _)| d < bd).unwrap_or(true) {
+                if best.is_none_or(|(bd, _, _, _)| d < bd) {
                     best = Some((d, hi, oi, hpi));
                 }
             }
@@ -2038,7 +2038,7 @@ impl HalfedgeMesh {
             let push_corner = |he_id: u32, positions: &mut Vec<f32>, normals: &mut Vec<f32>, vertex_ids: &mut Vec<u32>, uvs: &mut Vec<f32>, normal: Vec3| {
                 let he = &self.halfedges[he_id as usize];
                 let vert = &self.vertices[he.vertex as usize];
-                let n = if smooth { vert.normal.map(Vec3).unwrap_or(normal) } else { normal };
+                let n = if smooth { vert.normal.map_or(normal, Vec3) } else { normal };
                 positions.extend_from_slice(&vert.position);
                 normals.extend_from_slice(&n.0);
                 vertex_ids.push(he.vertex);

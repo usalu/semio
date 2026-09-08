@@ -1,6 +1,6 @@
 //! 🪟️ The event loop that does nothing when nothing changed — ticket
 //! `26/08/20/SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY`, packet `os-host`, master plan §5.
-//! [`WinitApp`] is the `ApplicationHandler` **replacing `SemioApp`**: `ControlFlow::Poll`, the
+//! `WinitApp` is the `ApplicationHandler` **replacing `SemioApp`**: `ControlFlow::Poll`, the
 //! `RedrawRequested` re-arm and `start_frame_loop` are all deleted (see this crate's
 //! `📓️terra-os-host-report.md` redraw audit for the exact old line numbers and what replaced them).
 //!
@@ -20,19 +20,10 @@
 //! the just-created `Window` (or an explicit two-phase `NativeHost::new_pending()` API) would let a
 //! future revision drop this file's hand-rolled `ApplicationHandler` entirely.
 
-use crate::kernel_seam::KernelSeam;
-use crate::os_host::{OsHost, OsHostRetirement};
+use crate::os_host::OsHost;
 use crate::AppInteractionState;
-use crate::RuntimeMailbox;
-use std::sync::Arc;
-use ui_host::{should_request_redraw, RedrawOutcome, WindowDelegate, WindowMetrics};
-use ui_render::{CursorRequest, DispatchEvent, EventModifiers, ImeEvent, InvalidationReason, PhysicalSize, PointerButton, PointerInfo};
-#[cfg(target_arch = "wasm32")]
-use ui_render::{PointerId, PointerKind};
-use winit::application::ApplicationHandler;
-use winit::event::WindowEvent;
-use winit::event_loop::{ActiveEventLoop, EventLoopProxy};
-use winit::window::{Window, WindowAttributes, WindowId};
+use ui_host::{RedrawOutcome, WindowDelegate, WindowMetrics};
+use ui_render::{CursorRequest, DispatchEvent, EventModifiers, ImeEvent, InvalidationReason, PointerButton};
 
 /// ⏱️ P1e: this process has exactly one renderer frame callback (`OsHost::redraw`, below) — one
 /// `OperationId` allocated once, lazily, on first frame, rather than a fresh one per call (an
@@ -389,472 +380,492 @@ fn key_action_from_dispatch(key: &str, pressed: bool) -> Option<ui_wgpu::wgpu::K
 
 //#endregion 🔖️WindowDelegate for OsHost
 
-//#region 🚀️WinitApp
-
-/// 📨️ Same two-phase boot handshake `SemioApp`'s own `HostUserEvent` used — kept, not deleted, per
-/// this file's own module docstring on why `ui_host::NativeHost`'s single-phase construction cannot
-/// replace it. Only the STEADY-STATE control flow changes: `ControlFlow::Poll` → `WaitUntil`/`Wait`.
-/// No `callbacks` payload (the old variant carried `ui_wgpu::wgpu::PointerCallbacks`) — this file
-/// normalizes input itself via `ui_host::event` and drives `AppRuntime` through the enqueue-only
-/// `dispatch_normalized_event` path above, so `boot_runtime` returns only the runtime.
-pub(crate) enum HostUserEvent {
-    RuntimeReady {
-        runtime: RuntimeMailbox,
-        presenter: crate::AppPresenter,
-    },
-    FrameReady,
-    /// 🔔️ Payload-free worker-completion signal. Receiving it invalidates the retained snapshot;
-    /// no future is polled by the event loop.
-    Wake,
-}
-
-/// 🚀️ `ApplicationHandler` replacing `SemioApp` (deleted by this packet's surgical `🦀️.rs` edit —
-/// see the report's redraw audit). Boot mirrors the old `SemioApp::resumed`/`user_event` handshake
-/// verbatim (window created synchronously, `AppRuntime` booted async, delivered via
-/// `HostUserEvent::RuntimeReady`); everything AFTER boot is new: no `ControlFlow::Poll`, no
-/// `RedrawRequested` re-arm, no `start_frame_loop` — every redraw and every control-flow recompute
-/// funnels through [`OsHost`]'s `WindowDelegate` impl above plus `ui_host::should_request_redraw`.
-/// Input normalization (`pointers`/`modifiers`/`last_pointer_pos`) ports `ui_host::window::native::
-/// NativeHost::normalize`'s exact match arms — that method is private on a private struct, so this
-/// file's own `normalize` free fn below duplicates its logic over the same public `ui_host::event`
-/// functions rather than being able to call it directly.
-pub struct WinitApp {
-    proxy: EventLoopProxy<HostUserEvent>,
-    plugin_filter: String,
+#[cfg(not(target_arch = "wasm32"))]
+mod native {
+    use super::{advance_frame_generation, DispatchEvent, EventModifiers, InvalidationReason, OsHost, PointerButton, WindowDelegate, WindowMetrics};
+    use crate::kernel_seam::KernelSeam;
+    use crate::os_host::OsHostRetirement;
+    use crate::RuntimeMailbox;
+    use std::sync::Arc;
+    use ui_host::should_request_redraw;
+    use ui_render::{PhysicalSize, PointerInfo};
     #[cfg(target_arch = "wasm32")]
-    plugins: Option<wasm_bindgen::JsValue>,
-    #[cfg(target_arch = "wasm32")]
-    canvas: Option<web_sys::HtmlCanvasElement>,
-    #[cfg(not(target_arch = "wasm32"))]
-    plugin_modules_root: std::path::PathBuf,
-    window: Option<Arc<Window>>,
-    host: Option<OsHost>,
-    retirement: Option<OsHostRetirement>,
-    #[cfg(not(target_arch = "wasm32"))]
-    pointers: ui_host::PointerRegistry,
-    modifiers: EventModifiers,
-    last_pointer_pos: (f32, f32),
-    pending_reason: Option<InvalidationReason>,
-}
+    use ui_render::{PointerId, PointerKind};
+    use winit::application::ApplicationHandler;
+    use winit::event::WindowEvent;
+    use winit::event_loop::{ActiveEventLoop, EventLoopProxy};
+    use winit::window::{Window, WindowAttributes, WindowId};
 
-impl WinitApp {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(
+    //#region 🚀️WinitApp
+
+    /// 📨️ Same two-phase boot handshake `SemioApp`'s own `HostUserEvent` used — kept, not deleted, per
+    /// this file's own module docstring on why `ui_host::NativeHost`'s single-phase construction cannot
+    /// replace it. Only the STEADY-STATE control flow changes: `ControlFlow::Poll` → `WaitUntil`/`Wait`.
+    /// No `callbacks` payload (the old variant carried `ui_wgpu::wgpu::PointerCallbacks`) — this file
+    /// normalizes input itself via `ui_host::event` and drives `AppRuntime` through the enqueue-only
+    /// `dispatch_normalized_event` path above, so `boot_runtime` returns only the runtime.
+    pub(crate) enum HostUserEvent {
+        RuntimeReady {
+            runtime: RuntimeMailbox,
+            presenter: crate::AppPresenter,
+        },
+        FrameReady,
+        /// 🔔️ Payload-free worker-completion signal. Receiving it invalidates the retained snapshot;
+        /// no future is polled by the event loop.
+        Wake,
+    }
+
+    /// 🚀️ `ApplicationHandler` replacing `SemioApp` (deleted by this packet's surgical `🦀️.rs` edit —
+    /// see the report's redraw audit). Boot mirrors the old `SemioApp::resumed`/`user_event` handshake
+    /// verbatim (window created synchronously, `AppRuntime` booted async, delivered via
+    /// `HostUserEvent::RuntimeReady`); everything AFTER boot is new: no `ControlFlow::Poll`, no
+    /// `RedrawRequested` re-arm, no `start_frame_loop` — every redraw and every control-flow recompute
+    /// funnels through [`OsHost`]'s `WindowDelegate` impl above plus `ui_host::should_request_redraw`.
+    /// Input normalization (`pointers`/`modifiers`/`last_pointer_pos`) ports `ui_host::window::native::
+    /// NativeHost::normalize`'s exact match arms — that method is private on a private struct, so this
+    /// file's own `normalize` free fn below duplicates its logic over the same public `ui_host::event`
+    /// functions rather than being able to call it directly.
+    pub struct WinitApp {
         proxy: EventLoopProxy<HostUserEvent>,
         plugin_filter: String,
-        #[cfg(target_arch = "wasm32")] plugins: Option<wasm_bindgen::JsValue>,
-        #[cfg(target_arch = "wasm32")] canvas: Option<web_sys::HtmlCanvasElement>,
-        #[cfg(not(target_arch = "wasm32"))] plugin_modules_root: std::path::PathBuf,
-    ) -> Self {
-        Self {
-            proxy,
-            plugin_filter,
-            #[cfg(target_arch = "wasm32")]
-            plugins,
-            #[cfg(target_arch = "wasm32")]
-            canvas,
-            #[cfg(not(target_arch = "wasm32"))]
-            plugin_modules_root,
-            window: None,
-            host: None,
-            retirement: None,
-            #[cfg(not(target_arch = "wasm32"))]
-            pointers: ui_host::PointerRegistry::new(),
-            modifiers: EventModifiers::default(),
-            last_pointer_pos: (0.0, 0.0),
-            pending_reason: None,
-        }
-    }
-}
-
-//#region 🎛️WinitEventNormalization
-
-fn pointer_info_for_mouse(app: &mut WinitApp, device: winit::event::DeviceId) -> PointerInfo {
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        ui_host::pointer_info_for_mouse(&mut app.pointers, device)
-    }
-    #[cfg(target_arch = "wasm32")]
-    {
-        let _ = (app, device);
-        PointerInfo { id: PointerId(1_u64 << 62), kind: PointerKind::Mouse, pressure: None, tilt: None }
-    }
-}
-
-fn pointer_info_for_touch(app: &mut WinitApp, touch: &winit::event::Touch) -> PointerInfo {
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        ui_host::pointer_info_for_touch(&mut app.pointers, touch)
-    }
-    #[cfg(target_arch = "wasm32")]
-    {
-        let _ = app;
-        PointerInfo { id: PointerId((0b10_u64 << 62) | (touch.id & ((1_u64 << 62) - 1))), kind: PointerKind::Touch, pressure: touch.force.map(|force| force.normalized() as f32), tilt: None }
-    }
-}
-
-fn pointer_button_from_winit(button: winit::event::MouseButton) -> Option<PointerButton> {
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        ui_host::pointer_button_from_winit(button)
-    }
-    #[cfg(target_arch = "wasm32")]
-    {
-        match button {
-            winit::event::MouseButton::Left => Some(PointerButton::Primary),
-            winit::event::MouseButton::Right => Some(PointerButton::Secondary),
-            winit::event::MouseButton::Middle => Some(PointerButton::Middle),
-            _ => None,
-        }
-    }
-}
-
-fn normalize_wheel_delta(delta: winit::event::MouseScrollDelta) -> (f32, f32) {
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        ui_host::normalize_wheel_delta_native(delta)
-    }
-    #[cfg(target_arch = "wasm32")]
-    {
-        match delta {
-            winit::event::MouseScrollDelta::LineDelta(x, y) => (x * 40.0, y * 40.0),
-            winit::event::MouseScrollDelta::PixelDelta(position) => (position.x as f32, position.y as f32),
-        }
-    }
-}
-
-fn modifiers_from_winit(state: winit::keyboard::ModifiersState) -> EventModifiers {
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        ui_host::modifiers_from_winit(state)
-    }
-    #[cfg(target_arch = "wasm32")]
-    {
-        EventModifiers { shift: state.shift_key(), ctrl: state.control_key(), alt: state.alt_key(), meta: state.super_key() }
-    }
-}
-
-fn logical_key_to_dispatch_string(key: &winit::keyboard::Key) -> String {
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        ui_host::logical_key_to_dispatch_string(key)
-    }
-    #[cfg(target_arch = "wasm32")]
-    {
-        use winit::keyboard::Key;
-        match key {
-            Key::Character(value) => value.to_string(),
-            Key::Named(named) => named_key_label(*named).to_string(),
-            Key::Dead(Some(value)) => value.to_string(),
-            _ => "Unidentified".to_string(),
-        }
-    }
-}
-
-#[cfg(target_arch = "wasm32")]
-fn named_key_label(named: winit::keyboard::NamedKey) -> &'static str {
-    use winit::keyboard::NamedKey as N;
-    match named {
-        N::Enter => "Enter",
-        N::Tab => "Tab",
-        N::Space => " ",
-        N::ArrowDown => "ArrowDown",
-        N::ArrowLeft => "ArrowLeft",
-        N::ArrowRight => "ArrowRight",
-        N::ArrowUp => "ArrowUp",
-        N::End => "End",
-        N::Home => "Home",
-        N::PageDown => "PageDown",
-        N::PageUp => "PageUp",
-        N::Backspace => "Backspace",
-        N::Delete => "Delete",
-        N::Escape => "Escape",
-        N::Shift => "Shift",
-        N::Control => "Control",
-        N::Alt => "Alt",
-        N::Meta | N::Super => "Meta",
-        N::CapsLock => "CapsLock",
-        N::ContextMenu => "ContextMenu",
-        N::F1 => "F1",
-        N::F2 => "F2",
-        N::F3 => "F3",
-        N::F4 => "F4",
-        N::F5 => "F5",
-        N::F6 => "F6",
-        N::F7 => "F7",
-        N::F8 => "F8",
-        N::F9 => "F9",
-        N::F10 => "F10",
-        N::F11 => "F11",
-        N::F12 => "F12",
-        _ => "Unidentified",
-    }
-}
-
-/// 🔀️ Raw `winit::event::WindowEvent` → `ui_render::DispatchEvent`, ported from
-/// `ui_host::window::native::NativeHost::normalize` (private, see this file's own struct docstring).
-// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn normalize(app: &mut WinitApp, event: &WindowEvent) -> Option<DispatchEvent> {
-    use winit::event::{ElementState, TouchPhase};
-    match event {
-        WindowEvent::CursorMoved { device_id, position } => {
-            app.last_pointer_pos = (position.x as f32, position.y as f32);
-            let pointer = pointer_info_for_mouse(app, *device_id);
-            Some(DispatchEvent::PointerMove { pointer, x: app.last_pointer_pos.0, y: app.last_pointer_pos.1 })
-        }
-        WindowEvent::MouseInput { device_id, state, button } => {
-            let pointer = pointer_info_for_mouse(app, *device_id);
-            let button = pointer_button_from_winit(*button)?;
-            let (x, y) = app.last_pointer_pos;
-            Some(match state {
-                ElementState::Pressed => DispatchEvent::PointerDown { pointer, x, y, button },
-                ElementState::Released => DispatchEvent::PointerUp { pointer, x, y, button },
-            })
-        }
-        WindowEvent::MouseWheel { delta, .. } => {
-            let (delta_x, delta_y) = normalize_wheel_delta(*delta);
-            let (x, y) = app.last_pointer_pos;
-            Some(DispatchEvent::Scroll { x, y, delta_x, delta_y })
-        }
-        WindowEvent::Touch(touch) => {
-            let pointer = pointer_info_for_touch(app, touch);
-            let x = touch.location.x as f32;
-            let y = touch.location.y as f32;
-            Some(match touch.phase {
-                TouchPhase::Started => DispatchEvent::PointerDown { pointer, x, y, button: PointerButton::Primary },
-                TouchPhase::Moved => DispatchEvent::PointerMove { pointer, x, y },
-                TouchPhase::Ended | TouchPhase::Cancelled => DispatchEvent::PointerUp { pointer, x, y, button: PointerButton::Primary },
-            })
-        }
-        WindowEvent::KeyboardInput { event, .. } => {
-            let logical = logical_key_to_dispatch_string(&event.logical_key);
-            Some(ui_host::key_dispatch_event(logical, app.modifiers, event.state == ElementState::Pressed))
-        }
-        WindowEvent::ModifiersChanged(modifiers) => {
-            app.modifiers = modifiers_from_winit(modifiers.state());
-            None
-        }
-        _ => None,
-    }
-}
-
-//#endregion 🎛️WinitEventNormalization
-
-impl ApplicationHandler<HostUserEvent> for WinitApp {
-    /// 🪟️ Window creation ported verbatim from the old `SemioApp::resumed` (title/size/canvas-mount
-    /// logic unchanged — see this file's own module docstring for why the two-phase handshake this
-    /// method starts is kept, not deleted). Only the tail changes: no `start_frame_loop` call.
-    // 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait.
-    fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        if self.window.is_some() {
-            return;
-        }
-        // ⏱️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): registers THIS thread —
-        // winit's callback thread, the only thread `resumed`/`window_event`/`about_to_wait` ever run
-        // on — as the UI thread with `semio-framework-trace`'s thread-role census, so
-        // `semio_framework_trace::is_ui_thread()`/`assert_ui_thread()` are meaningful anywhere in this
-        // process from this point on. Exactly once, first callback, before any event can be normalized.
-        semio_framework_trace::register_ui_thread();
-        let mut attributes = WindowAttributes::default().with_title("Semio");
         #[cfg(target_arch = "wasm32")]
-        {
-            use winit::platform::web::WindowAttributesExtWebSys;
-            if let Some(canvas) = self.canvas.clone() {
-                let css_width = canvas.client_width().max(1) as f32;
-                let css_height = canvas.client_height().max(1) as f32;
-                let _ = canvas.style().set_property("width", "100%");
-                let _ = canvas.style().set_property("height", "100vh");
-                attributes = attributes.with_inner_size(winit::dpi::LogicalSize::new(css_width, css_height)).with_canvas(Some(canvas)).with_append(true);
-            }
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            attributes = attributes.with_inner_size(winit::dpi::LogicalSize::new(1280.0, 800.0));
-        }
-        let window = Arc::new(event_loop.create_window(attributes).expect("create window"));
-        self.window = Some(window.clone());
-        let proxy = self.proxy.clone();
-        let plugin_filter = self.plugin_filter.clone();
+        plugins: Option<wasm_bindgen::JsValue>,
         #[cfg(target_arch = "wasm32")]
-        let plugins = self.plugins.clone();
+        canvas: Option<web_sys::HtmlCanvasElement>,
         #[cfg(not(target_arch = "wasm32"))]
-        let plugin_modules_root = self.plugin_modules_root.clone();
-        crate::spawn_app_task(async move {
-            let result = crate::boot_runtime(
-                window,
+        plugin_modules_root: std::path::PathBuf,
+        window: Option<Arc<Window>>,
+        host: Option<OsHost>,
+        retirement: Option<OsHostRetirement>,
+        #[cfg(not(target_arch = "wasm32"))]
+        pointers: ui_host::PointerRegistry,
+        modifiers: EventModifiers,
+        last_pointer_pos: (f32, f32),
+        pending_reason: Option<InvalidationReason>,
+    }
+
+    impl WinitApp {
+        // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+        #[allow(clippy::too_many_arguments)]
+        pub fn new(
+            proxy: EventLoopProxy<HostUserEvent>,
+            plugin_filter: String,
+            #[cfg(target_arch = "wasm32")] plugins: Option<wasm_bindgen::JsValue>,
+            #[cfg(target_arch = "wasm32")] canvas: Option<web_sys::HtmlCanvasElement>,
+            #[cfg(not(target_arch = "wasm32"))] plugin_modules_root: std::path::PathBuf,
+        ) -> Self {
+            Self {
+                proxy,
                 plugin_filter,
                 #[cfg(target_arch = "wasm32")]
                 plugins,
+                #[cfg(target_arch = "wasm32")]
+                canvas,
                 #[cfg(not(target_arch = "wasm32"))]
                 plugin_modules_root,
-            )
-            .await;
-            match result {
-                Ok((runtime, presenter)) => {
-                    let _ = proxy.send_event(HostUserEvent::RuntimeReady { runtime, presenter });
-                }
-                Err(error) => crate::log_debug(&format!("boot_runtime failed: {error}")),
+                window: None,
+                host: None,
+                retirement: None,
+                #[cfg(not(target_arch = "wasm32"))]
+                pointers: ui_host::PointerRegistry::new(),
+                modifiers: EventModifiers::default(),
+                last_pointer_pos: (0.0, 0.0),
+                pending_reason: None,
             }
-        });
+        }
     }
 
-    // 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait.
-    fn user_event(&mut self, event_loop: &ActiveEventLoop, event: HostUserEvent) {
+    //#region 🎛️WinitEventNormalization
+
+    fn pointer_info_for_mouse(app: &mut WinitApp, device: winit::event::DeviceId) -> PointerInfo {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            ui_host::pointer_info_for_mouse(&mut app.pointers, device)
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            let _ = (app, device);
+            PointerInfo { id: PointerId(1_u64 << 62), kind: PointerKind::Mouse, pressure: None, tilt: None }
+        }
+    }
+
+    fn pointer_info_for_touch(app: &mut WinitApp, touch: &winit::event::Touch) -> PointerInfo {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            ui_host::pointer_info_for_touch(&mut app.pointers, touch)
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            let _ = app;
+            PointerInfo { id: PointerId((0b10_u64 << 62) | (touch.id & ((1_u64 << 62) - 1))), kind: PointerKind::Touch, pressure: touch.force.map(|force| force.normalized() as f32), tilt: None }
+        }
+    }
+
+    fn pointer_button_from_winit(button: winit::event::MouseButton) -> Option<PointerButton> {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            ui_host::pointer_button_from_winit(button)
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            match button {
+                winit::event::MouseButton::Left => Some(PointerButton::Primary),
+                winit::event::MouseButton::Right => Some(PointerButton::Secondary),
+                winit::event::MouseButton::Middle => Some(PointerButton::Middle),
+                _ => None,
+            }
+        }
+    }
+
+    fn normalize_wheel_delta(delta: winit::event::MouseScrollDelta) -> (f32, f32) {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            ui_host::normalize_wheel_delta_native(delta)
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            match delta {
+                winit::event::MouseScrollDelta::LineDelta(x, y) => (x * 40.0, y * 40.0),
+                winit::event::MouseScrollDelta::PixelDelta(position) => (position.x as f32, position.y as f32),
+            }
+        }
+    }
+
+    fn modifiers_from_winit(state: winit::keyboard::ModifiersState) -> EventModifiers {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            ui_host::modifiers_from_winit(state)
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            EventModifiers { shift: state.shift_key(), ctrl: state.control_key(), alt: state.alt_key(), meta: state.super_key() }
+        }
+    }
+
+    fn logical_key_to_dispatch_string(key: &winit::keyboard::Key) -> String {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            ui_host::logical_key_to_dispatch_string(key)
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            use winit::keyboard::Key;
+            match key {
+                Key::Character(value) => value.to_string(),
+                Key::Named(named) => named_key_label(*named).to_string(),
+                Key::Dead(Some(value)) => value.to_string(),
+                _ => "Unidentified".to_string(),
+            }
+        }
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    fn named_key_label(named: winit::keyboard::NamedKey) -> &'static str {
+        use winit::keyboard::NamedKey as N;
+        match named {
+            N::Enter => "Enter",
+            N::Tab => "Tab",
+            N::Space => " ",
+            N::ArrowDown => "ArrowDown",
+            N::ArrowLeft => "ArrowLeft",
+            N::ArrowRight => "ArrowRight",
+            N::ArrowUp => "ArrowUp",
+            N::End => "End",
+            N::Home => "Home",
+            N::PageDown => "PageDown",
+            N::PageUp => "PageUp",
+            N::Backspace => "Backspace",
+            N::Delete => "Delete",
+            N::Escape => "Escape",
+            N::Shift => "Shift",
+            N::Control => "Control",
+            N::Alt => "Alt",
+            N::Meta | N::Super => "Meta",
+            N::CapsLock => "CapsLock",
+            N::ContextMenu => "ContextMenu",
+            N::F1 => "F1",
+            N::F2 => "F2",
+            N::F3 => "F3",
+            N::F4 => "F4",
+            N::F5 => "F5",
+            N::F6 => "F6",
+            N::F7 => "F7",
+            N::F8 => "F8",
+            N::F9 => "F9",
+            N::F10 => "F10",
+            N::F11 => "F11",
+            N::F12 => "F12",
+            _ => "Unidentified",
+        }
+    }
+
+    /// 🔀️ Raw `winit::event::WindowEvent` → `ui_render::DispatchEvent`, ported from
+    /// `ui_host::window::native::NativeHost::normalize` (private, see this file's own struct docstring).
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn normalize(app: &mut WinitApp, event: &WindowEvent) -> Option<DispatchEvent> {
+        use winit::event::{ElementState, TouchPhase};
         match event {
-            HostUserEvent::RuntimeReady { runtime, presenter } => {
-                let mut host = OsHost::new(runtime, presenter);
-                let proxy = self.proxy.clone();
-                #[cfg(not(target_arch = "wasm32"))]
-                host.runtime.set_waker(Arc::new(move || {
-                    let _ = proxy.send_event(HostUserEvent::Wake);
-                }));
-                #[cfg(target_arch = "wasm32")]
-                host.runtime.set_waker(std::rc::Rc::new(move || {
-                    let _ = proxy.send_event(HostUserEvent::Wake);
-                }));
-                let proxy = self.proxy.clone();
-                host.kernel.set_waker(crate::kernel_seam::HostWaker::new(move || {
-                    let _ = proxy.send_event(HostUserEvent::Wake);
-                }));
-                #[cfg(not(target_arch = "wasm32"))]
-                {
-                    let proxy = self.proxy.clone();
-                    host.frame_build.set_completion_waker(Arc::new(move || {
-                        let _ = proxy.send_event(HostUserEvent::FrameReady);
-                    }));
-                }
-                host.scheduler.invalidate(InvalidationReason::STRUCTURE);
-                self.host = Some(host);
+            WindowEvent::CursorMoved { device_id, position } => {
+                app.last_pointer_pos = (position.x as f32, position.y as f32);
+                let pointer = pointer_info_for_mouse(app, *device_id);
+                Some(DispatchEvent::PointerMove { pointer, x: app.last_pointer_pos.0, y: app.last_pointer_pos.1 })
             }
-            HostUserEvent::FrameReady => {
-                if let Some(host) = self.host.as_mut() {
-                    host.frame_ready = true;
-                    host.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
-                }
+            WindowEvent::MouseInput { device_id, state, button } => {
+                let pointer = pointer_info_for_mouse(app, *device_id);
+                let button = pointer_button_from_winit(*button)?;
+                let (x, y) = app.last_pointer_pos;
+                Some(match state {
+                    ElementState::Pressed => DispatchEvent::PointerDown { pointer, x, y, button },
+                    ElementState::Released => DispatchEvent::PointerUp { pointer, x, y, button },
+                })
             }
-            // 🔔️ Worker completion wake: invalidate only; no future is polled on this callback.
-            HostUserEvent::Wake => {
-                if let Some(host) = self.host.as_mut() {
-                    if !advance_frame_generation(&mut host.frame_generation) {
-                        host.present_fault = Some("frame generation exhausted".to_string());
-                    }
-                    host.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
-                }
+            WindowEvent::MouseWheel { delta, .. } => {
+                let (delta_x, delta_y) = normalize_wheel_delta(*delta);
+                let (x, y) = app.last_pointer_pos;
+                Some(DispatchEvent::Scroll { x, y, delta_x, delta_y })
             }
+            WindowEvent::Touch(touch) => {
+                let pointer = pointer_info_for_touch(app, touch);
+                let x = touch.location.x as f32;
+                let y = touch.location.y as f32;
+                Some(match touch.phase {
+                    TouchPhase::Started => DispatchEvent::PointerDown { pointer, x, y, button: PointerButton::Primary },
+                    TouchPhase::Moved => DispatchEvent::PointerMove { pointer, x, y },
+                    TouchPhase::Ended | TouchPhase::Cancelled => DispatchEvent::PointerUp { pointer, x, y, button: PointerButton::Primary },
+                })
+            }
+            WindowEvent::KeyboardInput { event, .. } => {
+                let logical = logical_key_to_dispatch_string(&event.logical_key);
+                Some(ui_host::key_dispatch_event(logical, app.modifiers, event.state == ElementState::Pressed))
+            }
+            WindowEvent::ModifiersChanged(modifiers) => {
+                app.modifiers = modifiers_from_winit(modifiers.state());
+                None
+            }
+            _ => None,
         }
-        self.recompute_control_flow(event_loop);
     }
 
-    // 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait.
-    fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
-        let Some(window) = self.window.clone() else { return };
-        if self.host.is_none() && self.retirement.is_none() {
-            return;
+    //#endregion 🎛️WinitEventNormalization
+
+    impl ApplicationHandler<HostUserEvent> for WinitApp {
+        /// 🪟️ Window creation ported verbatim from the old `SemioApp::resumed` (title/size/canvas-mount
+        /// logic unchanged — see this file's own module docstring for why the two-phase handshake this
+        /// method starts is kept, not deleted). Only the tail changes: no `start_frame_loop` call.
+        // 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait.
+        fn resumed(&mut self, event_loop: &ActiveEventLoop) {
+            if self.window.is_some() {
+                return;
+            }
+            // ⏱️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): registers THIS thread —
+            // winit's callback thread, the only thread `resumed`/`window_event`/`about_to_wait` ever run
+            // on — as the UI thread with `semio-framework-trace`'s thread-role census, so
+            // `semio_framework_trace::is_ui_thread()`/`assert_ui_thread()` are meaningful anywhere in this
+            // process from this point on. Exactly once, first callback, before any event can be normalized.
+            semio_framework_trace::register_ui_thread();
+            let mut attributes = WindowAttributes::default().with_title("Semio");
+            #[cfg(target_arch = "wasm32")]
+            {
+                use winit::platform::web::WindowAttributesExtWebSys;
+                if let Some(canvas) = self.canvas.clone() {
+                    let css_width = canvas.client_width().max(1) as f32;
+                    let css_height = canvas.client_height().max(1) as f32;
+                    let _ = canvas.style().set_property("width", "100%");
+                    let _ = canvas.style().set_property("height", "100vh");
+                    attributes = attributes.with_inner_size(winit::dpi::LogicalSize::new(css_width, css_height)).with_canvas(Some(canvas)).with_append(true);
+                }
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                attributes = attributes.with_inner_size(winit::dpi::LogicalSize::new(1280.0, 800.0));
+            }
+            let window = Arc::new(event_loop.create_window(attributes).expect("create window"));
+            self.window = Some(window.clone());
+            let proxy = self.proxy.clone();
+            let plugin_filter = self.plugin_filter.clone();
+            #[cfg(target_arch = "wasm32")]
+            let plugins = self.plugins.clone();
+            #[cfg(not(target_arch = "wasm32"))]
+            let plugin_modules_root = self.plugin_modules_root.clone();
+            crate::spawn_app_task(async move {
+                let result = crate::boot_runtime(
+                    window,
+                    plugin_filter,
+                    #[cfg(target_arch = "wasm32")]
+                    plugins,
+                    #[cfg(not(target_arch = "wasm32"))]
+                    plugin_modules_root,
+                )
+                .await;
+                match result {
+                    Ok((runtime, presenter)) => {
+                        let _ = proxy.send_event(HostUserEvent::RuntimeReady { runtime, presenter });
+                    }
+                    Err(error) => crate::log_debug(&format!("boot_runtime failed: {error}")),
+                }
+            });
         }
-        match &event {
-            WindowEvent::CloseRequested => {
-                let requested = self.host.as_mut().is_some_and(|host| host.close_requested());
-                if requested {
-                    if let Some(host) = self.host.take() {
-                        match host.try_into_retirement() {
-                            Ok(retirement) => self.retirement = Some(retirement),
-                            Err(mut host) => {
-                                host.present_fault = Some("host retirement abandonment registry refused admission".to_string());
-                                self.host = Some(host);
+
+        // 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait.
+        fn user_event(&mut self, event_loop: &ActiveEventLoop, event: HostUserEvent) {
+            match event {
+                HostUserEvent::RuntimeReady { runtime, presenter } => {
+                    let mut host = OsHost::new(runtime, presenter);
+                    let proxy = self.proxy.clone();
+                    #[cfg(not(target_arch = "wasm32"))]
+                    host.runtime.set_waker(Arc::new(move || {
+                        let _ = proxy.send_event(HostUserEvent::Wake);
+                    }));
+                    #[cfg(target_arch = "wasm32")]
+                    host.runtime.set_waker(std::rc::Rc::new(move || {
+                        let _ = proxy.send_event(HostUserEvent::Wake);
+                    }));
+                    let proxy = self.proxy.clone();
+                    host.kernel.set_waker(crate::kernel_seam::HostWaker::new(move || {
+                        let _ = proxy.send_event(HostUserEvent::Wake);
+                    }));
+                    #[cfg(not(target_arch = "wasm32"))]
+                    {
+                        let proxy = self.proxy.clone();
+                        host.frame_build.set_completion_waker(Arc::new(move || {
+                            let _ = proxy.send_event(HostUserEvent::FrameReady);
+                        }));
+                    }
+                    host.scheduler.invalidate(InvalidationReason::STRUCTURE);
+                    self.host = Some(host);
+                }
+                HostUserEvent::FrameReady => {
+                    if let Some(host) = self.host.as_mut() {
+                        host.frame_ready = true;
+                        host.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
+                    }
+                }
+                // 🔔️ Worker completion wake: invalidate only; no future is polled on this callback.
+                HostUserEvent::Wake => {
+                    if let Some(host) = self.host.as_mut() {
+                        if !advance_frame_generation(&mut host.frame_generation) {
+                            host.present_fault = Some("frame generation exhausted".to_string());
+                        }
+                        host.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
+                    }
+                }
+            }
+            self.recompute_control_flow(event_loop);
+        }
+
+        // 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait.
+        fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
+            let Some(window) = self.window.clone() else { return };
+            if self.host.is_none() && self.retirement.is_none() {
+                return;
+            }
+            match &event {
+                WindowEvent::CloseRequested => {
+                    let requested = self.host.as_mut().is_some_and(|host| host.close_requested());
+                    if requested {
+                        if let Some(host) = self.host.take() {
+                            match host.try_into_retirement() {
+                                Ok(retirement) => self.retirement = Some(retirement),
+                                Err(mut host) => {
+                                    host.present_fault = Some("host retirement abandonment registry refused admission".to_string());
+                                    self.host = Some(host);
+                                }
                             }
                         }
+                        event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));
                     }
+                    return;
+                }
+                WindowEvent::Resized(size) => {
+                    let scale_factor = window.scale_factor() as f32;
+                    if let Some(host) = self.host.as_mut() {
+                        host.handle_metrics(WindowMetrics { physical: PhysicalSize::new(size.width, size.height), scale_factor });
+                    }
+                }
+                WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
+                    let size = window.inner_size();
+                    if let Some(host) = self.host.as_mut() {
+                        host.handle_metrics(WindowMetrics { physical: PhysicalSize::new(size.width, size.height), scale_factor: *scale_factor as f32 });
+                    }
+                }
+                WindowEvent::RedrawRequested => {
+                    if let Some(reason) = self.pending_reason.take() {
+                        if let Some(host) = self.host.as_mut() {
+                            let _outcome = host.redraw(reason);
+                        }
+                    }
+                    self.recompute_control_flow(event_loop);
+                    return;
+                }
+                _ => {
+                    if let Some(dispatch_event) = normalize(self, &event) {
+                        if let Some(host) = self.host.as_mut() {
+                            host.handle_event(dispatch_event);
+                        }
+                    }
+                }
+            }
+            self.recompute_control_flow(event_loop);
+        }
+
+        /// 🌙️ Requests a redraw only when the scheduler reports invalidation or a due deadline.
+        /// Native futures run exclusively on the process worker pool; this callback never polls them.
+        // 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait.
+        fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
+            if !OsHostRetirement::close_abandoned_step() {
+                event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));
+                return;
+            }
+            if let Some(retirement) = self.retirement.as_mut() {
+                if retirement.close_step() && retirement.terminal_is_empty() {
+                    self.retirement = None;
+                    self.window = None;
+                    event_loop.exit();
+                } else {
                     event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));
                 }
                 return;
             }
-            WindowEvent::Resized(size) => {
-                let scale_factor = window.scale_factor() as f32;
-                if let Some(host) = self.host.as_mut() {
-                    host.handle_metrics(WindowMetrics { physical: PhysicalSize::new(size.width, size.height), scale_factor });
-                }
-            }
-            WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
-                let size = window.inner_size();
-                if let Some(host) = self.host.as_mut() {
-                    host.handle_metrics(WindowMetrics { physical: PhysicalSize::new(size.width, size.height), scale_factor: *scale_factor as f32 });
-                }
-            }
-            WindowEvent::RedrawRequested => {
-                if let Some(reason) = self.pending_reason.take() {
-                    if let Some(host) = self.host.as_mut() {
-                        let _outcome = host.redraw(reason);
+            let Some(host) = self.host.as_mut() else { return };
+            let now = host.now_seconds();
+            if let Some(reason) = should_request_redraw(&mut host.scheduler, now) {
+                self.pending_reason = Some(reason);
+                if let Some(window) = self.window.as_ref() {
+                    window.request_redraw();
+                    if reason.contains(InvalidationReason::RESOURCE_READY) {
+                        let _ = host.take_cursor_wake_directive();
                     }
                 }
-                self.recompute_control_flow(event_loop);
+            }
+            self.recompute_control_flow(event_loop);
+        }
+    }
+
+    impl WinitApp {
+        /// 🚦️ `WaitUntil(next deadline)` / `Wait` — never `Poll` (this file's own headline change).
+        /// `ControlFlow::wait_duration` selects winit's target clock while the scheduler remains in
+        /// elapsed seconds, so native and browser builds share the same deadline policy.
+        // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+        fn recompute_control_flow(&mut self, event_loop: &ActiveEventLoop) {
+            let Some(host) = self.host.as_ref() else {
+                event_loop.set_control_flow(winit::event_loop::ControlFlow::Wait);
                 return;
-            }
-            _ => {
-                if let Some(dispatch_event) = normalize(self, &event) {
-                    if let Some(host) = self.host.as_mut() {
-                        host.handle_event(dispatch_event);
-                    }
+            };
+            event_loop.set_control_flow(match host.scheduler.next_deadline() {
+                Some(deadline) => {
+                    let remaining = (deadline.due - host.now_seconds()).max(0.0);
+                    winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_secs_f64(remaining))
                 }
-            }
+                None => winit::event_loop::ControlFlow::Wait,
+            });
         }
-        self.recompute_control_flow(event_loop);
     }
 
-    /// 🌙️ Requests a redraw only when the scheduler reports invalidation or a due deadline.
-    /// Native futures run exclusively on the process worker pool; this callback never polls them.
-    // 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait.
-    fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
-        if !OsHostRetirement::close_abandoned_step() {
-            event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));
-            return;
-        }
-        if let Some(retirement) = self.retirement.as_mut() {
-            if retirement.close_step() && retirement.terminal_is_empty() {
-                self.retirement = None;
-                self.window = None;
-                event_loop.exit();
-            } else {
-                event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));
-            }
-            return;
-        }
-        let Some(host) = self.host.as_mut() else { return };
-        let now = host.now_seconds();
-        if let Some(reason) = should_request_redraw(&mut host.scheduler, now) {
-            self.pending_reason = Some(reason);
-            if let Some(window) = self.window.as_ref() {
-                window.request_redraw();
-                if reason.contains(InvalidationReason::RESOURCE_READY) {
-                    let _ = host.take_cursor_wake_directive();
-                }
-            }
-        }
-        self.recompute_control_flow(event_loop);
-    }
+    //#endregion 🚀️WinitApp
 }
 
-impl WinitApp {
-    /// 🚦️ `WaitUntil(next deadline)` / `Wait` — never `Poll` (this file's own headline change).
-    /// `ControlFlow::wait_duration` selects winit's target clock while the scheduler remains in
-    /// elapsed seconds, so native and browser builds share the same deadline policy.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn recompute_control_flow(&mut self, event_loop: &ActiveEventLoop) {
-        let Some(host) = self.host.as_ref() else {
-            event_loop.set_control_flow(winit::event_loop::ControlFlow::Wait);
-            return;
-        };
-        event_loop.set_control_flow(match host.scheduler.next_deadline() {
-            Some(deadline) => {
-                let remaining = (deadline.due - host.now_seconds()).max(0.0);
-                winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_secs_f64(remaining))
-            }
-            None => winit::event_loop::ControlFlow::Wait,
-        });
-    }
-}
-
-//#endregion 🚀️WinitApp
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) use native::{HostUserEvent, WinitApp};
 
 #[cfg(test)]
 mod callback_latency_tests {

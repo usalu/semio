@@ -215,8 +215,7 @@ pub struct World3dScene {
     /// serialized as `domainId`. `None` leaves the window on the OS's own shared `world` board
     /// domain and plain plugin-private actions (`setHover`/`worldPick`/`worldSelect`). When set, a
     /// renderer routes its own instance pick/hover through the framework verbs
-    /// `interactionSelect`/`interactionHover` on this domain instead — see
-    /// `world3d_scene_extended`'s own doc comment for the constructor side of this contract.
+    /// `interactionSelect`/`interactionHover` on this domain. [`World3dScene::base`] leaves it unset.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub domain_id: Option<String>,
     /// 🎯️ `domain_id`'s bound domain granularity id for a plain (non-component) instance pick/hover

@@ -19,7 +19,7 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn from_raw(context: &GltfGeometryContext<'_>, raw: &super::GltfCompactnessRaw) -> GltfMeasure<f64> {
-    raw.ratio.map(|value| exact(value, GltfUnit::InverseMetre, context.sample_count, Some(context.topology))).unwrap_or_else(|| unavailable(GltfUnit::InverseMetre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology)))
+    raw.ratio.map_or_else(|| unavailable(GltfUnit::InverseMetre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology)), |value| exact(value, GltfUnit::InverseMetre, context.sample_count, Some(context.topology)))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

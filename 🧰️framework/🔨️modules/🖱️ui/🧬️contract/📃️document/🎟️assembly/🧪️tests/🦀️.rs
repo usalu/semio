@@ -6,9 +6,9 @@ fn open() -> UiDocumentAssembly {
     let data = fixture();
     let mut owner = UiDocumentAssembly::default();
     let mut surface = Some(SurfaceId::try_from(data["surface"].as_str().unwrap()).unwrap());
-    assert!(!owner.open_into(&mut surface, 117, UiRevision(4), Some(UiNodeId(41)), 0, 1, 0).unwrap().progressed);
+    assert!(!owner.open_into(&mut surface, crate::UiDocumentAssemblyIdentity { generation: 117, revision: UiRevision(4), root: Some(UiNodeId(41)), layout_epoch: 0 }, 1, 0).unwrap().progressed);
     assert!(surface.is_some() && owner.terminal_is_empty());
-    let step = owner.open_into(&mut surface, 117, UiRevision(4), Some(UiNodeId(41)), 0, 1, 32768).unwrap();
+    let step = owner.open_into(&mut surface, crate::UiDocumentAssemblyIdentity { generation: 117, revision: UiRevision(4), root: Some(UiNodeId(41)), layout_epoch: 0 }, 1, 32768).unwrap();
     assert!(step.progressed && surface.is_none());
     assert_eq!(step.allocated_bytes, 0);
     assert!(step.initialized_bytes + step.moved_bytes <= 32768);
@@ -109,7 +109,7 @@ fn retained_document_assembly_and_read_alias_do_not_wait_on_contended_arena() {
     let alias_blocked = matches!(lease.try_alias_into(&mut second, 32768), Err(UiDocumentLeaseError::Contended));
     let mut blocked = UiDocumentAssembly::default();
     let mut surface = Some(SurfaceId::try_from("blocked").unwrap());
-    let open_blocked = matches!(blocked.open_into(&mut surface, 117, UiRevision(4), Some(UiNodeId(41)), 0, 1, 32768), Err(error) if error.kind == UiDocumentAssemblyErrorKind::Contended);
+    let open_blocked = matches!(blocked.open_into(&mut surface, crate::UiDocumentAssemblyIdentity { generation: 117, revision: UiRevision(4), root: Some(UiNodeId(41)), layout_epoch: 0 }, 1, 32768), Err(error) if error.kind == UiDocumentAssemblyErrorKind::Contended);
     release_tx.send(()).unwrap(); holder.join().unwrap();
     close(alias.as_mut().unwrap(), 64);
     assert!(lease.try_read().unwrap().node_at(0).is_some());

@@ -39,7 +39,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn node_graph_viewport_sets_camera() {
         let mut app = app().await;
-        dispatch(&mut app, Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json: serde_json::to_string(&CameraJson { x: 1.0, y: 2.0, zoom: 3.0 }).unwrap() })).await;
+        dispatch(&mut app, Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json: dsl::json::to_json_string(&flow::CameraJson { x: 1.0, y: 2.0, zoom: 3.0 }) })).await;
     }
 }
 //#endregion 🧪️Tests

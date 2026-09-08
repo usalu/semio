@@ -41,10 +41,10 @@ fn decode_hex(value: &str) -> Result<Vec<u8>, String> {
             _ => None,
         }
     }
-    if value.len() % 2 != 0 {
+    if !value.len().is_multiple_of(2) {
         return Err("payload must be lowercase hexadecimal".to_string());
     }
-    value.as_bytes().chunks_exact(2).map(|pair| Ok((nibble(pair[0]).ok_or_else(|| "invalid hexadecimal".to_string())? << 4) | nibble(pair[1]).ok_or_else(|| "invalid hexadecimal".to_string())?)).collect()
+    value.as_bytes().as_chunks::<2>().0.iter().map(|pair| Ok((nibble(pair[0]).ok_or_else(|| "invalid hexadecimal".to_string())? << 4) | nibble(pair[1]).ok_or_else(|| "invalid hexadecimal".to_string())?)).collect()
 }
 //#endregion 🔖️Framing
 

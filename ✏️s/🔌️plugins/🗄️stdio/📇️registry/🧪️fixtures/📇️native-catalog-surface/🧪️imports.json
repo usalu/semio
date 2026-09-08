@@ -1,0 +1,11 @@
+{
+  "schema": "semio.stdio.headless-imports/v1",
+  "features": ["full-artifact-catalog"],
+  "cases": [
+    { "id": "complete-native-catalog", "source": "pub use semio_s_plugin_stdio::registry::{native_codec_factory_receipts, native_artifact_catalog_contribution};", "accepted": true },
+    { "id": "guest-plugin", "source": "pub use semio_s_plugin_stdio::plugin;", "accepted": false },
+    { "id": "guest-app-enum", "source": "pub use semio_s_plugin_stdio::plugin::StdioApps;", "accepted": false },
+    { "id": "guest-editor", "source": "pub use semio_s_plugin_stdio::editor;", "accepted": false },
+    { "id": "guest-viewer", "source": "pub use semio_s_plugin_stdio::viewer;", "accepted": false }
+  ]
+}

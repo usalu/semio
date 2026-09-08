@@ -2,7 +2,7 @@
 name = "semio-s-plugin-draw-fsm"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Draw plugin - statechart kernel, actor runtime and hosts (used by the drawing app's canvas gesture machine); kept as its own crate because its proc-macro sibling cannot be merged into the main plugin crate"
 
 [lints]

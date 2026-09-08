@@ -19,7 +19,7 @@ use crate::editor::puzzle3d::{
     PUZZLE3D_FALLBACK_MESH_KIND, PUZZLE3D_VORTEX_SHOW_ALWAYS,
 };
 use semio_framework_plugin::{
-    world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene_extended, world3d_selection_json, SurfaceKind, WindowEngagement,
+    world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, World3dScene, world3d_selection_json, SurfaceKind, WindowEngagement,
     WindowEngagementInput, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,
 };
 use semio_framework_ui_contract::BuiltNode;
@@ -465,35 +465,23 @@ pub fn world_selection_json(envelope: &Puzzle3dScene) -> String {
 /// from `Puzzle3dPlayApp`'s geometry cache (they only change with the fixture's geometry fingerprint).
 pub fn render(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels, instances_json: String, meshes_json: String) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let brush_preview = world_fill_preview_json(precompute, envelope, labels).or_else(|| world_brush_preview_json(precompute, envelope));
-    let scene = world3d_scene_extended(
-        camera_json(&envelope.runtime),
-        meshes_json,
-        instances_json,
-        world_selection_json(envelope),
-        Some(world_vortices_json(&envelope.fixture, &envelope.runtime)),
-        Some(world_attractions_json(&envelope.fixture)),
-        Some(world_target_volumes_json(&envelope.fixture)),
-        Some(world_references_json(&envelope.fixture)),
-        brush_preview,
-        Some(world_interaction_json(envelope, precompute)),
-        None,
-        Some(world3d_lod_json(&envelope.runtime)),
-        Some(world3d_chunking_json(envelope.runtime.chunk_size, 8000.0)),
-        Some(world3d_environment_json(&envelope.runtime.sun)),
-        None,
-        None,
-        None,
-        None,
-        None,
-        // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): not wired here — this app
-        // already emits its own `interactionSelect`/`interactionHover` for `PUZZLE3D_INTERACTION_DOMAIN`
-        // ("vortex") from bespoke vortex-fit pick logic elsewhere in this crate, independent of the
-        // OS `♾️infinite` surface's generic `pick_select_action`/`pick_hover_action`; binding this
-        // scene's plain-pick fallback to the same domain without first confirming the two paths
-        // can't double-emit is left as a follow-up, not attempted here.
-        None,
-        None,
-    );
+    let mut scene = World3dScene::base(camera_json(&envelope.runtime), meshes_json, instances_json, world_selection_json(envelope));
+    scene.vortices_json = Some(world_vortices_json(&envelope.fixture, &envelope.runtime));
+    scene.attractions_json = Some(world_attractions_json(&envelope.fixture));
+    scene.target_volumes_json = Some(world_target_volumes_json(&envelope.fixture));
+    scene.references_json = Some(world_references_json(&envelope.fixture));
+    scene.brush_preview_json = brush_preview;
+    scene.interaction_json = Some(world_interaction_json(envelope, precompute));
+    scene.lod_json = Some(world3d_lod_json(&envelope.runtime));
+    scene.chunking_json = Some(world3d_chunking_json(envelope.runtime.chunk_size, 8000.0));
+    scene.environment_json = Some(world3d_environment_json(&envelope.runtime.sun));
+    // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): not wired here — this app
+    // already emits its own `interactionSelect`/`interactionHover` for `PUZZLE3D_INTERACTION_DOMAIN`
+    // ("vortex") from bespoke vortex-fit pick logic elsewhere in this crate, independent of the
+    // OS `♾️infinite` surface's generic `pick_select_action`/`pick_hover_action`; binding this
+    // scene's plain-pick fallback to the same domain without first confirming the two paths
+    // can't double-emit is left as a follow-up, not attempted here.
+    scene.domain_id = None;
     semio_framework_plugin::scene_surface(SURFACE_VIEWPORT, semio_framework_ui_contract::SurfaceKind::World3d, &scene)
 }
 

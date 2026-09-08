@@ -21,6 +21,7 @@ pub struct NativeGisCodecIdentityV1 {
     pub extension: &'static str,
     pub capability: &'static str,
     pub pack_schema_hash: [u8; 32],
+    pub protocol_sha256: [u8; 32],
 }
 
 /// 🔐 One package-owned closed factory, constructible only by the exact two-codec preview.
@@ -41,7 +42,22 @@ impl NativeGisCodecReceiptV1 {
                 include_bytes!("../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio").as_slice(),
             ),
         };
-        NativeGisCodecIdentityV1 { plugin_id: "gis", package_id: "semio:gis", package_version: env!("CARGO_PKG_VERSION"), factory_id, artifact_kind, schema, extension, capability, pack_schema_hash: Sha256::digest(protocol) }
+        NativeGisCodecIdentityV1 { plugin_id: "gis", package_id: "semio:gis", package_version: env!("CARGO_PKG_VERSION"), factory_id, artifact_kind, schema, extension, capability, pack_schema_hash: self.codec().pack_schema_hash, protocol_sha256: Sha256::digest(protocol) }
+    }
+
+    fn codec(&self) -> store::ArtifactCodec {
+        match self.artifact {
+            GisCodecV1::Map => store::ArtifactCodec::of::<crate::artifacts::gismap::GisMapSnapshot, crate::artifacts::gismap::GisMapMutation>("gis.map"),
+            GisCodecV1::Terrain => store::ArtifactCodec::of::<crate::artifacts::gisterrain::GisTerrainSnapshot, crate::artifacts::gisterrain::GisTerrainMutation>("gis.terrain"),
+        }
+    }
+
+    /// 🌱️ Returns the exact package-owned editor genesis selected by this receipt.
+    fn genesis_factory(&self) -> semio_framework_plugin::NativeArtifactGenesisFactoryV1 {
+        match self.artifact {
+            GisCodecV1::Map => semio_framework_plugin::native_artifact_genesis_for_editor::<crate::editor::gis2d::Gis2dPlayApp>,
+            GisCodecV1::Terrain => semio_framework_plugin::native_artifact_genesis_for_editor::<crate::editor::gis3d::Gis3dPlayApp>,
+        }
     }
 
     fn validate(&self) -> Result<(), PluginAssemblyError> {
@@ -73,22 +89,17 @@ impl NativeGisCodecReceiptV1 {
     pub fn into_codec(self) -> Result<store::ArtifactCodec, PluginAssemblyError> {
         self.validate()?;
         let identity = self.identity();
-        let (mut codec, extension) = match self.artifact {
-            GisCodecV1::Map => (
-                store::ArtifactCodec::of::<crate::artifacts::gismap::GisMapSnapshot, crate::artifacts::gismap::GisMapMutation>(identity.schema),
-                <crate::artifacts::gismap::GisMapSnapshot as store::ArtifactDsl>::EXTENSION,
-            ),
-            GisCodecV1::Terrain => (
-                store::ArtifactCodec::of::<crate::artifacts::gisterrain::GisTerrainSnapshot, crate::artifacts::gisterrain::GisTerrainMutation>(identity.schema),
-                <crate::artifacts::gisterrain::GisTerrainSnapshot as store::ArtifactDsl>::EXTENSION,
-            ),
-        };
-        if codec.schema != identity.schema || extension != identity.extension {
+        let codec = self.codec();
+        if codec.schema != identity.schema || codec.extension != identity.extension || codec.pack_schema_hash != identity.pack_schema_hash {
             return Err(invalid("GIS typed codec differs from its private receipt"));
         }
-        codec.extension = extension;
-        codec.pack_schema_hash = identity.pack_schema_hash;
         Ok(codec)
+    }
+
+    /// 🌱️ Consumes one validated private receipt into its inseparable codec and editor genesis pair.
+    pub fn into_codec_and_genesis(self) -> Result<(store::ArtifactCodec, semio_framework_plugin::NativeArtifactGenesisFactoryV1), PluginAssemblyError> {
+        let genesis = self.genesis_factory();
+        Ok((self.into_codec()?, genesis))
     }
 }
 

@@ -433,14 +433,7 @@ impl ArtifactEditor for HomeApp {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            operation_context,
-            request.completion,
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
             HomeCommand::command_id,
             HOME_RETAINED_RAW_BYTES,
             HOME_RETAINED_WORK_ITEMS,
@@ -589,13 +582,13 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
                         LocalizedLabel::native("Kind", "Art"),
                         vec![ActionArgOption::new("atelier", LocalizedLabel::native("Atelier", "Atelier")), ActionArgOption::new("studio", LocalizedLabel::native("Studio", "Studio"))],
                     )
-                    .default_value("atelier"),
+                    .default_value(&"atelier"),
                     ActionArgDef::select(
                         "visibility",
                         LocalizedLabel::native("Visibility", "Sichtbarkeit"),
                         vec![ActionArgOption::new("private", LocalizedLabel::native("Private", "Privat")), ActionArgOption::new("public", LocalizedLabel::native("Public", "Öffentlich"))],
                     )
-                    .default_value("private"),
+                    .default_value(&"private"),
                 ])
                 .submit_label(LocalizedLabel::native("Create", "Erstellen")),
         )
@@ -621,7 +614,7 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
                         LocalizedLabel::native("Role", "Rolle"),
                         vec![ActionArgOption::new("author", LocalizedLabel::native("Author", "Autor")), ActionArgOption::new("spectator", LocalizedLabel::native("Spectator", "Betrachter"))],
                     )
-                    .default_value("spectator"),
+                    .default_value(&"spectator"),
                 ])
                 .submit_label(LocalizedLabel::native("Share", "Teilen")),
         )
@@ -671,22 +664,6 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
     definition
 }
 //#endregion 🔖️HomeManifest
-
-//#region 🧪️Testkit
-/// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region.
-#[cfg(test)]
-pub(crate) mod testkit {
-    use super::*;
-    use semio_framework_plugin::EditorApp;
-
-    pub type HomeEditorApp = semio_framework_plugin::VcsArtifactApp<EditorApp<HomeApp>>;
-
-    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub async fn new_app() -> HomeEditorApp {
-        semio_framework_plugin::testkit::new_app::<EditorApp<HomeApp>>().await
-    }
-}
-//#endregion 🧪️Testkit
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -771,8 +748,8 @@ mod tests {
         let port = Arc::new(OsBackbonePorts::Store(store::BackbonePorts::LocalStorage(LocalStorageBackbonePort::default())));
         let projection = empty_space_snapshot("Persist Test", SpaceKind::Atelier, SpaceVisibility::Private);
         let demo: OsSpaceDocument = create_backbone_document(S_SPACE_SCHEMA, "persist-test", "Persist Test", projection);
-        let _ = seed_os_space_catalog_if_empty(demo, port.clone()).expect("seed");
-        let loaded = load_os_space_document("persist-test", port.clone()).expect("load");
+        let _ = seed_os_space_catalog_if_empty(demo, &port).expect("seed");
+        let loaded = load_os_space_document("persist-test", &port).expect("load");
         assert_eq!(loaded.id, "persist-test");
         assert_eq!(loaded.name, "Persist Test");
     }

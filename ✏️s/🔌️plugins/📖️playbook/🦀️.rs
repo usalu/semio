@@ -53,12 +53,12 @@ mod surface_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn playbook_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::playbook::PlaybookViewer>();
+        assert_viewer_never_mutates::<crate::viewer::playbook::PlaybookViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn playbook_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::playbook::PlaybookPlayApp, crate::viewer::playbook::PlaybookViewer>();
+        assert_editor_and_viewer_share_dialect::<crate::editor::playbook::PlaybookPlayApp, crate::viewer::playbook::PlaybookViewer>().await;
     }
 }
 //#endregion 🧪️SurfaceTests

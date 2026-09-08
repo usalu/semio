@@ -546,7 +546,7 @@ fn dec_block_path(s: &str) -> Result<DocBlockPath, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
-    format!("[{}]", items.iter().map(|i| enc(i)).collect::<Vec<_>>().join(","))
+    format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
@@ -1216,6 +1216,6 @@ mod tests {
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/📋️bolds-the-body-paragraph-and-finalizes-its-copy/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/📋️bolds-the-body-e1b6f1/🦀️.rs"]
 mod set_snapshot_bolds_the_body_paragraph_and_finalizes_its_copy;
 //#endregion 🧪️FixtureCases

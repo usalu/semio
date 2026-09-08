@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "documents"],
+  "properties": {
+    "version": { "const": 1 },
+    "documents": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "texPath", "sources", "actorNetwork"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z]+$" },
+          "texPath": { "type": "string", "pattern": "^[^/\\\\]+/[^/\\\\]+\\.tex$" },
+          "sources": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "actorNetwork": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

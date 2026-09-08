@@ -21,6 +21,7 @@ pub struct En1990Snapshot {
     pub g_k: f64,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.table")]
+    #[cfg_attr(test, serde(with = "crate::document::child_identity_oracle"))]
     pub q_k: En1990QkChild,
     #[state(artifact)]
     pub resistance_kn: f64,

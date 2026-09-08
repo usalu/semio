@@ -1,0 +1,26 @@
+{
+  "entries": [
+    "🔨️modules/🖨️tectonic-template-compilation/🟦️.ts",
+    "🔨️modules/🎨print-design-token-paints/🟦️.ts",
+    "🔨️modules/🖨️tectonic-template-compilation/📜️script.ts",
+    "🔨️modules/🎨print-design-token-paints/📜️script.ts"
+  ],
+  "maxSourceFiles": 14,
+  "forbidden": [
+    "📚️library/📦️packages/🟦️typescript/🟦️.ts",
+    "🎨️styling/📦️packages/🦀️rust/📜️script.ts",
+    "🧪️tests/"
+  ],
+  "externalDependencies": {
+    "🔨️modules/🖨️tectonic-template-compilation/🟦️.ts": [
+      "pdfjs-dist",
+      "sharp"
+    ],
+    "🔨️modules/🎨print-design-token-paints/🟦️.ts": [],
+    "🔨️modules/🖨️tectonic-template-compilation/📜️script.ts": [
+      "pdfjs-dist",
+      "sharp"
+    ],
+    "🔨️modules/🎨print-design-token-paints/📜️script.ts": []
+  }
+}

@@ -162,24 +162,24 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    fn op_text_round_trips_change_v_ed_kn() {
+    async fn op_text_round_trips_change_v_ed_kn() {
         store::os_store::test_support::assert_op_line_round_trip(&En1997Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 620.0 }));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn op_text_round_trips_change_annex() {
-        store::os_store::test_support::assert_op_line_round_trip(&En1997Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }));
+    async fn op_text_round_trips_change_annex() {
+        store::os_store::test_support::assert_op_line_round_trip(&En1997Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: AnnexChoice::En }));
     }
 
     #[semio_framework_async_macros::async_test]
-    fn op_text_round_trips_change_design_approach() {
+    async fn op_text_round_trips_change_design_approach() {
         store::os_store::test_support::assert_op_line_round_trip(&En1997Mutation::ChangeDesignApproach(change_design_approach::ChangeDesignApproach { new_design_approach: "da2".to_string() }));
     }
 
     /// ⚖️ Every variant, not just the hand-picked ones above — full-coverage `OpText` round trip
     /// over the closed vocabulary, one sample value per field.
     #[semio_framework_async_macros::async_test]
-    fn every_variant_op_text_round_trips() {
+    async fn every_variant_op_text_round_trips() {
         for mutation in every_mutation() {
             store::os_store::test_support::assert_op_line_round_trip(&mutation);
         }
@@ -198,7 +198,7 @@ mod tests {
             En1997Mutation::ChangeESMpa(change_e_s_mpa::ChangeESMpa { new_e_s_mpa: 32_000.0 }),
             En1997Mutation::ChangeNu(change_nu::ChangeNu { new_nu: 0.32 }),
             En1997Mutation::ChangeDesignApproach(change_design_approach::ChangeDesignApproach { new_design_approach: "da2".to_string() }),
-            En1997Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
+            En1997Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: AnnexChoice::En }),
             En1997Mutation::ChangeSettlementLimitMm(change_settlement_limit_mm::ChangeSettlementLimitMm { new_settlement_limit_mm: 20.0 }),
             En1997Mutation::ChangeNPileEdKn(change_n_pile_ed_kn::ChangeNPileEdKn { new_n_pile_ed_kn: 900.0 }),
             En1997Mutation::ChangeAlphaS(change_alpha_s::ChangeAlphaS { new_alpha_s: 0.75 }),

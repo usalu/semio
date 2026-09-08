@@ -157,7 +157,7 @@ pub fn encode_tiff_baseline_projection_json(snapshot: &TiffSnapshot) -> String {
 /// `mutate-<kind>` scenario names when it claims a kind leaves the class by its own axis.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn tiff_baseline_conformance_codes(snapshot: &TiffSnapshot) -> Vec<String> {
-    crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::check_tiff_baseline_conformance(snapshot).into_iter().map(|finding| finding.code.0.to_string()).collect()
+    crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::check_tiff_baseline_conformance(snapshot).into_iter().map(|finding| finding.code.0).collect()
 }
 //#endregion 🌉️ConformanceProjection
 //#endregion 🔖️Mutations
@@ -398,7 +398,7 @@ mod tests {
         ];
         assert_eq!(variants.len(), KINDS.len(), "every variant needs exactly one KINDS entry");
         for (variant, kind) in variants.iter().zip(KINDS) {
-            let tag = match serde_json::to_value(variant).expect("serialize") {
+            let tag = match serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(variant)).expect("serialize") {
                 serde_json::Value::Object(members) => members.get("mutation").and_then(|value| value.as_str()).expect("tagged enum carries its own discriminant").to_string(),
                 other => panic!("a tagged enum must serialize as an object, got {other:?}"),
             };
@@ -468,8 +468,8 @@ mod tests {
     fn removing_strip_offsets_restores_the_neutral_fixture() {
         let before_json = include_str!("../../🧫️fixtures/✂️remove-strip-offsets/⬅️before.json");
         let after_json = include_str!("../../🧫️fixtures/✂️remove-strip-offsets/➡️after.json");
-        let before: TiffSnapshot = serde_json::from_str(before_json).expect("before fixture");
-        let after: TiffSnapshot = serde_json::from_str(after_json).expect("after fixture");
+        let before: TiffSnapshot = dsl::json::from_json_str(before_json).expect("before fixture");
+        let after: TiffSnapshot = dsl::json::from_json_str(after_json).expect("after fixture");
         let mutation = TiffBaselineMutation::RemoveStripOffsets(remove_strip_offsets::RemoveStripOffsets {});
         let mut actual = before.clone();
         apply_tiff_baseline_mutation(&mut actual, &mutation);
@@ -478,7 +478,7 @@ mod tests {
         assert_eq!(inverse.len(), 1);
         for undo in inverse { apply_tiff_baseline_mutation(&mut actual, &undo); }
         assert_eq!(actual, before);
-        assert_eq!(serde_json::to_value(&actual).unwrap(), serde_json::from_str::<serde_json::Value>(before_json).unwrap());
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&actual)).unwrap(), serde_json::from_str::<serde_json::Value>(before_json).unwrap());
         assert!(inverse_tiff_baseline_mutation(&mutation, &after).is_empty());
         eprintln!("[DEBUG] TIFF strip-offsets removal and inverse agree with the neutral fixtures");
     }

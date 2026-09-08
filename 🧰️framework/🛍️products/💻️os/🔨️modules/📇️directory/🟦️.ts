@@ -34,6 +34,9 @@ export type {
   DirectoryEventBody,
   DirectoryEventInviteRedeemed,
   DirectoryEventDocumentAnnounced,
+  DirectoryEventDocumentIndexed,
+  DirectoryIndexedDocumentViewV1,
+  DocumentIndexEntryV1,
   DirectoryEventArtifactCheckpointPublished,
   DirectoryEventArtifactRetentionAdvanced,
   DirectoryEventMemberRemoved,
@@ -73,6 +76,7 @@ export type {
 export { descriptorDigestEncodingV1, descriptorDigestV1, parseDirectorySpaceAdministrationPageV1, DESCRIPTOR_DIGEST_V1_DOMAIN, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS, DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA } from "./🧬️schema/🟦️.ts";
 
 import type { DirectoryCommand, DirectoryEvent, DirectoryEventBody, DirectoryStreamMessage, DocumentDescriptor, MemberView, SpaceView, UserView } from "./🧬️schema/🟦️.ts";
+import { validDocumentIndexEntryV1, type DirectoryIndexedDocumentViewV1 } from "./🧬️schema/🟦️.ts";
 
 //#region 🔖️ReadModel
 /** 🏠️ One projected space: its `SpaceView` plus the current member roster. */
@@ -80,6 +84,7 @@ export interface DirectorySpace {
   view: SpaceView;
   members: MemberView[];
   documents: DocumentDescriptor[];
+  indexedDocuments: DirectoryIndexedDocumentViewV1[];
 }
 
 /** 📇️ The directory's whole projected state, folded from the event log. `users` is a side-table
@@ -123,7 +128,7 @@ export function fold(model: DirectoryReadModel, event: DirectoryEvent): Director
   const withSpace = (spaceId: string, mutate: (space: DirectorySpace) => void): void => {
     const existing = spaces.get(spaceId);
     if (!existing) return;
-    const copy: DirectorySpace = { view: { ...existing.view }, members: existing.members.map((member) => ({ ...member })), documents: existing.documents.map((document) => ({ ...document, owner: { ...document.owner }, bootstrapFrontier: { ...document.bootstrapFrontier } })) };
+    const copy: DirectorySpace = { view: { ...existing.view }, members: existing.members.map((member) => ({ ...member })), documents: existing.documents.map((document) => ({ ...document, owner: { ...document.owner }, bootstrapFrontier: { ...document.bootstrapFrontier } })), indexedDocuments: existing.indexedDocuments.map((row) => ({ ...row, descriptor: { ...row.descriptor, owner: { ...row.descriptor.owner }, bootstrapFrontier: { ...row.descriptor.bootstrapFrontier } }, entry: { ...row.entry, dialect: { ...row.entry.dialect } } })) };
     mutate(copy);
     spaces.set(spaceId, copy);
   };
@@ -148,6 +153,7 @@ export function fold(model: DirectoryReadModel, event: DirectoryEvent): Director
         },
         members: [],
         documents: [],
+        indexedDocuments: [],
       });
       break;
     case "space.renamed":
@@ -191,6 +197,13 @@ export function fold(model: DirectoryReadModel, event: DirectoryEvent): Director
         if (!space.documents.some((document) => document.documentId === body.descriptor.documentId)) space.documents.push(body.descriptor);
         space.view.documentCount = space.documents.length;
         space.view.updatedAtMs = event.recordedAtMs;
+      });
+      break;
+    case "document.indexed":
+      withSpace(body.scope.spaceId, (space) => {
+        if (!validDocumentIndexEntryV1(body.entry) || body.descriptorDigestV1.length !== 32 || body.descriptorDigestV1.some((byte) => !Number.isInteger(byte) || byte < 0 || byte > 255) || !body.descriptorDigestV1.some((byte) => byte !== 0) || !event.userId || new TextEncoder().encode(event.userId).length > 256 || event.spaceId !== body.scope.spaceId || space.indexedDocuments.some((row) => row.descriptor.documentId === body.scope.documentId)) return;
+        const descriptor = space.documents.find((document) => document.documentId === body.scope.documentId && document.artifactKind === body.entry.dialect.artifactKind);
+        if (descriptor) space.indexedDocuments.push({ descriptor, descriptorDigestV1: body.descriptorDigestV1, entry: body.entry, createdAtMs: event.recordedAtMs, createdBy: event.userId });
       });
       break;
     case "artifact.checkpoint-published":

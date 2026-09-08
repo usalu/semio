@@ -12,6 +12,7 @@
  * @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/REGISTRY-SCRIPT-REFACTOR-TO-VOCABULARY-DISCOVERY-LIBRARY
  */
 import { createHash } from "node:crypto";
+import { stageArtifacts } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 import { closeSync, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, readSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { isAbsolute, basename, dirname, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
@@ -1862,13 +1863,21 @@ function validatePlaygroundSessions(repoRoot: string): string[] {
 /** @emoji 🗂️ The full generated catalog, rendered in memory once and consumed by both `generate`
  * (writes) and `check` (byte-compares) so the two can never disagree about what belongs in
  * `🤖️generated/`. */
-function renderCatalogFiles(repoRoot: string, view?: RegistryCatalogInputView): { files: Record<string, string>; entries: PluginRegistryEntry[]; playgrounds: PlaygroundEntry[]; frameworkPackages: FrameworkPackageEntry[] } {
+function renderCatalogFiles(repoRoot: string, view: RegistryCatalogInputView = registryCatalogInputView(repoRoot, TAXONOMY)): { files: Record<string, string>; entries: PluginRegistryEntry[]; playgrounds: PlaygroundEntry[]; frameworkPackages: FrameworkPackageEntry[]; componentLaunchers: { project: string; pluginId: string }[] } {
   const packages = discoverCatalogPackages(repoRoot, TAXONOMY, view);
   const entries = generatePluginRegistry(repoRoot, { packages, view });
   const playgrounds = generatePlaygroundRegistry(repoRoot, { packages, view });
   const frameworkPackages = generateFrameworkPackageRegistry(repoRoot, packages);
   const hostVariant = defaultHostVariant(entries, playgrounds);
+  const componentLaunchers = entries.map((entry) => {
+    const path = `${entry.cratePath}/📋️project.json`, kind = view.kind(path);
+    if (kind && kind !== "file") throw new Error(`Invalid component Nx project: ${path}`);
+    const project = kind ? JSON.parse(view.readText(path)).name : entry.packageName;
+    if (typeof project !== "string" || !project.length) throw new Error(`Missing component Nx identity: ${path}`);
+    return { project, pluginId: entry.pluginId };
+  });
   return {
+    componentLaunchers,
     entries,
     playgrounds,
     frameworkPackages,
@@ -1888,7 +1897,7 @@ function renderCatalogFiles(repoRoot: string, view?: RegistryCatalogInputView): 
 class GenerateScript extends BundleScript {
   run(_segments: string[]): void {
     const repoRoot = getWorkspaceRoot();
-    const { files, entries, playgrounds, frameworkPackages } = renderCatalogFiles(repoRoot);
+    const { files, entries, playgrounds, frameworkPackages, componentLaunchers } = renderCatalogFiles(repoRoot);
     const outDir = join(this.root, "🤖️generated");
     mkdirSync(outDir, { recursive: true });
     const expected = new Set(Object.keys(files));
@@ -1899,7 +1908,7 @@ class GenerateScript extends BundleScript {
     // regenerated here rather than from a separate entry point — `check` enforces its freshness. Written
     // last so a seed/devLaunchers problem can never leave the catalog itself unwritten.
     const launchPath = join(repoRoot, LAUNCH_OUTPUT_REL_PATH);
-    writeFileSync(launchPath, generateLaunchJson(repoRoot, playgrounds));
+    writeFileSync(launchPath, generateLaunchJson(repoRoot, playgrounds, componentLaunchers));
     console.log(`${LAUNCH_OUTPUT_REL_PATH} regenerated -> ${launchPath}`);
   }
 }
@@ -1941,14 +1950,14 @@ class PreviewGeneratedScript extends BundleScript {
       payload = Buffer.concat(chunks).toString("utf8");
     }
     const view = protocol ? registryCatalogProjectedInputView(repoRoot, TAXONOMY, parseRegistryCatalogProjection(payload, TAXONOMY), base) : base;
-    const { files, playgrounds } = renderCatalogFiles(repoRoot, view);
+    const { files, playgrounds, componentLaunchers } = renderCatalogFiles(repoRoot, view);
     const outDir = join(this.root, "🤖️generated");
     const rootPath = relative(repoRoot, outDir).replaceAll("\\", "/").normalize("NFC");
     const launchPath = join(repoRoot, LAUNCH_OUTPUT_REL_PATH);
     const nodes = [
       { bytesBase64: "", mode: 0o755, nodeKind: "directory" as const, path: rootPath },
       ...Object.entries(files).map(([name, content]) => ({ bytesBase64: Buffer.from(content).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: `${rootPath}/${name.normalize("NFC")}` })),
-      { bytesBase64: Buffer.from(generateLaunchJson(repoRoot, playgrounds, (path) => view.readText(path))).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: relative(repoRoot, launchPath).replaceAll("\\", "/").normalize("NFC") },
+      { bytesBase64: Buffer.from(generateLaunchJson(repoRoot, playgrounds, componentLaunchers, (path) => view.readText(path))).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: relative(repoRoot, launchPath).replaceAll("\\", "/").normalize("NFC") },
     ].sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
     const expected = new Set(Object.keys(files));
     const staleRemovals = (existsSync(outDir) ? readdirSync(outDir) : []).filter((name) => !expected.has(name)).map((name) => `${rootPath}/${name.normalize("NFC")}`).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
@@ -3169,12 +3178,12 @@ class CatalogCompleteScript extends BundleScript {
 class CheckGeneratedScript extends BundleScript {
   run(_segments: string[]): void {
     const repoRoot = getWorkspaceRoot();
-    const { files, playgrounds } = renderCatalogFiles(repoRoot);
+    const { files, playgrounds, componentLaunchers } = renderCatalogFiles(repoRoot);
     const outDir = join(this.root, "🤖️generated");
     const stale = Object.entries(files).filter(([name, content]) => !existsSync(join(outDir, name)) || readFileSync(join(outDir, name), "utf8") !== content).map(([name]) => name);
     if (existsSync(outDir)) stale.push(...readdirSync(outDir).filter((name) => !(name in files)));
     const launchPath = join(repoRoot, LAUNCH_OUTPUT_REL_PATH);
-    if (!existsSync(launchPath) || readFileSync(launchPath, "utf8") !== generateLaunchJson(repoRoot, playgrounds)) stale.push(LAUNCH_OUTPUT_REL_PATH);
+    if (!existsSync(launchPath) || readFileSync(launchPath, "utf8") !== generateLaunchJson(repoRoot, playgrounds, componentLaunchers)) stale.push(LAUNCH_OUTPUT_REL_PATH);
     if (stale.length) throw new Error(`Generated registry output is stale: ${stale.join(", ")}`);
     console.log("plugin registry generated catalog and launch bytes are fresh.");
   }
@@ -3185,7 +3194,7 @@ class CheckScript extends BundleScript {
     const repoRoot = getWorkspaceRoot();
     const authorityProblems = validateGeneratorContractsAgainstWorkspace(repoRoot, TAXONOMY);
     if (authorityProblems.length) throw new Error(authorityProblems.join("\n"));
-    const { files, entries, playgrounds, frameworkPackages } = renderCatalogFiles(repoRoot);
+    const { files, entries, playgrounds, frameworkPackages, componentLaunchers } = renderCatalogFiles(repoRoot);
     const outDir = join(this.root, "🤖️generated");
     const stale = Object.entries(files)
       .filter(([name, content]) => !existsSync(join(outDir, name)) || readFileSync(join(outDir, name), "utf8") !== content)
@@ -3195,7 +3204,7 @@ class CheckScript extends BundleScript {
     const launchViolations: string[] = [];
     try {
       const launchPath = join(repoRoot, LAUNCH_OUTPUT_REL_PATH);
-      const expectedLaunch = generateLaunchJson(repoRoot, playgrounds);
+      const expectedLaunch = generateLaunchJson(repoRoot, playgrounds, componentLaunchers);
       if (!existsSync(launchPath) || readFileSync(launchPath, "utf8") !== expectedLaunch) stale.push(LAUNCH_OUTPUT_REL_PATH);
     } catch (error) {
       launchViolations.push(`${LAUNCH_OUTPUT_REL_PATH} cannot be rendered: ${(error as Error).message}`);
@@ -3260,7 +3269,24 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check-generated", CheckGeneratedScript).register("rust-taxonomy-mounts-check", RustTaxonomyMountsCheckScript).register("plugin-root-ownership-check", PluginRootOwnershipCheckScript).register("native-catalog-selection-check", NativeCatalogSelectionCheckScript).register("catalog-complete", CatalogCompleteScript).register("check", CheckScript).register("test", TestScript).register("new", NewScript);
+/** 🎮️ Publishes one standalone session without overwriting another playground variant. */
+class SessionScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    const variant = args[0];
+    if (args.length !== 1 || !variant || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("Usage: session <variant>");
+    const output = join(this.root, "dist", "sessions", variant);
+    mkdirSync(dirname(output), { recursive: true });
+    const temporary = mkdtempSync(output + ".stage-");
+    try {
+      const file = join(temporary, "🟦️session.ts");
+      const session = writePlaygroundSession(variant, file);
+      stageArtifacts(output, `playground-session:${variant}`, new Map([["🟦️session.ts", file]]));
+      console.log(`Playground session ${variant}: ${session.plugins.length} plugins staged`);
+    } finally { rmSync(temporary, { recursive: true, force: true }); }
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("session", SessionScript).register("preview-generated", PreviewGeneratedScript).register("check-generated", CheckGeneratedScript).register("rust-taxonomy-mounts-check", RustTaxonomyMountsCheckScript).register("plugin-root-ownership-check", PluginRootOwnershipCheckScript).register("native-catalog-selection-check", NativeCatalogSelectionCheckScript).register("catalog-complete", CatalogCompleteScript).register("check", CheckScript).register("test", TestScript).register("new", NewScript);
 
 if (import.meta.main) {
   await runBundleScriptMain(router, import.meta.url, { defaultCommand: "generate" });

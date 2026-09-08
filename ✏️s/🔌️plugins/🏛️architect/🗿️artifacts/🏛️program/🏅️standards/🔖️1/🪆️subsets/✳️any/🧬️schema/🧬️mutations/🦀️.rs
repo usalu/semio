@@ -853,7 +853,7 @@ mod tests {
     use crate::artifacts::program::kernel::*;
     use crate::artifacts::program::registers::*;
     use crate::artifacts::program::{empty_plugin, sample_plugin};
-    use protocol::{Mutation, MutationDiff, OpText, SemanticMutation};
+    use protocol::{Mutation, MutationDiff, SemanticMutation};
 
     fn round_trip(snapshot: &ProgramSnapshot, operation: &ProgramMutation) -> ProgramSnapshot {
         let forward = operation.diff(snapshot).diff().apply(snapshot).expect("valid mutation diff");
@@ -1070,18 +1070,18 @@ mod tests {
         let mut new_stakeholder = base.stakeholders[0].clone();
         new_stakeholder.header.id = EntityId::new_serial("stakeholder", "stakeholder");
         let create = ProgramMutation::CreateStakeholder(super::super::create_stakeholder::CreateStakeholder { stakeholder: new_stakeholder.clone() });
-        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &create);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &create).await;
         let d1 = create.diff(&base).into_parts().0;
         let after = d1.apply(&base).expect("valid mutation diff");
         let d2 = ProgramMutation::RenameStakeholder(super::super::rename_stakeholder::RenameStakeholder { id: new_stakeholder.header.id, new_name: "Renamed".into() }).diff(&after).into_parts().0;
-        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn rename_meta_obeys_the_inverse_law() {
         let base = sample_plugin();
         let rename = ProgramMutation::RenameMeta(super::super::rename_meta::RenameMeta { new_title: "Renamed Program".into() });
-        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &rename);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &rename).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1090,7 +1090,7 @@ mod tests {
         let mut updated = base.adjacencies[0].clone();
         updated.weight = 9.0;
         let connect = ProgramMutation::ConnectAdjacency(super::super::connect_adjacency::ConnectAdjacency { adjacency: updated });
-        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &connect);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &connect).await;
     }
     //#endregion ⚖️SemanticLaws
 

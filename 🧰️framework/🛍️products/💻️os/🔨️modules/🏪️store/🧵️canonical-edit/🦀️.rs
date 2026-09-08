@@ -110,7 +110,7 @@ impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
                     ("group_id", meta.group_id.is_some()),
                     ("origin", !meta.origin.is_owner()),
                     ("", false),
-                ]
+                ];
             }
             Self::Clock(_) => fields[..3].copy_from_slice(&[("actor", true), ("physical_ms", true), ("logical", true)]),
             Self::Origin(origin) => match origin {

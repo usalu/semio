@@ -7,9 +7,7 @@ use schema::ArtifactSchema;
 //#region 🔖️Snapshot
 /// 📸️ Persisted architect program snapshot (persistent fields of the artifact).
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, ArtifactSchema)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(extension = "architect", layout = "lines")]
 #[artifact_schema(id = "s.architect.program")]
 pub struct ProgramSnapshot {

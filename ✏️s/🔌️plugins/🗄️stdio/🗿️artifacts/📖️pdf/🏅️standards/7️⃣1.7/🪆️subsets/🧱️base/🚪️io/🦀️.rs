@@ -193,7 +193,7 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    fn parse_name(&mut self) -> PResult<PdfObject> {
+    fn parse_name(&mut self) -> PdfObject {
         self.pos += 1; // consume '/'
         let mut out = String::new();
         while let Some(b) = self.peek() {
@@ -213,7 +213,7 @@ impl<'a> Lexer<'a> {
             out.push(b as char);
             self.pos += 1;
         }
-        Ok(PdfObject::Name(out))
+        PdfObject::Name(out)
     }
 
     fn parse_literal_string(&mut self) -> PResult<PdfObject> {
@@ -360,7 +360,7 @@ impl<'a> Lexer<'a> {
             if self.peek() != Some(b'/') {
                 return malformed("expected dict key");
             }
-            let key = match self.parse_name()? {
+            let key = match self.parse_name() {
                 PdfObject::Name(n) => n,
                 _ => unreachable!(),
             };
@@ -405,7 +405,7 @@ impl<'a> Lexer<'a> {
         self.skip_ws();
         match self.peek() {
             None => malformed("unexpected end of input"),
-            Some(b'/') => self.parse_name(),
+            Some(b'/') => Ok(self.parse_name()),
             Some(b'(') => self.parse_literal_string(),
             Some(b'<') if self.peek_at(1) == Some(b'<') => self.parse_dict_or_stream(true),
             Some(b'<') => self.parse_hex_string(),
@@ -422,7 +422,7 @@ impl<'a> Lexer<'a> {
                             if let Ok(PdfObject::Int(gen)) = self.parse_number() {
                                 if gen >= 0 {
                                     self.skip_ws();
-                                    if self.consume_keyword(b"R") && self.peek().map(|b| is_ws(b) || is_delim(b)).unwrap_or(true) {
+                                    if self.consume_keyword(b"R") && self.peek().is_none_or(|b| is_ws(b) || is_delim(b)) {
                                         return Ok(PdfObject::Ref(ObjRef { num: num as u32, gen: gen as u16 }));
                                     }
                                 }
@@ -590,9 +590,7 @@ pub fn ascii85_decode(s: &[u8]) -> PResult<Vec<u8>> {
     }
     if glen > 0 {
         let n = glen;
-        for j in glen..5 {
-            group[j] = 84;
-        }
+        group[glen..5].fill(84);
         let mut v: u32 = 0;
         for g in group {
             v = v.wrapping_mul(85).wrapping_add(g as u32);
@@ -625,7 +623,7 @@ pub fn run_length_decode(s: &[u8]) -> Vec<u8> {
             }
             let b = s[i];
             i += 1;
-            out.extend(std::iter::repeat(b).take(257 - len as usize));
+            out.extend(std::iter::repeat_n(b, 257 - len as usize));
         }
     }
     out
@@ -650,8 +648,8 @@ fn paeth(a: u8, b: u8, c: u8) -> u8 {
 /// prefixed by a filter-type byte. Reused by xref streams and any Flate/LZW stream declaring
 /// `/DecodeParms /Predictor`. Verified standalone against hand-checked rows before landing here.
 pub fn png_predictor_decode(raw: &[u8], columns: usize, colors: usize, bpc: usize) -> PResult<Vec<u8>> {
-    let bpp = ((colors * bpc + 7) / 8).max(1);
-    let row_bytes = (columns * colors * bpc + 7) / 8;
+    let bpp = (colors * bpc).div_ceil(8).max(1);
+    let row_bytes = (columns * colors * bpc).div_ceil(8);
     if row_bytes == 0 {
         return malformed("predictor: zero row width");
     }
@@ -861,8 +859,8 @@ fn parse_xref_stream(data: &[u8], offset: usize) -> PResult<(HashMap<u32, XrefEn
     let row_bytes = w[0] + w[1] + w[2];
     let mut entries = HashMap::new();
     let mut pos = 0usize;
-    let mut pair = index.chunks(2);
-    while let Some(chunk) = pair.next() {
+    let pair = index.chunks(2);
+    for chunk in pair {
         if chunk.len() < 2 {
             break;
         }
@@ -1337,7 +1335,7 @@ fn parse_tounicode_cmap(text: &[u8]) -> FontDecoder {
         if let Some(first_hex) = csr.split_whitespace().next() {
             let hexlen = first_hex.trim_matches(|c| c == '<' || c == '>').len();
             if hexlen > 0 {
-                fd.byte_width = (hexlen + 1) / 2;
+                fd.byte_width = hexlen.div_ceil(2);
             }
         }
     }
@@ -1346,9 +1344,8 @@ fn parse_tounicode_cmap(text: &[u8]) -> FontDecoder {
         let mut i = 0;
         while i + 1 < toks.len() {
             if let Some(src) = hex_tok(toks[i]) {
-                if let Some(u) = hex_to_unicode_string(toks[i + 1]) {
-                    fd.chars.insert(src, u);
-                }
+                let u = hex_to_unicode_string(toks[i + 1]);
+                fd.chars.insert(src, u);
             }
             i += 2;
         }
@@ -1401,7 +1398,7 @@ fn hex_tok(tok: &str) -> Option<u32> {
     }
     u32::from_str_radix(inner, 16).ok()
 }
-fn hex_to_unicode_string(hex: &str) -> Option<String> {
+fn hex_to_unicode_string(hex: &str) -> String {
     let inner = hex.trim_start_matches('<').trim_end_matches('>');
     let bytes: Vec<u8> = (0..inner.len()).step_by(2).filter_map(|i| inner.get(i..i + 2)).filter_map(|h| u8::from_str_radix(h, 16).ok()).collect();
     let mut out = String::new();
@@ -1413,7 +1410,7 @@ fn hex_to_unicode_string(hex: &str) -> Option<String> {
             }
         }
     }
-    Some(out)
+    out
 }
 
 /// 🏗️ Builds a `FontDecoder` for one font dict, per requirement #6: ToUnicode CMap first, else
@@ -1514,7 +1511,7 @@ fn extract_text(content: &[u8], resources: &PdfObject, resolve: &mut dyn FnMut(u
         let Some(b) = lex.data.get(lex.pos).copied() else { break };
         match b {
             b'/' => {
-                if let Ok(PdfObject::Name(n)) = lex.parse_name() {
+                if let PdfObject::Name(n) = lex.parse_name() {
                     operands.push(ContentOperand::Name(n));
                 }
             }
@@ -1553,11 +1550,10 @@ fn extract_text(content: &[u8], resources: &PdfObject, resolve: &mut dyn FnMut(u
                         }
                         Some(c) if c == b'-' || c == b'+' || c == b'.' || c.is_ascii_digit() => match lex.parse_number() {
                             Ok(PdfObject::Int(_)) => arr.push(ContentOperand::Num),
-                            Ok(PdfObject::Real(real)) => {
-                                if real.to_f64().is_some() {
+                            Ok(PdfObject::Real(real))
+                                if real.to_f64().is_some() => {
                                     arr.push(ContentOperand::Num);
                                 }
-                            }
                             _ => {}
                         },
                         Some(_) => {
@@ -1570,11 +1566,10 @@ fn extract_text(content: &[u8], resources: &PdfObject, resolve: &mut dyn FnMut(u
             }
             c if c == b'-' || c == b'+' || c == b'.' || c.is_ascii_digit() => match lex.parse_number() {
                 Ok(PdfObject::Int(_)) => operands.push(ContentOperand::Num),
-                Ok(PdfObject::Real(r)) => {
-                    if r.to_f64().is_some() {
+                Ok(PdfObject::Real(r))
+                    if r.to_f64().is_some() => {
                         operands.push(ContentOperand::Num);
                     }
-                }
                 _ => {}
             },
             b'%' => {
@@ -1709,7 +1704,7 @@ fn walk_page_tree(node_ref: ObjRef, resolve: &mut dyn FnMut(u32) -> Option<PdfOb
     let kids = node.dict_get("Kids").and_then(|v| v.as_array());
     if is_pages || kids.is_some() {
         if let Some(kids) = kids {
-            for kid in kids.to_vec() {
+            for kid in kids {
                 if let Some(r) = kid.as_ref() {
                     walk_page_tree(r, resolve, &here, visited, out);
                 }
@@ -1806,7 +1801,7 @@ pub fn decode_pdf(data: &[u8]) -> PResult<PdfSnapshot> {
         .unwrap_or_default();
 
     let objects = resolver.resolve_all()?;
-    let trailer = xref.trailer.clone();
+    let trailer = xref.trailer;
 
     Ok(PdfSnapshot { schema: STDIO_PDF17_DOCUMENT_SCHEMA.into(), declared_version, pages, info, objects, trailer })
 }
@@ -2912,7 +2907,7 @@ pub fn sniff_pdf(bytes: &[u8]) -> Option<String> {
     if bytes.len() < 8 || &bytes[0..5] != b"%PDF-" {
         return None;
     }
-    let end = bytes.iter().skip(5).take(8).position(|&b| b == b'\n' || b == b'\r' || is_ws(b)).map(|p| p + 5).unwrap_or(bytes.len().min(13));
+    let end = bytes.iter().skip(5).take(8).position(|&b| b == b'\n' || b == b'\r' || is_ws(b)).map_or(bytes.len().min(13), |p| p + 5);
     let version = String::from_utf8_lossy(&bytes[5..end]).trim().to_string();
     if version.chars().all(|c| c.is_ascii_digit() || c == '.') && !version.is_empty() {
         Some(version)
@@ -2976,7 +2971,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn bachelor_thesis_logical_lifecycle_preserves_original_native_bytes() {
         use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::diff::PdfDiff;
-        use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::{apply_pdf_mutation, InsertPage, PdfMutation, SetInfo};
+        use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::{apply_pdf_mutation, PdfMutation, SetInfo};
         use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::PdfAnalyzer;
         use protocol::command::DiffAlgebra;
         use protocol::{DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
@@ -3084,7 +3079,7 @@ mod tests {
         use super::*;
         use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::diff::{PdfDiff, PdfPathSegment};
         use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::mutations::*;
-        use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::{diff, mutations, snapshot};
+        use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::{diff, snapshot};
 
         use protocol::command::DiffAlgebra;
         use protocol::{DiffCodec, OpBinary, OpText};
@@ -3139,11 +3134,11 @@ mod tests {
         /// parse under the real dialect.
         #[test]
         fn committed_facet_files_parse() {
-            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
+            for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
+            for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
                 dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }
@@ -3163,7 +3158,7 @@ mod tests {
         /// output for every demo `PdfMutation` variant.
         #[test]
         fn ops_grammar_conformance_law() {
-            let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+            let grammar = dsl::parse_grammar(text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for mutation in demo_mutation_cases() {
                 let printed = mutation.print_op();
@@ -3194,7 +3189,7 @@ mod tests {
             assert!(trace.consumed <= inner.len(), "pack walk consumed more than the buffer holds");
             assert!(trace.consumed > 0, "pack walk must consume at least the real 5-byte %PDF- magic");
 
-            let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+            let op_spec = dsl::parse_protocol(binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
             for mutation in demo_mutation_cases() {
                 let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));

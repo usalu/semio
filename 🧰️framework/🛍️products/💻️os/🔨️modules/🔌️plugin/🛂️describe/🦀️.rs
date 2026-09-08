@@ -136,9 +136,9 @@ fn encode_package_descriptor(descriptor: &PackageDescriptor) -> Vec<u8> {
 
 async fn plugin_descriptor<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> PackageDescriptor {
     let manifest = crate::plugin_runtime::plugin_manifest(runtime).await;
-    let extras = crate::plugin_runtime::plugin_descriptor_extras().await;
+    let extras = crate::plugin_runtime::plugin_descriptor_extras(runtime).await;
     let contributions = plugin_contributions(runtime, &manifest).await;
-    let descriptor = PackageDescriptor {
+    PackageDescriptor {
         descriptor_version: 1,
         package_id: extras.package_id,
         role: PackageRole::Plugin,
@@ -152,8 +152,7 @@ async fn plugin_descriptor<PA: crate::app::PluginApp>(runtime: &crate::plugin_ru
         contributions,
         assets: extras.assets,
         hashes: PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() },
-    };
-    descriptor
+    }
 }
 
 /// 🔌️ Encodes the plugin's installed runtime descriptor.

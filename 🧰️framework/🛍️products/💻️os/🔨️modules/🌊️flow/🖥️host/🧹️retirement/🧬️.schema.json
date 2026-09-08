@@ -6,7 +6,7 @@
     "text":{"type":"object","additionalProperties":false,"required":["text","repeat","reservedCapacity"],"properties":{"text":{"const":"🌊"},"repeat":{"const":4096},"reservedCapacity":{"const":65536}}},
     "preview":{"type":"object","additionalProperties":false,"required":["text","repeat"],"properties":{"text":{"const":"高"},"repeat":{"const":1600}}},
     "dag":{"type":"object","additionalProperties":false,"required":["schemaText","nodeId","nodeName","text","repeat","minimumUtf8Bytes"],"properties":{"schemaText":{"const":"dag.fixture"},"nodeId":{"const":"retained-note"},"nodeName":{"const":"Retained note"},"text":{"const":"高"},"repeat":{"const":1600},"minimumUtf8Bytes":{"const":4800}}},
-    "scene":{"type":"object","additionalProperties":false,"required":["retirementCapacity","retainedCommands"],"properties":{"retirementCapacity":{"const":1024},"retainedCommands":{"const":128}}},
+    "scene":{"type":"object","additionalProperties":false,"required":["retirementCapacity","retainedCommands","retainedPathElements","retainedVelloRects","retainedConsumers"],"properties":{"retirementCapacity":{"const":1024},"retainedCommands":{"const":128},"retainedPathElements":{"const":1600},"retainedVelloRects":{"const":256},"retainedConsumers":{"const":["iconPaintCache","boardWorldCache","engineCanvasPacket"]}}},
     "expected":{"type":"object","additionalProperties":false,"required":["releasedBytes","terminalOwners","zeroGrant"],"properties":{"releasedBytes":{"const":42405},"terminalOwners":{"const":0},"zeroGrant":{"const":"blocked"}}}
   }
 }

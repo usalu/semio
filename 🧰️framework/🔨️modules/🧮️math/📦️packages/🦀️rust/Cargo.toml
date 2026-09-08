@@ -2,7 +2,7 @@
 name = "semio-framework-math"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.88"
+rust-version.workspace = true
 description = "Semio math framework — an LLM token-sampling/diffusion-noise engine (misfiled here; domain-specific, no plugin owner found — see ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave MATHEND's report), the sole remaining content. Number theory lives in semio-framework-number; geometry/random live in semio-framework-geometry; the graph vocabulary, algorithms, drawing, manifest and Jack query language live in semio-framework-graph; symbolic algebra (CAS) and polynomials live in the ➗️mathematical plugin's own artifact tree (wave M3a); tabular/probability/statistics/causal live as ✳️table inference compute internals in the 🗄️stdio plugin's 🧿️semio artifact (wave M3c); graph traversal/operators/normal/ports live as ✳️graph inference compute internals in the same artifact (wave MATHEND)."
 
 [package.metadata.semio]

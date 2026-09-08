@@ -591,12 +591,12 @@ mod compliance_helpers_tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    fn k_mod_sc1_permanent() {
+    async fn k_mod_sc1_permanent() {
         assert!((k_mod(ServiceClass::Sc1, LoadDuration::Permanent) - 0.6).abs() < 1e-9);
     }
 
     #[semio_framework_async_macros::async_test]
-    fn glulam_ltb_reduces_bending_resistance() {
+    async fn glulam_ltb_reduces_bending_resistance() {
         let w = 1_000_000.0;
         let f_m_k = 24.0;
         let km = k_mod(ServiceClass::Sc1, LoadDuration::Medium);
@@ -610,20 +610,20 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn glulam_beam_e2e() {
+    async fn glulam_beam_e2e() {
         let report = check_glulam_beam(25.0, 50.0, 15.0, 1_000_000.0, 20_000.0, 200.0, 300.0, 24.0, 21.0, 4.0, ServiceClass::Sc1, LoadDuration::Medium, 80.0, AnnexChoice::De);
         assert_eq!(report.checks.len(), 3);
     }
 
     #[semio_framework_async_macros::async_test]
-    fn connection_bearing_resistance_worked() {
+    async fn connection_bearing_resistance_worked() {
         let km = k_mod(ServiceClass::Sc1, LoadDuration::Medium);
         let f_rd = part_1_1::connection_bearing_resistance_kn(12_000.0, 2.5, km, AnnexChoice::De);
         assert!((f_rd - 18.46).abs() < 0.5);
     }
 
     #[semio_framework_async_macros::async_test]
-    fn fire_char_depth_r30() {
+    async fn fire_char_depth_r30() {
         let charred = part_1_2::charred_depth_mm(30.0);
         assert!((charred - 19.5).abs() < 0.1);
         let remaining = part_1_2::residual_section_mm(300.0, charred);
@@ -631,7 +631,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn annex_params_gamma_m_per_material() {
+    async fn annex_params_gamma_m_per_material() {
         let en = AnnexParams::en();
         let de = AnnexParams::de();
         assert!((en.gamma_m(TimberMaterial::Solid) - 1.3).abs() < 1e-9);
@@ -643,7 +643,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn k_cr_diverges_between_en_and_de_for_c24() {
+    async fn k_cr_diverges_between_en_and_de_for_c24() {
         let f_v_k = 4.0;
         let k_cr_en = AnnexParams::en().k_cr(f_v_k);
         let k_cr_de = AnnexParams::de().k_cr(f_v_k);
@@ -653,7 +653,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn shear_utilization_diverges_between_annexes_for_c24() {
+    async fn shear_utilization_diverges_between_annexes_for_c24() {
         let v_ed_kn = 15.0;
         let b_mm = 200.0;
         let h_mm = 300.0;
@@ -668,7 +668,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn pedestrian_vibration_within_comfort_limit() {
+    async fn pedestrian_vibration_within_comfort_limit() {
         let check = part_2::check_pedestrian_vibration(0.3);
         assert!(check.utilization < 1.0);
         let check_exceeding = part_2::check_pedestrian_vibration(1.0);
@@ -676,7 +676,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    fn fatigue_reduction_factor_degrades_with_cycles() {
+    async fn fatigue_reduction_factor_degrades_with_cycles() {
         assert!((part_2::fatigue_reduction_factor(500_000.0) - 1.0).abs() < 1e-9);
         let k_fat = part_2::fatigue_reduction_factor(1.0e8);
         assert!((0.5..1.0).contains(&k_fat));

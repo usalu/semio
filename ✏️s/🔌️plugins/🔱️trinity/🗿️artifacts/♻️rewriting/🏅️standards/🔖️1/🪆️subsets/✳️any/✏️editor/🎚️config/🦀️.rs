@@ -99,7 +99,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn rewriting_config_operation_backwards_restores_prior_snapshot() {
         let base = RewritingConfig::default();
-        let operation = RewritingConfigMutation::SetReorganizeEpoch(crate::editor::rewriting::config::SetReorganizeEpoch { value: 7 });
+        let operation = RewritingConfigMutation::SetReorganizeEpoch(SetReorganizeEpoch { value: 7 });
         let next = operation.diff(&base).diff().clone();
         assert_eq!(next.reorganize_epoch, 7);
         let backwards = operation.inverse(&base);
@@ -109,8 +109,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn rewriting_config_operation_text_round_trips() {
-        ::store::os_store::test_support::assert_op_line_round_trip(&RewritingConfigMutation::SetLodMode(crate::editor::rewriting::config::SetLodMode { window_id: "trinity-rewriting-before".into(), value: "compact".into() }));
-        ::store::os_store::test_support::assert_op_line_round_trip(&RewritingConfigMutation::SetReorganizeEpoch(crate::editor::rewriting::config::SetReorganizeEpoch { value: 4 }));
+        ::store::os_store::test_support::assert_op_line_round_trip(&RewritingConfigMutation::SetLodMode(SetLodMode { window_id: "trinity-rewriting-before".into(), value: "compact".into() }));
+        ::store::os_store::test_support::assert_op_line_round_trip(&RewritingConfigMutation::SetReorganizeEpoch(SetReorganizeEpoch { value: 4 }));
     }
 }
 //#endregion 🧪️Tests

@@ -19,9 +19,7 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn infer_pair(pair: &super::super::geometry_core::GltfPairGeometry) -> GltfMeasure<f64> {
-    pair.contact_area
-        .map(|area| if area == 0.0 { exact(area, GltfUnit::SquareMetre, pair.sample_count, None) } else { estimate(area, GltfUnit::SquareMetre, pair.sample_count, None) })
-        .unwrap_or_else(|| unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), pair.sample_count, None))
+    pair.contact_area.map_or_else(|| unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), pair.sample_count, None), |area| if area == 0.0 { exact(area, GltfUnit::SquareMetre, pair.sample_count, None) } else { estimate(area, GltfUnit::SquareMetre, pair.sample_count, None) })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

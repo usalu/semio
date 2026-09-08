@@ -17,7 +17,7 @@ pub fn diff(payload: &super::MoveNode, base: &SemioGraphSnapshot) -> protocol::M
     }
     let mut nodes = base.nodes.clone();
     let node = nodes.iter_mut().find(|n| n.id == payload.id).expect("checked above");
-    node.position = payload.new_position.clone();
+    node.position = payload.new_position;
     protocol::MutationOutcome::new(SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: nodes }), edges: None })
 }
 //#endregion 🔖️Diff

@@ -923,6 +923,7 @@ impl RetainedJobPayloadWriter {
         Ok(self.begin_page(ledger, source))
     }
 
+    #[expect(clippy::result_large_err, reason = "A refused finish returns the exact admitted writer and its staged pages without allocating.")]
     pub fn finish(mut self) -> Result<RetainedJobPayload, Self> {
         if self.rejected.is_some() || self.staged.is_some() {
             return Err(self);
@@ -1257,12 +1258,19 @@ impl<'a> StepContext<'a> {
             return Err(JobPayloadRejectedPage { fault: JobPayloadAdmissionFault::StreamBytes, source: ManuallyDrop::new(Some(source)) });
         }
         let mut writer = RetainedJobPayloadWriter::new(stream);
-        {
-            let mut page = self.admit_payload_page(&mut writer, source)?;
-            page.write(bytes).expect("single-page payload was length-checked before write");
-            page.commit();
+        let rejected = match self.admit_payload_page(&mut writer, source) {
+            Ok(mut page) => {
+                page.write(bytes).expect("single-page payload was length-checked before write");
+                page.commit();
+                None
+            }
+            Err(rejected) => Some(rejected),
+        };
+        let payload = writer.finish().unwrap_or_else(|_| unreachable!("single-page admission leaves no source inside the writer"));
+        match rejected {
+            Some(rejected) => Err(rejected),
+            None => Ok(payload),
         }
-        Ok(writer.finish().unwrap_or_else(|_| unreachable!("committed one-page writer has no rejected source")))
     }
 }
 //#endregion 🧭️StepContext
@@ -1298,6 +1306,7 @@ pub struct JobFault {
 /// [`StepOutcome::CheckpointReady`] all mean "call `step` again"; [`StepOutcome::is_terminal`] marks
 /// the other three.
 #[derive(Debug, PartialEq, Eq)]
+#[expect(clippy::large_enum_variant, reason = "Step outcomes move preadmitted payload pages inline; boxing would allocate outside the step grant.")]
 pub enum StepOutcome {
     Yield,
     PreviewReady(RetainedJobPayload),
@@ -1888,6 +1897,7 @@ pub enum DiagnosticKind {
 /// UI over a channel governed by [`channel_policy_for`]/[`default_channel_kind_for`] — the trace ring
 /// alone has no entity/quality/tolerance vocabulary, by design (it stays domain-neutral).
 #[derive(Debug, PartialEq)]
+#[expect(clippy::large_enum_variant, reason = "Progress events transfer retained payload and entity credits without an unbudgeted allocation per event.")]
 pub enum ProgressEvent {
     Started {
         operation: OperationId,
@@ -2675,7 +2685,7 @@ fn drive_worker_job_authority<J: InteractiveJob>(authority: &mut WorkerJobAuthor
             Arc::clone(&authority.payload_ledger),
         )
     }));
-    authority.step_sequence = authority.step_sequence.checked_add(1).unwrap_or(u64::MAX);
+    authority.step_sequence = authority.step_sequence.saturating_add(1);
     authority.outcome = Some(match result {
         Ok(outcome) if authority.callback_verdict.as_ref().is_some_and(semio_framework_trace::CallbackVerdict::is_fault) => {
             authority.quarantined_outcome = Some(outcome);
@@ -3106,6 +3116,7 @@ impl<J> WorkerJobOutcome<J> {
         self.authority.as_mut().and_then(|authority| authority.outcome.take()).expect("checked-out worker outcome owns exact outcome")
     }
 
+    #[expect(clippy::result_large_err, reason = "Refused resumption returns the checked-out job authority and retained outcome without allocation or ownership loss.")]
     pub fn resume(mut self) -> Result<(), Self> {
         if self.restore_phase == SESSION_TERMINAL {
             return Err(self);
@@ -3504,6 +3515,10 @@ mod retained_ownership_tests {
         let mut state_page = state_context.admit_payload_page(&mut state_writer, JobPayloadPageSource::new()).expect("state page");
         state_page.write(b"state").expect("state bytes");
         state_page.commit();
+        let rejected = state_context.payload_from_bytes(JobPayloadStream::CommitOutput, b"output").expect_err("a second stream cannot bypass the one-page opportunity");
+        assert_eq!(rejected.fault, JobPayloadAdmissionFault::OpportunityExhausted);
+        drop(rejected.into_source());
+        assert_eq!(state_writer.page_count(), 1);
         let mut output_context = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_us, &mut sequence, Arc::clone(&ledger));
         let mut output_page = output_context.admit_payload_page(&mut output_writer, JobPayloadPageSource::new()).expect("separate output page");
         output_page.write(b"output").expect("output bytes");

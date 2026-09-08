@@ -1,14 +1,9 @@
 //! 🧪️ Preserved raster sparse-diff and codec regression laws.
-use crate::artifacts::png::schema::diff::{
-    self, dec_background, dec_chromaticities, dec_chunk, dec_chunk_marker, dec_color_type, dec_list, dec_physical_dims, dec_rgb, dec_srgb_intent, dec_str, dec_text_chunk, dec_timestamp, dec_transparency, decode_option, enc_background,
-    enc_chromaticities, enc_chunk, enc_chunk_marker, enc_color_type, enc_list, enc_physical_dims, enc_rgb, enc_srgb_intent, enc_str, enc_text_chunk, enc_timestamp, enc_transparency, encode_option, hex_decode, hex_encode, parse_u32, parse_u8,
-    split_top_level, strip_brackets, PngDiff,
-};
+use crate::artifacts::png::schema::diff::PngDiff;
 use crate::artifacts::png::schema::snapshot::{PngBackground, PngChromaticities, PngChunk, PngColorType, PngPhysicalDims, PngRgb, PngSrgbIntent, PngTextChunk, PngTimestamp, PngTransparency};
 use crate::artifacts::png::PngSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
-use serde::{Deserialize, Serialize};
 
 use crate::artifacts::png::schema::mutations::*;
 //#region 🔖️DemoMutationCases
@@ -55,24 +50,24 @@ pub(crate) fn demo_base_snapshot() -> PngSnapshot {
 pub(crate) fn regression_mutation_cases() -> Vec<PngMutation> {
     let base = demo_base_snapshot();
     vec![
-        PngMutation::ChangeHeader(crate::artifacts::png::schema::mutations::ChangeHeaderMutation { width: 8, height: 8, bit_depth: 16, color_type: PngColorType::Grayscale, interlace: true }),
-        PngMutation::ReplacePalette(crate::artifacts::png::schema::mutations::ReplacePaletteMutation { plte: Some(vec![PngRgb { r: 1, g: 2, b: 3 }]) }),
-        PngMutation::ChangeTransparency(crate::artifacts::png::schema::mutations::ChangeTransparencyMutation { trns: Some(PngTransparency::Grayscale { gray: 7 }) }),
-        PngMutation::ChangeGamma(crate::artifacts::png::schema::mutations::ChangeGammaMutation { gama: Some(45455) }),
-        PngMutation::ChangeChromaticities(crate::artifacts::png::schema::mutations::ChangeChromaticitiesMutation { chrm: Some(PngChromaticities { white_x: 1, white_y: 2, red_x: 3, red_y: 4, green_x: 5, green_y: 6, blue_x: 7, blue_y: 8 }) }),
-        PngMutation::ChangeSrgbIntent(crate::artifacts::png::schema::mutations::ChangeSrgbIntentMutation { srgb: Some(PngSrgbIntent::Saturation) }),
-        PngMutation::ChangePhysicalDims(crate::artifacts::png::schema::mutations::ChangePhysicalDimsMutation { phys: Some(PngPhysicalDims { ppu_x: 96, ppu_y: 96, unit_is_meter: false }) }),
-        PngMutation::ChangeTimestamp(crate::artifacts::png::schema::mutations::ChangeTimestampMutation { time: Some(PngTimestamp { year: 2024, month: 6, day: 1, hour: 12, minute: 0, second: 0 }) }),
-        PngMutation::ChangeBackground(crate::artifacts::png::schema::mutations::ChangeBackgroundMutation { bkgd: Some(PngBackground::Rgb { r: 1, g: 2, b: 3 }) }),
-        PngMutation::InsertTextChunk(crate::artifacts::png::schema::mutations::InsertTextChunkMutation { index: 1, chunk: demo_text_chunk("Comment", "hi") }),
-        PngMutation::RemoveTextChunk(crate::artifacts::png::schema::mutations::RemoveTextChunkMutation { index: 0 }),
-        PngMutation::ReplaceTextChunk(crate::artifacts::png::schema::mutations::ReplaceTextChunkMutation { index: 0, chunk: demo_text_chunk("Title", "updated") }),
-        PngMutation::ReplacePixels(crate::artifacts::png::schema::mutations::ReplacePixelsMutation { pixels: vec![9u8; base.pixels.len()] }),
-        PngMutation::InsertUnknownChunk(crate::artifacts::png::schema::mutations::InsertUnknownChunkMutation { index: 1, chunk: PngChunk { kind: *b"zTXt", data: vec![4, 5] } }),
-        PngMutation::RemoveUnknownChunk(crate::artifacts::png::schema::mutations::RemoveUnknownChunkMutation { index: 0 }),
+        PngMutation::ChangeHeader(ChangeHeaderMutation { width: 8, height: 8, bit_depth: 16, color_type: PngColorType::Grayscale, interlace: true }),
+        PngMutation::ReplacePalette(ReplacePaletteMutation { plte: Some(vec![PngRgb { r: 1, g: 2, b: 3 }]) }),
+        PngMutation::ChangeTransparency(ChangeTransparencyMutation { trns: Some(PngTransparency::Grayscale { gray: 7 }) }),
+        PngMutation::ChangeGamma(ChangeGammaMutation { gama: Some(45455) }),
+        PngMutation::ChangeChromaticities(ChangeChromaticitiesMutation { chrm: Some(PngChromaticities { white_x: 1, white_y: 2, red_x: 3, red_y: 4, green_x: 5, green_y: 6, blue_x: 7, blue_y: 8 }) }),
+        PngMutation::ChangeSrgbIntent(ChangeSrgbIntentMutation { srgb: Some(PngSrgbIntent::Saturation) }),
+        PngMutation::ChangePhysicalDims(ChangePhysicalDimsMutation { phys: Some(PngPhysicalDims { ppu_x: 96, ppu_y: 96, unit_is_meter: false }) }),
+        PngMutation::ChangeTimestamp(ChangeTimestampMutation { time: Some(PngTimestamp { year: 2024, month: 6, day: 1, hour: 12, minute: 0, second: 0 }) }),
+        PngMutation::ChangeBackground(ChangeBackgroundMutation { bkgd: Some(PngBackground::Rgb { r: 1, g: 2, b: 3 }) }),
+        PngMutation::InsertTextChunk(InsertTextChunkMutation { index: 1, chunk: demo_text_chunk("Comment", "hi") }),
+        PngMutation::RemoveTextChunk(RemoveTextChunkMutation { index: 0 }),
+        PngMutation::ReplaceTextChunk(ReplaceTextChunkMutation { index: 0, chunk: demo_text_chunk("Title", "updated") }),
+        PngMutation::ReplacePixels(ReplacePixelsMutation { pixels: vec![9u8; base.pixels.len()] }),
+        PngMutation::InsertUnknownChunk(InsertUnknownChunkMutation { index: 1, chunk: PngChunk { kind: *b"zTXt", data: vec![4, 5] } }),
+        PngMutation::RemoveUnknownChunk(RemoveUnknownChunkMutation { index: 0 }),
         // Out-of-range targets: graceful no-ops, still law-compliant.
-        PngMutation::RemoveTextChunk(crate::artifacts::png::schema::mutations::RemoveTextChunkMutation { index: 99 }),
-        PngMutation::RemoveUnknownChunk(crate::artifacts::png::schema::mutations::RemoveUnknownChunkMutation { index: 99 }),
+        PngMutation::RemoveTextChunk(RemoveTextChunkMutation { index: 99 }),
+        PngMutation::RemoveUnknownChunk(RemoveUnknownChunkMutation { index: 99 }),
     ]
 }
 //#endregion 🔖️DemoMutationCases
@@ -222,29 +217,29 @@ mod tests {
         // shift case, on text_chunks' bespoke field-aware absorb path).
         assert_absorb_law(
             &base,
-            PngMutation::InsertTextChunk(crate::artifacts::png::schema::mutations::InsertTextChunkMutation { index: 1, chunk: text_chunk("New", "n") }),
-            PngMutation::RemoveTextChunk(crate::artifacts::png::schema::mutations::RemoveTextChunkMutation { index: 0 }),
+            PngMutation::InsertTextChunk(InsertTextChunkMutation { index: 1, chunk: text_chunk("New", "n") }),
+            PngMutation::RemoveTextChunk(RemoveTextChunkMutation { index: 0 }),
         );
 
         // Insert+Insert-same-index: both survive, later insert lands at the lower final index.
         assert_absorb_law(
             &base,
-            PngMutation::InsertTextChunk(crate::artifacts::png::schema::mutations::InsertTextChunkMutation { index: 1, chunk: text_chunk("F", "f") }),
-            PngMutation::InsertTextChunk(crate::artifacts::png::schema::mutations::InsertTextChunkMutation { index: 1, chunk: text_chunk("G", "g") }),
+            PngMutation::InsertTextChunk(InsertTextChunkMutation { index: 1, chunk: text_chunk("F", "f") }),
+            PngMutation::InsertTextChunk(InsertTextChunkMutation { index: 1, chunk: text_chunk("G", "g") }),
         );
 
         // Add+SetField: the second mutation patches directly into the still-pending added chunk.
         assert_absorb_law(
             &base,
-            PngMutation::InsertTextChunk(crate::artifacts::png::schema::mutations::InsertTextChunkMutation { index: 0, chunk: text_chunk("X", "orig") }),
-            PngMutation::ReplaceTextChunk(crate::artifacts::png::schema::mutations::ReplaceTextChunkMutation { index: 0, chunk: text_chunk("X", "patched") }),
+            PngMutation::InsertTextChunk(InsertTextChunkMutation { index: 0, chunk: text_chunk("X", "orig") }),
+            PngMutation::ReplaceTextChunk(ReplaceTextChunkMutation { index: 0, chunk: text_chunk("X", "patched") }),
         );
 
         // Modify+Remove: a pending field patch on a since-removed base item vanishes.
         assert_absorb_law(
             &base,
-            PngMutation::ReplaceTextChunk(crate::artifacts::png::schema::mutations::ReplaceTextChunkMutation { index: 0, chunk: text_chunk("Title", "will-vanish") }),
-            PngMutation::RemoveTextChunk(crate::artifacts::png::schema::mutations::RemoveTextChunkMutation { index: 0 }),
+            PngMutation::ReplaceTextChunk(ReplaceTextChunkMutation { index: 0, chunk: text_chunk("Title", "will-vanish") }),
+            PngMutation::RemoveTextChunk(RemoveTextChunkMutation { index: 0 }),
         );
 
         // Insert then annihilate the very same insert — on `unknown_chunks`, exercising the
@@ -252,29 +247,29 @@ mod tests {
         // text_chunks' bespoke field-aware variant.
         assert_absorb_law(
             &base,
-            PngMutation::InsertUnknownChunk(crate::artifacts::png::schema::mutations::InsertUnknownChunkMutation { index: 0, chunk: PngChunk { kind: *b"abcd", data: vec![1] } }),
-            PngMutation::RemoveUnknownChunk(crate::artifacts::png::schema::mutations::RemoveUnknownChunkMutation { index: 0 }),
+            PngMutation::InsertUnknownChunk(InsertUnknownChunkMutation { index: 0, chunk: PngChunk { kind: *b"abcd", data: vec![1] } }),
+            PngMutation::RemoveUnknownChunk(RemoveUnknownChunkMutation { index: 0 }),
         );
 
         // Two unrelated scalar sets absorb via LWW.
-        assert_absorb_law(&base, PngMutation::ChangeGamma(crate::artifacts::png::schema::mutations::ChangeGammaMutation { gama: Some(1) }), PngMutation::ChangeGamma(crate::artifacts::png::schema::mutations::ChangeGammaMutation { gama: Some(2) }));
+        assert_absorb_law(&base, PngMutation::ChangeGamma(ChangeGammaMutation { gama: Some(1) }), PngMutation::ChangeGamma(ChangeGammaMutation { gama: Some(2) }));
 
         // Tri-state set-then-clear: the later clear wins outright over the pending set.
         assert_absorb_law(
             &base,
-            PngMutation::ChangeTransparency(crate::artifacts::png::schema::mutations::ChangeTransparencyMutation { trns: Some(PngTransparency::Grayscale { gray: 1 }) }),
-            PngMutation::ChangeTransparency(crate::artifacts::png::schema::mutations::ChangeTransparencyMutation { trns: None }),
+            PngMutation::ChangeTransparency(ChangeTransparencyMutation { trns: Some(PngTransparency::Grayscale { gray: 1 }) }),
+            PngMutation::ChangeTransparency(ChangeTransparencyMutation { trns: None }),
         );
     }
 
     #[test]
     fn absorb_law_associativity() {
         let base = base_snapshot();
-        let d1 = PngMutation::InsertTextChunk(crate::artifacts::png::schema::mutations::InsertTextChunkMutation { index: 0, chunk: text_chunk("A", "a") }).diff(&base);
+        let d1 = PngMutation::InsertTextChunk(InsertTextChunkMutation { index: 0, chunk: text_chunk("A", "a") }).diff(&base);
         let s1 = d1.diff().apply(&base).expect("d1 must apply to base");
-        let d2 = PngMutation::ReplaceTextChunk(crate::artifacts::png::schema::mutations::ReplaceTextChunkMutation { index: 0, chunk: text_chunk("A", "a2") }).diff(&s1);
+        let d2 = PngMutation::ReplaceTextChunk(ReplaceTextChunkMutation { index: 0, chunk: text_chunk("A", "a2") }).diff(&s1);
         let s2 = d2.diff().apply(&s1).expect("d2 must apply to s1");
-        let d3 = PngMutation::RemoveTextChunk(crate::artifacts::png::schema::mutations::RemoveTextChunkMutation { index: 1 }).diff(&s2);
+        let d3 = PngMutation::RemoveTextChunk(RemoveTextChunkMutation { index: 1 }).diff(&s2);
         let s3 = d3.diff().apply(&s2).expect("d3 must apply to s2");
 
         // (d1∘d2)∘d3
@@ -425,11 +420,11 @@ mod tests {
     fn out_of_range_mutation_is_noop_not_panic() {
         let base = base_snapshot();
         let mut snap = base.clone();
-        apply_png_mutation(&mut snap, &PngMutation::RemoveTextChunk(crate::artifacts::png::schema::mutations::RemoveTextChunkMutation { index: 42 }));
+        apply_png_mutation(&mut snap, &PngMutation::RemoveTextChunk(RemoveTextChunkMutation { index: 42 }));
         assert_eq!(snap, base);
-        apply_png_mutation(&mut snap, &PngMutation::RemoveUnknownChunk(crate::artifacts::png::schema::mutations::RemoveUnknownChunkMutation { index: 42 }));
+        apply_png_mutation(&mut snap, &PngMutation::RemoveUnknownChunk(RemoveUnknownChunkMutation { index: 42 }));
         assert_eq!(snap, base);
-        apply_png_mutation(&mut snap, &PngMutation::ReplaceTextChunk(crate::artifacts::png::schema::mutations::ReplaceTextChunkMutation { index: 42, chunk: text_chunk("x", "y") }));
+        apply_png_mutation(&mut snap, &PngMutation::ReplaceTextChunk(ReplaceTextChunkMutation { index: 42, chunk: text_chunk("x", "y") }));
         assert_eq!(snap, base);
     }
 
@@ -442,7 +437,7 @@ mod tests {
     #[test]
     fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
-        let mut mutations = all_variants(&base);
+        let mutations = all_variants(&base);
         for mutation in mutations {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

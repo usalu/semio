@@ -250,7 +250,7 @@ impl MutationDiff<MdSnapshot> for MdDiff {
         self.blocks = match (self.blocks.take(), other.blocks) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_blocks_diff(a, b)),
+            (Some(a), Some(b)) => Some(absorb_blocks_diff(a, &b)),
         };
     }
 }
@@ -382,7 +382,7 @@ fn apply_block_diff(block: &MdBlock, diff: &MdBlockDiff) -> MdBlock {
         MdBlockDiff::List { ordered, start, tight, items } => match block {
             MdBlock::List { ordered: o, start: s, tight: t, items: it } => MdBlock::List {
                 ordered: ordered.unwrap_or(*o),
-                start: start.clone().unwrap_or(*s),
+                start: (*start).unwrap_or(*s),
                 tight: tight.unwrap_or(*t),
                 items: match items {
                     Some(d) => apply_list_items_diff(it, d),
@@ -655,7 +655,7 @@ fn absorb_block_diff(a: MdBlockDiff, b: MdBlockDiff) -> MdBlockDiff {
             blocks: match (ba, bb) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(x), Some(y)) => Some(absorb_blocks_diff(x, y)),
+                (Some(x), Some(y)) => Some(absorb_blocks_diff(x, &y)),
             },
         },
         (MdBlockDiff::List { ordered: oa, start: sa, tight: ta, items: ia }, MdBlockDiff::List { ordered: ob, start: sb, tight: tb, items: ib }) => MdBlockDiff::List {
@@ -665,7 +665,7 @@ fn absorb_block_diff(a: MdBlockDiff, b: MdBlockDiff) -> MdBlockDiff {
             items: match (ia, ib) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(x), Some(y)) => Some(absorb_list_items_diff(x, y)),
+                (Some(x), Some(y)) => Some(absorb_list_items_diff(x, &y)),
             },
         },
         // 🛡️ Kind-mismatched arms (should not arise outside a prior `Replace`, handled above) --
@@ -675,15 +675,15 @@ fn absorb_block_diff(a: MdBlockDiff, b: MdBlockDiff) -> MdBlockDiff {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_blocks_diff(d1: MdBlocksDiff, d2: MdBlocksDiff) -> MdBlocksDiff {
+fn absorb_blocks_diff(d1: MdBlocksDiff, d2: &MdBlocksDiff) -> MdBlocksDiff {
     let d1_ref_max = d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).max();
-    let mut base_len = d1_ref_max.map(|m| m + 1).unwrap_or(0);
+    let mut base_len = d1_ref_max.map_or(0, |m| m + 1);
     let mid_len_needed_by_d1 = d1.added.iter().map(|a| a.index + 1).max().unwrap_or(0);
     while base_len.saturating_sub(d1.removed.len()) + d1.added.len() < mid_len_needed_by_d1 {
         base_len += 1;
     }
     let d2_ref_max = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max();
-    let required_mid_len = d2_ref_max.map(|m| m + 1).unwrap_or(0);
+    let required_mid_len = d2_ref_max.map_or(0, |m| m + 1);
     while base_len.saturating_sub(d1.removed.len()) + d1.added.len() < required_mid_len {
         base_len += 1;
     }
@@ -692,7 +692,7 @@ fn absorb_blocks_diff(d1: MdBlocksDiff, d2: MdBlocksDiff) -> MdBlocksDiff {
 
     let mut removed = d1.removed.clone();
     let mut modified = d1.modified.clone();
-    let mut working_added = d1.added.clone();
+    let mut working_added = d1.added;
     let mut annihilated: std::collections::HashSet<usize> = std::collections::HashSet::new();
 
     for &r2 in &d2.removed {
@@ -783,15 +783,15 @@ fn simulate_item_mid_origins(base_len: usize, removed: &[usize], added: &[MdList
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_list_items_diff(d1: MdListItemsDiff, d2: MdListItemsDiff) -> MdListItemsDiff {
+fn absorb_list_items_diff(d1: MdListItemsDiff, d2: &MdListItemsDiff) -> MdListItemsDiff {
     let d1_ref_max = d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).max();
-    let mut base_len = d1_ref_max.map(|m| m + 1).unwrap_or(0);
+    let mut base_len = d1_ref_max.map_or(0, |m| m + 1);
     let mid_len_needed_by_d1 = d1.added.iter().map(|a| a.index + 1).max().unwrap_or(0);
     while base_len.saturating_sub(d1.removed.len()) + d1.added.len() < mid_len_needed_by_d1 {
         base_len += 1;
     }
     let d2_ref_max = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max();
-    let required_mid_len = d2_ref_max.map(|m| m + 1).unwrap_or(0);
+    let required_mid_len = d2_ref_max.map_or(0, |m| m + 1);
     while base_len.saturating_sub(d1.removed.len()) + d1.added.len() < required_mid_len {
         base_len += 1;
     }
@@ -800,7 +800,7 @@ fn absorb_list_items_diff(d1: MdListItemsDiff, d2: MdListItemsDiff) -> MdListIte
 
     let mut removed = d1.removed.clone();
     let mut modified = d1.modified.clone();
-    let mut working_added = d1.added.clone();
+    let mut working_added = d1.added;
     let mut annihilated: std::collections::HashSet<usize> = std::collections::HashSet::new();
 
     for &r2 in &d2.removed {
@@ -824,7 +824,7 @@ fn absorb_list_items_diff(d1: MdListItemsDiff, d2: MdListItemsDiff) -> MdListIte
                     continue;
                 }
                 match modified.iter_mut().find(|m| &m.index == bi) {
-                    Some(existing) => existing.diff = absorb_blocks_diff(existing.diff.clone(), m2.diff.clone()),
+                    Some(existing) => existing.diff = absorb_blocks_diff(existing.diff.clone(), &m2.diff),
                     None => modified.push(MdListItemModified { index: *bi, diff: m2.diff.clone() }),
                 }
             }
@@ -883,6 +883,7 @@ pub fn diff_set_snapshot(base: &MdSnapshot, next: &MdSnapshot) -> MdDiff {
 ///     `R`=Paragraph `S`=List `T`=CodeBlock `U`=BlockQuote `V`=ThematicBreak `W`=HtmlBlock
 ///     `X`=Replace.
 ///   - `MdPathStep` (mutations-side, 2 variants): `Y`=BlockQuote `Z`=ListItem.
+///
 /// Same grammar style as `GifDiff`/`SvgDiff` (bracket-depth-aware split, hex for strings, `[0]`/
 /// `[1,x]` for `Option<T>`, nested `encode_option`/`decode_option` calls for `Option<Option<T>>`
 /// tri-states) — primitives duplicated per-file by design (no shared "hand-roll helpers" module
@@ -909,7 +910,7 @@ pub(crate) fn hex_encode(bytes: &[u8]) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
@@ -1358,10 +1359,10 @@ pub(crate) fn enc_block_diff(d: &MdBlockDiff) -> String {
             encode_option(ordered, |v| enc_bool(*v).to_string()),
             encode_option(start, |v| encode_option(v, |x| x.to_string())),
             encode_option(tight, |v| enc_bool(*v).to_string()),
-            encode_option(items, |v| enc_list_items_diff(v)),
+            encode_option(items, enc_list_items_diff),
         ),
         MdBlockDiff::CodeBlock { info, literal } => format!("T[{},{}]", encode_option(info, |v| encode_option(v, |x| enc_str(x))), encode_option(literal, |v| enc_str(v)),),
-        MdBlockDiff::BlockQuote { blocks } => format!("U[{}]", encode_option(blocks, |v| enc_blocks_diff(v))),
+        MdBlockDiff::BlockQuote { blocks } => format!("U[{}]", encode_option(blocks, enc_blocks_diff)),
         MdBlockDiff::ThematicBreak => "V[]".to_string(),
         MdBlockDiff::HtmlBlock { raw } => format!("W[{}]", encode_option(raw, |v| enc_str(v))),
         MdBlockDiff::Replace { block } => format!("X[{}]", enc_block(block)),
@@ -1493,7 +1494,7 @@ pub(crate) fn enc_block_diff_bin(d: &MdBlockDiff, out: &mut Vec<u8>) {
             write_option_bin(out, ordered, |v, o| write_bool_bin(o, *v));
             write_tristate_bin(out, start, |v, o| store::pack_rt::write_varint_u64(o, *v as u64));
             write_option_bin(out, tight, |v, o| write_bool_bin(o, *v));
-            write_option_bin(out, items, |v, o| enc_list_items_diff_bin(v, o));
+            write_option_bin(out, items, enc_list_items_diff_bin);
         }
         MdBlockDiff::CodeBlock { info, literal } => {
             out.push(3);
@@ -1502,7 +1503,7 @@ pub(crate) fn enc_block_diff_bin(d: &MdBlockDiff, out: &mut Vec<u8>) {
         }
         MdBlockDiff::BlockQuote { blocks } => {
             out.push(4);
-            write_option_bin(out, blocks, |v, o| enc_blocks_diff_bin(v, o));
+            write_option_bin(out, blocks, enc_blocks_diff_bin);
         }
         MdBlockDiff::ThematicBreak => out.push(5),
         MdBlockDiff::HtmlBlock { raw } => {

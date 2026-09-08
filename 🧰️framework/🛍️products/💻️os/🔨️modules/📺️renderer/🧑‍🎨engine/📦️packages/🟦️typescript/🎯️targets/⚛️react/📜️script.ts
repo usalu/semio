@@ -75,6 +75,25 @@ class FlowBrowserRuntimeCheckScript extends BundleScript {
   }
 }
 
+/** 🌱️ Executes the retained artifact-creation progress, cancellation and accessibility laws. */
+class ArtifactCreationProgressCheckScript extends BundleScript {
+  run(segments: string[]): void {
+    if (segments.length !== 0) throw new Error("artifact-creation-progress-check accepts no arguments");
+    process.env.SEMIO_TEST_LEVEL = "long";
+    runVitest(
+      this.root,
+      ["🔬️index.test.ts", "--silent=false", "--reporter=verbose", "--testNamePattern=Space artifact creation host owner"],
+      "🧪️tests/🟦️.ts",
+    );
+    process.env.SEMIO_INCLUDE_BACKBONE_WORKER = "1";
+    runVitest(
+      this.root,
+      [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"), "--silent=false", "--reporter=verbose", "--testNamePattern=space artifact creation owner"],
+      "🧪️tests/🟦️.ts",
+    );
+  }
+}
+
 /** 📇️ Proves the visible retained Home identity/ACK bridge and language-neutral boundaries. */
 export function directoryHomeBootstrapOracle(repoRoot: string): number {
   const contractRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/📇️directory-bootstrap");
@@ -318,6 +337,7 @@ const router = new ScriptRouter(fileURLToPath(new URL(".", import.meta.url)))
   .register("typecheck", TypecheckScript)
   .register("tutorial-interaction-check", TutorialInteractionCheckScript)
   .register("flow-browser-runtime-check", FlowBrowserRuntimeCheckScript)
+  .register("artifact-creation-progress-check", ArtifactCreationProgressCheckScript)
   .register("agent-bridge-check", AgentBridgeCheckScript)
   .register("directory-home-bootstrap-check", DirectoryHomeBootstrapCheckScript)
   .register("directory-invite-capability-check", DirectoryInviteCapabilityCheckScript)

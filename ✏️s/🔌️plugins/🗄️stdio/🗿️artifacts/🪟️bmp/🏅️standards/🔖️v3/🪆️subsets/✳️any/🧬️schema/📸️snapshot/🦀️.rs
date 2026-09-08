@@ -141,7 +141,7 @@ impl store::ArtifactDsl for BmpSnapshot {
 impl store::ArtifactPack for BmpSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::bmp::engine::encode_bmp(self).map_err(|e| store::PackError::Schema(e))?;
+        let raw = crate::artifacts::bmp::engine::encode_bmp(self).map_err(store::PackError::Schema)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -151,7 +151,7 @@ impl store::ArtifactPack for BmpSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        crate::artifacts::bmp::engine::decode_bmp(&inner).map_err(|e| store::PackError::Schema(e))
+        crate::artifacts::bmp::engine::decode_bmp(&inner).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

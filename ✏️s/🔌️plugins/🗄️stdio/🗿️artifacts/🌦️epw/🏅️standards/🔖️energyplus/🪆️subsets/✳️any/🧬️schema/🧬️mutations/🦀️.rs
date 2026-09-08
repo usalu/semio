@@ -122,7 +122,7 @@ pub(crate) fn agg_diff(this: &EpwMutation, base: &EpwSnapshot) -> protocol::Muta
         EpwMutation::SetComments1(set_comments1::SetComments1 { value }) => EpwDiff { comments_1: Some(value.clone()), ..EpwDiff::default() },
         EpwMutation::SetComments2(set_comments2::SetComments2 { value }) => EpwDiff { comments_2: Some(value.clone()), ..EpwDiff::default() },
         EpwMutation::SetDataPeriods(set_data_periods::SetDataPeriods { data_periods }) => EpwDiff { data_periods: Some(data_periods.clone()), ..EpwDiff::default() },
-        EpwMutation::InsertRecord(insert_record::InsertRecord { index, record }) => EpwDiff { records: Some(EpwRecordsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![EpwRecordAdded { index: *index, record: record.clone() }] }), ..EpwDiff::default() },
+        EpwMutation::InsertRecord(insert_record::InsertRecord { index, record }) => EpwDiff { records: Some(EpwRecordsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![EpwRecordAdded { index: *index, record: record.as_ref().clone() }] }), ..EpwDiff::default() },
         EpwMutation::RemoveRecord(remove_record::RemoveRecord { index }) => EpwDiff { records: Some(EpwRecordsDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }), ..EpwDiff::default() },
         EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index, field_index, value }) => {
             let mut fdiff = EpwRecordDiff::default();
@@ -146,7 +146,7 @@ pub(crate) fn agg_inverse(this: &EpwMutation, base: &EpwSnapshot) -> Vec<EpwMuta
         EpwMutation::SetDataPeriods(_) => vec![EpwMutation::SetDataPeriods(set_data_periods::SetDataPeriods { data_periods: base.data_periods.clone() })],
         EpwMutation::InsertRecord(insert_record::InsertRecord { index, .. }) => vec![EpwMutation::RemoveRecord(remove_record::RemoveRecord { index: *index })],
         EpwMutation::RemoveRecord(remove_record::RemoveRecord { index }) => match base.records.get(*index) {
-            Some(record) => vec![EpwMutation::InsertRecord(insert_record::InsertRecord { index: *index, record: record.clone() })],
+            Some(record) => vec![EpwMutation::InsertRecord(insert_record::InsertRecord { index: *index, record: Box::new(record.clone()) })],
             None => Vec::new(),
         },
         EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index, field_index, .. }) => match base.records.get(*record_index).and_then(|r| r.field_at(*field_index)) {
@@ -231,7 +231,7 @@ fn parse_epw_mutation(line: &str) -> Result<EpwMutation, String> {
         "set-comments-1" => Ok(EpwMutation::SetComments1(set_comments1::SetComments1 { value: dec_str(arg("value")?)? })),
         "set-comments-2" => Ok(EpwMutation::SetComments2(set_comments2::SetComments2 { value: dec_str(arg("value")?)? })),
         "set-data-periods" => Ok(EpwMutation::SetDataPeriods(set_data_periods::SetDataPeriods { data_periods: dec_data_periods(arg("data-periods")?)? })),
-        "insert-record" => Ok(EpwMutation::InsertRecord(insert_record::InsertRecord { index: usize_arg("index")?, record: dec_record(arg("record")?)? })),
+        "insert-record" => Ok(EpwMutation::InsertRecord(insert_record::InsertRecord { index: usize_arg("index")?, record: Box::new(dec_record(arg("record")?)?) })),
         "remove-record" => Ok(EpwMutation::RemoveRecord(remove_record::RemoveRecord { index: usize_arg("index")? })),
         "set-record-field" => Ok(EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: usize_arg("record-index")?, field_index: usize_arg("field-index")?, value: dec_str(arg("value")?)? })),
         other => Err(format!("epw mutation: unknown keyword {other:?}")),
@@ -352,7 +352,7 @@ mod tests {
             EpwMutation::SetLocation(set_location::SetLocation { location: location("Munich") }),
             EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value: "DESIGN CONDITIONS,changed".into() }),
             EpwMutation::SetDataPeriods(set_data_periods::SetDataPeriods { data_periods: data_periods() }),
-            EpwMutation::InsertRecord(insert_record::InsertRecord { index: 1, record: record("50", "1.0") }),
+            EpwMutation::InsertRecord(insert_record::InsertRecord { index: 1, record: Box::new(record("50", "1.0")) }),
             EpwMutation::RemoveRecord(remove_record::RemoveRecord { index: 0 }),
             EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: 1, field_index: 6, value: "changed".into() }),
         ];
@@ -377,7 +377,7 @@ mod tests {
             EpwMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
             EpwMutation::SetLocation(set_location::SetLocation { location: location("Munich") }),
             EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value: "DESIGN CONDITIONS,changed".into() }),
-            EpwMutation::InsertRecord(insert_record::InsertRecord { index: 1, record: record("50", "1.0") }),
+            EpwMutation::InsertRecord(insert_record::InsertRecord { index: 1, record: Box::new(record("50", "1.0")) }),
             EpwMutation::RemoveRecord(remove_record::RemoveRecord { index: 0 }),
             EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: 1, field_index: 6, value: "changed".into() }),
         ];
@@ -402,7 +402,7 @@ mod tests {
     async fn absorb_law() {
         let base = base_snapshot();
 
-        let d1 = EpwMutation::InsertRecord(insert_record::InsertRecord { index: 2, record: record("40", "ins") }).diff(&base);
+        let d1 = EpwMutation::InsertRecord(insert_record::InsertRecord { index: 2, record: Box::new(record("40", "ins")) }).diff(&base);
         let mid = d1.diff().apply(&base).unwrap();
         let d2 = EpwMutation::RemoveRecord(remove_record::RemoveRecord { index: 0 }).diff(&mid);
         let after = d2.diff().apply(&mid).unwrap();
@@ -410,16 +410,16 @@ mod tests {
         composed.absorb(d2.diff().clone());
         assert_eq!(composed.apply(&base).unwrap(), after, "Insert+Remove-before absorb mismatch");
 
-        let d1 = EpwMutation::InsertRecord(insert_record::InsertRecord { index: 2, record: record("41", "f") }).diff(&base);
+        let d1 = EpwMutation::InsertRecord(insert_record::InsertRecord { index: 2, record: Box::new(record("41", "f")) }).diff(&base);
         let mid = d1.diff().apply(&base).unwrap();
-        let d2 = EpwMutation::InsertRecord(insert_record::InsertRecord { index: 2, record: record("42", "g") }).diff(&mid);
+        let d2 = EpwMutation::InsertRecord(insert_record::InsertRecord { index: 2, record: Box::new(record("42", "g")) }).diff(&mid);
         let after = d2.diff().apply(&mid).unwrap();
         let mut composed = d1.diff().clone();
         composed.absorb(d2.diff().clone());
         assert_eq!(composed.apply(&base).unwrap(), after, "Insert+Insert-same-index absorb mismatch");
         assert_eq!(after.records.len(), base.records.len() + 2, "both inserts must survive");
 
-        let d1 = EpwMutation::InsertRecord(insert_record::InsertRecord { index: 1, record: record("43", "orig") }).diff(&base);
+        let d1 = EpwMutation::InsertRecord(insert_record::InsertRecord { index: 1, record: Box::new(record("43", "orig")) }).diff(&base);
         let mid = d1.diff().apply(&base).unwrap();
         let d2 = EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: 1, field_index: 6, value: "patched".into() }).diff(&mid);
         let after = d2.diff().apply(&mid).unwrap();
@@ -437,7 +437,7 @@ mod tests {
         assert_eq!(composed.apply(&base).unwrap(), after, "Modify+Remove absorb mismatch");
 
         let base = base_snapshot();
-        let d1 = EpwMutation::InsertRecord(insert_record::InsertRecord { index: 0, record: record("44", "a") }).diff(&base);
+        let d1 = EpwMutation::InsertRecord(insert_record::InsertRecord { index: 0, record: Box::new(record("44", "a")) }).diff(&base);
         let s1 = d1.diff().apply(&base).unwrap();
         let d2 = EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: 0, field_index: 6, value: "a2".into() }).diff(&s1);
         let s2 = d2.diff().apply(&s1).unwrap();
@@ -537,7 +537,7 @@ mod tests {
             EpwMutation::SetComments1(set_comments1::SetComments1 { value: "COMMENTS 1,x".into() }),
             EpwMutation::SetComments2(set_comments2::SetComments2 { value: "COMMENTS 2,x".into() }),
             EpwMutation::SetDataPeriods(set_data_periods::SetDataPeriods { data_periods: data_periods() }),
-            EpwMutation::InsertRecord(insert_record::InsertRecord { index: 1, record: record("12", "tricky, [value]") }),
+            EpwMutation::InsertRecord(insert_record::InsertRecord { index: 1, record: Box::new(record("12", "tricky, [value]")) }),
             EpwMutation::RemoveRecord(remove_record::RemoveRecord { index: 0 }),
             EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: 1, field_index: 6, value: "with, comma [and] brackets".into() }),
         ];
@@ -589,7 +589,7 @@ mod tests {
             EpwMutation::SetComments1(set_comments1::SetComments1 { value: String::new() }),
             EpwMutation::SetComments2(set_comments2::SetComments2 { value: String::new() }),
             EpwMutation::SetDataPeriods(set_data_periods::SetDataPeriods { data_periods: EpwDataPeriods::default() }),
-            EpwMutation::InsertRecord(insert_record::InsertRecord { index: 0, record: EpwRecord::default() }),
+            EpwMutation::InsertRecord(insert_record::InsertRecord { index: 0, record: Box::default() }),
             EpwMutation::RemoveRecord(remove_record::RemoveRecord { index: 0 }),
             EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: 0, field_index: 0, value: String::new() }),
         ];
@@ -616,7 +616,7 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "📸️set-snapshot/🧪️tests/🌡️warms-the-second-hour-and-restamps-the-station-city/🦀️.rs"]
+    #[path = "📸️set-snapshot/🧪️tests/🌡️warms-the-second-efb87c/🦀️.rs"]
     mod tests_set_snapshot_warms_the_second_hour_and_restamps_the_station_city;
 }
 //#endregion 🧪️FixtureTests

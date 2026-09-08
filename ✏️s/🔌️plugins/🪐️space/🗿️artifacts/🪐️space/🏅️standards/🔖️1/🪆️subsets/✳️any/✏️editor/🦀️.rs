@@ -18,47 +18,10 @@ use semio_framework::InteractiveJobClassification;
 use semio_framework_plugin::app::Dialect;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    built_to_component_tree, ActionArgDef, ActionArgOption, ActionFactory, ActionRef, ArtifactEditor, ArtifactView, ComponentTree, ConfigView, DialogDefinition, DraftView, Editor, Emit, Fault, FaultCode, FaultOrigin,
-    LocalizedLabel, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult,
+    built_to_component_tree, ActionArgDef, ActionArgOption, ActionFactory, ActionRef, ArtifactEditor, ArtifactView, ComponentTree, ConfigView, DialogDefinition, DraftView, Editor, Emit, Fault, FaultCode, FaultOrigin, LocalizedLabel, NoDraft,
+    NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult,
 };
 use store::EngineHandles;
-
-//#region 🔖️KnownArtifactKinds
-/// 🗂️ Task 2's "artifact kinds that actually have an editor registered" — a static fallback table,
-/// NOT a live read of the `ArtifactKindSpec` registry: the space plugin runs as its own isolated
-/// guest crate and has no in-process access to the host's registry of every OTHER plugin's editors.
-/// Per the worker-brief's own escape hatch ("if the guest cannot see that list, take it from a
-/// config-lane value the host sets and say so in your report") this should ideally be a
-/// `SpaceIndexConfig` field the host folds in from its own `ArtifactKindSpec` catalog — deferred
-/// (documented in `📓️w2-b-report.md`) since that catalog isn't exposed to the shell's directory/
-/// opening lane yet either. Curated from four plugins confirmed to have real registered editors
-/// (`🖍️draw`, `🗒️note`, `🕸️dag`, `✒️writer` — each grepped for its own `DIALECT`/`DOCUMENT_SCHEMA`
-/// constants).
-pub struct KnownArtifactKind {
-    pub id: &'static str,
-    pub schema: &'static str,
-    pub dialect_artifact_kind: &'static str,
-    pub standard: &'static str,
-    pub subset: &'static str,
-    pub label_en: &'static str,
-    pub label_de: &'static str,
-}
-
-pub const KNOWN_ARTIFACT_KINDS: [KnownArtifactKind; 4] = [
-    KnownArtifactKind { id: "draw", schema: "draw.document", dialect_artifact_kind: "s.draw.draw", standard: "1", subset: "*", label_en: "Draw", label_de: "Zeichnung" },
-    KnownArtifactKind { id: "note", schema: "note.document", dialect_artifact_kind: "s.note.note", standard: "1", subset: "*", label_en: "Note", label_de: "Notiz" },
-    KnownArtifactKind { id: "dag", schema: "dag.dag", dialect_artifact_kind: "s.dag.dag", standard: "1", subset: "*", label_en: "Graph", label_de: "Graph" },
-    KnownArtifactKind { id: "writer", schema: "writer.document", dialect_artifact_kind: "s.writer.writer", standard: "1", subset: "*", label_en: "Writer", label_de: "Text" },
-];
-
-pub fn known_artifact_kind(id: &str) -> Option<&'static KnownArtifactKind> {
-    KNOWN_ARTIFACT_KINDS.iter().find(|kind| kind.id == id)
-}
-
-fn create_artifact_kind_options() -> Vec<ActionArgOption> {
-    KNOWN_ARTIFACT_KINDS.iter().map(|kind| ActionArgOption::new(kind.id, LocalizedLabel::native(kind.label_en, kind.label_de))).collect()
-}
-//#endregion 🔖️KnownArtifactKinds
 
 //#region 🔖️Actions
 /// 🎯️ Every panel/dialog-adjacent action this app declares addresses itself through this factory —
@@ -168,7 +131,7 @@ const SPACE_INDEX_RETAINED_OUTPUT_BYTES: usize = 4 * 1024 * 1024;
 /// the two directory/presence folds publish `config_mutations`, and every `Effect`-only relay
 /// publishes nothing at all.
 const SPACE_INDEX_RETAINED_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "createArtifact", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "createArtifact", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "deleteArtifact", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "renameArtifact", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "touchArtifact", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
@@ -326,14 +289,7 @@ impl ArtifactEditor for SpaceIndexEditor {
             canonical_base_revision: request.canonical_base_revision,
         };
         let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
-            *request.command,
-            request.snapshot,
-            request.config,
-            request.history,
-            request.interaction_state,
-            request.interaction_hover,
-            operation_context,
-            request.completion,
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: None, operation: operation_context, completion: request.completion },
             SpaceIndexCommand::command_id,
             SPACE_INDEX_RETAINED_RAW_BYTES,
             SPACE_INDEX_RETAINED_WORK_ITEMS,
@@ -374,12 +330,7 @@ impl ArtifactEditor for SpaceIndexEditor {
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_str).map(str::to_string);
         let u64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_f64).map(|value| value as u64);
         match action {
-            "createArtifact" => Ok(SpaceIndexCommand::CreateArtifact(create_artifact::CreateArtifact {
-                name: str_field("name").unwrap_or_default(),
-                kind_id: str_field("kindId").or_else(|| str_field("kind_id")).unwrap_or_default(),
-                now_ms: u64_field("nowMs").or_else(|| u64_field("now_ms")).unwrap_or_default(),
-                actor: str_field("actor").unwrap_or_default(),
-            })),
+            "createArtifact" => Ok(SpaceIndexCommand::CreateArtifact(create_artifact::CreateArtifact { name: str_field("name").unwrap_or_default(), kind_choice: str_field("kindChoice").unwrap_or_default() })),
             "deleteArtifact" => Ok(SpaceIndexCommand::DeleteArtifact(delete_artifact::DeleteArtifact { id: str_field("id").unwrap_or_default() })),
             "renameArtifact" => Ok(SpaceIndexCommand::RenameArtifact(rename_artifact::RenameArtifact { id: str_field("id").unwrap_or_default(), new_name: str_field("newName").or_else(|| str_field("new_name")).unwrap_or_default() })),
             "touchArtifact" => Ok(SpaceIndexCommand::TouchArtifact(touch_artifact::TouchArtifact {
@@ -479,7 +430,7 @@ pub fn create_space_index_editor() -> semio_framework_plugin::AppDefinition {
         // doc comments for why).
         .dialog(
             DialogDefinition::new("createArtifact", LocalizedLabel::native("Create Artifact", "Artefakt erstellen"), ActionRef::new("createArtifact"))
-                .args(vec![ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).required(), ActionArgDef::select("kindId", LocalizedLabel::native("Kind", "Art"), create_artifact_kind_options()).required()])
+                .args(vec![ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).required(), ActionArgDef::artifact_kind("kindChoice", LocalizedLabel::native("Kind", "Art"), vec![semio_framework_plugin::AppRole::Editor]).required()])
                 .submit_label(LocalizedLabel::native("Create", "Erstellen")),
         )
         .dialog(
@@ -491,7 +442,7 @@ pub fn create_space_index_editor() -> semio_framework_plugin::AppDefinition {
             DialogDefinition::new("inviteMember", LocalizedLabel::native("Invite Member", "Mitglied einladen"), ActionRef::new("inviteMember"))
                 .args(vec![
                     ActionArgDef::text("email", LocalizedLabel::native("Email", "E-Mail")).required(),
-                    ActionArgDef::select("role", LocalizedLabel::native("Role", "Rolle"), vec![ActionArgOption::new("author", LocalizedLabel::native("Author", "Autor")), ActionArgOption::new("spectator", LocalizedLabel::native("Spectator", "Betrachter"))]).default_value("spectator").required(),
+                    ActionArgDef::select("role", LocalizedLabel::native("Role", "Rolle"), vec![ActionArgOption::new("author", LocalizedLabel::native("Author", "Autor")), ActionArgOption::new("spectator", LocalizedLabel::native("Spectator", "Betrachter"))]).default_value(&"spectator").required(),
                 ])
                 .submit_label(LocalizedLabel::native("Invite", "Einladen")),
         )
@@ -510,6 +461,82 @@ pub(crate) mod testkit {
 
     pub async fn new_app() -> SpaceIndexApp {
         framework_new_app::<EditorApp<SpaceIndexEditor>>().await
+    }
+
+    pub async fn new_app_with_artifact() -> (SpaceIndexApp, String) {
+        use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{empty_space_index_snapshot, SpaceArtifactDialect, SpaceArtifactRow};
+        use semio_framework_plugin::PluginApp;
+        use store::ArtifactDsl;
+        let mut app = new_app().await;
+        let id = "artifact-1".to_string();
+        let mut snapshot = empty_space_index_snapshot("space-1");
+        snapshot.artifacts.push(SpaceArtifactRow {
+            id: id.clone(),
+            name: "First".into(),
+            kind_id: "s.draw.draw".into(),
+            schema: "s.draw.draw".into(),
+            dialect: SpaceArtifactDialect { artifact_kind: "s.draw.draw".into(), standard: "1".into(), subset: "*".into() },
+            created_at_ms: 1,
+            created_by: "user:1".into(),
+            updated_at_ms: 1,
+            updated_by: "user:1".into(),
+        });
+        app.load_document_text(&store::ArtifactTextFiles { dsl: snapshot.print_dsl(), ops: String::new() }).await.expect("load test artifact");
+        (app, id)
+    }
+
+    pub async fn new_app_with_indexed_artifact() -> (SpaceIndexApp, String) {
+        use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::empty_space_index_snapshot;
+        use crate::editor::space_index::commands::fold_directory_events::FoldDirectoryEvents;
+        use semio_framework_os_kernel::os_directory::{
+            ArtifactHash, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceVisibility, DocumentDescriptor, DocumentFrontier, DocumentIndexEntryV1, DocumentOwner, DocumentScope, Hlc,
+        };
+        use semio_framework_plugin::{ArtifactDialect, PluginApp};
+        use store::ArtifactDsl;
+
+        let mut app = new_app().await;
+        let id = "artifact-0123456789abcdef0123456789abcdef".to_string();
+        let snapshot = empty_space_index_snapshot("space-1");
+        app.load_document_text(&store::ArtifactTextFiles { dsl: snapshot.print_dsl(), ops: String::new() }).await.expect("load empty Space index");
+        let descriptor = DocumentDescriptor {
+            space_id: "space-1".into(),
+            document_id: id.clone(),
+            artifact_kind: "s.draw.draw".into(),
+            artifact_schema: "s.draw.draw".into(),
+            owner: DocumentOwner { plugin_id: "draw".into(), package_id: "draw".into(), version: "1".into(), package_hash: "a".repeat(64) },
+            pack_schema_hash: "b".repeat(64),
+            bootstrap_version: 1,
+            bootstrap_frontier: DocumentFrontier { head_seq: 1, commit_seq: 1, epoch: 1 },
+            bootstrap_snapshot_hash: "c".repeat(64),
+        };
+        let event = |seq: u64, user_id: Option<&str>, body: DirectoryEventBody| DirectoryEvent {
+            seq,
+            id: format!("evt-{seq}"),
+            hlc: Hlc { physical_ms: seq as i64, logical: 0 },
+            actor: DirectoryActor { kind: DirectoryActorKind::System, id: "system:test".into() },
+            space_id: Some("space-1".into()),
+            user_id: user_id.map(Into::into),
+            body,
+            recorded_at_ms: seq as i64,
+        };
+        let events = vec![
+            event(1, None, DirectoryEventBody::SpaceCreated { space_id: "space-1".into(), name: "Space 1".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Private, owner_user_id: "u-1".into() }),
+            event(2, None, DirectoryEventBody::DocumentAnnounced { descriptor }),
+            event(
+                3,
+                Some("u-1"),
+                DirectoryEventBody::DocumentIndexed {
+                    scope: DocumentScope { space_id: "space-1".into(), document_id: id.clone() },
+                    descriptor_digest_v1: ArtifactHash([7; 32]),
+                    entry: DocumentIndexEntryV1 { name: "First".into(), dialect: ArtifactDialect { artifact_kind: "s.draw.draw".into(), standard: "1".into(), subset: "*".into() } },
+                },
+            ),
+        ];
+        app.dispatch_typed(SpaceIndexCommand::FoldDirectoryEvents(FoldDirectoryEvents { events_json: pack::to_json_string(&events) }), &meta("local")).await.expect("fold indexed artifact");
+        let files = app.config_pack().await.expect("indexed config pack");
+        let config = store::parse_document_pack::<SpaceIndexConfig, SpaceIndexConfigMutation>(&files.pack, &files.spr).await.expect("indexed config projection").snapshot;
+        assert_eq!(config.indexed_artifacts.len(), 1);
+        (app, id)
     }
 
     #[allow(dead_code)]
@@ -564,17 +591,10 @@ mod tests {
         assert_eq!(definition.dialogs.len(), 3);
         let by_id = |id: &str| definition.dialogs.iter().find(|dialog| dialog.id == id).unwrap_or_else(|| panic!("dialog {id} must be registered"));
         assert_eq!(by_id("createArtifact").submit_action, ActionRef::new("createArtifact"));
-        assert_eq!(by_id("createArtifact").args.len(), 2);
+        assert_eq!(by_id("createArtifact").args.iter().map(|arg| arg.id.as_str()).collect::<Vec<_>>(), ["name", "kindChoice"]);
         assert_eq!(by_id("deleteArtifact").submit_action, ActionRef::new("deleteArtifact"));
         assert_eq!(by_id("inviteMember").submit_action, ActionRef::new("inviteMember"));
         assert_eq!(by_id("inviteMember").args.len(), 2);
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn known_artifact_kinds_resolve_by_id_and_reject_unknown_ids() {
-        assert_eq!(known_artifact_kind("draw").unwrap().dialect_artifact_kind, "s.draw.draw");
-        assert_eq!(known_artifact_kind("note").unwrap().schema, "note.document");
-        assert!(known_artifact_kind("nope").is_none());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -609,7 +629,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         let cases: Vec<(&str, pack::JsonValue)> = vec![
-            ("createArtifact", pack::json!({ "name": "First", "kindId": "draw", "nowMs": 1, "actor": "user:1" })),
+            ("createArtifact", pack::json!({ "name": "First", "kindChoice": "{\"kindId\":\"s.gis.gismap\"}" })),
             ("deleteArtifact", pack::json!({ "id": "artifact-1" })),
             ("renameArtifact", pack::json!({ "id": "artifact-1", "newName": "Renamed" })),
             ("touchArtifact", pack::json!({ "id": "artifact-1", "nowMs": 2, "actor": "user:1" })),
@@ -632,6 +652,28 @@ mod tests {
         assert!(SpaceIndexEditor::command_from_action("bogus", None).is_err());
     }
 
+    #[semio_framework_async_macros::async_test]
+    async fn create_artifact_dialog_submission_preserves_the_exact_catalog_choice_in_the_host_relay() {
+        let kind_choice = "{\"kindId\":\"s.gis.gismap\",\"schema\":\"gis.map\"}";
+        let args = pack::json_to_dsl_value(&pack::json!({ "name": " First map ", "kindChoice": kind_choice }));
+        let SpaceIndexCommand::CreateArtifact(command) = SpaceIndexEditor::command_from_action("createArtifact", Some(&args)).expect("dialog submission must bridge") else {
+            panic!("expected CreateArtifact");
+        };
+        assert_eq!(command.kind_choice, kind_choice);
+        let mut app = testkit::new_app().await;
+        let result = app
+            .dispatch_typed(SpaceIndexCommand::CreateArtifact(command), &semio_framework_plugin::testkit::meta("dialog"))
+            .await
+            .expect("dialog submission");
+        assert!(app.snapshot().expect("projection").artifacts.is_empty());
+        let [Effect::ReplayShellCommand { action_id, args }] = result.requested_effects.as_slice() else {
+            panic!("dialog submission must emit one ReplayShellCommand");
+        };
+        assert_eq!(action_id, "os.create-space-artifact");
+        let args = pack::json_from_dsl_value(args.as_ref().expect("relay args"));
+        assert_eq!(args, pack::json!({ "kindChoice": kind_choice, "name": "First map" }));
+    }
+
     /// 🆔️ Lane 4-F: `#s-space-create-artifact`'s no-args click must bridge to an EMPTY `CreateArtifact`
     /// payload (not error on missing fields) — its own handler treats empty `name`/`kindId` as "open
     /// the dialog", mirroring Home's `createSpace`.
@@ -639,7 +681,7 @@ mod tests {
     async fn command_from_action_bridges_an_empty_create_artifact_click() {
         let SpaceIndexCommand::CreateArtifact(payload) = SpaceIndexEditor::command_from_action("createArtifact", None).expect("no-args click must bridge") else { panic!("expected CreateArtifact") };
         assert_eq!(payload.name, "");
-        assert_eq!(payload.kind_id, "");
+        assert_eq!(payload.kind_choice, "");
     }
 }
 //#endregion 🧪️Tests

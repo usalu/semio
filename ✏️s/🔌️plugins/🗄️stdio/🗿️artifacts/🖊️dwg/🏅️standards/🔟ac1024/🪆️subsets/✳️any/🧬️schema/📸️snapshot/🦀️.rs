@@ -2846,7 +2846,7 @@ pub enum DwgLogicalObjectBody {
     DictionaryVariable(DwgDictionaryVariable),
     AnnotationScale(DwgAnnotationScale),
     SortEntitiesTable(DwgSortEntitiesTable),
-    TableStyle(DwgTableStyle),
+    TableStyle(Box<DwgTableStyle>),
     MlineStyle(DwgMlineStyle),
     MLeaderStyle(DwgMLeaderStyle),
     Material(DwgMaterial),
@@ -3058,7 +3058,7 @@ impl dsl::DslField for DwgLogicalObjectBody {
             Some(dsl::FieldValue::Enum(20)) => Ok(Self::DictionaryVariable(<DwgDictionaryVariable as dsl::DslField>::from_value(record.get(21).ok_or("dictionary-variable body missing")?)?)),
             Some(dsl::FieldValue::Enum(21)) => Ok(Self::AnnotationScale(<DwgAnnotationScale as dsl::DslField>::from_value(record.get(22).ok_or("annotation-scale body missing")?)?)),
             Some(dsl::FieldValue::Enum(22)) => Ok(Self::SortEntitiesTable(<DwgSortEntitiesTable as dsl::DslField>::from_value(record.get(23).ok_or("sort-entities-table body missing")?)?)),
-            Some(dsl::FieldValue::Enum(23)) => Ok(Self::TableStyle(<DwgTableStyle as dsl::DslField>::from_value(record.get(24).ok_or("table-style body missing")?)?)),
+            Some(dsl::FieldValue::Enum(23)) => Ok(Self::TableStyle(Box::new(<DwgTableStyle as dsl::DslField>::from_value(record.get(24).ok_or("table-style body missing")?)?))),
             Some(dsl::FieldValue::Enum(24)) => Ok(Self::MlineStyle(<DwgMlineStyle as dsl::DslField>::from_value(record.get(25).ok_or("MLINESTYLE body missing")?)?)),
             Some(dsl::FieldValue::Enum(25)) => Ok(Self::MLeaderStyle(<DwgMLeaderStyle as dsl::DslField>::from_value(record.get(26).ok_or("MLEADERSTYLE body missing")?)?)),
             Some(dsl::FieldValue::Enum(26)) => Ok(Self::Material(<DwgMaterial as dsl::DslField>::from_value(record.get(27).ok_or("MATERIAL body missing")?)?)),
@@ -3325,7 +3325,7 @@ impl DwgLogicalGeometry {
             Ellipse => dwg_engine::DwgGeometry::Ellipse { center: vec3(&self.values[0..3])?, major_axis: vec3(&self.values[3..6])?, ratio: self.values[6], start_param: self.values[7], end_param: self.values[8], normal: vec3(&self.values[9..12])? },
             LwPolyline => {
                 let count = *self.indices.first().ok_or("polyline vertex count missing")? as usize;
-                let vertices = self.values[1..1 + count * 2].chunks_exact(2).map(vec2).collect::<Result<_, _>>()?;
+                let vertices = self.values[1..1 + count * 2].as_chunks::<2>().0.iter().map(|chunk| vec2(chunk)).collect::<Result<_, _>>()?;
                 dwg_engine::DwgGeometry::LwPolyline { closed: self.closed, elevation: self.values[0], vertices, bulges: self.values[1 + count * 2..].to_vec() }
             }
             Spline => {
@@ -3333,16 +3333,16 @@ impl DwgLogicalGeometry {
                 let point_count = self.indices[1] as usize;
                 let knot_count = self.indices[2] as usize;
                 let point_end = point_count * 3;
-                let control_points = self.values[..point_end].chunks_exact(3).map(vec3).collect::<Result<_, _>>()?;
+                let control_points = self.values[..point_end].as_chunks::<3>().0.iter().map(|chunk| vec3(chunk)).collect::<Result<_, _>>()?;
                 dwg_engine::DwgGeometry::Spline { degree, control_points, knots: self.values[point_end..point_end + knot_count].to_vec(), weights: self.values[point_end + knot_count..].to_vec() }
             }
             Text => dwg_engine::DwgGeometry::Text { at: vec3(&self.values[0..3])?, height: self.values[3], rotation: self.values[4], content: self.text.clone() },
             Face3d => dwg_engine::DwgGeometry::Face3d { corners: [vec3(&self.values[0..3])?, vec3(&self.values[3..6])?, vec3(&self.values[6..9])?, vec3(&self.values[9..12])?] },
-            Polyline3d => dwg_engine::DwgGeometry::Polyline3d { closed: self.closed, vertices: self.values.chunks_exact(3).map(vec3).collect::<Result<_, _>>()? },
+            Polyline3d => dwg_engine::DwgGeometry::Polyline3d { closed: self.closed, vertices: self.values.as_chunks::<3>().0.iter().map(|chunk| vec3(chunk)).collect::<Result<_, _>>()? },
             PolyfaceMesh => {
                 let vertex_count = self.indices[0] as usize;
-                let vertices = self.values.chunks_exact(3).take(vertex_count).map(vec3).collect::<Result<_, _>>()?;
-                let faces = self.indices[1..].chunks_exact(4).map(|face| face.try_into().unwrap()).collect();
+                let vertices = self.values.as_chunks::<3>().0.iter().take(vertex_count).map(|chunk| vec3(chunk)).collect::<Result<_, _>>()?;
+                let faces = self.indices[1..].as_chunks::<4>().0.to_vec();
                 dwg_engine::DwgGeometry::PolyfaceMesh { vertices, faces }
             }
         })
@@ -4093,7 +4093,6 @@ pub fn decode_dwg(bytes: &[u8]) -> Result<DwgSnapshot, String> {
         revision_history: document.revision_history,
         preview: document.preview,
         application_history: document.application_history,
-        ..Default::default()
     })
 }
 

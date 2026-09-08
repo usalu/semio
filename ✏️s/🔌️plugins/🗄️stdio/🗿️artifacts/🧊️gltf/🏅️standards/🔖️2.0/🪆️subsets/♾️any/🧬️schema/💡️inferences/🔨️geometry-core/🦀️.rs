@@ -1,5 +1,11 @@
 //! 🔨️ Internal glTF 2.0 static-pose geometry kernel.
 //!
+/// 🕸️ Topology summary, vertices, faces, and oriented edge incidences.
+pub(crate) type MeshTopology = (Topology, Vec<V3>, Vec<[usize; 3]>, BTreeMap<(usize, usize), Vec<(usize, bool)>>);
+
+/// 🧊 Hull surface area, volume, and oriented supporting planes.
+pub type ConvexHullMetrics = (f64, f64, Vec<(V3, f64)>);
+
 // 🚫️async: E1/R9 whole-file revert — every fn here is pure in-memory vector/matrix/mesh math
 // over an already-decoded `GltfSnapshot` (verified zero `std::fs`/`tokio`/`reqwest`/`File::`/
 // `TcpStream`/`spawn`/`sleep`/`SystemTime` across the file, same shape as the ticket's
@@ -155,22 +161,22 @@ fn primitive_triangles(mode: u64, indices: &[usize]) -> Result<Vec<[usize; 3]>, 
     let mut out = Vec::new();
     match mode {
         4 => {
-            for c in indices.chunks_exact(3) {
-                out.push([c[0], c[1], c[2]])
+            for c in indices.as_chunks::<3>().0 {
+                out.push([c[0], c[1], c[2]]);
             }
         }
         5 => {
             for i in 2..indices.len() {
                 if i % 2 == 0 {
-                    out.push([indices[i - 2], indices[i - 1], indices[i]])
+                    out.push([indices[i - 2], indices[i - 1], indices[i]]);
                 } else {
-                    out.push([indices[i - 1], indices[i - 2], indices[i]])
+                    out.push([indices[i - 1], indices[i - 2], indices[i]]);
                 }
             }
         }
         6 => {
             for i in 2..indices.len() {
-                out.push([indices[0], indices[i - 1], indices[i]])
+                out.push([indices[0], indices[i - 1], indices[i]]);
             }
         }
         _ => return Err(GltfAvailability::UnsupportedPrimitive),
@@ -178,7 +184,7 @@ fn primitive_triangles(mode: u64, indices: &[usize]) -> Result<Vec<[usize; 3]>, 
     Ok(out)
 }
 
-fn decode_part(snapshot: &GltfSnapshot, mesh_index: usize, primitive_index: usize, matrix: M4, scene: Option<usize>, path: &[usize], weights: &[f64], diagnostics: &mut Vec<GltfDiagnostic>) -> Option<RawPart> {
+fn decode_part(snapshot: &GltfSnapshot, (mesh_index, primitive_index): (usize, usize), matrix: M4, scene: Option<usize>, path: &[usize], weights: &[f64], diagnostics: &mut Vec<GltfDiagnostic>) -> Option<RawPart> {
     let mesh = snapshot.document.meshes.get(mesh_index)?;
     let primitive = mesh.primitives.get(primitive_index)?;
     let Some(position_accessor) = primitive.attributes.iter().find(|(s, _)| s == "POSITION").map(|x| x.1) else {
@@ -217,7 +223,7 @@ fn decode_part(snapshot: &GltfSnapshot, mesh_index: usize, primitive_index: usiz
             return None;
         }
     };
-    let mut local: Vec<V3> = decoded.components.chunks_exact(3).map(|v| [v[0], v[1], v[2]]).collect();
+    let mut local: Vec<V3> = decoded.components.as_chunks::<3>().0.iter().map(|v| [v[0], v[1], v[2]]).collect();
     for (target_index, target) in primitive.targets.iter().enumerate() {
         let weight = weights.get(target_index).copied().unwrap_or(0.0);
         if weight == 0.0 {
@@ -237,7 +243,7 @@ fn decode_part(snapshot: &GltfSnapshot, mesh_index: usize, primitive_index: usiz
         }
         match crate::artifacts::gltf::engine::decode_accessor(&snapshot.document, &snapshot.buffers, accessor) {
             Ok(delta) if delta.components.len() == local.len() * 3 => {
-                for (p, d) in local.iter_mut().zip(delta.components.chunks_exact(3)) {
+                for (p, d) in local.iter_mut().zip(delta.components.as_chunks::<3>().0) {
                     *p = add(*p, mul([d[0], d[1], d[2]], weight));
                 }
             }
@@ -304,8 +310,11 @@ fn decode_part(snapshot: &GltfSnapshot, mesh_index: usize, primitive_index: usiz
     Some(RawPart { address, name: mesh.name.clone(), points, triangles, diagnostic_ids: Vec::new() })
 }
 
+/// 🌳️ Accumulated primitive instances, diagnostics, and instance count during traversal.
+type TraversalOutput<'a> = (&'a mut Vec<RawPart>, &'a mut Vec<GltfDiagnostic>, &'a mut u64);
+
 pub(crate) fn collect_parts(snapshot: &GltfSnapshot, diagnostics: &mut Vec<GltfDiagnostic>) -> (Vec<RawPart>, u64) {
-    fn visit(snapshot: &GltfSnapshot, scene: usize, node_index: usize, parent: M4, path: &mut Vec<usize>, stack: &mut BTreeSet<usize>, parts: &mut Vec<RawPart>, diagnostics: &mut Vec<GltfDiagnostic>, instances: &mut u64) {
+    fn visit(snapshot: &GltfSnapshot, scene: usize, node_index: usize, parent: M4, path: &mut Vec<usize>, stack: &mut BTreeSet<usize>, (parts, diagnostics, instances): TraversalOutput<'_>) {
         let Some(node) = snapshot.document.nodes.get(node_index) else { return };
         if !stack.insert(node_index) {
             let id = format!("gltf-geometry-{}", diagnostics.len());
@@ -319,14 +328,14 @@ pub(crate) fn collect_parts(snapshot: &GltfSnapshot, diagnostics: &mut Vec<GltfD
             if let Some(mesh) = snapshot.document.meshes.get(mesh_index) {
                 let weights = if node.weights.is_empty() { &mesh.weights } else { &node.weights };
                 for primitive_index in 0..mesh.primitives.len() {
-                    if let Some(p) = decode_part(snapshot, mesh_index, primitive_index, world, Some(scene), path, weights, diagnostics) {
-                        parts.push(p)
+                    if let Some(p) = decode_part(snapshot, (mesh_index, primitive_index), world, Some(scene), path, weights, diagnostics) {
+                        parts.push(p);
                     }
                 }
             }
         }
         for child in &node.children {
-            visit(snapshot, scene, *child, world, path, stack, parts, diagnostics, instances)
+            visit(snapshot, scene, *child, world, path, stack, (parts, diagnostics, instances));
         }
         path.pop();
         stack.remove(&node_index);
@@ -336,15 +345,15 @@ pub(crate) fn collect_parts(snapshot: &GltfSnapshot, diagnostics: &mut Vec<GltfD
     if snapshot.document.scenes.is_empty() {
         for (mi, mesh) in snapshot.document.meshes.iter().enumerate() {
             for pi in 0..mesh.primitives.len() {
-                if let Some(p) = decode_part(snapshot, mi, pi, identity(), None, &[], &mesh.weights, diagnostics) {
-                    parts.push(p)
+                if let Some(p) = decode_part(snapshot, (mi, pi), identity(), None, &[], &mesh.weights, diagnostics) {
+                    parts.push(p);
                 }
             }
         }
     } else {
         for (si, scene) in snapshot.document.scenes.iter().enumerate() {
             for root in &scene.nodes {
-                visit(snapshot, si, *root, identity(), &mut Vec::new(), &mut BTreeSet::new(), &mut parts, diagnostics, &mut instances)
+                visit(snapshot, si, *root, identity(), &mut Vec::new(), &mut BTreeSet::new(), (&mut parts, diagnostics, &mut instances));
             }
         }
     }
@@ -393,7 +402,7 @@ pub(crate) fn pair_geometry(first: &RawPart, second: &RawPart, policy: &GltfAnal
         [(first_hi[0].min(second_hi[0]) - first_lo[0].max(second_lo[0])).max(0.0), (first_hi[1].min(second_hi[1]) - first_lo[1].max(second_lo[1])).max(0.0), (first_hi[2].min(second_hi[2]) - first_lo[2].max(second_lo[2])).max(0.0)];
     let overlap_volume = overlap_dimensions.iter().product::<f64>();
     let contact_area = if minimum_distance <= policy.contact_tolerance.max(tolerance) {
-        let normal_axis = overlap_dimensions.iter().enumerate().min_by(|(_, left), (_, right)| left.total_cmp(right)).map(|(axis, _)| axis).unwrap_or(0);
+        let normal_axis = overlap_dimensions.iter().enumerate().min_by(|(_, left), (_, right)| left.total_cmp(right)).map_or(0, |(axis, _)| axis);
         overlap_dimensions.iter().enumerate().filter(|(axis, _)| *axis != normal_axis).map(|(_, extent)| *extent).product()
     } else {
         0.0
@@ -413,7 +422,7 @@ pub(crate) fn triangle_area(a: V3, b: V3, c: V3) -> f64 {
     0.5 * norm(cross(sub(b, a), sub(c, a)))
 }
 
-pub(crate) fn convex_hull_metrics(points: &[V3], tolerance: f64) -> Option<(f64, f64, Vec<(V3, f64)>)> {
+pub(crate) fn convex_hull_metrics(points: &[V3], tolerance: f64) -> Option<ConvexHullMetrics> {
     if points.len() < 4 {
         return None;
     }
@@ -438,7 +447,7 @@ pub(crate) fn convex_hull_metrics(points: &[V3], tolerance: f64) -> Option<(f64,
                 }
                 if positive {
                     n = mul(n, -1.0);
-                    d = -d
+                    d = -d;
                 }
                 let q = 1e-8;
                 planes.entry(((n[0] / q).round() as i64, (n[1] / q).round() as i64, (n[2] / q).round() as i64, (d / q).round() as i64)).or_insert((n, d));
@@ -464,14 +473,14 @@ pub(crate) fn convex_hull_metrics(points: &[V3], tolerance: f64) -> Option<(f64,
             while h.len() >= 2 && turn(h[h.len() - 2], h[h.len() - 1], p) <= tolerance {
                 h.pop();
             }
-            h.push(p)
+            h.push(p);
         }
         let lower = h.len();
         for p in q.iter().rev().skip(1).copied() {
             while h.len() > lower && turn(h[h.len() - 2], h[h.len() - 1], p) <= tolerance {
                 h.pop();
             }
-            h.push(p)
+            h.push(p);
         }
         if h.len() > 1 {
             h.pop();
@@ -490,7 +499,7 @@ pub(crate) fn convex_hull_metrics(points: &[V3], tolerance: f64) -> Option<(f64,
 }
 
 pub(crate) fn hull_sample(points: &[V3], budget: usize) -> Vec<V3> {
-    let limit = budget.min(32).max(4);
+    let limit = budget.clamp(4, 32);
     if points.len() <= limit {
         return points.to_vec();
     }
@@ -546,7 +555,7 @@ pub(crate) fn thickness_samples(points: &[V3], faces: &[[usize; 3]], budget: usi
     for f in faces {
         let n = cross(sub(points[f[1]], points[f[0]]), sub(points[f[2]], points[f[0]]));
         for i in f {
-            normals[*i] = add(normals[*i], n)
+            normals[*i] = add(normals[*i], n);
         }
     }
     let budget = budget.max(1);
@@ -565,12 +574,12 @@ pub(crate) fn thickness_samples(points: &[V3], faces: &[[usize; 3]], budget: usi
                     continue;
                 }
                 if let Some(t) = ray_triangle(*p, direction, points[f[0]], points[f[1]], points[f[2]], tolerance) {
-                    best = best.min(t)
+                    best = best.min(t);
                 }
             }
         }
         if best.is_finite() {
-            out.push(best)
+            out.push(best);
         }
     }
     out
@@ -608,7 +617,7 @@ impl Dsu {
     }
     fn find(&mut self, x: usize) -> usize {
         if self.p[x] != x {
-            self.p[x] = self.find(self.p[x])
+            self.p[x] = self.find(self.p[x]);
         }
         self.p[x]
     }
@@ -618,17 +627,17 @@ impl Dsu {
             return;
         }
         if self.r[a] < self.r[b] {
-            std::mem::swap(&mut a, &mut b)
+            std::mem::swap(&mut a, &mut b);
         }
         self.p[b] = a;
         if self.r[a] == self.r[b] {
-            self.r[a] += 1
+            self.r[a] += 1;
         }
     }
 }
 
-fn topology(points: &[V3], faces: &[[usize; 3]]) -> (Topology, Vec<V3>, Vec<[usize; 3]>, BTreeMap<(usize, usize), Vec<(usize, bool)>>) {
-    let diagonal = bounds(points).map(|x| norm(x.2)).unwrap_or(0.0);
+fn topology(points: &[V3], faces: &[[usize; 3]]) -> MeshTopology {
+    let diagonal = bounds(points).map_or(0.0, |x| norm(x.2));
     let tol = (diagonal * 1e-9).max(1e-9);
     let mut map = BTreeMap::<(i64, i64, i64), usize>::new();
     let mut welded = Vec::new();
@@ -640,14 +649,14 @@ fn topology(points: &[V3], faces: &[[usize; 3]]) -> (Topology, Vec<V3>, Vec<[usi
             welded.push(*p);
             i
         });
-        remap.push(id)
+        remap.push(id);
     }
     let mut clean = Vec::new();
     for f in faces {
         if f.iter().all(|i| *i < remap.len()) {
             let w = [remap[f[0]], remap[f[1]], remap[f[2]]];
             if w[0] != w[1] && w[1] != w[2] && w[2] != w[0] && triangle_area(welded[w[0]], welded[w[1]], welded[w[2]]) > tol * tol {
-                clean.push(w)
+                clean.push(w);
             }
         }
     }
@@ -862,7 +871,7 @@ fn shell_material_metrics(points: &[V3], faces: &[[usize; 3]], edge_faces: &BTre
         let depth = (0..shells.len()).filter(|other| *other != i).filter(|other| point_in_closed_mesh(shells[i].2, points, &shells[*other].3, tolerance) == Some(true)).count();
         let sign = if depth % 2 == 0 { 1.0 } else { -1.0 };
         if depth == 0 {
-            enclosed += shells[i].0
+            enclosed += shells[i].0;
         }
         material += sign * shells[i].0;
         material_centroid = add(material_centroid, mul(shells[i].1, sign * shells[i].0));
@@ -889,9 +898,9 @@ pub(crate) fn statistics(values: &[f64], edges: &[f64]) -> GltfStatistics {
     let mut counts = vec![0u64; edges.len().saturating_sub(1)];
     for v in &sorted {
         if let Some(i) = edges.windows(2).position(|e| *v >= e[0] && *v < e[1]) {
-            counts[i] += 1
+            counts[i] += 1;
         } else if *v == *edges.last().unwrap_or(v) && !counts.is_empty() {
-            *counts.last_mut().unwrap() += 1
+            *counts.last_mut().unwrap() += 1;
         }
     }
     GltfStatistics {
@@ -912,7 +921,7 @@ fn principal_frame(points: &[V3], centroid: V3) -> GltfPrincipalFrame {
         let d = sub(*p, centroid);
         for i in 0..3 {
             for j in 0..3 {
-                a[i][j] += d[i] * d[j] / points.len().max(1) as f64
+                a[i][j] += d[i] * d[j] / points.len().max(1) as f64;
             }
         }
     }
@@ -924,7 +933,7 @@ fn principal_frame(points: &[V3], centroid: V3) -> GltfPrincipalFrame {
             for j in i + 1..3 {
                 if a[i][j].abs() > a[p][q].abs() {
                     p = i;
-                    q = j
+                    q = j;
                 }
             }
         }
@@ -933,10 +942,10 @@ fn principal_frame(points: &[V3], centroid: V3) -> GltfPrincipalFrame {
         }
         let phi = 0.5 * (2.0 * a[p][q]).atan2(a[q][q] - a[p][p]);
         let (c, s) = (phi.cos(), phi.sin());
-        for k in 0..3 {
-            let (ap, aq) = (a[k][p], a[k][q]);
-            a[k][p] = c * ap - s * aq;
-            a[k][q] = s * ap + c * aq
+        for row in &mut a {
+            let (ap, aq) = (row[p], row[q]);
+            row[p] = c * ap - s * aq;
+            row[q] = s * ap + c * aq;
         }
         for k in 0..3 {
             let (ap, aq) = (a[p][k], a[q][k]);
@@ -944,7 +953,7 @@ fn principal_frame(points: &[V3], centroid: V3) -> GltfPrincipalFrame {
             a[q][k] = s * ap + c * aq;
             let (vp, vq) = (v[k][p], v[k][q]);
             v[k][p] = c * vp - s * vq;
-            v[k][q] = s * vp + c * vq
+            v[k][q] = s * vp + c * vq;
         }
     }
     let mut e = [(a[0][0], [v[0][0], v[1][0], v[2][0]]), (a[1][1], [v[0][1], v[1][1], v[2][1]]), (a[2][2], [v[0][2], v[1][2], v[2][2]])];
@@ -953,7 +962,7 @@ fn principal_frame(points: &[V3], centroid: V3) -> GltfPrincipalFrame {
         let axis = &mut x.1;
         let k = (0..3).max_by(|i, j| axis[*i].abs().total_cmp(&axis[*j].abs())).unwrap();
         if axis[k] < 0.0 {
-            *axis = mul(*axis, -1.0)
+            *axis = mul(*axis, -1.0);
         }
     }
     GltfPrincipalFrame { centroid: GltfVec3::new(centroid), axes: e.map(|x| GltfVec3::new(normalize(x.1))), eigenvalues: e.map(|x| x.0.max(0.0)) }
@@ -1002,8 +1011,8 @@ impl<'a> GltfGeometryContext<'a> {
         }
         let tolerance = (diagonal * policy.relative_tolerance).max(policy.absolute_length_tolerance);
         let solid = if topology.watertight && topology.manifold && topology.oriented { shell_material_metrics(&points, &faces, &edge_faces, tolerance, policy.sampling_budget as usize) } else { None };
-        let volume = solid.map(|metrics| metrics.0).unwrap_or(0.0);
-        let centroid = solid.map(|metrics| metrics.3).unwrap_or(surface_centroid);
+        let volume = solid.map_or(0.0, |metrics| metrics.0);
+        let centroid = solid.map_or(surface_centroid, |metrics| metrics.3);
         let principal_frame = principal_frame(&points, centroid);
         let principal_axes = principal_frame.axes.iter().enumerate().map(|(index, axis)| GltfDirectionScore { direction: *axis, score: principal_frame.eigenvalues[index], order: Some((index + 1) as u32) }).collect::<Vec<_>>();
         let mut oriented_extent = [0.0; 3];

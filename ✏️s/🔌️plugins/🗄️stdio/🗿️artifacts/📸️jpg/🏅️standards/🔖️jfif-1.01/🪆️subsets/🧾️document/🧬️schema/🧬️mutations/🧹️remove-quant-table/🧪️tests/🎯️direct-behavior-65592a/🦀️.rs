@@ -24,13 +24,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> JpgSnapshot {
-    serde_json::from_str(BEFORE).expect("committed before-snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("committed before-snapshot decodes")
 }
 fn expected_after() -> JpgSnapshot {
-    serde_json::from_str(AFTER).expect("committed after-snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("committed after-snapshot decodes")
 }
 fn mutation() -> JpgMutation {
-    serde_json::from_str(MUTATION).expect("committed remove-quant-table payload decodes")
+    dsl::json::from_json_str(MUTATION).expect("committed remove-quant-table payload decodes")
 }
 
 /// ▶️ Applying the committed payload to the committed before-snapshot reaches the committed
@@ -60,12 +60,12 @@ fn inverse_restores_before() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: JpgSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: JpgSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "remove-quant-table/direct-behavior: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("payload encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&(mutation()))).expect("payload encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("payload reparses");
     assert_eq!(reencoded, original, "remove-quant-table/direct-behavior: committed payload JSON is not canonical");
 }
@@ -88,7 +88,7 @@ fn declared_outcome_holds() {
 /// diff is what replication ships and what undo inverts.
 #[test]
 fn produces_committed_diff() {
-    let produced = serde_json::to_value(mutation().diff(&before()).diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(mutation().diff(&before()).diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "remove-quant-table/direct-behavior: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -109,7 +109,7 @@ fn op_codecs_round_trip() {
     let payload = mutation();
     assert_eq!(JpgMutation::parse_op(&payload.print_op()).expect("the text op parses"), payload, "remove-quant-table/direct-behavior: the text op form does not round-trip");
     let bytes = payload.encode_op().expect("the binary op encodes");
-    assert_eq!(bytes[1], super::binary::BINARY_TAG, "remove-quant-table/direct-behavior: the binary frame must carry this schema's tag");
+    assert_eq!(bytes[1], binary::BINARY_TAG, "remove-quant-table/direct-behavior: the binary frame must carry this schema's tag");
     assert_eq!(JpgMutation::decode_op(&bytes).expect("the binary op decodes"), payload, "remove-quant-table/direct-behavior: the binary op form does not round-trip");
     assert!(JpgMutation::decode_op(&bytes[..1]).is_err(), "remove-quant-table/direct-behavior: a truncated binary frame must be rejected");
 }
